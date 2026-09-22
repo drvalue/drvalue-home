@@ -8,7 +8,6 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ADMIN_ROLES_KEY } from './roles.decorator';
 import type { Request } from 'express';
-import { IamUserService } from '@drvalue-oss/iam-nestjs';
 import { CommonError } from '../../../common/error/common-error';
 import {
   parseCookies,
@@ -20,26 +19,23 @@ import { MaxRootService } from '../service/max-root.service';
 import { AdminUserService } from '../service/admin-user.service';
 
 export const ADMIN_COOKIE = 'dv_admin';
-/** IAM 에 사용자 상태를 다시 묻는 간격. 그 사이에 비활성화되면 이만큼 늦게 막힌다. */
+/** admin_users · nxcms 를 다시 보는 간격. 그 사이에 빼면 이만큼 늦게 막힌다. */
 const RECHECK_MS = 60_000;
 
 /**
- * 관리 API 의 문.
+ * 관리 API 의 문. 들어오는 길은 IAM 로그인이 만든 세션(dv_admin) 하나뿐이다.
  *
- * 1) 세션 쿠키(dv_admin)가 유효해야 한다. 30분짜리라 만료되면 IAM 을 다시 다녀온다 —
- *    그때 그룹·역할이 새로 온다. 우리 DB 에 IAM 사용자를 저장하지 않는다.
- * 2) IAM 내부 API 가 설정돼 있으면 60초마다 그 사람이 아직 살아 있는지(enabled) 묻는다.
- *    IAM 에서 지우거나 비활성화하면 세션이 남아 있어도 막힌다 — PHP 때 없던 것.
- * 3) ADMIN_API_TOKEN 이 있고 `Authorization: Bearer <값>` 이 오면 통과 — 검사 스크립트용.
+ * 1) 세션 쿠키가 서명·만료 모두 유효해야 한다(30분 — 만료되면 IAM 을 다시 다녀온다).
+ * 2) 60초마다 admin_users 를 다시 본다. 빠지거나 꺼지면 막히고, 역할 변경도 따라온다.
+ * 3) nxcms 가 설정돼 있으면 60초마다 root 표도 다시 본다.
+ * 4) @AdminRoles() 가 붙은 곳은 그 역할만(admin 은 항상).
  */
 @Injectable()
 export class AdminSessionGuard implements CanActivate {
   private readonly log = new Logger(AdminSessionGuard.name);
   private readonly checked = new Map<string, number>();
-  private lookupAvailable: boolean | null = null;
 
   constructor(
-    private readonly iamUserService: IamUserService,
     private readonly maxRootService: MaxRootService,
     private readonly adminUserService: AdminUserService,
     private readonly reflector: Reflector,
@@ -57,18 +53,8 @@ export class AdminSessionGuard implements CanActivate {
     if (session) {
       await this.assertStillRegistered(session);
       await this.assertStillRoot(session);
-      await this.assertStillEnabled(session.email);
       this.assertRole(ctx, session.role);
       req.admin = session;
-      return true;
-    }
-    const token = process.env.ADMIN_API_TOKEN;
-    const given = String(req.headers.authorization ?? '').replace(
-      /^Bearer\s+/i,
-      '',
-    );
-    if (token && given && given === token) {
-      req.admin = { email: 'script@local', exp: Number.MAX_SAFE_INTEGER };
       return true;
     }
     throw new CommonError(AdminAuthError.UNAUTHORIZED);
@@ -81,8 +67,8 @@ export class AdminSessionGuard implements CanActivate {
       [ctx.getHandler(), ctx.getClass()],
     );
     if (!need || need.length === 0) return;
-    const r = role ?? 'admin';
-    if (r === 'admin' || need.includes(r)) return;
+    // 역할 없는 세션(옛 세션)은 아무 데도 못 간다 — 조용히 admin 으로 올리지 않는다.
+    if (role === 'admin' || (role && need.includes(role))) return;
     throw new CommonError(AdminAuthError.FORBIDDEN);
   }
 
@@ -116,35 +102,6 @@ export class AdminSessionGuard implements CanActivate {
     // 'unavailable' 은 로그인 때와 달리 세션을 끊지 않는다 — 이미 통과한 사람을 DB 장애로
     // 쫓아내지는 않되, 캐시를 안 늘려 다음 요청에 다시 본다.
     if (root === true) this.checked.set(key, Date.now());
-  }
-
-  private async assertStillEnabled(email: string): Promise<void> {
-    if (this.lookupAvailable === false) return;
-    const last = this.checked.get(email) ?? 0;
-    if (Date.now() - last < RECHECK_MS) return;
-    try {
-      const user = await this.iamUserService.lookup({ email });
-      this.lookupAvailable = true;
-      if (!user.enabled) {
-        this.log.warn(`iam user disabled: session rejected`);
-        throw new CommonError(AdminAuthError.NOT_ALLOWED);
-      }
-      this.checked.set(email, Date.now());
-    } catch (e) {
-      if (e instanceof CommonError) throw e;
-      const status = (e as { status?: number })?.status;
-      if (status === 404) {
-        this.log.warn(`iam user not found: session rejected`);
-        throw new CommonError(AdminAuthError.NOT_ALLOWED);
-      }
-      // 내부 API 가 설정 안 됐거나 안 닿는다. 한 번만 알리고 30분 재검만 남긴다.
-      if (this.lookupAvailable === null) {
-        this.lookupAvailable = false;
-        this.log.warn(
-          `IAM 내부 API 로 사용자 상태를 못 본다 (${(e as Error)?.message ?? e}). 세션 만료(30분) 재검만 동작한다.`,
-        );
-      }
-    }
   }
 }
 

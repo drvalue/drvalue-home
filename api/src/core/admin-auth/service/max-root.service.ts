@@ -12,7 +12,7 @@ import { createPool, Pool } from 'mysql2/promise';
  *   이미 연결된 행을 같은 이메일로 가로채지 못하게.
  *
  * 읽기 전용. 우리 쪽에 사용자 사본을 두지 않는다 — 두면 그게 어긋나는 사본이 된다.
- * ADMIN_MAX_DB_HOST 가 비어 있으면 꺼진 것이고, 그때는 IAM 그룹 판정만 남는다.
+ * ADMIN_MAX_DB_URL(mysql://user:pass@host:3306/nx_cms_database)이 비면 꺼진 것이다.
  */
 @Injectable()
 export class MaxRootService implements OnModuleDestroy {
@@ -20,12 +20,11 @@ export class MaxRootService implements OnModuleDestroy {
   private pool: Pool | null = null;
 
   get configured(): boolean {
-    return Boolean(process.env.ADMIN_MAX_DB_HOST);
+    return Boolean(process.env.ADMIN_MAX_DB_URL);
   }
 
-  private get tenantCode(): string {
-    return process.env.ADMIN_MAX_TENANT_CODE || 'drvalue';
-  }
+  /** 홈페이지는 drvalue 테넌트의 것이다. */
+  private readonly tenantCode = 'drvalue';
 
   /**
    * null = 설정이 없다(판정 안 함). 'unavailable' = 설정은 있는데 DB 가 안 닿는다.
@@ -56,11 +55,7 @@ export class MaxRootService implements OnModuleDestroy {
   private getPool(): Pool {
     if (!this.pool) {
       this.pool = createPool({
-        host: process.env.ADMIN_MAX_DB_HOST,
-        port: Number(process.env.ADMIN_MAX_DB_PORT ?? 3306),
-        database: process.env.ADMIN_MAX_DB_NAME ?? 'nx_cms_database',
-        user: process.env.ADMIN_MAX_DB_USER,
-        password: process.env.ADMIN_MAX_DB_PASSWORD,
+        uri: process.env.ADMIN_MAX_DB_URL,
         connectionLimit: 2,
         connectTimeout: 5_000,
       });

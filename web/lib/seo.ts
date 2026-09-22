@@ -13,7 +13,7 @@
 import type { Metadata } from 'next'
 
 /** 운영 주소. 미리보기에 올려도 대표주소는 운영 쪽을 가리켜야 한다. */
-export const SITE_ORIGIN = (process.env.SITE_ORIGIN ?? 'https://drvalue.co.kr').replace(/\/+$/, '')
+export const SITE_ORIGIN = 'https://drvalue.co.kr'
 
 export const SITE_NAME = '디알밸류'
 

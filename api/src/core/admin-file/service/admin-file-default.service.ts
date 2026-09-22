@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { extname, join } from 'node:path';
+import { uploadsDir } from '../../../common/uploads';
 import { FileEntity } from '../../../common/entity/file.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { imageSize } from '../../../common/image/image-size';
@@ -16,11 +17,6 @@ const ALLOWED: Record<string, string> = {
   'application/pdf': '.pdf',
   'text/plain': '.txt',
 };
-
-/** 업로드 파일이 놓이는 곳. 컨테이너는 /data/uploads, 로컬은 저장소의 data/uploads. */
-export function uploadsDir(): string {
-  return resolve(process.env.UPLOADS_DIR || './data/uploads');
-}
 
 @Injectable()
 export class AdminFileDefaultService {

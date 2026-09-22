@@ -21,9 +21,7 @@ export class NcpMailService {
     return {
       accessKey: process.env.NCP_ACCESS_KEY ?? '',
       secretKey: process.env.NCP_SECRET_KEY ?? '',
-      apiBase: (
-        process.env.NCP_MAIL_API_URL ?? 'https://mail.apigw.ntruss.com/api/v1'
-      ).replace(/\/$/, ''),
+      apiBase: 'https://mail.apigw.ntruss.com/api/v1',
       sender: process.env.NCP_MAIL_SENDER_ADDRESS ?? '',
       to: (process.env.NCP_MAIL_TO ?? '')
         .split(',')

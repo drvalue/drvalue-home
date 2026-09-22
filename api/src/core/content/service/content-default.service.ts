@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { uploadsDir } from '../../../common/uploads';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import { FileEntity } from '../../../common/entity/file.entity';
@@ -14,6 +15,8 @@ export const PAGE_SIZE = 10;
 export const MAX_LIMIT = 100;
 
 const LANGS = ['ko-KR', 'en-US'];
+/** 공개 사이트 기본 언어. 요청 언어 번역이 없을 때 여기로 떨어진다. */
+const DEFAULT_LANGUAGE = 'ko-KR';
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_RE = /^[0-9a-fA-F-]{36}$/;
 
@@ -47,7 +50,7 @@ export class ContentDefaultService {
   ) {}
 
   language(requested?: string): string {
-    const fallback = process.env.DEFAULT_LANGUAGE ?? 'ko-KR';
+    const fallback = DEFAULT_LANGUAGE;
     return requested && LANGS.includes(requested) ? requested : fallback;
   }
 
@@ -120,10 +123,7 @@ export class ContentDefaultService {
       throw new CommonError(ContentError.FILE_NOT_FOUND);
     const row = await this.files.findOne({ where: { id } });
     const name = String(row?.filenameDisk ?? '').replace(/[/\\]/g, '');
-    const path = join(
-      resolve(process.env.UPLOADS_DIR || './data/uploads'),
-      name,
-    );
+    const path = join(uploadsDir(), name);
     if (!row || !name || !existsSync(path)) {
       // 행은 있는데 디스크에 없다 — 밖으로는 404, 원인은 로그에.
       this.log.warn(`파일 ${id}: 디스크에 없음`);
@@ -171,7 +171,7 @@ export class ContentDefaultService {
 
   /** 요청 언어 + 기본 언어. 한 언어만 실으면 번역 없는 글이 제목 없이 나간다. */
   private languages(requested: string): string[] {
-    const fallback = process.env.DEFAULT_LANGUAGE ?? 'ko-KR';
+    const fallback = DEFAULT_LANGUAGE;
     return requested === fallback ? [requested] : [requested, fallback];
   }
 

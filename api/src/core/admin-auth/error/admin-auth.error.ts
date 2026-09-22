@@ -4,7 +4,7 @@ import { ICommonErrorCode } from '../../../common/error/common-error';
 export const AdminAuthError = {
   NOT_CONFIGURED: {
     code: 'ADMIN_AUTH_NOT_CONFIGURED',
-    message: 'ADMIN_IAM_BASE / ADMIN_IAM_CALLBACK_URL 이 비어 있다',
+    message: 'ADMIN_IAM_CALLBACK_URL 이 비어 있다',
     status: HttpStatus.SERVICE_UNAVAILABLE,
   } as ICommonErrorCode,
 

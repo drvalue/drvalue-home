@@ -10,13 +10,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Public, SkipGatewaySignature } from '@drvalue-oss/iam-nestjs';
 import { AdminSessionGuard } from '../../admin-auth/guard/admin-session.guard';
 import { AdminInquiryDefaultService } from '../service/admin-inquiry-default.service';
 
 /** 문의 목록과 상태. 문의 접수 자체는 공개 API(/api/inquiry)가 한다. */
-@SkipGatewaySignature()
-@Public()
 @UseGuards(AdminSessionGuard)
 @Controller('admin/inquiries')
 export class AdminInquiryDefaultController {

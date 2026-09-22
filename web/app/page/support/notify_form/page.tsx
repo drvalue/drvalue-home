@@ -51,7 +51,8 @@ export default async function Page(
 ) {
   const board = boardOf((await searchParams).board)
   // 운영마다 다르다. 비면 링크 없이 안내만 낸다 — 틀린 주소를 박아 두는 것보다 낫다.
-  const cmsUrl = (process.env.CMS_ADMIN_URL ?? '').replace(/\/+$/, '')
+  // 관리 화면은 같은 사이트의 /admin 이다.
+  const cmsUrl = '/admin'
   const default_type = board === 'press' ? 'NEWSROOM' : 'NOTICE'
   const page_title = board === 'press' ? '보도자료' : '공지사항'
   const hero_text = board === 'press'

@@ -11,7 +11,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Public, SkipGatewaySignature } from '@drvalue-oss/iam-nestjs';
 import {
   AdminSessionGuard,
   AdminUser,
@@ -24,8 +23,6 @@ import {
 import { AdminPostDefaultService } from '../service/admin-post-default.service';
 
 /** 관리 화면의 글 CRUD. 세션(또는 스크립트 토큰) 뒤. */
-@SkipGatewaySignature()
-@Public()
 @UseGuards(AdminSessionGuard)
 @Controller('admin/posts')
 export class AdminPostDefaultController {

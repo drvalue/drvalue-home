@@ -5,17 +5,36 @@
 # Promise.allSettled 가 그 실패를 삼켰다. 화면에는 ok 가 떴다.
 # 그래서 "응답이 200 이다" 로 끝내지 않고 DB 에 실제로 행이 생겼는지까지 본다.
 #
-# 표본은 관리 API(/api/admin/*)로 만들고 지운다. 그 문은 ADMIN_API_TOKEN 이다.
+# 표본은 관리 API(/api/admin/*)로 만들고 지운다. 그 문은 IAM 로그인이 만드는 세션 하나뿐이라,
+# 검사는 서버와 같은 서명 키(ADMIN_SESSION_SECRET)로 그 세션을 만들어 들어간다.
 #
 # 실행: bash scripts/verify.sh   (api 와 db 가 떠 있어야 한다)
 set -u
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 API="${API_URL:-http://localhost:3500}"
 
-# 루트 .env 하나다. 관리 API 토큰과 DB 접속 정보가 다 여기 있다.
+# 루트 .env 하나다. 세션 서명 키와 DB 비밀번호가 여기 있다.
 set -a; [ -f "$HERE/../.env" ] && . "$HERE/../.env"; set +a
 
-if [ -z "${ADMIN_API_TOKEN:-}" ]; then echo "루트 .env 에 ADMIN_API_TOKEN 이 없다." >&2; exit 2; fi
+if [ -z "${ADMIN_SESSION_SECRET:-}" ]; then echo "루트 .env 에 ADMIN_SESSION_SECRET 이 없다." >&2; exit 2; fi
+[ -f "$HERE/dist/common/session/session-token.js" ] || { echo "api 를 먼저 빌드하라 (npm run build)." >&2; exit 2; }
+
+# DB 한 줄 질의(pg 는 api 의 의존성이다).
+dbq() { (cd "$HERE" && DBQ="$1" node -e "
+const {Client}=require('pg');
+const c=new Client({host:process.env.DB_HOST||'localhost',port:+(process.env.DB_PORT||3330),database:'drvalue_cms',user:'drvalue',password:process.env.DB_PASSWORD});
+c.connect().then(()=>c.query(process.env.DBQ)).then(r=>{console.log((r.rows||[]).map(x=>Object.values(x).join('|')).join('\n'));return c.end()}).catch(e=>{console.error(e.message);process.exit(1)})"); }
+
+# 검사용 관리자 세션. admin_users 가 비어 있으면(첫 설치) 세션만으로 들어가고,
+# 사람이 있으면 검사용 계정을 잠시 넣었다가 끝날 때 지운다 — 빈 표에는 넣지 않는다
+# (넣으면 그 순간 첫 관리자 자동 등록이 막힌다).
+VERIFY_EMAIL="verify@drvalue.local"
+SESSION=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$VERIFY_EMAIL',role:'admin',name:'verify.sh',exp:Date.now()+3600000}))")
+if [ "$(dbq 'select count(*) from admin_users')" != "0" ]; then
+  dbq "insert into admin_users(email,role,name) values ('$VERIFY_EMAIL','admin','verify.sh') on conflict (email) do update set enabled=true, role='admin'" >/dev/null
+  trap 'dbq "delete from admin_users where email='"'"'$VERIFY_EMAIL'"'"'" >/dev/null' EXIT
+fi
+AUTH="Cookie: dv_admin=$SESSION"
 
 PASS=0; FAIL=0; NA=0
 check() { # 이름 기대 실제
@@ -28,9 +47,9 @@ try: d=json.load(sys.stdin)
 except Exception: d=None
 $1" 2>/dev/null; }
 # 관리 API. 셸에서 JSON 리터럴을 만들지 않는다 — zsh 가 중괄호를 확장해서 몸통이 깨진다.
-adm() { curl -s -H "Authorization: Bearer $ADMIN_API_TOKEN" "$API/api/admin$1" --max-time 30; }
+adm() { curl -s -H "$AUTH" "$API/api/admin$1" --max-time 30; }
 admj() { # METHOD 경로 (본문은 stdin JSON)
-  curl -s -X "$1" -H "Authorization: Bearer $ADMIN_API_TOKEN" -H 'Content-Type: application/json' \
+  curl -s -X "$1" -H "$AUTH" -H 'Content-Type: application/json' \
     --data-binary @- "$API/api/admin$2" --max-time 30
 }
 
@@ -168,7 +187,7 @@ check "파일 주소는 uuid 만 받는다" "400" \
 
 # 첨부. 파일은 관리 API 로 올리고 브라우저는 우리 주소로만 받는다.
 upload() { # 로컬경로 → 파일 id
-  curl -s -X POST "$API/api/admin/files" -H "Authorization: Bearer $ADMIN_API_TOKEN" \
+  curl -s -X POST "$API/api/admin/files" -H "$AUTH" \
     -F "file=@$1;type=text/plain" --max-time 30 | pick 'print((d.get("data") or {}).get("id",""))'
 }
 printf '검증 첨부 내용' > "/tmp/dv_att.$$.txt"
@@ -196,7 +215,7 @@ print(a.get("url",""))')
   else
     check "참조 없는 파일은 막힌다" "404" \
       "$(curl -s -o /dev/null -w '%{http_code}' "$API/api/content/assets/$OID" --max-time 30)"
-    curl -s -o /dev/null -X DELETE "$API/api/admin/files/$OID" -H "Authorization: Bearer $ADMIN_API_TOKEN" --max-time 30
+    curl -s -o /dev/null -X DELETE "$API/api/admin/files/$OID" -H "$AUTH" --max-time 30
   fi
   # 초안 글의 첨부도 나가면 안 된다. 같은 파일을 초안에 물리고 본다.
   if [ -n "$(id_of "$D_")" ]; then
@@ -205,7 +224,7 @@ print(a.get("url",""))')
     check "게시글이 가리키면 여전히 나간다" "200" \
       "$(curl -s -o /dev/null -w '%{http_code}' "$API$AURL" --max-time 30)"
   fi
-  curl -s -o /dev/null -X DELETE "$API/api/admin/files/$FID" -H "Authorization: Bearer $ADMIN_API_TOKEN" --max-time 30
+  curl -s -o /dev/null -X DELETE "$API/api/admin/files/$FID" -H "$AUTH" --max-time 30
   check "파일이 지워지면 404 다" "404" \
     "$(curl -s -o /dev/null -w '%{http_code}' "$API$AURL" --max-time 30)"
 fi
@@ -213,7 +232,7 @@ fi
 for slug in "$A" "$B" "$C" "$D_"; do
   PID=$(id_of "$slug")
   [ -n "$PID" ] && curl -s -o /dev/null -X DELETE "$API/api/admin/posts/$PID" \
-    -H "Authorization: Bearer $ADMIN_API_TOKEN" --max-time 30
+    -H "$AUTH" --max-time 30
 done
 check "검증 게시글이 남지 않음" "0" \
   "$(adm "/posts?q=$RUN-" | pick 'print(d.get("total"))')"
@@ -274,9 +293,9 @@ else
 fi
 
 echo "== 뒷정리 =="
-[ -n "$DRAFT" ] && curl -s -o /dev/null -X DELETE "$API/api/admin/posts/$DRAFT" -H "Authorization: Bearer $ADMIN_API_TOKEN" --max-time 30
+[ -n "$DRAFT" ] && curl -s -o /dev/null -X DELETE "$API/api/admin/posts/$DRAFT" -H "$AUTH" --max-time 30
 for i in $(adm "/inquiries?q=$RUN" | pick 'print(" ".join(str(x["id"]) for x in (d.get("data") or [])))'); do
-  curl -s -o /dev/null -X DELETE "$API/api/admin/inquiries/$i" -H "Authorization: Bearer $ADMIN_API_TOKEN" --max-time 30
+  curl -s -o /dev/null -X DELETE "$API/api/admin/inquiries/$i" -H "$AUTH" --max-time 30
 done
 rm -f "$IDS"
 check "검증 초안이 남지 않음" "0" \
@@ -290,8 +309,8 @@ echo "== 기본값이 닫힌 쪽인가 =="
 NOENV=$(mktemp -d)
 BIN="/usr/bin:/bin:$(dirname "$(command -v node)")"
 BOOT_PID=""
-# 뜨는 데 꼭 필요한 것: DB 접속과 업로드 폴더. 비밀 둘(게이트웨이·세션)은 검사 대상이라 따로 준다.
-DBENV="DB_HOST=${DB_HOST:-localhost} DB_PORT=${DB_PORT:-3330} DB_NAME=${DB_NAME:-drvalue_cms} DB_USER=${DB_USER:-drvalue} DB_PASSWORD=${DB_PASSWORD:-} UPLOADS_DIR=${UPLOADS_DIR:-$HERE/../data/uploads}"
+# 뜨는 데 꼭 필요한 것: DB 접속과 업로드 폴더. 세션 비밀은 검사 대상이라 따로 준다.
+DBENV="DB_HOST=${DB_HOST:-localhost} DB_PORT=${DB_PORT:-3330} DB_PASSWORD=${DB_PASSWORD:-}"
 boot() {  # 환경변수들… → 떴으면 0, 죽었으면 1
   # exec 로 바꿔치기해서 $! 가 진짜 node 프로세스가 되게 한다. pkill 로
   # 잡으면 이 검사 바깥에서 돌고 있는 Nest 까지 같이 죽는다.
@@ -308,19 +327,12 @@ boot() {  # 환경변수들… → 떴으면 0, 죽었으면 1
 stop() { [ -n "$BOOT_PID" ] && kill "$BOOT_PID" 2>/dev/null; wait "$BOOT_PID" 2>/dev/null; BOOT_PID=""; }
 
 # 관리자 세션 서명 비밀에 안전한 기본값은 없다. 없으면 떠서는 안 된다.
-boot IAM_GATEWAY_SECRET=gw && r=up || r=down; stop
+boot && r=up || r=down; stop
 check "세션 비밀 없이는 안 뜬다" "down" "$r"
 
-# 게이트웨이 검증은 기본이 켜짐이고, 켜졌는데 공유 비밀이 없으면 안 뜬다.
-boot ADMIN_SESSION_SECRET=x && r=up || r=down; stop
-check "게이트웨이 비밀 없이는 안 뜬다" "down" "$r"
-
-boot ADMIN_SESSION_SECRET=x IAM_GATEWAY_SECRET=gw && r=up || r=down
-check "둘 다 주면 뜬다" "up" "$r"
-check "게이트웨이 검증이 켜져 있다" "0" \
-  "$(grep -c 'enforceGatewayOnly is false' "$NOENV/boot.log" 2>/dev/null || :)"
-# 공개 API 는 @SkipGatewaySignature() 로 표시돼 있어야 통과한다.
-# 표시를 빼면 403 이 된다(돌연변이로 확인함).
+boot ADMIN_SESSION_SECRET=x && r=up || r=down
+check "세션 비밀을 주면 뜬다" "up" "$r"
+# 공개 API 는 무인증으로 열려 있다.
 check "공개 콘텐츠 API 는 막히지 않는다" "not403" \
   "$([ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3907/api/content/posts --max-time 10)" = "403" ] && echo 403 || echo not403)"
 check "공개 문의 API 는 막히지 않는다" "not403" \
@@ -335,13 +347,14 @@ stop
 # TRUST_PROXY 를 문자열 그대로 넘기면 Express 는 홉 수가 아니라 신뢰 대역
 # 목록으로 읽어서 아무것도 신뢰하지 않는다. 설정을 넣고도 증상이 그대로다.
 # 숫자로 바뀌었는지는 IP 별 한도가 정말 갈리는지로 본다.
-boot ADMIN_SESSION_SECRET=x IAM_GATEWAY_SECRET=gw TRUST_PROXY=1 MAIL_RL_PER_MINUTE=2 && r=up || r=down
+boot ADMIN_SESSION_SECRET=x TRUST_PROXY=1 && r=up || r=down
 check "프록시 설정을 주면 뜬다" "up" "$r"
 ask() {  # X-Forwarded-For → 상태코드
   curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3907/api/inquiry \
     -H 'Content-Type: application/json' -H "X-Forwarded-For: $1" -d '{}' --max-time 10
 }
-for _ in 1 2; do ask 203.0.113.10 > /dev/null; done
+# 한도는 분당 5 로 고정이다. 다섯 번 쓰고 여섯 번째가 막혀야 한다.
+for _ in 1 2 3 4 5; do ask 203.0.113.10 > /dev/null; done
 check "같은 IP 는 한도에 걸린다" "429" "$(ask 203.0.113.10)"
 check "다른 IP 는 한도를 나눠 쓰지 않는다" "not429" \
   "$([ "$(ask 203.0.113.20)" = "429" ] && echo 429 || echo not429)"

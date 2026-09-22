@@ -34,14 +34,13 @@ export class AdminAuthDefaultService {
   ) {}
 
   readonly secret = process.env.ADMIN_SESSION_SECRET ?? '';
-  private readonly iamBase = (process.env.ADMIN_IAM_BASE ?? '').replace(
-    /\/+$/,
-    '',
-  );
+  private readonly iamBase = 'https://iam.drvalue.co.kr';
   private readonly callbackUrl = process.env.ADMIN_IAM_CALLBACK_URL ?? '';
   private readonly rule = {
-    group: process.env.ADMIN_IAM_GROUP ?? '',
-    roles: (process.env.ADMIN_IAM_GROUP_ROLES ?? 'OWNER,ADMIN').split(','),
+    // IAM 그룹은 입장 판정에 안 쓴다(개인 "Default" 그룹이 누구에게나 있다).
+    // 첫 관리자는 PLATFORM_ADMIN 또는 nxcms root 만. 그 뒤로는 admin_users.
+    group: '',
+    roles: [],
   };
 
   get configured(): boolean {

@@ -26,14 +26,14 @@ export const ENTITIES = [
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
+      // 호스트·포트는 compose 가 db:5432 로 준다. 로컬은 localhost:3330(compose 가 연 포트).
       host: process.env.DB_HOST ?? 'localhost',
       port: Number(process.env.DB_PORT ?? 3330),
-      database: process.env.DB_NAME ?? 'drvalue_cms',
-      username: process.env.DB_USER ?? 'drvalue',
+      database: 'drvalue_cms',
+      username: 'drvalue',
       password: process.env.DB_PASSWORD ?? '',
       entities: ENTITIES,
       synchronize: false,
-      logging: process.env.DB_LOGGING === 'true',
     }),
   ],
   exports: [TypeOrmModule],

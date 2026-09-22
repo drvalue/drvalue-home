@@ -105,6 +105,6 @@ test('board: marketing 은 채용 빼고', () => {
   assert.equal(canEditBoard('marketing', 'notice'), true);
   assert.equal(canEditBoard('marketing', 'recruit'), false);
 });
-test('board: 역할 없는 옛 세션은 admin 취급', () => {
-  assert.equal(canEditBoard(undefined, 'recruit'), true);
+test('board: 역할 없는 옛 세션은 거부', () => {
+  assert.equal(canEditBoard(undefined, 'notice'), false);
 });

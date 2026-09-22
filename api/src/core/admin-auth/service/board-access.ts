@@ -6,10 +6,10 @@
  *   hr         채용(recruit)만
  */
 export function canEditBoard(role: string | undefined, board: string): boolean {
-  const r = role ?? 'admin';
-  if (r === 'admin') return true;
-  if (r === 'hr') return board === 'recruit';
-  if (r === 'marketing') return board !== 'recruit';
+  if (role === 'admin') return true;
+  if (role === 'hr') return board === 'recruit';
+  if (role === 'marketing') return board !== 'recruit';
+  // 역할 없음(옛 세션)은 거부 — 조용히 admin 으로 올리지 않는다.
   return false;
 }
 

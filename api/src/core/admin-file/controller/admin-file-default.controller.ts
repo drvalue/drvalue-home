@@ -12,14 +12,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Public, SkipGatewaySignature } from '@drvalue-oss/iam-nestjs';
 import type { Response } from 'express';
 import { AdminSessionGuard } from '../../admin-auth/guard/admin-session.guard';
 import { AdminFileDefaultService } from '../service/admin-file-default.service';
 
 /** 관리 화면의 파일. 올리기와 미리보기. 공개 배포는 /api/content/assets 가 관문을 두고 한다. */
-@SkipGatewaySignature()
-@Public()
 @UseGuards(AdminSessionGuard)
 @Controller('admin/files')
 export class AdminFileDefaultController {
