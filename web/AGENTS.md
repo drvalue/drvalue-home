@@ -122,6 +122,13 @@
 - 제품 설명·화면 캡처 설명은 `app/page/business/max/maxContent.ts` 와
   `app/page/service/solutionContent.ts` 에서 온다. 화면 파일에 글을 적지
   않는다 — 자료를 고쳤을 때 화면이 옛말을 하게 된다.
+- **회사·사업·서비스 소개 16장(오시는 길 포함)은 관리 화면 「페이지」의 글로 그린다.** 장마다
+  `content.ts` 가 기본 글(= 위 자료 파일의 옛 글을 페이지 글 모양으로)이고, 화면은
+  `cmsPageContent(key) ?? 기본 글` 이다 — api 가 죽어도 같은 장이 나온다. 형·변환은
+  `app/page/pageContentParts.ts` 하나(api 의 `core/page/schema/parts.ts` 와 같은 모양).
+  M.AX 소개·AI 솔루션 개발 장의 카드·구역 제목은 하위 장의 페이지 글(머리말·요약)을 읽는다.
+  움직이는 시연(…Demo)·실제 응답 기록·흐름도(FlowBand)는 코드다. 이제 자료 파일을 고쳐도
+  사이트는 안 바뀐다(DB 의 글이 이긴다) — 글은 관리 화면에서 고친다. 자료 파일은 씨앗·예비다.
 - 특허·저작권·수행실적·연혁 4장과 홈 소식은 `lib/cms.ts`·`app/home/news.ts` 로
   요청마다 `/api/content/posts` 를 읽는다(`no-store`, `force-dynamic`). 관리 화면에서
   저장하면 다음 요청에 보인다. api 가 안 닿을 때만 코드의 예비 목록

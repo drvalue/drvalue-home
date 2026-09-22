@@ -26,10 +26,29 @@ registerHooks({
 /** 편집할 수 있는 장. key 는 api 의 core/page/schema 와 같아야 한다. */
 const PAGES = [
   { key: 'company-location', module: '../app/page/company/location/content.ts', name: 'LOCATION_DEFAULT' },
+  // E7 — 회사·사업·서비스 소개 장(db/migrations/0008)
+  { key: 'company-intro', module: '../app/page/company/intro/content.ts', name: 'COMPANY_INTRO_DEFAULT' },
+  { key: 'company-vision', module: '../app/page/company/vision/content.ts', name: 'COMPANY_VISION_DEFAULT' },
+  { key: 'business-max', module: '../app/page/business/max/content.ts', name: 'MAX_HUB_DEFAULT' },
+  { key: 'business-pcb-mes', module: '../app/page/business/max/pcb-mes/content.ts', name: 'PCB_MES_DEFAULT' },
+  { key: 'business-cosmetics-mes', module: '../app/page/business/max/cosmetics-mes/content.ts', name: 'COSMETICS_MES_DEFAULT' },
+  { key: 'business-mes-ai', module: '../app/page/business/max/mes-ai/content.ts', name: 'MES_AI_DEFAULT' },
+  { key: 'business-smart-fac', module: '../app/page/business/smart_fac/content.ts', name: 'SMART_FAC_DEFAULT' },
+  { key: 'business-ai-sol', module: '../app/page/business/ai_sol/content.ts', name: 'AI_SOL_DEFAULT' },
+  { key: 'service-autoform', module: '../app/page/service/autoform/content.ts', name: 'AUTOFORM_DEFAULT' },
+  { key: 'service-cuton', module: '../app/page/service/cuton/content.ts', name: 'CUTON_DEFAULT' },
+  { key: 'service-cadon', module: '../app/page/service/cadon/content.ts', name: 'CADON_DEFAULT' },
+  { key: 'service-chat', module: '../app/page/service/chat/content.ts', name: 'CHAT_DEFAULT' },
+  { key: 'service-hangeon', module: '../app/page/service/hangeon/content.ts', name: 'HANGEON_DEFAULT' },
+  { key: 'service-growtok', module: '../app/page/service/growtok/content.ts', name: 'GROWTOK_DEFAULT' },
+  { key: 'service-growxd', module: '../app/page/service/growxd/content.ts', name: 'GROWXD_DEFAULT' },
 ]
 
+// 한 번에 한 마이그레이션 분만 찍는다: `node web/scripts/page-seed.mjs company-intro company-vision …`
+const only = process.argv.slice(2)
+
 const lines = []
-for (const p of PAGES) {
+for (const p of PAGES.filter((x) => only.length === 0 || only.includes(x.key))) {
   const mod = await import(new URL(p.module, import.meta.url).href)
   const json = JSON.stringify(mod[p.name])
   if (json.includes('$seed$')) throw new Error(`${p.key}: 글에 $seed$ 가 있다 — 따옴표 구분자를 바꿔라`)

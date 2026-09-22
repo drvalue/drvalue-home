@@ -1,15 +1,20 @@
-import { GROWTOK, GROWTOK_LEAD } from '../solutionContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
-import SolutionShell from '../../business/max/SolutionShell'
 import { FeatureBlock } from '../../business/max/FeatureBlocks'
+import SolutionShell from '../../business/max/SolutionShell'
+import FeaturePage from '../../business/max/FeaturePage'
 import { seoMeta } from '@/lib/seo'
+import { cmsPageContent } from '@/lib/cms'
+import type { FeaturePageContent } from '../../pageContentParts'
+import { GROWTOK_DEFAULT, GROWTOK_KEY } from './content'
 
 /**
  * /page/service/growtok.php 를 옮긴 것. 2026-09-18 옛 꾸밈(가운데 정렬 사진 머리 + 아이콘 카드 + AOS)
  * 에서 M.AX 계열과 같은 틀로 옮겼다 — 한 메뉴 안에서 두 꾸밈이 섞여 난잡했다.
- * 글은 solutionContent.ts 에 그대로 옮겨 두었다. 새로 지은 문장은 없다.
+ * 글은 관리 화면의 페이지 글이다 — 못 읽으면 content.ts 의 기본 글(= solutionContent.ts 의 옛 글)로 그린다.
  */
 const PATH = '/page/service/growtok'
+
+export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
   title: 'GrowTalk 협업 플랫폼',
@@ -17,24 +22,12 @@ export const generateMetadata = seoMeta({
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const c = (await cmsPageContent<FeaturePageContent>(GROWTOK_KEY)) ?? GROWTOK_DEFAULT
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
-      <SolutionShell
-        path={PATH}
-        look="v4"
-        kicker="GrowTalk"
-        kickerSub="AI솔루션"
-        headLead="현장의 목소리를 데이터로, "
-        headStrong="지능형 협업 플랫폼 GrowTalk"
-        desc="제조·공공기관·쇼핑몰 운영사 등 현장의 실시간 상황을 데이터화하여 신속한 의사결정을 돕는 스마트 협업 플랫폼입니다."
-        lead={GROWTOK_LEAD}
-        ctaTitle="GrowTalk으로 스마트한 현장을 만들어보세요"
-        ctaDesc="현장과 사무실이 같은 화면에서 이야기합니다."
-      >
-        {GROWTOK.map((f, i) => <FeatureBlock key={f.no} f={f} flip={i % 2 === 1} tone={i} />)}
-      </SolutionShell>
+      <FeaturePage path={PATH} c={c} />
     </>
   )
 }

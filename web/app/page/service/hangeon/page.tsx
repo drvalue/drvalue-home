@@ -1,11 +1,14 @@
-import { HANGEON_LEAD } from '../solutionContent'
-import { HK_AFTER, HK_BEFORE, HK_BIZ, HK_HONEST } from '../hankeonContent'
+import { HK_HONEST } from '../hankeonContent'
 import HankeonDemo from '../HankeonDemo'
 import BizShowcase from '../BizShowcase'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
 import { seoMeta } from '@/lib/seo'
+import { cmsPageContent } from '@/lib/cms'
+import CompareBlock from '../CompareBlock'
+import { orUndefined, toHeroShots, toLead, type ServiceDemoContent } from '../../pageContentParts'
+import { HANGEON_DEFAULT, HANGEON_KEY } from './content'
 
 /**
  * 한건(hankeon.com) — 디알밸류가 만들어 상용 운영 중인 건설 AI.
@@ -22,6 +25,8 @@ import { seoMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/hangeon'
 
+export const dynamic = 'force-dynamic'
+
 export const generateMetadata = seoMeta({
   title: '한건 AI Chat',
   description:
@@ -29,28 +34,30 @@ export const generateMetadata = seoMeta({
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const c = (await cmsPageContent<ServiceDemoContent>(HANGEON_KEY)) ?? HANGEON_DEFAULT
+  const { shell, demo, compareStatement, extra } = c
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
       <SolutionShell
         path={PATH}
         look="v4"
-        kicker="한건 AI Chat"
-        kickerSub="AI솔루션"
-        headLead="건설 법령·기준을 "
-        headStrong="근거와 함께 답합니다"
-        desc="LLM 과 RAG 를 함께 써서 KCS·KDS·표준품셈과 법령 조문을 근거로 답하는 건설 AI 입니다. 디알밸류가 만들어 상용으로 운영하고 있습니다."
-        lead={HANGEON_LEAD}
-        heroShot={{ src: '/screens/hankeon-chat.jpg', alt: '한건 Chat 화면 — 지하층 직통계단·특별피난계단 질문에 건축법 시행령 34조·35조, 피난·방화규칙 9조를 인용해 답한다', w: 1600, h: 1000, tag: 'Chat · 근거 기반 질의응답', url: 'hankeon.com / chat' }}
-        ctaTitle="건설 법령을 근거와 함께, 한건을 먼저 써 보세요"
-        ctaDesc="hankeon.com 에서 바로 쓸 수 있습니다. 우리 회사 자료로 같은 구조를 만들려면 도입 상담으로."
+        kicker={shell.kicker}
+        kickerSub={shell.kickerSub}
+        headLead={shell.headLead}
+        headStrong={shell.headStrong}
+        desc={shell.desc}
+        lead={toLead(c.lead)}
+        heroShot={toHeroShots(c.heroShots)}
+        ctaTitle={orUndefined(shell.ctaTitle)}
+        ctaDesc={orUndefined(shell.ctaDesc)}
       >
         {/* 대화 시연 — 실제 질문·단계·답을 순서대로 */}
         <section className="mx_sec4 hk_sec">
-          <p className="mx_kicker hk_center">Chat</p>
-          <Statement desc="질문 한 줄을 넣으면 질문을 분류하고, 자료를 찾고, 어느 법령이 걸리는지 판정한 뒤 조문을 인용해 답합니다. 아래는 실제 응답을 순서대로 다시 보여 주는 것입니다.">
-            “지하 2층 직통계단, 특별피난계단으로 해야 합니까?” 조문을 짚어 답합니다
+          {demo.kicker && <p className="mx_kicker hk_center">{demo.kicker}</p>}
+          <Statement desc={orUndefined(demo.desc)}>
+            {demo.title}
           </Statement>
           <div className="hk_plate">
             <HankeonDemo />
@@ -59,35 +66,14 @@ export default function Page() {
 
         {/* 전/후 */}
         <section className="mx_sec4 hk_sec">
-          <Statement desc="법령·시행령·규칙 세 곳을 오가며 조문을 대조하던 일을, 질문 한 줄로 끝냅니다.">
-            찾는 시간이 아니라 판단에 쓰는 시간
+          {compareStatement.kicker && <p className="mx_kicker hk_center">{compareStatement.kicker}</p>}
+          <Statement desc={orUndefined(compareStatement.desc)}>
+            {compareStatement.title}
           </Statement>
-          <div className="hk_pair" data-rv>
-            <figure className="hk_card hk_dark">
-              <div className="hk_bubbles">
-                {HK_BEFORE.bubbles.map((b, i) => (
-                  <p key={i} className={`hk_bb ${b.who}`} style={{ ['--i' as string]: i }}>{b.t}</p>
-                ))}
-              </div>
-            </figure>
-            <figure className="hk_card hk_light">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/hankeon-chat.jpg" alt="한건 Chat 답변 화면 — 조문 인용과 판단 요약" width={1600} height={1000} loading="lazy" />
-            </figure>
-          </div>
-          <div className="hk_lists" data-rv>
-            <div>
-              <h3><i className="hk_x" aria-hidden="true">✕</i>{HK_BEFORE.title}</h3>
-              <ul>{HK_BEFORE.points.map((p) => <li key={p} className="hk_no">{p}</li>)}</ul>
-            </div>
-            <div>
-              <h3><i className="hk_ok" aria-hidden="true">✓</i>{HK_AFTER.title}</h3>
-              <ul>{HK_AFTER.points.map((p) => <li key={p} className="hk_yes">{p}</li>)}</ul>
-            </div>
-          </div>
+          <CompareBlock c={c.compare} />
         </section>
 
-        {/* 모르면 모른다 — 실제 응답 */}
+        {/* 모르면 모른다 — 실제 응답(기록이라 코드에 둔다) */}
         <section className="mx_sec4 hk_sec">
           <div className="hk_honest" data-rv>
             <div>
@@ -105,9 +91,9 @@ export default function Page() {
 
         {/* Biz */}
         <section className="mx_sec4 hk_sec">
-          <p className="mx_kicker hk_center">Biz</p>
-          <Statement desc={`내 정보·면허를 한 번 적어 두면 나라장터·지자체 공고를 면허와 지역 기준으로 가려 줍니다. 아래는 「${HK_BIZ.profile}」 프로필로 2026-09-22 실제 조회한 결과입니다.`}>
-            공고 100건 중 우리가 낼 수 있는 건 2건 — 이유까지 붙여서
+          {extra.kicker && <p className="mx_kicker hk_center">{extra.kicker}</p>}
+          <Statement desc={orUndefined(extra.desc)}>
+            {extra.title}
           </Statement>
           {/* 판정 셋 — 채널톡 온사이트 장의 짜임(09-22 사용자 지목): 왼쪽 사진 판 위에 제품 카드가 떠 있고,
               오른쪽에 제목·설명·「판정 예시」 목록. 목록을 누르면 왼쪽 카드가 바뀐다. 카드 값은 실제 화면 그대로. */}
