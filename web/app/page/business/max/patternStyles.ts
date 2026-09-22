@@ -105,8 +105,10 @@ export const PATTERN_CSS = `
 `
 export const PATTERN_CSS2 = `
 /* ── HeroCycle: 머리말 화면이 몇 초마다 넘어간다 ── */
-#dvmax.mx_v4 .mx_cycle { position: relative; overflow: hidden; background: #fff; transition: aspect-ratio .5s; }
-#dvmax.mx_v4 .mx_cycle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transform: scale(1.04); transition: opacity .9s ease, transform .9s ease; }
+/* 비율은 HeroCycle 이 한 번만 정한다(가장 납작한 장 기준). 장마다 바꾸면 판이 출렁인다 — transition 도 없앴다. */
+#dvmax.mx_v4 .mx_cycle { position: relative; overflow: hidden; background: #fff; }
+/* contain — 잘라 채우면 표 화면의 좌측 라벨·앞 열이 날아간다. 툴바 밑에 붙이고 남는 아래는 흰 여백. */
+#dvmax.mx_v4 .mx_cycle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: top center; background: #fff; opacity: 0; transform: scale(1.04); transition: opacity .9s ease, transform .9s ease; }
 #dvmax.mx_v4 .mx_cycle img.on { opacity: 1; transform: scale(1); animation: mxKen 6s ease-out both; }
 @keyframes mxKen { from { transform: scale(1); } to { transform: scale(1.025); } }
 #dvmax.mx_v4 .mx_cycle_tag { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }
@@ -208,6 +210,8 @@ export const PATTERN_CSS4 = `
 /* 화면 여럿일 때 ShotViewer 의 「N장 크게 보기」 — 프레임 밑은 판에 잘리므로 프레임 위 오른쪽에 띄운다. */
 #dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: absolute; right: 24px; top: -22px; z-index: 5; margin: 0; padding: 8px 14px; border-radius: 999px; background: #fff; box-shadow: 0 6px 18px rgba(21,34,56,.12); }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_grid { display: block; }
+/* will-change: transform 은 fixed 자식(크게 보기 창)의 기준 상자가 된다 — 여기선 끈다. */
+#dvmax.mx_v4 .mx_fs_fig .mx_browser { will-change: auto; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot img { border: 0; border-radius: 0; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_frame { border-radius: 0; box-shadow: none; }
 #dvmax.mx_v4 .mx_fs .mx_cols { margin-top: 24px; }
