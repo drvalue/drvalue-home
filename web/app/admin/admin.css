@@ -1,0 +1,469 @@
+/* 관리 화면. 공개 화면의 css(style.css·header.css)가 루트 레이아웃에서 같이 오므로
+   전부 .dva 아래에 가두고 필요한 것은 되돌린다. */
+.dva,
+.dva * {
+  box-sizing: border-box;
+}
+.dva {
+  --dva-side: #172033;
+  --dva-side-ink: #c7d0dd;
+  --dva-side-on: #ffffff;
+  --dva-accent: #6644ff;
+  --dva-bg: #f5f6f8;
+  --dva-panel: #ffffff;
+  --dva-ink: #1b2430;
+  --dva-muted: #6b7684;
+  --dva-line: #e2e6ec;
+  --dva-ok: #1f7a4d;
+  --dva-ok-bg: #e6f4ec;
+  --dva-warn: #9a6300;
+  --dva-warn-bg: #fff4d6;
+  --dva-crit: #b3261e;
+  --dva-crit-bg: #fde8e6;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  background: var(--dva-bg);
+  color: var(--dva-ink);
+  font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: left;
+}
+.dva a {
+  color: inherit;
+  text-decoration: none;
+}
+.dva h1,
+.dva h2,
+.dva h3 {
+  margin: 0;
+  font-weight: 700;
+}
+.dva button,
+.dva input,
+.dva select,
+.dva textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* 사이드바 */
+.dva_side {
+  background: var(--dva-side);
+  color: var(--dva-side-ink);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.dva_brand {
+  color: var(--dva-side-on);
+  font-weight: 800;
+  font-size: 15px;
+  padding: 6px 10px 14px;
+  letter-spacing: -0.2px;
+}
+.dva_group {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7d8aa0;
+  padding: 12px 10px 4px;
+}
+.dva_nav {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--dva-side-ink);
+}
+.dva_nav:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dva-side-on);
+}
+.dva_nav.is-on {
+  background: var(--dva-accent);
+  color: #fff;
+}
+.dva_me {
+  margin-top: auto;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  word-break: break-all;
+}
+.dva_me button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* 본문 */
+.dva_main {
+  padding: 24px 28px 60px;
+  min-width: 0;
+}
+.dva_head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.dva_head h1 {
+  font-size: 20px;
+}
+.dva_tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.dva_tools input[type='search'] {
+  min-width: 200px;
+}
+
+/* 조작 */
+.dva_btn {
+  appearance: none;
+  border: 1px solid var(--dva-line);
+  background: var(--dva-panel);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--dva-ink);
+  line-height: 1.3;
+}
+.dva_btn:hover {
+  background: #eef0f4;
+}
+.dva_btn.is-primary {
+  background: var(--dva-accent);
+  border-color: var(--dva-accent);
+  color: #fff;
+}
+.dva_btn.is-primary:hover {
+  filter: brightness(1.08);
+}
+.dva_btn.is-danger {
+  color: var(--dva-crit);
+}
+.dva_btn.is-small {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+.dva_btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.dva_btn:focus-visible,
+.dva input:focus-visible,
+.dva select:focus-visible,
+.dva textarea:focus-visible {
+  outline: 2px solid var(--dva-accent);
+  outline-offset: 1px;
+}
+.dva input[type='text'],
+.dva input[type='search'],
+.dva input[type='date'],
+.dva input[type='month'],
+.dva select,
+.dva textarea {
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: #fff;
+  width: 100%;
+  max-width: 100%;
+}
+.dva textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.dva textarea.is-body {
+  min-height: 260px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+/* 표 */
+.dva_tw {
+  overflow-x: auto;
+  background: var(--dva-panel);
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+}
+.dva_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.dva_table th,
+.dva_table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--dva-line);
+  text-align: left;
+  vertical-align: middle;
+}
+.dva_table th {
+  font-size: 12px;
+  color: var(--dva-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dva_table tr:last-child td {
+  border-bottom: 0;
+}
+.dva_table td.is-title a {
+  font-weight: 600;
+}
+.dva_table td.is-title a:hover {
+  color: var(--dva-accent);
+}
+.dva_table td.is-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dva_table td.is-act {
+  white-space: nowrap;
+  text-align: right;
+}
+.dva_thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--dva-line);
+  display: block;
+}
+.dva_empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--dva-muted);
+}
+
+/* 배지 */
+.dva_pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dva_pill.is-published {
+  background: var(--dva-ok-bg);
+  color: var(--dva-ok);
+}
+.dva_pill.is-draft {
+  background: var(--dva-warn-bg);
+  color: var(--dva-warn);
+}
+.dva_pill.is-pinned {
+  background: #eef3f8;
+  color: #3d5a80;
+  margin-left: 4px;
+}
+
+/* 쪽 */
+.dva_pager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+  color: var(--dva-muted);
+  font-size: 13px;
+}
+
+/* 폼 */
+.dva_form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+.dva_card {
+  background: var(--dva-panel);
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+.dva_card h2 {
+  font-size: 14px;
+  color: var(--dva-muted);
+  letter-spacing: 0.02em;
+}
+.dva_field {
+  display: grid;
+  gap: 5px;
+}
+.dva_field > label,
+.dva_field > .dva_label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dva-muted);
+}
+.dva_field small {
+  color: var(--dva-muted);
+  font-size: 12px;
+}
+.dva_row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.dva_check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.dva_tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--dva-line);
+}
+.dva_tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--dva-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.dva_tab.is-on {
+  color: var(--dva-accent);
+  border-bottom-color: var(--dva-accent);
+}
+.dva_error {
+  background: var(--dva-crit-bg);
+  color: var(--dva-crit);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.dva_notice {
+  background: #eef3f8;
+  color: #3d5a80;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.dva_preview {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.dva_files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.dva_files li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.dva_files li a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dva_actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dva_confirm {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px;
+}
+
+/* 로그인 */
+.dva_login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--dva-side);
+  color: #fff;
+  padding: 16px;
+  font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  text-align: left;
+}
+.dva_login_box {
+  width: min(100%, 380px);
+  display: grid;
+  gap: 16px;
+}
+.dva_login h1 {
+  font-size: 26px;
+  margin: 0;
+  font-weight: 800;
+}
+.dva_login p {
+  margin: 0;
+  color: #c7d0dd;
+}
+.dva_login .dva_btn.is-primary {
+  padding: 12px 16px;
+  font-size: 15px;
+  text-align: center;
+  display: block;
+}
+
+@media (max-width: 860px) {
+  .dva {
+    grid-template-columns: 1fr;
+  }
+  .dva_side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .dva_brand {
+    padding: 4px 10px;
+    width: 100%;
+  }
+  .dva_group {
+    display: none;
+  }
+  .dva_me {
+    margin-top: 0;
+    border-top: 0;
+    width: 100%;
+  }
+  .dva_main {
+    padding: 16px;
+  }
+  .dva_form,
+  .dva_row2 {
+    grid-template-columns: 1fr;
+  }
+}

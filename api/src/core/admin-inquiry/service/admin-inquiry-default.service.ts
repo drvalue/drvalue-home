@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ILike } from 'typeorm';
 import { INQUIRY_STATUSES } from '../../../common/entity/inquiry.entity';
 import {
   CommonError,
@@ -27,11 +28,14 @@ export class AdminInquiryDefaultService {
     private readonly inquiryDefaultRepository: InquiryDefaultRepository,
   ) {}
 
-  async list(options: { status?: string; page?: number }) {
+  async list(options: { status?: string; q?: string; page?: number }) {
     const page = Math.max(1, options.page ?? 1);
+    const where: Record<string, unknown> = {};
+    if (options.status) where.status = options.status;
+    if (options.q) where.name = ILike(`%${options.q}%`);
     const [rows, total] =
       await this.inquiryDefaultRepository.repository.findAndCount({
-        where: options.status ? { status: options.status } : {},
+        where,
         order: { id: 'DESC' },
         skip: (page - 1) * PAGE,
         take: PAGE,
@@ -48,5 +52,13 @@ export class AdminInquiryDefaultService {
     if (!row) throw new CommonError(AdminInquiryError.NOT_FOUND);
     row.status = status;
     return this.inquiryDefaultRepository.repository.save(row);
+  }
+
+  async remove(id: number): Promise<void> {
+    const row = await this.inquiryDefaultRepository.repository.findOne({
+      where: { id },
+    });
+    if (!row) throw new CommonError(AdminInquiryError.NOT_FOUND);
+    await this.inquiryDefaultRepository.repository.remove(row);
   }
 }

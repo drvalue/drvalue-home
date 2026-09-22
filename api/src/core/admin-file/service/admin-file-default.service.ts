@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 import { FileEntity } from '../../../common/entity/file.entity';
 import { CommonError } from '../../../common/error/common-error';
@@ -14,6 +14,7 @@ const ALLOWED: Record<string, string> = {
   'image/webp': '.webp',
   'image/gif': '.gif',
   'application/pdf': '.pdf',
+  'text/plain': '.txt',
 };
 
 /** 업로드 파일이 놓이는 곳. 컨테이너는 /data/uploads, 로컬은 저장소의 data/uploads. */
@@ -63,6 +64,13 @@ export class AdminFileDefaultService {
     const row = await this.fileDefaultRepository.findById(id);
     if (!row) throw new CommonError(AdminFileError.NOT_FOUND);
     return row;
+  }
+
+  /** 행과 디스크 파일을 같이 지운다. 글에 물려 있던 연결은 DB 가 SET NULL 로 푼다. */
+  async remove(id: string): Promise<void> {
+    const row = await this.get(id);
+    rmSync(this.diskPath(row), { force: true });
+    await this.fileDefaultRepository.repository.remove(row);
   }
 
   /** 디스크 경로. filename_disk 에 경로 문자가 들어 있으면 거른다. */

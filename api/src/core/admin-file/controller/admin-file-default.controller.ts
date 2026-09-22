@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Res,
@@ -54,5 +56,12 @@ export class AdminFileDefaultController {
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Cache-Control', 'private, max-age=300');
     return res.sendFile(this.adminFileDefaultService.diskPath(row));
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  async remove(@Param('id') id: string) {
+    await this.adminFileDefaultService.remove(id);
+    return { ok: true };
   }
 }

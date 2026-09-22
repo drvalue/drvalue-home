@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -23,9 +25,14 @@ export class AdminInquiryDefaultController {
   ) {}
 
   @Get()
-  list(@Query('status') status?: string, @Query('page') page?: string) {
+  list(
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+  ) {
     return this.adminInquiryDefaultService.list({
       status,
+      q,
       page: Number(page) || 1,
     });
   }
@@ -41,5 +48,12 @@ export class AdminInquiryDefaultController {
         String(status ?? ''),
       ),
     };
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.adminInquiryDefaultService.remove(id);
+    return { ok: true };
   }
 }

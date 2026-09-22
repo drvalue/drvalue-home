@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { DirectusModule } from '../../common/directus/directus.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { InquiryEntity } from '../../common/entity/inquiry.entity';
 import { NcpMailModule } from '../../common/ncp-mail/ncp-mail.module';
 import { InquiryDefaultController } from './controller/inquiry-default.controller';
 import { InquiryDefaultService } from './service/inquiry-default.service';
@@ -11,7 +12,7 @@ const perHour = Number(process.env.MAIL_RL_PER_HOUR ?? 30);
 
 @Module({
   imports: [
-    DirectusModule,
+    TypeOrmModule.forFeature([InquiryEntity]),
     NcpMailModule,
     ThrottlerModule.forRoot([
       { name: 'minute', ttl: 60_000, limit: perMinute },

@@ -79,3 +79,13 @@ test('decide: PLATFORM_ADMIN 은 M.AX 가 거부해도 통과', () => {
     by: 'platform-admin',
   });
 });
+test('decide: M.AX 설정은 있는데 안 닿으면 거부 (열리지 않는다)', () => {
+  assert.deepEqual(
+    decide(
+      { role: 'USER', groups: [{ id: G, role: 'OWNER' }] },
+      rule,
+      'unavailable',
+    ),
+    { ok: false, by: 'max-unavailable' },
+  );
+});

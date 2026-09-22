@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
       // 글 작성 안내와 내부 API. 사람이 찾아올 자리가 아니다.
-      disallow: ['/api/', '/page/support/notify_form'],
+      disallow: ['/api/', '/admin', '/page/support/notify_form'],
     },
     sitemap: `${SITE_ORIGIN}/sitemap.xml`,
     host: SITE_ORIGIN,

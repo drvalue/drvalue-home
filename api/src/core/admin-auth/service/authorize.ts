@@ -34,10 +34,15 @@ export function authorize(claims: IamClaims, rule: AuthorizeRule): boolean {
 export function decide(
   claims: IamClaims,
   rule: AuthorizeRule,
-  maxRoot: boolean | null,
-): { ok: boolean; by: 'platform-admin' | 'max-root' | 'iam-group' } {
+  maxRoot: boolean | null | 'unavailable',
+): {
+  ok: boolean;
+  by: 'platform-admin' | 'max-root' | 'max-unavailable' | 'iam-group';
+} {
   if (String(claims.role ?? '').toUpperCase() === 'PLATFORM_ADMIN')
     return { ok: true, by: 'platform-admin' };
+  // 설정은 있는데 DB 가 안 닿는다 → 거부. 그룹 판정으로 떨어뜨리면 장애가 곧 권한 완화다.
+  if (maxRoot === 'unavailable') return { ok: false, by: 'max-unavailable' };
   if (maxRoot !== null) return { ok: maxRoot, by: 'max-root' };
   return { ok: authorize(claims, rule), by: 'iam-group' };
 }

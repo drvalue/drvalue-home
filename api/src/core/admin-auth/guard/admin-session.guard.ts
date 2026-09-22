@@ -80,6 +80,8 @@ export class AdminSessionGuard implements CanActivate {
       this.log.warn('M.AX root 표에서 빠진 사용자: 세션 거부');
       throw new CommonError(AdminAuthError.NOT_ALLOWED);
     }
+    // 'unavailable' 은 로그인 때와 달리 세션을 끊지 않는다 — 이미 통과한 사람을 DB 장애로
+    // 쫓아내지는 않되, 캐시를 안 늘려 다음 요청에 다시 본다.
     if (root === true) this.checked.set(key, Date.now());
   }
 
