@@ -52,6 +52,24 @@ echo "== 콘텐츠 읽기 =="
 check "게시판 목록" "yes" \
   "$(curl -s "$API/api/content/posts?board=notice" --max-time 30 | pick 'print("yes" if isinstance(d.get("data"),list) else "no")')"
 
+echo "== 회사 자료 게시판 (특허·저작권·수행실적·연혁) =="
+# import_site_content.py 가 넣은 것이 api 로 나오는지. CMS 에서 지우면 여기서 잡힌다.
+check "특허 6건" "6" "$(curl -s "$API/api/content/posts?board=patent&limit=100" --max-time 30 | pick 'print(len(d.get("data") or []))')"
+check "특허에 번호·상태가 붙어 온다" "yes" \
+  "$(curl -s "$API/api/content/posts?board=patent&limit=100" --max-time 30 | pick 'r=(d.get("data") or [{}])[0]; print("yes" if r.get("cert_no") and r.get("cert_state") else "no")')"
+check "특허 증서 그림이 우리 주소로 열린다" "200" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "$API$(curl -s "$API/api/content/posts?board=patent&limit=1" --max-time 30 | pick 'print((d.get("data") or [{}])[0].get("thumbnail") or "/none")')" --max-time 30)"
+check "저작권에 종류·창작일" "yes" \
+  "$(curl -s "$API/api/content/posts?board=copyright&limit=100" --max-time 30 | pick 'r=(d.get("data") or [{}])[0]; print("yes" if r.get("cert_kind") and r.get("cert_made_date") else "no")')"
+check "연혁은 10건 넘게 한 번에 온다" "yes" \
+  "$(curl -s "$API/api/content/posts?board=history&limit=100" --max-time 30 | pick 'print("yes" if len(d.get("data") or [])>10 else "no")')"
+check "연혁은 최신 연도부터" "yes" \
+  "$(curl -s "$API/api/content/posts?board=history&limit=100" --max-time 30 | pick 'y=[r.get("history_year") or "" for r in d.get("data") or []]; print("yes" if y==sorted(y,reverse=True) else "no")')"
+check "수행실적에 기간·구분" "yes" \
+  "$(curl -s "$API/api/content/posts?board=case&limit=100" --max-time 30 | pick 'r=(d.get("data") or [{}])[0]; print("yes" if r.get("period_start") and r.get("case_category_label") else "no")')"
+check "limit 은 100 을 넘지 않는다" "100" \
+  "$(curl -s "$API/api/content/posts?board=notice&limit=999" --max-time 30 | pick 'print(d.get("pageSize"))')"
+
 echo "== 초안이 새지 않는다 =="
 # Directus Core 는 권한에 조건을 못 걸어서 토큰이 초안까지 다 본다.
 # 거르는 일은 Nest 가 한다 — 실제로 초안을 하나 만들어 확인한다.

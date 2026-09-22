@@ -2,6 +2,7 @@ import { HISTORY, HISTORY_LEAD, COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { pageMeta } from '@/lib/seo'
+import { cmsBoard, type CmsPost } from '@/lib/cms'
 
 /**
  * /page/company/history.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
@@ -18,7 +19,26 @@ export const metadata = pageMeta({
   path: PATH,
 })
 
-export default function Page() {
+/**
+ * CMS(게시판 「연혁」)가 우선. 연도 내림차순, 한 해 안은 관리 화면의 순서(sort).
+ * companyContent.ts 의 HISTORY 는 CMS 가 안 될 때의 예비.
+ */
+type Year = { year: string; items: readonly { t: string; note: string }[] }
+
+function fromCms(rows: CmsPost[]): Year[] {
+  const by = new Map<string, { t: string; note: string }[]>()
+  for (const r of rows) {
+    const y = r.history_year ?? (r.published_date ?? '').slice(0, 4)
+    if (!y || !r.title) continue
+    if (!by.has(y)) by.set(y, [])
+    by.get(y)!.push({ t: r.title, note: r.summary ?? '' })
+  }
+  return [...by.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([year, items]) => ({ year, items }))
+}
+
+export default async function Page() {
+  const cms = await cmsBoard('history')
+  const years: readonly Year[] = cms ? fromCms(cms) : HISTORY
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -35,7 +55,7 @@ export default function Page() {
         ctaDesc="프로젝트 문의는 문의하기에서 남길 수 있습니다."
       >
         <div className="timeline_container">
-          {HISTORY.map((h) => (
+          {years.map((h) => (
             <div className="history_item" key={h.year} data-rv>
               <h3 className="history_year">{h.year}</h3>
               <ul className="history_list">

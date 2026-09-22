@@ -2,6 +2,7 @@ import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import CertGrid from '../CertGrid'
 import { pageMeta } from '@/lib/seo'
+import { cmsBoard, dots, type CmsPost } from '@/lib/cms'
 
 /** 증서 그림의 원본 치수. 칸(.cert_img)이 이미 자리를 잡아 주지만, 치수를
  *  안 적으면 그림이 늦게 올 때 브라우저가 높이를 0 으로 잡아 한 번 흔들린다.
@@ -127,7 +128,30 @@ const CERT_CSS = `
 }
 `
 
-export default function Page() {
+/** CMS(게시판 「저작권」)가 우선. COPYRIGHT_LIST 는 CMS 가 안 될 때의 예비. */
+type CopyrightCert = { img: string; title: string; kind: string; made: string; reg: string; w: number; h: number }
+
+function fromCms(rows: CmsPost[]): CopyrightCert[] {
+  return rows
+    .filter((r) => r.thumbnail && r.title)
+    .map((r) => ({
+      img: r.thumbnail as string,
+      title: r.title,
+      kind: r.cert_kind ?? '',
+      made: dots(r.cert_made_date),
+      reg: dots(r.cert_date),
+      w: r.thumbnail_size?.w ?? CERT_W,
+      h: r.thumbnail_size?.h ?? CERT_H,
+    }))
+}
+
+function fallback(): CopyrightCert[] {
+  return COPYRIGHT_LIST.map((c) => ({ ...c, w: CERT_W, h: CERT_H }))
+}
+
+export default async function Page() {
+  const rows = await cmsBoard('copyright')
+  const list = rows ? fromCms(rows) : fallback()
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -138,25 +162,25 @@ export default function Page() {
         kickerSub="기술력"
         headLead="디알밸류의 프로그램 저작권, "
         headStrong="디알밸류의 기술력입니다."
-        desc="클라우드 네이티브 SaaS 생산관리시스템, AI 하이브리드 LLM 기반 클라우드 MES 등 디알밸류가 등록한 프로그램 저작권 5건입니다."
+        desc={`클라우드 네이티브 SaaS 생산관리시스템, AI 하이브리드 LLM 기반 클라우드 MES 등 디알밸류가 등록한 프로그램 저작권 ${list.length}건입니다.`}
         ctaTitle="문의사항이 있으신가요?"
         ctaDesc="프로젝트 문의는 문의하기에서 남길 수 있습니다."
       >
         <h2 className="mx_sec_title">프로그램 저작권</h2>
         <CertGrid
-          certs={COPYRIGHT_LIST.map((cr) => ({
+          certs={list.map((cr) => ({
             src: cr.img,
             alt: `${cr.title} 저작권 등록증`,
-            w: CERT_W,
-            h: CERT_H,
+            w: cr.w,
+            h: cr.h,
             open: `${cr.title} 저작권 등록증 크게 보기`,
             body: (
               <>
-                <span className="cert_kind">{cr.kind}</span>
+                {cr.kind && <span className="cert_kind">{cr.kind}</span>}
                 <h3 className="cert_title">{cr.title}</h3>
                 <dl className="cert_meta">
                   <dt>등록일</dt><dd>{cr.reg}</dd>
-                  <dt>창작일</dt><dd>{cr.made}</dd>
+                  {cr.made && (<><dt>창작일</dt><dd>{cr.made}</dd></>)}
                 </dl>
               </>
             ),

@@ -24,6 +24,7 @@ export class ContentDefaultController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('lang') lang?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.contentDefaultService.findPosts({
       board,
@@ -32,6 +33,7 @@ export class ContentDefaultController {
       startDate,
       endDate,
       lang,
+      limit,
     });
   }
 

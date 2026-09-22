@@ -29,8 +29,12 @@ BOARDS = [
     ("press", "보도자료"),
     ("faq", "FAQ"),
     ("library", "자료실"),
-    ("case", "수행사례"),
+    ("case", "수행실적"),
     ("support_program", "지원사업"),
+    # 회사 소개 자료. 컬렉션 한도(25) 때문에 게시판으로 둔다 — 화면은 특허·저작권·연혁 장.
+    ("patent", "특허"),
+    ("copyright", "저작권"),
+    ("history", "연혁"),
 ]
 
 STATUSES = [("published", "게시"), ("draft", "초안"), ("archived", "보관")]
@@ -358,6 +362,22 @@ def build(s: Schema) -> None:
             meta={"conditions": [{"rule": {"board": {"_neq": "support_program"}}, "hidden": True}]})
     s.field("posts", "deadline", "date", interface="datetime", label="접수 마감",
             meta={"conditions": [{"rule": {"board": {"_neq": "support_program"}}, "hidden": True}]})
+    # 특허·저작권 — 증서 그림은 thumbnail, 제목은 translations.title.
+    # 번호·날짜는 그림 밖 글자로 나간다(검색엔진이 그림 안 글자를 못 읽는다).
+    s.field("posts", "cert_state", "string", interface="select-dropdown", label="등록/출원",
+            options={"choices": choices([("registered", "등록"), ("applied", "출원")])},
+            meta={"width": "half", "conditions": [{"rule": {"board": {"_neq": "patent"}}, "hidden": True}]})
+    s.field("posts", "cert_no", "string", label="번호 (등록·출원·저작권)",
+            meta={"width": "half", "conditions": [{"rule": {"board": {"_nin": ["patent", "copyright"]}}, "hidden": True}]})
+    s.field("posts", "cert_date", "date", interface="datetime", label="등록일 (출원이면 출원일)",
+            meta={"width": "half", "conditions": [{"rule": {"board": {"_nin": ["patent", "copyright"]}}, "hidden": True}]})
+    s.field("posts", "cert_made_date", "date", interface="datetime", label="창작일",
+            meta={"width": "half", "conditions": [{"rule": {"board": {"_neq": "copyright"}}, "hidden": True}]})
+    s.field("posts", "cert_kind", "string", label="저작물 종류 (등록증 그대로)",
+            meta={"conditions": [{"rule": {"board": {"_neq": "copyright"}}, "hidden": True}]})
+    # 연혁 — 연도 + 제목(translations.title) + 부연(translations.summary). 한 해 안 순서는 sort.
+    s.field("posts", "history_year", "string", label="연도 (예: 2025)",
+            meta={"width": "half", "conditions": [{"rule": {"board": {"_neq": "history"}}, "hidden": True}]})
     # 옛 게시판에는 첨부가 있었다(자료실·공지). 여기 없으면 옮길 데가 없다.
     s.files_field("posts", "attachments", "첨부 파일")
     s.i18n_ready("posts")

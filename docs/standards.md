@@ -33,7 +33,7 @@
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
 | `cms/scripts/smoke.sh` | Directus 권한·예약 게시·다국어·공개 엔드포인트·IAM 다리 | 109항. 2026-09-22 실측 89 — 떨어진 20건은 전부 `public_api.py` 플로우(Nest 가 대신하므로 미설치). 기준을 어디 둘지는 미결 |
-| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 닫힌 기본값 | 45/45 (pages·menu·notify 검사 10건을 기능과 함께 뺐다. 55→45 는 회귀가 아니다) |
+| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 닫힌 기본값 | 53/53 (55 → 45: pages·menu·notify 검사 10건을 기능과 함께 뺌 → 53: 회사 자료 게시판 8건 추가) |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 |
 | `web/scripts/check-pages.py` | 새로 채운 24장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 98/54 |
 | `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 104/104 |

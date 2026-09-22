@@ -23,6 +23,9 @@ RELATIONS = [
     ("inquiry_notes", "inquiry", "inquiries", "notes", "CASCADE"),
     # 담당자는 Directus 사용자다. 계정이 사라져도 문의는 남긴다.
     ("inquiries", "assignee", "directus_users", None, "SET NULL"),
+    # 대표 이미지. special=["file"] 만으로는 관계가 안 생겨 fields=thumbnail.width
+    # 같은 중첩 조회가 빈 값으로 온다(실측). 파일을 지워도 글은 남긴다.
+    ("posts", "thumbnail", "directus_files", None, "SET NULL"),
 ]
 
 

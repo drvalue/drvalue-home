@@ -55,12 +55,14 @@ src/
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
   프로세스당 한도가 된다 — 그때 공유 저장소로 바꾼다.
 - Directus 이름을 그대로 내보낸다(`is_pinned` · `published_date`). 변환 코드 없음.
+  예외 하나: `thumbnail` 은 우리 주소 문자열로 바꾸고 치수는 `thumbnail_size` 에.
+- 목록 순서는 서비스의 `sortOf(board)` 가 정한다. 증서·연혁은 날짜가 아니라 `sort`.
 
 ## 검사
 
 ```bash
 npm run typecheck && npm run build
-bash scripts/verify.sh          # 45/45 (api 와 cms 가 떠 있어야 한다)
+bash scripts/verify.sh          # 53/53 (api 와 cms 가 떠 있어야 한다)
 ```
 
 문의 구간은 1분 안에 두 번 돌리면 속도 제한에 걸려 판정 불가로 빠진다.

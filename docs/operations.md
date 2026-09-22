@@ -57,7 +57,7 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 
 ```bash
 cd cms  && bash scripts/smoke.sh                 # 109항 중 89 (플로우 20건은 미설치)
-cd api  && bash scripts/verify.sh                # 45/45
+cd api  && bash scripts/verify.sh                # 53/53
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-home.py         # 21/21  (:3400 필요)
         && python3 scripts/check-header.py       # 103/103

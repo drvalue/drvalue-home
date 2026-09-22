@@ -8,6 +8,17 @@ import { ContentError } from '../error/content.error';
 
 /** 게시판 한 쪽의 글 수. 화면의 페이지 번호가 이 값을 전제한다. */
 export const PAGE_SIZE = 10;
+/** `limit` 으로 늘릴 수 있는 상한. 연혁·증서처럼 한 장에 다 보이는 목록용. */
+export const MAX_LIMIT = 100;
+
+/** 목록·상세가 같이 내보내는 칸. 게시판마다 쓰는 칸이 다르지만 없는 값은 null 로 그냥 나간다. */
+const LIST_FIELDS = [
+  'id,board,slug,published_date,publish_at,unpublish_at,is_pinned,sort',
+  'thumbnail.id,thumbnail.width,thumbnail.height',
+  'cert_state,cert_no,cert_date,cert_made_date,cert_kind,history_year',
+  'case_category,period_start,period_end',
+  'translations.*',
+].join(',');
 
 const PUBLISHED = { status: { _eq: 'published' } };
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -38,6 +49,7 @@ export class ContentDefaultService {
     startDate?: string;
     endDate?: string;
     lang?: string;
+    limit?: string;
   }) {
     this.directus.assertConfigured();
     const language = this.directus.language(options.lang);
@@ -59,10 +71,13 @@ export class ContentDefaultService {
     if (options.endDate && DAY_RE.test(options.endDate))
       and.push({ published_date: { _lte: options.endDate } });
 
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number(options.limit) || PAGE_SIZE),
+    );
     const res = await this.directus.get<DirectusRow[]>('/items/posts', {
       filter: JSON.stringify({ _and: and }),
-      fields:
-        'id,board,slug,published_date,publish_at,unpublish_at,thumbnail,is_pinned,translations.*',
+      fields: LIST_FIELDS,
       deep: JSON.stringify({
         translations: {
           _filter: {
@@ -70,19 +85,18 @@ export class ContentDefaultService {
           },
         },
       }),
-      sort: '-is_pinned,-published_date,-id',
-      limit: PAGE_SIZE,
+      sort: this.sortOf(options.board),
+      limit,
       page: Math.max(1, Number(options.page) || 1),
       meta: 'filter_count',
     });
-    const data = (res.data ?? []).map((row) => {
-      const it = this.flat(row, language);
-      return { ...it, thumbnail: this.assetUrl(it['thumbnail']) };
-    });
+    const data = (res.data ?? []).map((row) =>
+      this.present(this.flat(row, language)),
+    );
     return {
       data,
       total: res.meta?.['filter_count'] ?? null,
-      pageSize: PAGE_SIZE,
+      pageSize: limit,
       language,
     };
   }
@@ -93,7 +107,7 @@ export class ContentDefaultService {
     const res = await this.directus.get<DirectusRow[]>('/items/posts', {
       filter: JSON.stringify({ _and: [PUBLISHED, { slug: { _eq: slug } }] }),
       fields:
-        '*,translations.*,attachments.directus_files_id.id,' +
+        '*,thumbnail.id,thumbnail.width,thumbnail.height,translations.*,attachments.directus_files_id.id,' +
         'attachments.directus_files_id.title,attachments.directus_files_id.filename_download',
       deep: JSON.stringify({
         translations: {
@@ -106,13 +120,9 @@ export class ContentDefaultService {
     });
     const row = res.data?.[0];
     if (!row) throw new CommonError(ContentError.POST_NOT_FOUND);
-    const post = this.flat(row, language);
+    const post = this.present(this.flat(row, language));
     return {
-      data: {
-        ...post,
-        thumbnail: this.assetUrl(post['thumbnail']),
-        attachments: this.attachments(post['attachments']),
-      },
+      data: { ...post, attachments: this.attachments(post['attachments']) },
       language,
     };
   }
@@ -179,6 +189,35 @@ export class ContentDefaultService {
       ...text
     } = t;
     return { ...rest, ...text };
+  }
+
+  /**
+   * thumbnail 을 우리 주소(문자열)로 바꾸고 치수를 `thumbnail_size` 에 따로 둔다.
+   * 게시판 화면 JS 가 thumbnail 을 문자열로 읽으므로 모양을 바꾸지 않는다.
+   * 치수는 증서 카드가 그림 오기 전에 자리를 잡는 데 쓴다.
+   */
+  private present(row: DirectusRow): DirectusRow {
+    const t = row['thumbnail'] as DirectusRow | string | null | undefined;
+    const id = typeof t === 'string' ? t : (t?.['id'] as string | undefined);
+    const size =
+      t &&
+      typeof t === 'object' &&
+      typeof t['width'] === 'number' &&
+      typeof t['height'] === 'number'
+        ? { w: t['width'], h: t['height'] }
+        : null;
+    return { ...row, thumbnail: this.assetUrl(id), thumbnail_size: size };
+  }
+
+  /**
+   * 게시판은 날짜순. 증서·수행실적은 관리 화면에서 끈 순서(sort), 연혁은 연도
+   * 내림차순 안에서 sort 다 — 그 장들은 「최신 글」이 아니라 「목록」이다.
+   */
+  private sortOf(board?: string): string {
+    if (board === 'history') return '-history_year,sort,id';
+    if (board === 'patent' || board === 'copyright' || board === 'case')
+      return 'sort,-published_date,id';
+    return '-is_pinned,-published_date,-id';
   }
 
   private assetUrl(id: unknown): string | null {

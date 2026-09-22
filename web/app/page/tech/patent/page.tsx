@@ -2,6 +2,7 @@ import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import CertGrid from '../CertGrid'
 import { pageMeta } from '@/lib/seo'
+import { cmsBoard, dots, type CmsPost } from '@/lib/cms'
 
 /** 증서 그림의 원본 치수. 칸(.cert_img)이 이미 자리를 잡아 주지만, 치수를
  *  안 적으면 그림이 늦게 올 때 브라우저가 높이를 0 으로 잡아 한 번 흔들린다.
@@ -140,7 +141,35 @@ const CERT_CSS = `
 }
 `
 
-export default function Page() {
+/**
+ * CMS(게시판 「특허」)가 우선이다. 위 PATENT_LIST 는 CMS 가 안 될 때의 예비 —
+ * 관리 화면에서 고친 것은 5분 안에 여기 반영된다(lib/cms.ts).
+ */
+type PatentCert = { img: string; title: string; state: '등록' | '출원'; no: string; date: string; w: number; h: number }
+
+function fromCms(rows: CmsPost[]): PatentCert[] {
+  return rows
+    .filter((r) => r.thumbnail && r.title)
+    .map((r) => ({
+      img: r.thumbnail as string,
+      title: r.title,
+      state: r.cert_state === 'registered' ? '등록' : '출원',
+      no: r.cert_no ?? '',
+      date: dots(r.cert_date),
+      w: r.thumbnail_size?.w ?? 793,
+      h: r.thumbnail_size?.h ?? 1087,
+    }))
+}
+
+function fallback(): PatentCert[] {
+  return PATENT_LIST.map((p) => ({ img: p.img, title: p.title, state: p.state, no: p.no, date: p.date, w: DIMS[p.img].w, h: DIMS[p.img].h }))
+}
+
+export default async function Page() {
+  const rows = await cmsBoard('patent')
+  const list = rows ? fromCms(rows) : fallback()
+  const reg = list.filter((p) => p.state === '등록').length
+  const app = list.length - reg
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -151,17 +180,17 @@ export default function Page() {
         kickerSub="기술력"
         headLead="디알밸류의 특허 등록 및 출원, "
         headStrong="디알밸류의 기술력입니다."
-        desc="마이크로서비스 아키텍처 기반 SaaS, AI 에이전트 도면인식 BOM·공정 자동 매칭 등 디알밸류의 특허 등록 1건·출원 5건을 공개합니다."
+        desc={`마이크로서비스 아키텍처 기반 SaaS, AI 에이전트 도면인식 BOM·공정 자동 매칭 등 디알밸류의 특허 등록 ${reg}건·출원 ${app}건을 공개합니다.`}
         ctaTitle="문의사항이 있으신가요?"
         ctaDesc="프로젝트 문의는 문의하기에서 남길 수 있습니다."
       >
         <h2 className="mx_sec_title">특허 등록 및 출원</h2>
         <CertGrid
-          certs={PATENT_LIST.map((pt) => ({
+          certs={list.map((pt) => ({
             src: pt.img,
             alt: `${pt.title} ${pt.state}증`,
-            w: DIMS[pt.img].w,
-            h: DIMS[pt.img].h,
+            w: pt.w,
+            h: pt.h,
             open: `${pt.title} ${pt.state}증 크게 보기`,
             body: (
               <>
@@ -169,7 +198,7 @@ export default function Page() {
                 <h3 className="cert_title">{pt.title}</h3>
                 <dl className="cert_meta">
                   <dt>{pt.state === '등록' ? '등록번호' : '출원번호'}</dt><dd>{pt.no}</dd>
-                  <dt>{pt.dateLabel}</dt><dd>{pt.date}</dd>
+                  <dt>{pt.state === '등록' ? '등록일' : '출원일'}</dt><dd>{pt.date}</dd>
                 </dl>
               </>
             ),

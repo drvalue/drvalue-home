@@ -3,6 +3,8 @@ import SolutionShell from '../../business/max/SolutionShell'
 import PortfolioTable from './PortfolioTable'
 import { pageMeta } from '@/lib/seo'
 import { PORTFOLIO_LIST } from './list'
+import { cmsBoard, yymm } from '@/lib/cms'
+import type { Row } from './PortfolioTable'
 
 /**
  * /page/portfolio/portfolio.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + AOS)
@@ -88,7 +90,16 @@ const PF_CSS = `
 }
 `
 
-export default function Page() {
+/** CMS(게시판 「수행실적」)가 우선. PORTFOLIO_LIST 는 CMS 가 안 될 때의 예비. */
+export default async function Page() {
+  const cms = await cmsBoard('case')
+  const rows: readonly Row[] = cms
+    ? cms.map((r) => ({
+        과제명: r.title,
+        기간: `${yymm(r.period_start)}~${yymm(r.period_end)}`,
+        구분: r.case_category_label ?? '',
+      }))
+    : PORTFOLIO_LIST
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -99,13 +110,13 @@ export default function Page() {
         kickerSub="수행실적"
         headLead="디알밸류의 수행실적을 "
         headStrong="확인해 보세요."
-        desc="안산스마트공장 보급, 경기도형 스마트공장 공급기술 상용화, 한양대학교 R&D 등 9건의 수행 과제와 기간·발주 유형을 공개합니다."
+        desc={`안산스마트공장 보급, 경기도형 스마트공장 공급기술 상용화, 한양대학교 R&D 등 ${rows.length}건의 수행 과제와 기간·발주 유형을 공개합니다.`}
         ctaTitle="문의사항이 있으신가요?"
         ctaDesc="프로젝트 문의는 문의하기에서 남길 수 있습니다."
       >
         <h2 className="mx_sec_title">주요 수행실적</h2>
         <div data-rv>
-          <PortfolioTable rows={PORTFOLIO_LIST} />
+          <PortfolioTable rows={rows} />
         </div>
       </SolutionShell>
     </>

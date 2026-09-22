@@ -19,18 +19,24 @@
 
 | 받는 것 | 뜻 |
 |---|---|
-| `board` | 게시판 종류. 예: `notice`, `press`. 안 주면 전부 |
+| `board` | 게시판 종류. `notice` · `press` · `case`(수행실적) · `patent` · `copyright` · `history`(연혁). 안 주면 전부 |
 | `page` | 1부터. 한 쪽 크기는 응답의 `pageSize` |
+| `limit` | 한 쪽 크기. 기본 10, 최대 100. 연혁·증서처럼 한 장에 다 보이는 목록이 쓴다 |
 | `q` | 제목·요약·본문 부분 일치. 200자에서 자른다 |
 | `startDate` · `endDate` | `YYYY-MM-DD`. **표시 날짜** 기준이다 |
 | `lang` | 언어 |
 
 돌려주는 것: `data` 는 글 배열이다. 각 글은 `slug` · `title` · `summary` ·
-`published_date` · `is_pinned` · `thumbnail`(주소 또는 `null`) 을 갖는다.
+`published_date` · `is_pinned` · `sort` · `thumbnail`(주소 또는 `null`) ·
+`thumbnail_size`(`{w, h}` 또는 `null`) 을 갖는다. 게시판에 따라 더 온다 —
+특허·저작권: `cert_state`(`registered`|`applied`) · `cert_no` · `cert_date` ·
+`cert_made_date` · `cert_kind`. 연혁: `history_year`. 수행실적:
+`period_start` · `period_end` · `case_category_label`. 없는 칸은 `null`.
 `total` 은 조건에 맞는 전체 건수다. **CMS 가 건수를 안 주면 `null` 이
 나간다** — 그때 쪽수를 `total` 로 계산하는 화면은 1쪽으로 접힌다.
 
-정렬은 **고정 글 먼저, 그다음 표시 날짜 내림차순**이다.
+정렬은 게시판이 정한다. 공지·보도자료는 **고정 글 먼저, 표시 날짜 내림차순**.
+특허·저작권·수행실적은 관리 화면의 순서(`sort`). 연혁은 연도 내림차순 안에서 `sort`.
 **공개 상태인 글만 나온다.**
 
 검색은 언어를 가리지 않는다. 영어 번역이 걸려 같은 글이 나오는 것은
