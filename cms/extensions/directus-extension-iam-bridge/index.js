@@ -92,13 +92,23 @@ export default {
         return res.status(status).json({ error: why });
       };
 
-      // 1) state — 우리가 보낸 것이어야 하고, 아직 유효해야 한다.
+      try {
+      // 1) state — 우리가 보낸 쿠키가 유효해야 한다. IAM 이 state 를 되돌려주면
+      //    그것까지 맞아야 하고, 안 돌려주면(PHP 는 redirect_url 만 보냈다) 쿠키만 본다.
       const cookie = parseCookie(req.headers.cookie)[STATE_COOKIE] ?? '';
       const given = String(req.query.state ?? '');
-      if (!verifyState(c.secret, cookie, given)) return fail('bad state');
+      const stateOk = verifyState(c.secret, cookie, given || null);
+      if (!stateOk) {
+        logger.warn(`iam-bridge: bad state (cookie=${cookie ? 'yes' : 'no'} query=${given ? 'yes' : 'no'})`);
+        return fail('bad state');
+      }
+      if (!given) logger.warn('iam-bridge: IAM did not echo state; cookie only');
 
       const code = String(req.query.code ?? '');
-      if (!code) return fail('missing code', 400);
+      if (!code) {
+        logger.warn(`iam-bridge: callback without code (query keys=${Object.keys(req.query).join(',')})`);
+        return fail('missing code', 400);
+      }
 
       // 2) code → IAM 토큰
       const [st1, j1] = await call(`${c.iamBase}/auth/token/exchange`, 'POST', {
@@ -118,9 +128,9 @@ export default {
       for (const path of ['/api/v1/me', '/auth/me']) {
         const [st, j] = await call(`${c.iamBase}${path}`, 'GET', null, iamToken);
         if (st === 200 && j && typeof j === 'object') { me = j.data && typeof j.data === 'object' ? j.data : j; break; }
-        if (st === 401 || st === 403) { logger.warn(`iam-bridge: me ${st} at ${path}`); return fail('iam rejected token'); }
+        if (st === 401 || st === 403) { logger.warn(`iam-bridge: me ${st} at ${path} — 방금 교환한 토큰이라 claim 으로 진행`); break; }
       }
-      if (!me) logger.warn(`iam-bridge: me endpoint unavailable, using token claims (keys=${keys(claims)})`);
+      if (!me) logger.warn(`iam-bridge: me unavailable, using token claims (keys=${keys(claims)})`);
       const user = me ?? claims;
       const email = String(user.email ?? claims.email ?? '').trim().toLowerCase();
       if (!email) {
@@ -185,6 +195,11 @@ export default {
         sameSite: env.SESSION_COOKIE_SAME_SITE || 'strict',
       });
       return res.redirect('/admin');
+      } catch (e) {
+        // Express 4 는 async 예외를 못 잡는다. 안 잡으면 요청이 매달린다.
+        logger.error(`iam-bridge: callback failed (${e?.message ?? e})`);
+        return fail('internal', 500);
+      }
     });
   },
 };
@@ -212,7 +227,7 @@ function verifyState(secret, cookie, given) {
   const [nonce, exp, sig] = cookie.split('.');
   if (!nonce || !exp || !sig) return false;
   const state = `${nonce}.${exp}`;
-  if (given !== state) return false;
+  if (given !== null && given !== state) return false;
   if (Number(exp) < Date.now()) return false;
   const a = Buffer.from(sig);
   const b = Buffer.from(sign(secret, state));

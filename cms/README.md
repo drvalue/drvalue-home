@@ -124,6 +124,8 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 1. 대상 계정 비밀번호를 `HMAC-SHA256(SECRET, "iam-bridge:<이메일>")` 로 바꾼다.
    다리는 로그인할 때 같은 값을 다시 계산한다. 어디에도 적혀 있지 않다.
 2. 로그인 화면 하단(`public_note`)에 `/iam-bridge/login` 링크를 넣는다.
+   (입구 자체는 `directus-extension-iam-bridge-entry` 훅이 돌린다 — 세션 쿠키 없이
+   `/admin`·`/admin/login` 을 열면 IAM 으로 간다. 로컬 폼은 `?local=1`.)
 
 돌리고 나면 매핑된 계정은 `ADMIN_PASSWORD` 로 로그인되지 않는다. 로컬에서
 써 볼 때는 `admin@` 이 아니라 `marketing@drvalue.co.kr` 에 매핑한다 —
@@ -135,7 +137,8 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
    `IAM_BRIDGE_GROUP` 은 알면 넣고 모르면 비운다
 2. `docker compose up -d directus` (루트에서)
 3. `set -a; . .env; set +a; cd cms && python3 scripts/iam_bridge_sync.py`
-4. 브라우저에서 `http://localhost:3350/iam-bridge/login` → IAM 로그인 → `/admin`
+4. 브라우저에서 `http://localhost:3350/admin` → 바로 IAM 으로 간다 → 돌아오면 `/admin`
+   (로컬 폼이 필요하면 `/admin/login?local=1`. `extensions/directus-extension-iam-bridge-entry` 가 입구를 돌린다)
 5. 거부되면 `docker logs drvalue_directus | grep iam-bridge` 의 `denied … groups=[…]` 에서
    그룹 id 를 읽어 `IAM_BRIDGE_GROUP` 에 넣고 2 부터 다시
 
@@ -145,6 +148,7 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 | 로그 | 뜻 |
 |---|---|
 | `exchange 4xx` | IAM 이 code 나 redirectUri 를 거부했다. 콜백 주소가 IAM 화이트리스트에 없을 때가 대부분 — IAM 쪽 등록이 필요하다 |
+| `bad state` | 우리가 심은 state 쿠키가 없다. 브라우저가 쿠키를 막았거나 10분이 지났다. (IAM 은 `state` 를 되돌려주지 않는다 — 실측. 쿠키만 본다) |
 | `me endpoint unavailable` | IAM 의 `/api/v1/me` 가 200 을 안 줬다. claim 으로 진행한다 — 키 이름을 보고 경로를 맞춘다 |
 | `denied role=… groups=[…]` | IAM 은 통과했는데 인가 조건에 안 맞는다. 여기 찍힌 그룹 id·역할로 `IAM_BRIDGE_GROUP` 을 정한다 |
 | `no directus account` | `IAM_BRIDGE_DEFAULT_ACCOUNT` 가 비었다 |

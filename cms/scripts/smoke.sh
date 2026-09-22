@@ -27,10 +27,20 @@ try: d=json.load(sys.stdin)
 except Exception: print(''); sys.exit(0)
 $1"; }
 
+# 시드 비밀번호로 먼저, 안 되면 IAM 다리 파생값(iam_bridge_sync.py 가 바꾼 계정)으로.
 login() {
-  curl -s -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+  local tok
+  tok=$(curl -s -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
     -d "{\"email\":\"$1\",\"password\":\"drvalue1234!\"}" --max-time 60 \
-    | pick 'print(d.get("data",{}).get("access_token",""))'
+    | pick 'print(d.get("data",{}).get("access_token",""))')
+  if [ -z "$tok" ] && [ -n "${DIRECTUS_SECRET:-}" ]; then
+    local derived
+    derived=$(python3 -c "import hmac,hashlib,sys; print(hmac.new(sys.argv[1].encode(), ('iam-bridge:'+sys.argv[2].lower()).encode(), hashlib.sha256).hexdigest())" "$DIRECTUS_SECRET" "$1")
+    tok=$(curl -s -X POST "$BASE/auth/login" -H 'Content-Type: application/json' \
+      -d "{\"email\":\"$1\",\"password\":\"$derived\"}" --max-time 60 \
+      | pick 'print(d.get("data",{}).get("access_token",""))')
+  fi
+  printf '%s' "$tok"
 }
 
 check() {
