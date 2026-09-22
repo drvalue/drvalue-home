@@ -1,24 +1,40 @@
-# 디알밸류 홈페이지 한 벌 — 홈페이지(web) · API(api) · CMS(directus + db).
+# 디알밸류 홈페이지 한 벌 — 홈페이지(web) · API + 관리 화면(api) · DB(postgres).
 #
-#   docker compose up -d --build          # 넷 다
-#   docker compose up -d --build web api  # CMS 는 이미 떠 있을 때
+#   docker compose up -d --build          # 셋 다
+#   docker compose up -d --build web api  # DB 는 그대로 두고 앞·뒤만
 #   docker compose logs -f web api
 #
-# 포트는 로컬 개발과 같다: web 3400 · api 3500 · directus 3350 · db 3330.
-# CMS 정의는 cms/docker-compose.yml 그대로 가져온다(include) — 컨테이너·볼륨 이름이
-# 거기 고정돼 있어 지금 도는 drvalue_directus 와 데이터가 그대로 이어진다.
+# 포트는 로컬 개발과 같다: web 3400 · api 3500 · db 3330.
+# DB 컨테이너·볼륨 이름은 Directus 시절 것을 그대로 쓴다(drvalue_directus_pg ·
+# drvalue_directus_pgdata) — 이름을 바꾸면 빈 볼륨으로 갈아 끼워져 데이터가 사라진다.
+# 테이블(posts · posts_translations · posts_files · directus_files · inquiries)도 그때 것이다.
+# 처음 까는 곳은 db/schema.sql 로 만든다.
 #
 # 비밀값은 저장소에 없다. 루트 .env 하나를 .env.example 대로 만든다.
 # 컨테이너끼리는 서비스 이름으로 부른다: web → api 는 http://api:3500,
-# api → directus 는 http://directus:8055 (아래 environment 가 .env 값을 덮는다).
+# api → db 는 db:5432 (아래 environment 가 .env 값을 덮는다).
 name: drvalue
 
-include:
-  - path: cms/docker-compose.yml
-    project_directory: cms
-    env_file: .env
-
 services:
+  db:
+    image: postgres:10-alpine
+    container_name: drvalue_directus_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-drvalue}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-drvalue}
+      POSTGRES_DB: ${DB_NAME:-drvalue_cms}
+      TZ: Asia/Seoul
+    ports:
+      - '3330:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-drvalue} -d ${DB_NAME:-drvalue_cms}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   web:
     build:
       context: ./web
@@ -53,11 +69,20 @@ services:
         required: false
     environment:
       PORT: 3500
-      DIRECTUS_URL: http://directus:8055
-      # nginx 같은 프록시 뒤에 두면 1 — main.ts 의 경고 참조.
+      DB_HOST: db
+      DB_PORT: 5432
+      # 업로드 파일. 저장소의 data/uploads 를 그대로 물린다 — 호스트에서 돌리는 로컬 Nest 와 같은 폴더.
+      UPLOADS_DIR: /data/uploads
+      # nginx 같은 프록시 뒤에 두면 1 — main.ts 의 주석 참조.
       TRUST_PROXY: ${TRUST_PROXY:-1}
     ports:
       - '3500:3500'
+    volumes:
+      - ./data/uploads:/data/uploads
     depends_on:
-      directus:
+      db:
         condition: service_healthy
+
+volumes:
+  pgdata:
+    name: drvalue_directus_pgdata
