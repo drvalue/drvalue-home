@@ -336,14 +336,6 @@ ALTER TABLE ONLY public.posts_translations
 
 
 --
--- Name: inquiries inquiries_assignee_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inquiries
-    ADD CONSTRAINT inquiries_assignee_foreign FOREIGN KEY (assignee) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
 -- Name: posts posts_thumbnail_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 

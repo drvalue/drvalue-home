@@ -24,7 +24,7 @@
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다.
 - **IAM 을 안 거치는 관리자 문을 만들지 않는다.** 토큰·헤더 우회 경로 금지. 검사는
   `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다.
-- 환경변수는 `.env.example` 의 필수 일곱 개 + 선택 하나(`NEXT_PUBLIC_GTM_ID`, 비우면 통계가 안 실린다)뿐이다. 새로 만들기 전에 코드 상수나 compose
+- 환경변수는 `.env.example` 에 있는 것뿐이다 — 운영 필수는 DB 연결 다섯 · 세션 키 · IAM 콜백 · NCP 메일 넷, 선택은 `NEXT_PUBLIC_GTM_ID` · `DB_SSL` · `WEB_PORT`. 새로 만들기 전에 코드 상수나 compose
   배선으로 되는지 먼저 본다. api 에서 읽는 곳은 `common/config/app-config.ts` 하나다.
 
 ## 검사 통과 기준

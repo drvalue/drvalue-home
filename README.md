@@ -17,8 +17,8 @@ docker compose up -d --build        # web 3400 · api 3500 · db 3330
 docker compose up -d --build web api   # DB 는 그대로 두고 앞·뒤만
 ```
 
-`web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(db · api · web).
-api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 필수 일곱 개 + 선택 하나(`NEXT_PUBLIC_GTM_ID`)뿐이다.
+`web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(운영: web · api 둘, DB 는 iwinv 관리형) · `docker-compose.dev.yml`(로컬 개발: db 컨테이너 + 포트).
+api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 에 있는 것뿐이다(운영 DB 는 컨테이너 밖이라 DB 연결값을 받는다).
 컨테이너 안에서는 web → `http://api:3500`, api → `db:5432` 로 부른다(compose 가 .env 값을 덮는다).
 web 의 `/api` 프록시 주소는 빌드 때 굳어서 compose 가 빌드 인자로도 넘긴다. 3400 이 차 있으면
 `WEB_PORT=3410 docker compose up -d --build`(콜백 주소도 같은 포트로).
@@ -633,5 +633,5 @@ api  npm run build && node dist/main.js → http://localhost:3500
 web  npm run build && npm start        → http://localhost:3400  (/admin 포함)
 ```
 
-`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(필수 일곱 개 + 선택 하나)을 복사해서 채운다.
+`.env` 는 저장소에 넣지 않는다. 루트 `.env.example` 을 복사해서 채운다(`docs/operations.md` 「환경변수」·「새 서버 배포」).
 처음이면 `db/schema.sql` 다음에 `db/migrations/0001-admin-foundation.sql` 도 돌린다.
