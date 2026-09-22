@@ -73,6 +73,20 @@ export class AdminPostDefaultService {
     return { data: rows.map((r) => this.row(r)), total, page, pageSize: PAGE };
   }
 
+  /** 수행실적 「구분」에 지금까지 쓴 값. 폼이 datalist 로 보여 준다 — 같은 말을 다르게 적는 것을 막는다. */
+  async categoryLabels(): Promise<string[]> {
+    const rows = await this.postDefaultRepository.translations
+      .createQueryBuilder('t')
+      .innerJoin('t.post', 'p')
+      .select('DISTINCT t.caseCategoryLabel', 'label')
+      .where(
+        "p.board = 'case' AND t.caseCategoryLabel IS NOT NULL AND t.caseCategoryLabel <> ''",
+      )
+      .orderBy('label', 'ASC')
+      .getRawMany<{ label: string }>();
+    return rows.map((r) => r.label);
+  }
+
   async get(id: number) {
     const row = await this.postDefaultRepository.findOneFull(id);
     if (!row) throw new CommonError(AdminPostError.NOT_FOUND);

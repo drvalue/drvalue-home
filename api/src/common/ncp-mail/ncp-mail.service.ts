@@ -4,6 +4,7 @@ import { createHmac } from 'node:crypto';
 export interface NcpMailInput {
   user_name: string;
   user_tel: string;
+  user_email?: string;
   user_type: string;
   user_msg: string;
 }
@@ -57,6 +58,9 @@ export class NcpMailService {
     return (
       `<p><strong>회사명 / 성함</strong><br>${e(input.user_name)}</p>` +
       `<p><strong>연락처</strong><br>${e(input.user_tel)}</p>` +
+      (input.user_email
+        ? `<p><strong>이메일</strong><br>${e(input.user_email)}</p>`
+        : '') +
       `<p><strong>문의 유형</strong><br>${e(input.user_type)}</p>` +
       `<p><strong>문의 내용</strong></p>` +
       `<pre style="white-space:pre-wrap;font-family:inherit">${e(input.user_msg)}</pre>`

@@ -168,7 +168,7 @@ $(document).ready(function() {
             dataType: "json",
             contentType: "application/json",
             // PHP 는 form-urlencoded 를 받았고 Nest 는 JSON 을 받는다.
-            // 칸 이름(user_name·user_tel·user_type·user_msg)은 그대로다.
+            // 칸 이름(user_name·user_tel·user_type·user_msg)은 그대로다. user_email 은 새로 받는다.
             data: JSON.stringify($(this).serializeArray().reduce(function(o, f) {
                 o[f.name] = f.value; return o;
             }, {})),

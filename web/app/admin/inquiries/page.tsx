@@ -60,7 +60,7 @@ export default function InquiriesPage() {
               <tr key={q.id}>
                 <td>{q.name}{q.company ? <small style={{ display: 'block', color: 'var(--dva-muted)' }}>{q.company}</small> : null}</td>
                 <td>{q.type}</td>
-                <td className="is-num">{q.phone ?? ''}{q.email ? <small style={{ display: 'block' }}>{q.email}</small> : null}</td>
+                <td className="is-num">{q.phone ?? ''}{q.email ? <small style={{ display: 'block' }}><a href={`mailto:${q.email}?subject=${encodeURIComponent('[디알밸류] ' + q.type + ' 문의 답변')}`}>{q.email}</a></small> : null}</td>
                 <td title={q.message}>{q.message.length > 60 ? q.message.slice(0, 60) + '…' : q.message}</td>
                 <td>
                   <select value={q.status} onChange={(e) => change(q.id, e.target.value)} aria-label={`${q.name} 문의 상태`} style={{ width: 'auto' }}>

@@ -1,5 +1,7 @@
 --
 -- PostgreSQL database dump
+-- 홈페이지 DB 여섯 테이블(Directus 시절 이름 그대로). 처음 까는 곳에서 한 번 돌린다.
+-- directus_folders · directus_users 로 가는 외래키는 뺐다(그 표는 없다). 칸은 남아 있다.
 --
 
 -- Dumped from database version 10.23
@@ -319,24 +321,18 @@ ALTER TABLE ONLY public.posts_translations
 -- Name: directus_files directus_files_folder_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_folder_foreign FOREIGN KEY (folder) REFERENCES public.directus_folders(id) ON DELETE SET NULL;
 
 
 --
 -- Name: directus_files directus_files_modified_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_modified_by_foreign FOREIGN KEY (modified_by) REFERENCES public.directus_users(id);
 
 
 --
 -- Name: directus_files directus_files_uploaded_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_uploaded_by_foreign FOREIGN KEY (uploaded_by) REFERENCES public.directus_users(id);
 
 
 --
@@ -375,3 +371,7 @@ ALTER TABLE ONLY public.posts_translations
 -- PostgreSQL database dump complete
 --
 
+--
+-- 언어. posts_translations.languages_code 가 여기를 가리킨다 — 비어 있으면 첫 저장이 막힌다.
+--
+INSERT INTO public.languages (code, name, direction) VALUES ('ko-KR', '한국어', 'ltr'), ('en-US', 'English', 'ltr') ON CONFLICT DO NOTHING;

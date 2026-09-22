@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+import os
 import re
 import sys
 
@@ -30,7 +31,7 @@ assert _spec and _spec.loader
 compare = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(compare)
 
-NEXT = "http://localhost:3400/"
+NEXT = os.environ.get("NEXT_ORIGIN", "http://localhost:3400").rstrip("/") + "/"
 
 
 def subsequence(small: list[str], big: list[str]) -> tuple[bool, int]:

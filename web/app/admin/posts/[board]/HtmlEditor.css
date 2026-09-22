@@ -1,0 +1,51 @@
+/* 본문 편집기. 부모 폭 안에 머문다 — 관리 화면은 가로 스크롤이 없어야 한다. */
+.dva_editor {
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--dva-line, #e2e6ec);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.dva_editor .ql-toolbar.ql-snow {
+  border: 0;
+  border-bottom: 1px solid var(--dva-line, #e2e6ec);
+  flex-wrap: wrap;
+}
+.dva_editor .ql-container.ql-snow {
+  border: 0;
+  font-family: inherit;
+  font-size: 15px;
+}
+.dva_editor .ql-editor {
+  min-height: 320px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.dva_editor .ql-editor img {
+  max-width: 100%;
+  height: auto;
+}
+.dva_editor .ql-editor h2 {
+  font-size: 1.35em;
+}
+.dva_editor .ql-editor h3 {
+  font-size: 1.15em;
+}
+/* 「HTML 로 보기」 */
+.dva_editor_raw {
+  margin-top: 8px;
+}
+.dva_editor_raw summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--dva-muted, #6b7684);
+}
+.dva_editor_raw textarea {
+  margin-top: 6px;
+  width: 100%;
+  min-height: 200px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}

@@ -28,6 +28,10 @@ export default function ContactModal() {
                       <input id="dvq_tel" type="tel" inputMode="tel" name="user_tel" autoComplete="tel" placeholder="010-0000-0000" required={true} />
                   </div>
                   <div className="form_group">
+                      <label htmlFor="dvq_email">이메일</label>
+                      <input id="dvq_email" type="email" inputMode="email" name="user_email" autoComplete="email" placeholder="name@company.com" required={true} />
+                  </div>
+                  <div className="form_group">
                       <label htmlFor="dvq_type">문의 유형</label>
                       {/* 원본은 <option selected> 다. React 는 그것을 오류로 막고
                           <select defaultValue> 를 쓰라고 한다 — 내보내는 HTML 은

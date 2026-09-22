@@ -298,6 +298,13 @@
   padding: 18px;
   display: grid;
   gap: 14px;
+  /* grid 자식은 기본 min-width:auto 라 긴 입력이 카드를 밀어 넓힌다(실측: 날짜·파일 입력). */
+  min-width: 0;
+  overflow: hidden;
+}
+.dva_card img {
+  max-width: 100%;
+  height: auto;
 }
 .dva_card h2 {
   font-size: 14px;
@@ -307,6 +314,21 @@
 .dva_field {
   display: grid;
   gap: 5px;
+  min-width: 0;
+}
+.dva_field > * {
+  min-width: 0;
+}
+/* 파일·날짜 입력은 브라우저 고유 폭이 있어 100% 를 안 지킨다 — 부모에 가둔다. */
+.dva input[type='file'],
+.dva input[type='date'],
+.dva input[type='month'] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.dva input[type='file'] {
+  font-size: 13px;
 }
 .dva_field > label,
 .dva_field > .dva_label {

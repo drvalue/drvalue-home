@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { adminFetch, adminJson, boardOf, PostFull, today, Translation, uploadFile } from '@/lib/admin'
+import HtmlEditor from './HtmlEditor'
 
 type Lang = 'ko-KR' | 'en-US'
 const LANGS: { code: Lang; label: string }[] = [
@@ -20,7 +21,7 @@ const toMonth = (d: string | null) => (d ? d.slice(0, 7) : '')
 const fromMonth = (m: string) => (m ? `${m}-01` : null)
 
 /**
- * 만들기와 고치기가 같은 폼. 본문은 HTML 그대로 두는 textarea 다(v1 은 편집기 없음).
+ * 만들기와 고치기가 같은 폼. 본문은 편집기(Quill)로 쓰고 HTML 로도 볼 수 있다.
  * 저장 성공이면 목록으로. 오류는 서버 문장을 그대로 위에 띄운다.
  */
 export default function PostForm({ boardKey, id }: { boardKey: string; id?: number }) {
@@ -30,6 +31,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   const [lang, setLang] = useState<Lang>('ko-KR')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // 수행실적 「구분」에 지금까지 쓴 값. 입력하면서 고르게 해 같은 말을 다르게 적지 않는다.
+  const [labels, setLabels] = useState<string[]>([])
   const [thumbPreview, setThumbPreview] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,6 +56,10 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       })
       .catch((e) => setError((e as Error).message))
   }, [board, id])
+  useEffect(() => {
+    if (board?.key !== 'case') return
+    adminFetch<{ data: string[] }>('/api/admin/posts/category-labels').then((r) => setLabels(r.data)).catch(() => {})
+  }, [board])
 
   if (!board) return <div className="dva_error">없는 게시판이다: {boardKey}</div>
   if (!post) return error ? <div className="dva_error">{error}</div> : <div className="dva_empty">불러오는 중…</div>
@@ -168,8 +175,12 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           </div>
           {k === 'case' && (
             <div className="dva_field">
-              <label htmlFor="f-cat">구분 (발주·사업 유형, 원문 그대로)</label>
-              <input id="f-cat" type="text" value={val(t.case_category_label)} onChange={(e) => setT({ case_category_label: e.target.value })} />
+              <label htmlFor="f-cat">구분 (발주·사업 유형)</label>
+              <input id="f-cat" type="text" list="f-cat-list" placeholder="예: 안산스마트공장 보급" value={val(t.case_category_label)} onChange={(e) => setT({ case_category_label: e.target.value })} />
+              <datalist id="f-cat-list">
+                {labels.map((l) => <option key={l} value={l} />)}
+              </datalist>
+              <small>쓰던 값이 목록에 뜬다. 없으면 그대로 적으면 새 구분이 된다.</small>
             </div>
           )}
           <div className="dva_field">
@@ -179,8 +190,11 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           {(k === 'notice' || k === 'press') && (
             <div className="dva_field">
               <label htmlFor="f-body">본문</label>
-              <small>HTML 을 그대로 적는다. 편집기는 아직 없다.</small>
-              <textarea id="f-body" className="is-body" value={val(t.body)} onChange={(e) => setT({ body: e.target.value })} />
+              <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} />
+              <details className="dva_editor_raw">
+                <summary>HTML 로 보기</summary>
+                <textarea id="f-body" className="is-body" value={val(t.body)} onChange={(e) => setT({ body: e.target.value })} />
+              </details>
             </div>
           )}
         </div>

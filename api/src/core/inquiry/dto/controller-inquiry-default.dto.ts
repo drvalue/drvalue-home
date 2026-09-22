@@ -1,4 +1,10 @@
-import { IsIn, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 /** 문의 모달 select 의 선택지와 같게 둔다. */
 export const INQUIRY_TYPES = [
@@ -20,6 +26,11 @@ export class ControllerInquiryDefaultCreateDto {
   @IsNotEmpty()
   @MaxLength(50)
   user_tel!: string;
+
+  /** 답장 주소. 담당자가 관리 화면에서 바로 답장한다. */
+  @IsEmail()
+  @MaxLength(255)
+  user_email!: string;
 
   @IsString()
   @IsIn(INQUIRY_TYPES as unknown as string[])

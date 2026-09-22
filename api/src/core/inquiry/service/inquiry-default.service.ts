@@ -31,6 +31,7 @@ export class InquiryDefaultService {
         this.inquiries.create({
           name: dto.user_name,
           phone: dto.user_tel,
+          email: dto.user_email,
           type: dto.user_type,
           message: dto.user_msg,
           status: 'new',

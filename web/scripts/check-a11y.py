@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+import os
 import re
 import sys
 
@@ -23,7 +24,7 @@ assert _spec and _spec.loader
 compare = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(compare)
 
-NEXT = "http://localhost:3400"
+NEXT = os.environ.get("NEXT_ORIGIN", "http://localhost:3400").rstrip("/")
 
 # 모달이 실려야 하는 곳. 헤더·푸터가 모든 장에 있으므로 모든 장이 대상이다.
 PAGES = [
@@ -41,6 +42,7 @@ PAGES = [
 FIELDS = [
     ("user_name", "dvq_name", "회사명 / 성함"),
     ("user_tel", "dvq_tel", "연락처"),
+    ("user_email", "dvq_email", "이메일"),
     ("user_type", "dvq_type", "문의 유형"),
     ("user_msg", "dvq_msg", "문의 내용"),
 ]
