@@ -6,6 +6,8 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  */
 export interface SessionPayload {
   email: string;
+  /** IAM 사용자 id (claim sub). M.AX root 표 재검에 쓴다. */
+  sub?: string;
   name?: string;
   exp: number;
 }

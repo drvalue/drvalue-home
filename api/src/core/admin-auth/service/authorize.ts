@@ -27,6 +27,21 @@ export function authorize(claims: IamClaims, rule: AuthorizeRule): boolean {
   return Boolean(hit) && roles.includes(String(hit?.role ?? '').toUpperCase());
 }
 
+/**
+ * 최종 판정. M.AX(nxcms) root 표를 봤으면 그 결과가 원본이다 — 그룹 판정은 안 본다.
+ * 못 봤으면(null: 미설정·DB 안 닿음) IAM 그룹 판정으로. PLATFORM_ADMIN 은 어느 경우든 통과.
+ */
+export function decide(
+  claims: IamClaims,
+  rule: AuthorizeRule,
+  maxRoot: boolean | null,
+): { ok: boolean; by: 'platform-admin' | 'max-root' | 'iam-group' } {
+  if (String(claims.role ?? '').toUpperCase() === 'PLATFORM_ADMIN')
+    return { ok: true, by: 'platform-admin' };
+  if (maxRoot !== null) return { ok: maxRoot, by: 'max-root' };
+  return { ok: authorize(claims, rule), by: 'iam-group' };
+}
+
 /** 거부 로그용. 값이 아니라 모양만 — 그룹 id·역할은 식별자라 남겨도 된다. */
 export function describeGroups(claims: IamClaims): string {
   return (claims.groups ?? [])

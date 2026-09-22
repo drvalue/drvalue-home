@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   authorize,
+  decide,
 } = require('../../../../dist/core/admin-auth/service/authorize.js');
 
 const G = '81bf109a-60fd-4a72-a27b-87e355ac52e3';
@@ -52,4 +53,29 @@ test('rule.group 이 비면 PLATFORM_ADMIN 만', () => {
     ),
     false,
   );
+});
+
+test('decide: M.AX 가 root 라고 하면 그룹과 무관하게 통과', () => {
+  assert.deepEqual(decide({ role: 'USER', groups: [] }, rule, true), {
+    ok: true,
+    by: 'max-root',
+  });
+});
+test('decide: M.AX 가 root 아니라고 하면 그룹 OWNER 여도 거부', () => {
+  assert.deepEqual(
+    decide({ role: 'USER', groups: [{ id: G, role: 'OWNER' }] }, rule, false),
+    { ok: false, by: 'max-root' },
+  );
+});
+test('decide: M.AX 를 못 봤으면 그룹 판정', () => {
+  assert.deepEqual(
+    decide({ role: 'USER', groups: [{ id: G, role: 'OWNER' }] }, rule, null),
+    { ok: true, by: 'iam-group' },
+  );
+});
+test('decide: PLATFORM_ADMIN 은 M.AX 가 거부해도 통과', () => {
+  assert.deepEqual(decide({ role: 'PLATFORM_ADMIN' }, rule, false), {
+    ok: true,
+    by: 'platform-admin',
+  });
 });

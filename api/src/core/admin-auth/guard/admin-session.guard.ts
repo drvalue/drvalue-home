@@ -14,6 +14,7 @@ import {
   SessionPayload,
 } from '../../../common/session/session-token';
 import { AdminAuthError } from '../error/admin-auth.error';
+import { MaxRootService } from '../service/max-root.service';
 
 export const ADMIN_COOKIE = 'dv_admin';
 /** IAM 에 사용자 상태를 다시 묻는 간격. 그 사이에 비활성화되면 이만큼 늦게 막힌다. */
@@ -34,7 +35,10 @@ export class AdminSessionGuard implements CanActivate {
   private readonly checked = new Map<string, number>();
   private lookupAvailable: boolean | null = null;
 
-  constructor(private readonly iamUserService: IamUserService) {}
+  constructor(
+    private readonly iamUserService: IamUserService,
+    private readonly maxRootService: MaxRootService,
+  ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx
@@ -46,6 +50,7 @@ export class AdminSessionGuard implements CanActivate {
       parseCookies(req.headers.cookie)[ADMIN_COOKIE],
     );
     if (session) {
+      await this.assertStillRoot(session);
       await this.assertStillEnabled(session.email);
       req.admin = session;
       return true;
@@ -60,6 +65,22 @@ export class AdminSessionGuard implements CanActivate {
       return true;
     }
     throw new CommonError(AdminAuthError.UNAUTHORIZED);
+  }
+
+  /** M.AX root 표에서 빠지면 세션이 남아 있어도 60초 안에 막힌다. */
+  private async assertStillRoot(session: SessionPayload): Promise<void> {
+    if (!this.maxRootService.configured) return;
+    const key = `max:${session.email}`;
+    if (Date.now() - (this.checked.get(key) ?? 0) < RECHECK_MS) return;
+    const root = await this.maxRootService.isTenantRoot(
+      session.sub ?? '',
+      session.email,
+    );
+    if (root === false) {
+      this.log.warn('M.AX root 표에서 빠진 사용자: 세션 거부');
+      throw new CommonError(AdminAuthError.NOT_ALLOWED);
+    }
+    if (root === true) this.checked.set(key, Date.now());
   }
 
   private async assertStillEnabled(email: string): Promise<void> {

@@ -6,7 +6,8 @@ import {
   SessionPayload,
 } from '../../../common/session/session-token';
 import { AdminAuthError } from '../error/admin-auth.error';
-import { authorize, describeGroups, IamClaims } from './authorize';
+import { decide, describeGroups, IamClaims } from './authorize';
+import { MaxRootService } from './max-root.service';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 // 30분. 만료되면 IAM 을 다시 다녀오며 그룹·역할이 새로 온다 — IAM 쪽 변경이 여기서 따라온다.
@@ -25,6 +26,8 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 @Injectable()
 export class AdminAuthDefaultService {
   private readonly log = new Logger(AdminAuthDefaultService.name);
+
+  constructor(private readonly maxRootService: MaxRootService) {}
 
   readonly secret = process.env.ADMIN_SESSION_SECRET ?? '';
   private readonly iamBase = (process.env.ADMIN_IAM_BASE ?? '').replace(
@@ -94,14 +97,22 @@ export class AdminAuthDefaultService {
       this.log.warn(`no email (claim keys=${this.keys(claims)})`);
       throw new CommonError(AdminAuthError.NO_EMAIL);
     }
-    if (!authorize(claims, this.rule)) {
+    const sub = String((claims as { sub?: unknown }).sub ?? '');
+    const verdict = decide(
+      claims,
+      this.rule,
+      await this.maxRootService.isTenantRoot(sub, email),
+    );
+    if (!verdict.ok) {
       this.log.warn(
-        `denied role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
+        `denied by=${verdict.by} role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
       );
       throw new CommonError(AdminAuthError.NOT_ALLOWED);
     }
+    this.log.log(`admin login by=${verdict.by}`);
     const payload: SessionPayload = {
       email,
+      sub: sub || undefined,
       name:
         typeof (claims as { name?: unknown }).name === 'string'
           ? (claims as { name: string }).name
