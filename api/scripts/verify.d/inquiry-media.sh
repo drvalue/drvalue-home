@@ -6,8 +6,8 @@
 # 남으면 첫 관리자 자동 등록이 막힌다. 중간에 죽어도 EXIT 트랩이 지운다.
 
 echo "== 문의: 담당자 · 메모 · 이력 =="
-IM_V="verify@drvalue.local"
-IM_HR="verify-hr@drvalue.local"
+IM_V="$VERIFY_EMAIL"
+IM_HR="${VERIFY_EMAIL%%@*}-hr@drvalue.local"
 IM_HAD_V=$(dbq "select count(*) from admin_users where email='$IM_V'")
 dbq "insert into admin_users(email,role,name) values ('$IM_V','admin','verify.sh') on conflict (email) do update set enabled=true, role='admin'" >/dev/null
 dbq "insert into admin_users(email,role,name) values ('$IM_HR','hr','verify.sh hr') on conflict (email) do update set enabled=true, role='hr'" >/dev/null

@@ -27,13 +27,15 @@ c.connect().then(()=>c.query(process.env.DBQ)).then(r=>{console.log((r.rows||[])
 
 # 검사용 관리자 세션. 입장은 IAM 관리자만이고, 그 판정은 로그인 때 admin_users 에 적힌다 —
 # 검사는 그 동기화를 흉내 내 검사 계정을 넣고, 같은 서명 키로 세션을 만들어 들어간다. 끝나면 지운다.
-VERIFY_EMAIL="verify@drvalue.local"
+# 여러 곳에서 동시에 돌릴 때는 VERIFY_EMAIL 을 서로 다르게 준다 — 끝날 때 이 계정의 행과 이력을 지운다.
+VERIFY_EMAIL="${VERIFY_EMAIL:-verify@drvalue.local}"
 SESSION=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$VERIFY_EMAIL',role:'admin',name:'verify.sh',exp:Date.now()+3600000}))")
 dbq "insert into admin_users(email,role,name,enabled) values ('$VERIFY_EMAIL','admin','verify.sh',true) on conflict (email) do update set enabled=true, role='admin'" >/dev/null
 # 끝낼 때 돌릴 뒷정리. verify.d 모듈은 trap 을 걸지 말고 CLEANUP 에 더한다 — EXIT trap 은
 # 하나뿐이라 모듈이 걸면 여기 것이 사라진다(실제로 사라져 검사 계정의 변경 이력이 1천 줄 쌓였다).
 CLEANUP=()
-on_exit() { local c; for c in "${CLEANUP[@]}"; do eval "$c"; done; }
+# bash 3.2 + set -u 는 빈 배열의 "${CLEANUP[@]}" 를 unbound 로 본다 — 비어 있을 때를 따로 푼다.
+on_exit() { local c; for c in ${CLEANUP[@]+"${CLEANUP[@]}"}; do eval "$c"; done; }
 trap on_exit EXIT
 # 검사 계정은 verify.sh 만 쓴다. 그 계정이 남긴 변경 이력도 같이 지운다.
 CLEANUP+=("dbq \"delete from admin_revisions where actor='$VERIFY_EMAIL'\" >/dev/null")
@@ -46,6 +48,10 @@ check() { # 이름 기대 실제
   else FAIL=$((FAIL+1)); printf '  FAIL  %-36s 기대=%s 실제=%s\n' "$1" "$2" "$3"; fi
 }
 na() { NA=$((NA+1)); printf '  판정불가 %-38s %s\n' "$1" "$2"; }
+# 공개 문의는 IP 당 분 5회다. 실제 값이 429 면 규칙을 잰 게 아니라 한도에 걸린 것 — 판정 불가로 센다.
+check_rl() { # 이름 기대 실제
+  if [ "$3" = "429" ]; then na "$1" "속도 제한(분 5회)에 걸렸다 — 1분 뒤 다시 돌려라"; else check "$1" "$2" "$3"; fi
+}
 pick() { python3 -c "import json,sys
 try: d=json.load(sys.stdin)
 except Exception: d=None
@@ -267,18 +273,18 @@ check "연락처가 phone 으로 들어간다" "010-0000-0000" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("phone",""))')"
 check "이메일이 email 로 들어간다" "verify@example.com" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("email",""))')"
-check "이메일 없으면 거부" "400" \
+check_rl "이메일 없으면 거부" "400" \
   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/inquiry" -H 'Content-Type: application/json' \
      -d '{"user_name":"x","user_tel":"010","user_type":"기타","user_msg":"m"}' --max-time 30)"
 check "상태는 접수" "new" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("status",""))')"
-check "선택지 밖 유형은 거부" "400" \
+check_rl "선택지 밖 유형은 거부" "400" \
   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/inquiry" -H 'Content-Type: application/json' \
      -d '{"user_name":"x","user_tel":"010","user_email":"a@b.co","user_type":"없는유형","user_msg":"m"}' --max-time 30)"
 # 응답이 어느 쪽이 실패했는지 흘리면 익명 제출자가 내부 상태를 읽는다.
-check "응답에 내부 상태가 없다" "none" \
+check_rl "응답에 내부 상태가 없다" "none" \
   "$(curl -s -X POST "$API/api/inquiry" -H 'Content-Type: application/json' -d "$BODY" --max-time 60 \
-     | pick 'print("leak" if set(d) - {"ok"} else "none")')"
+     | pick 'print("429" if (d or {}).get("status")==429 else ("leak" if set(d) - {"ok"} else "none"))')"
 fi
 
 # 속도 제한은 창을 태워 버린다 — 켜고 나면 1분 안의 재실행이 429 로 막힌다.
