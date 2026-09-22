@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
 import { AppConfig } from './common/config/app-config';
 import { CommonExceptionFilter } from './common/error/common-exception.filter';
@@ -27,6 +28,21 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new CommonExceptionFilter());
+  if (AppConfig.swaggerEnabled) {
+    const config = new DocumentBuilder()
+      .setTitle('디알밸류 홈페이지 API')
+      .setDescription('공개 API(content·inquiry)와 관리 API(/api/admin/*)')
+      .addCookieAuth('dv_admin')
+      .build();
+    SwaggerModule.setup(
+      'api/docs',
+      app,
+      SwaggerModule.createDocument(app, config),
+      {
+        jsonDocumentUrl: 'api/docs-json',
+      },
+    );
+  }
   await app.listen(AppConfig.port);
 }
 void bootstrap();

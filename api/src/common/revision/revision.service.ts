@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import type { ITransactionContext } from '../typeorm/transaction-context';
 import { RevisionEntity } from '../entity/revision.entity';
 
 /**
@@ -14,16 +15,26 @@ export class RevisionService {
     private readonly revisions: Repository<RevisionEntity>,
   ) {}
 
-  async record(input: {
-    actor: string;
-    action: 'create' | 'update' | 'delete' | 'restore';
-    collection: string;
-    itemId: string | number;
-    before?: unknown;
-    after?: unknown;
-  }): Promise<void> {
-    await this.revisions.save(
-      this.revisions.create({
+  /**
+   * 한 줄 남긴다. `ctx` 를 주면 그 트랜잭션 안에서 쓴다 — 글 저장이 롤백되면 이력도 같이 사라진다.
+   * 안 주면 따로 쓴다(아직 문맥을 안 넘기는 모듈).
+   */
+  async record(
+    input: {
+      actor: string;
+      action: 'create' | 'update' | 'delete' | 'restore';
+      collection: string;
+      itemId: string | number;
+      before?: unknown;
+      after?: unknown;
+    },
+    ctx?: ITransactionContext,
+  ): Promise<void> {
+    const repo = ctx?.manager
+      ? ctx.manager.getRepository(RevisionEntity)
+      : this.revisions;
+    await repo.save(
+      repo.create({
         actor: input.actor,
         action: input.action,
         collection: input.collection,
