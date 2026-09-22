@@ -36,8 +36,8 @@ export const PAGE_CSS = `
   background: linear-gradient(90deg, #d71920 0 18%, transparent 18%); }
 #dvmax .mx_hero .mx_wrap { position: relative; z-index: 2; color: #fff; }
 #dvmax .mx_kicker { font-size: 16px; font-weight: 800; color: #ff5b66; margin-bottom: 10px; letter-spacing: .02em; }
-#dvmax .mx_hero h2 { font-size: 42px; font-weight: 800; line-height: 1.25; letter-spacing: -1.5px; margin: 0; color: #fff; }
-#dvmax .mx_hero h2 b { color: #a9c4dd; font-weight: 800; }
+#dvmax .mx_hero :is(h1, h2) { font-size: 42px; font-weight: 800; line-height: 1.25; letter-spacing: -1.5px; margin: 0; color: #fff; }
+#dvmax .mx_hero :is(h1, h2) b { color: #a9c4dd; font-weight: 800; }
 #dvmax .mx_hero p { margin-top: 16px; font-size: 17px; line-height: 1.75; color: #d6e2ee;
   max-width: 820px; word-break: keep-all; }
 
@@ -253,7 +253,7 @@ export const PAGE_CSS = `
 #dvmax .mx_cta button:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
 
 @media (max-width: 900px) {
-  #dvmax .mx_hero h2 { font-size: 28px; }
+  #dvmax .mx_hero :is(h1, h2) { font-size: 28px; }
   #dvmax .mx_sec_title { font-size: 26px; }
   #dvmax .mx_kpi { flex-direction: column; }
   #dvmax .mx_kpi_tag { padding: 14px; }
@@ -556,8 +556,8 @@ export const PAGE_CSS = `
 @keyframes mxGlow { from { transform: translateX(-56%) scale(1); } to { transform: translateX(-44%) scale(1.12); } }
 #dvmax.mx_v4 .mx_hero4 .mx_wrap { position: relative; }
 #dvmax.mx_v4 .mx_kicker { font-size: 15px; font-weight: 600; color: #62707e; margin: 0 0 14px; letter-spacing: 0; }
-#dvmax.mx_v4 .mx_hero4 h2 { font-size: clamp(30px, 3.6vw, 44px); line-height: 1.27; letter-spacing: -.88px; font-weight: 700; color: #191f28; max-width: 22em; margin: 0 auto; overflow-wrap: anywhere; }
-#dvmax.mx_v4 .mx_hero4 h2 b { color: inherit; font-weight: 700; }
+#dvmax.mx_v4 .mx_hero4 :is(h1, h2) { font-size: clamp(30px, 3.6vw, 44px); line-height: 1.27; letter-spacing: -.88px; font-weight: 700; color: #191f28; max-width: 22em; margin: 0 auto; overflow-wrap: anywhere; }
+#dvmax.mx_v4 .mx_hero4 :is(h1, h2) b { color: inherit; font-weight: 700; }
 #dvmax.mx_v4 .mx_hero4 p { font-size: 18px; line-height: 1.6; color: #333d4b; margin: 18px auto 30px; max-width: 40em; }
 #dvmax.mx_v4 .mx_hero4_act { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 /* 낱말 등장 — MotionFx 가 h2 를 낱말로 쪼개고 --i 를 준다 */

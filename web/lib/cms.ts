@@ -34,6 +34,11 @@ export type CmsPost = {
   faq_category?: string | null
   /** FAQ 목록과 낱개 조회에만 온다. HTML. */
   body?: string | null
+  board?: string
+  is_pinned?: boolean
+  /** 검색 결과에 쓸 제목·설명. 비어 있으면 제목·요약을 쓴다. */
+  seo_title?: string | null
+  seo_description?: string | null
 }
 
 export type CmsPostFull = CmsPost & { body: string | null; attachments: { id: string; name: string; url: string }[] }
@@ -62,6 +67,32 @@ export async function cmsBoard(board: string, limit = 100): Promise<CmsPost[] | 
     const body = (await res.json()) as { data?: CmsPost[] }
     // 빈 목록은 편집자가 다 내린 것이지 장애가 아니다. 예비 목록으로 되돌리지 않는다.
     return Array.isArray(body.data) ? body.data : null
+  } catch {
+    return null
+  }
+}
+
+export type CmsPage = { data: CmsPost[]; total: number; pageSize: number }
+
+/**
+ * 게시판 한 쪽(공지·보도·뉴스). 순서는 api 가 정한다(고정 글 → 날짜).
+ * 검색어·기간은 api 가 거른다. 못 읽으면 null — 화면이 「불러오지 못했습니다」를 그린다.
+ */
+export async function cmsBoardPage(
+  board: string,
+  q: { page?: number; q?: string; startDate?: string; endDate?: string } = {},
+): Promise<CmsPage | null> {
+  const qs = new URLSearchParams({ board })
+  if (q.page && q.page > 1) qs.set('page', String(q.page))
+  if (q.q) qs.set('q', q.q)
+  if (q.startDate) qs.set('startDate', q.startDate)
+  if (q.endDate) qs.set('endDate', q.endDate)
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/posts?${qs}`, { cache: 'no-store' })
+    if (!res.ok) return null
+    const body = (await res.json()) as Partial<CmsPage>
+    if (!Array.isArray(body.data)) return null
+    return { data: body.data, total: Number(body.total) || 0, pageSize: Number(body.pageSize) || 10 }
   } catch {
     return null
   }

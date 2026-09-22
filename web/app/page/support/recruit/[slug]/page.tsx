@@ -40,6 +40,7 @@ export default async function Page({ params }: Props) {
         headLead="디알밸류와 함께 "
         headStrong="일할 사람을 찾습니다."
         desc="진행 중인 채용 공고입니다."
+        heroTag="h2"
         ctaTitle="채용에 대해 궁금한 점이 있으신가요?"
         ctaDesc="문의하기에서 남기시면 담당자가 연락드립니다."
       >
@@ -51,7 +52,7 @@ export default async function Page({ params }: Props) {
               {p.employment_type && <span className="rc_tag">{EMPLOYMENT_LABEL[p.employment_type] ?? p.employment_type}</span>}
               <span className={`rc_tag ${dueOf(p).cls}`}>{dueOf(p).text}</span>
             </span>
-            <h2>{p.title}</h2>
+            <h1>{p.title}</h1>
             {p.published_date && <span className="rc_due">게시 {dots(p.published_date)}</span>}
             {p.body && <div className="rc_body" dangerouslySetInnerHTML={{ __html: p.body }} />}
             {p.attachments.length > 0 && (

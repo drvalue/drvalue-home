@@ -42,11 +42,14 @@ export function pageMeta({
   description,
   path,
   noIndex = false,
+  article,
 }: {
   title: string
   description: string
   path: string
   noIndex?: boolean
+  /** 게시판 글 한 건. 공유 카드가 「기사」로 읽고 게시일을 붙인다. */
+  article?: { publishedTime?: string | null }
 }): Metadata {
   const full = `${title} | ${SITE_NAME}`
   const url = `${SITE_ORIGIN}${path}`
@@ -60,7 +63,9 @@ export function pageMeta({
       url,
       siteName: SITE_NAME,
       locale: 'ko_KR',
-      type: 'website',
+      ...(article
+        ? { type: 'article' as const, ...(article.publishedTime ? { publishedTime: article.publishedTime } : {}) }
+        : { type: 'website' as const }),
     },
     twitter: { card: 'summary_large_image', title: full, description },
     ...(noIndex ? { robots: { index: false, follow: true } } : {}),

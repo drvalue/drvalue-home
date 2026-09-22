@@ -23,7 +23,7 @@ export const PAGE_CSS = `
 #dvmax .rc_state a { color: #3d5a80; font-weight: 700; }
 
 #dvmax .rc_art { max-width: 820px; }
-#dvmax .rc_art h2 { margin: 8px 0 10px; font-size: 26px; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
+#dvmax .rc_art h1 { margin: 8px 0 10px; font-size: 26px; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
 #dvmax .rc_body { margin-top: 24px; font-size: 16px; line-height: 1.8; color: #333d4b; overflow-wrap: anywhere; }
 #dvmax .rc_body img { max-width: 100%; height: auto; }
 #dvmax .rc_body h2 { font-size: 21px; margin: 28px 0 10px; }

@@ -89,7 +89,7 @@ export default function Page() {
     <section className="hero_sub_banner">
         <div className="t_inner">
             <div className="hero_text" data-aos="fade-up">
-                <h2>디알밸류의 특허 등록 및 출원,<br />디알밸류의 기술력입니다.</h2>
+                <h1>디알밸류의 특허 등록 및 출원,<br />디알밸류의 기술력입니다.</h1>
             </div>
         </div>
     </section>

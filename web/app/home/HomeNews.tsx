@@ -57,7 +57,7 @@ export default function HomeNews({ items }: { items: NewsItem[] }) {
               /* 한 줄씩 늦게 떠오르게 한다. 한꺼번에 나타나면 움직임이 아니라 깜빡임이다. */
               style={{ animationDelay: `${Math.min(i, 5) * 70}ms` }}
             >
-              <a href={`${BOARD_PAGE[it.board]}?id=${encodeURIComponent(it.slug)}`}>
+              <a href={`${BOARD_PAGE[it.board]}/${encodeURIComponent(it.slug)}`}>
                 <span className={`dvnews_badge is-${it.board}`}>{BOARD_LABEL[it.board]}</span>
                 <h4>{it.title}</h4>
                 <time className="dvnews_date" dateTime={it.published_date ?? undefined}>

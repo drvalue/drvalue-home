@@ -28,7 +28,9 @@ export default function SiteHeader({ currentPath }: { currentPath: string }) {
       {/* 맨 위에서만 투명해진다. 자세한 건 그 파일 머리말 참고. */}
       <HeaderScroll />
       <div className="header_container">
-        <h1 id="toss_logo">
+        {/* 로고는 h1 이 아니다 — 모든 장의 h1 이 로고(「디알밸류」)였다(SEO 감사). 장의 h1 은
+            그 장의 제목이다(SolutionShell 머리말). id 는 그대로 — CSS·검사가 본다. */}
+        <div id="toss_logo">
           <a href="/">
             {/* 로고 두 장을 겹쳐 두고 바꿔 보인다. 흰 것은 히어로 위(맨 위),
                 빨간 것은 흰 막대일 때. 받은 참조 코드가 같은 방식이고 두 파일 다
@@ -60,7 +62,7 @@ export default function SiteHeader({ currentPath }: { currentPath: string }) {
               />
             </span>
           </a>
-        </h1>
+        </div>
 
         <nav id="toss_gnb" className="desktop_only">
           <ul className="gnb_list">

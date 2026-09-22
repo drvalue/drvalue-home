@@ -87,6 +87,7 @@ export default function SolutionShell({
   heroLink,
   heroHref,
   proof,
+  heroTag = 'h1',
   children,
 }: {
   path: string
@@ -112,8 +113,14 @@ export default function SolutionShell({
   /** 머리말 둘째 단추 글. 기본 「기능 보기」. */
   heroLink?: string
   heroHref?: string
+  /**
+   * 머리말 큰 제목의 태그. 한 장에 h1 은 하나 — 장의 제목이다. 게시판 글 한 건처럼
+   * 글 제목이 따로 h1 인 장만 'h2' 로 내린다(모양은 같다 — CSS 가 둘 다 본다).
+   */
+  heroTag?: 'h1' | 'h2'
   children: ReactNode
 }) {
+  const HeroTitle = heroTag
   if (look === 'v4') {
     return (
       <>
@@ -129,7 +136,7 @@ export default function SolutionShell({
             <i className="mx_glow" aria-hidden="true" />
             <div className="mx_wrap">
               <p className="mx_kicker">{kickerSub} · {kicker}</p>
-              <h2 data-words>{headLead}<b>{headStrong}</b></h2>
+              <HeroTitle data-words>{headLead}<b>{headStrong}</b></HeroTitle>
               <p>{desc}</p>
               <div className="mx_hero4_act">
                 <ClientAction type="button" className="mx_pill red" calls={[{ fn: 'openContactModal' }]}>
@@ -183,7 +190,7 @@ export default function SolutionShell({
         <section className="mx_hero">
           <div className="mx_wrap">
             <p className="mx_kicker">{kicker} <span>| {kickerSub}</span></p>
-            <h2>{headLead}<b>{headStrong}</b></h2>
+            <HeroTitle>{headLead}<b>{headStrong}</b></HeroTitle>
             <p>{desc}</p>
           </div>
         </section>
