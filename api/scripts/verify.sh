@@ -30,7 +30,14 @@ c.connect().then(()=>c.query(process.env.DBQ)).then(r=>{console.log((r.rows||[])
 VERIFY_EMAIL="verify@drvalue.local"
 SESSION=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$VERIFY_EMAIL',role:'admin',name:'verify.sh',exp:Date.now()+3600000}))")
 dbq "insert into admin_users(email,role,name,enabled) values ('$VERIFY_EMAIL','admin','verify.sh',true) on conflict (email) do update set enabled=true, role='admin'" >/dev/null
-trap 'dbq "delete from admin_users where email='"'"'$VERIFY_EMAIL'"'"'" >/dev/null' EXIT
+# 끝낼 때 돌릴 뒷정리. verify.d 모듈은 trap 을 걸지 말고 CLEANUP 에 더한다 — EXIT trap 은
+# 하나뿐이라 모듈이 걸면 여기 것이 사라진다(실제로 사라져 검사 계정의 변경 이력이 1천 줄 쌓였다).
+CLEANUP=()
+on_exit() { local c; for c in "${CLEANUP[@]}"; do eval "$c"; done; }
+trap on_exit EXIT
+# 검사 계정은 verify.sh 만 쓴다. 그 계정이 남긴 변경 이력도 같이 지운다.
+CLEANUP+=("dbq \"delete from admin_revisions where actor='$VERIFY_EMAIL'\" >/dev/null")
+CLEANUP+=("dbq \"delete from admin_users where email='$VERIFY_EMAIL'\" >/dev/null")
 AUTH="Cookie: dv_admin=$SESSION"
 
 PASS=0; FAIL=0; NA=0

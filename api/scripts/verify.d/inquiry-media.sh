@@ -11,7 +11,7 @@ IM_HR="verify-hr@drvalue.local"
 IM_HAD_V=$(dbq "select count(*) from admin_users where email='$IM_V'")
 dbq "insert into admin_users(email,role,name) values ('$IM_V','admin','verify.sh') on conflict (email) do update set enabled=true, role='admin'" >/dev/null
 dbq "insert into admin_users(email,role,name) values ('$IM_HR','hr','verify.sh hr') on conflict (email) do update set enabled=true, role='hr'" >/dev/null
-trap 'dbq "delete from admin_users where email in ('"'"'$IM_V'"'"','"'"'$IM_HR'"'"')" >/dev/null' EXIT
+CLEANUP+=("dbq \"delete from admin_users where email='$IM_HR'\" >/dev/null")
 
 # 공개 /api/inquiry 는 분당 5회 한도를 앞 절이 거의 다 썼다 — 표본은 DB 에 바로 넣는다.
 IM_IID=$(dbq "insert into inquiries(type,status,name,phone,email,message,consent) values ('기타','new','$RUN-inq','010-1111-2222','im@example.com','담당자 검사',false) returning id")
@@ -100,8 +100,3 @@ fi
 # 이 절에서 넣은 계정을 되돌린다. verify@ 는 원래 있었으면(=verify.sh 가 넣었으면) 둔다.
 dbq "delete from admin_users where email='$IM_HR'" >/dev/null
 [ "$IM_HAD_V" = "0" ] && dbq "delete from admin_users where email='$IM_V'" >/dev/null
-if [ "$IM_HAD_V" = "0" ]; then
-  trap - EXIT
-else
-  trap 'dbq "delete from admin_users where email='"'"'$IM_V'"'"'" >/dev/null' EXIT
-fi

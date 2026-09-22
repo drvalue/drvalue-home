@@ -43,6 +43,8 @@ else
     "$(adm "/posts/$BI_PID" | pick 'print((d.get("data") or {}).get("thumbnail") or "none")')"
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$BI_PID" --max-time 30
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/files/$BI_FID?force=1" --max-time 30
+  dbq "delete from admin_revisions where collection='posts' and item_id='$BI_PID'" >/dev/null
+  dbq "delete from admin_revisions where collection='files' and item_id='$BI_FID'" >/dev/null
   check "검사 그림이 남지 않는다" "404" \
     "$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/api/admin/files/$BI_FID" --max-time 30)"
 fi
