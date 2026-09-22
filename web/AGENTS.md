@@ -105,6 +105,7 @@ python3 scripts/check-a11y.py     # 323/323
 python3 scripts/check-assets.py   # 빠진 파일 0
 NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 110/110
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
+python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
 npx tsc --noEmit && npx next build
 ```
 

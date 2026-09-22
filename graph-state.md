@@ -75,7 +75,7 @@ graph TD
 |---|---|---|---|---|
 | P0. 검사 격리 · 규칙 한 곳 · 첨부 FK | ✅ | verify.sh VERIFY_EMAIL·check_rl, /me boards, migrations/0003, robots 파일 경로 | 7586c0b · 109d223 · e779ce3 · verify 146/0/1 | web 의 canEditBoard 사본 삭제. 첨부 고아 행 52 정리 |
 | A1. api bmes 바닥 | ⬜ | common 기반 저장소·@ServiceException·@Transactional·swagger, admin-post 전환, 패턴 문서 | typecheck·build 0 · verify 전부 · admin-post 서비스 N/N @ServiceException · 컨트롤러 @ApiTags · /api/docs 200 | 성공 응답 모양·주소는 그대로. 파일 참조 등록부는 뺐다(글 40건, LIKE 로 충분 — 수천 건이면 다시) |
-| A2. 게시판 서버 렌더 | ⬜ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | JS 끈 HTML 에 글 제목 3/3·2/2 · 상세 canonical 이 자기 주소 · web 검사 전부 | 규칙 4(JS 꺼도 글) 수리 |
+| A2. 게시판 서버 렌더 | ✅ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | 합침 f1da062 · 부모 docker web 에서 check-boards 35/35 · src 0 · copy 0 · assets 0 · home 23/23 · header 107/107 · a11y 323/323 · pages 110/110 · 옛 ?id= 308 → /notice/legacy-… · 없는 글 404 | 규칙 4 수리. 브라우저 눈 확인은 A3 가 브라우저를 놓은 뒤 |
 | A3. 관리 UX 1차 | ⬜ | 감사 1~5·7~8·10~16·18 (9 예약 표시·필터는 A1 뒤 A3b) | 390·1280 브라우저 측정 전후 · check-copy 0 · tsc·build | 6(SEO)은 E10, 17(레이아웃)은 C2 |
 | A3b. 예약 글 표시·필터 | ⬜ | 목록 배지 · 「예약」 필터 · 대시보드 예약 수 | 예약 글이 목록·대시보드에 보임 | A1 의 목록 필터 뒤 |
 | A4. 페이지 편집 엔진 | ⬜ | pages 표(0004) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
@@ -87,5 +87,6 @@ graph TD
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
 | C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
 | V3. 전체 검증 | ⬜ | | docker 새로 띄움 · verify · web 검사 전부 · 브라우저 4종 · advisor | |
+| S1. 본문 HTML 소독 | ⬜ | api 저장 때 허용 태그만(편집기가 만드는 것) · 공개 렌더도 같은 규칙 | <script>·on* 속성이 저장 뒤 사라짐 | 지금은 관리자 글을 그대로 낸다(채용·게시판). 관리자 세션이 털리면 공개 사이트 XSS. security.md 가 이 기계에 없다 |
 | X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
 | X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |
