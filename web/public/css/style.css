@@ -765,6 +765,7 @@ li {
   z-index: 2;
   color: #fff;
 }
+.hero_sub_banner h1,
 .hero_sub_banner h2 {
   font-size: 42px;
   font-weight: 800;
@@ -1161,6 +1162,7 @@ td .dv_state { padding: 54px 20px 58px; }
 }
 
 @media (max-width: 900px) {
+  .hero_sub_banner h1,
   .hero_sub_banner h2 {
     font-size: 26px;
   }

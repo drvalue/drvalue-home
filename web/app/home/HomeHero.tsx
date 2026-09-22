@@ -18,13 +18,13 @@ export default function HomeHero() {
       <div className="dv_hero_bg" aria-hidden="true" />
       <div className="t_inner">
         <span className="dv_hero_kicker">MANUFACTURING AI · DX</span>
-        <h2>
+        <h1>
           <span>AI로 실현하는</span>
           <br />
           <span>
             <strong>지능형 제조의 미래</strong>
           </span>
-        </h2>
+        </h1>
         <p>
           MES/ERP 구축, 제조 AI 자동화, LLM·RAG 기반 AI Chat, 상담 솔루션. 실제 현장에서 사용하는
           시스템을 만듭니다.

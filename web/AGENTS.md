@@ -82,6 +82,14 @@
   요청마다 `/api/content/posts` 를 읽는다(`no-store`, `force-dynamic`). 관리 화면에서
   저장하면 다음 요청에 보인다. api 가 안 닿을 때만 코드의 예비 목록
   (`companyContent.ts` · `portfolio/list.ts` · 각 장의 배열)을 쓴다.
+- **공지·보도·뉴스는 `app/page/support/board/` 한 틀이다.** 목록·검색(GET 폼)·쪽 넘김(링크)·글
+  한 건을 서버가 그린다 — 예전 jQuery 목록은 스크립트가 꺼지면 비었다. 글 주소는
+  `/page/support/<게시판>/<slug>`. 옛 상세 `목록?id=` 는 308(옛 PHP id 는 `legacy-` + 앞 8자로
+  옮겼다), 다른 게시판 글 주소는 제 게시판으로 308, 없는 글은 404(`app/not-found.tsx`).
+  검색 결과 쪽은 noindex, 2쪽부터는 그 쪽이 대표주소. `scripts/check-boards.py` 가 본다.
+- **h1 은 장마다 하나, 장 제목이다.** SolutionShell 머리말이 h1(`heroTag`), 헤더 로고는 div
+  (`#toss_logo` — 글자 크기·굵기는 h1 기본값 그대로 둬서 줄 높이가 안 바뀐다). 글 한 건 장(게시판 글·
+  채용 글)은 글 제목이 h1 이고 머리말을 `heroTag="h2"` 로 내린다. 머리말 CSS 는 `:is(h1, h2)` 로 둘 다 본다.
 - 원본과 일부러 다르게 만든 자리는 **등록하고, 대신 볼 검사를 같이 만든다.**
   등록만 하고 검사를 안 만들면 그건 검사를 끈 것이다.
 

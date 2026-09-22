@@ -162,8 +162,8 @@ export const PATTERN_CSS2 = `
 `
 export const PATTERN_CSS3 = `
 /* ── 글씨 크고 깔끔하게(2026-09-22 사용자): channel.io marketing·documents 실측 h1 64/600/-2px · h2 52/600/-1.5px ── */
-#dvmax.mx_v4 .mx_hero4 h2 { font-size: clamp(34px, 4.6vw, 64px); font-weight: 600; letter-spacing: -2px; line-height: 1.22; max-width: 20em; }
-#dvmax.mx_v4 .mx_hero4 h2 b { font-weight: 600; }
+#dvmax.mx_v4 .mx_hero4 :is(h1, h2) { font-size: clamp(34px, 4.6vw, 64px); font-weight: 600; letter-spacing: -2px; line-height: 1.22; max-width: 20em; }
+#dvmax.mx_v4 .mx_hero4 :is(h1, h2) b { font-weight: 600; }
 #dvmax.mx_v4 .mx_hero4 p { font-size: clamp(17px, 1.5vw, 21px); color: #4e5968; }
 #dvmax.mx_v4 .mx_state { font-size: clamp(30px, 3.8vw, 52px); font-weight: 600; letter-spacing: -1.5px; line-height: 1.25; }
 #dvmax.mx_v4 .mx_state_p { font-size: clamp(16px, 1.4vw, 19px); }

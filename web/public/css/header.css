@@ -58,6 +58,9 @@ html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_
 }
 
 /* ── 로고 두 장 ────────────────────────────────────────────── */
+/* 로고 자리는 예전에 h1 이었다(2026-09-22 div 로 — 장의 h1 은 장 제목). 글자 크기·굵기를
+   h1 기본값 그대로 둬서 줄 높이가 한 픽셀도 안 바뀌게 한다. */
+#toss_logo { font-size: 2em; font-weight: bold; }
 .hdr_logo_wrap {
     position: relative;
     display: block;

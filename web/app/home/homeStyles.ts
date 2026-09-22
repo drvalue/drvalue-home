@@ -44,12 +44,12 @@ export const HOME_ADD_CSS = `
   margin-bottom: 22px;
 }
 .dv_hero_kicker::before { content: ''; width: 26px; height: 2px; background: #d71920; }
-.dv_hero h2 {
+.dv_hero h1 {
   font-size: 60px; line-height: 1.16; font-weight: 800; letter-spacing: -2px;
   color: #fff; margin: 0 0 22px;
 }
-.dv_hero h2 span { display: inline-block; }
-.dv_hero h2 strong { font-weight: 800; color: #fff; }
+.dv_hero h1 span { display: inline-block; }
+.dv_hero h1 strong { font-weight: 800; color: #fff; }
 .dv_hero p {
   font-size: 19.5px; line-height: 1.62; color: rgba(255,255,255,.82);
   max-width: 620px; margin: 0 0 34px; word-break: keep-all;
@@ -94,8 +94,8 @@ export const HOME_ADD_CSS = `
 .dv_hero .dv_hero_rise { animation: dvHeroRise .85s cubic-bezier(.22,.68,.24,1) both; }
 .dv_hero .dv_hero_rise:nth-of-type(1) { animation-delay: .05s; }
 @keyframes dvHeroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-.dv_hero h2 span:nth-child(1) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .12s both; }
-.dv_hero h2 span:nth-child(2) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .24s both; }
+.dv_hero h1 span:nth-child(1) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .12s both; }
+.dv_hero h1 span:nth-child(2) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .24s both; }
 .dv_hero p { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .38s both; }
 .dv_hero_btns { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .48s both; }
 .dv_hero_proof { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .58s both; }
@@ -103,20 +103,20 @@ export const HOME_ADD_CSS = `
 
 @media (max-width: 1024px) {
   .dv_hero { min-height: 560px; height: auto; padding: 130px 0 90px; }
-  .dv_hero h2 { font-size: 42px; letter-spacing: -1.4px; }
+  .dv_hero h1 { font-size: 42px; letter-spacing: -1.4px; }
   .dv_hero p { font-size: 17px; }
   .dv_hero_cue { display: none; }
 }
 @media (max-width: 560px) {
   .dv_hero { padding: 116px 0 74px; min-height: 0; }
-  .dv_hero h2 { font-size: 33px; letter-spacing: -1px; }
+  .dv_hero h1 { font-size: 33px; letter-spacing: -1px; }
   .dv_hero p { font-size: 15.5px; }
   .dv_hero_btns > * { height: 50px; padding: 0 22px; font-size: 15px; flex: 1 1 auto; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dv_hero_bg, .dv_hero_cue i, .dv_hero .dv_hero_rise,
-  .dv_hero h2 span, .dv_hero p, .dv_hero_btns, .dv_hero_proof, .dv_hero_cue { animation: none; }
+  .dv_hero h1 span, .dv_hero p, .dv_hero_btns, .dv_hero_proof, .dv_hero_cue { animation: none; }
   .dv_hero_bg { transform: none; }
   .dv_hero_btns > * { transition: none; }
   .dv_hero_btns > *:hover { transform: none; }
