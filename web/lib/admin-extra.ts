@@ -15,6 +15,17 @@ export type RevisionRow = {
   board: string | null
 }
 
+/**
+ * 홈 요약(`GET /api/admin/dashboard`). 범위가 못 보는 칸은 api 가 비운다 —
+ * 문의는 인사에게 null, 최근 변경은 전체 권한이 아니면 null. 게시판 수는 0 인 게시판이 빠진다.
+ */
+export type DashboardSummary = {
+  inquiries: { new: number; mine_open: number } | null
+  drafts: { board: string; count: number }[]
+  scheduled: { board: string; count: number }[]
+  recent: RevisionRow[] | null
+}
+
 export type RevisionFull = RevisionRow & {
   before: Record<string, unknown> | null
   after: Record<string, unknown> | null

@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { adminFetch, BOARDS, Page } from '@/lib/admin'
-import { ACTION_LABEL, boardLabel, COLLECTION_LABEL, RevisionRow, when } from '@/lib/admin-extra'
+import { adminFetch, BOARDS } from '@/lib/admin'
+import { ACTION_LABEL, boardLabel, COLLECTION_LABEL, DashboardSummary, when } from '@/lib/admin-extra'
 import { useMe } from './ui/me'
 import './dashboard.css'
 
@@ -12,64 +12,54 @@ const QUICK = ['notice', 'press', 'news', 'recruit']
 
 /**
  * 첫 화면. 사이트의 목적은 문의를 받는 것이라 새 문의가 맨 위다.
- * 수는 기존 목록 API 의 total 로 센다(요약 전용 API 없음).
+ * 수는 홈 요약 API(`/api/admin/dashboard`) 한 번으로 받는다 — 범위가 못 보는 칸은 api 가 비워 준다.
  */
 export default function AdminHome() {
-  const { me, newInquiries } = useMe()
-  const [mine, setMine] = useState<number | null>(null)
-  const [drafts, setDrafts] = useState<{ key: string; label: string; n: number }[] | null>(null)
-  const [recent, setRecent] = useState<RevisionRow[] | null>(null)
+  const { me } = useMe()
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [error, setError] = useState('')
   const boards = BOARDS.filter((b) => me.boards.includes(b.key))
 
   useEffect(() => {
-    if (me.role === 'hr') return
-    adminFetch<Page<unknown>>('/api/admin/inquiries?assignee=me&status=in_progress')
-      .then((r) => setMine(r.total))
-      .catch(() => setMine(null))
-  }, [me.role])
-
-  useEffect(() => {
-    Promise.all(
-      boards.map((b) =>
-        adminFetch<Page<unknown>>(`/api/admin/posts?board=${b.key}&status=draft`)
-          .then((r) => ({ key: b.key, label: b.label, n: r.total }))
-          .catch(() => ({ key: b.key, label: b.label, n: 0 })),
-      ),
-    ).then((xs) => setDrafts(xs.filter((x) => x.n > 0)))
-    // boards 는 me.boards 에서 온다 — 그것이 바뀔 때만 다시 센다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me.boards.join(',')])
-
-  useEffect(() => {
-    if (me.role !== 'admin') return
-    adminFetch<Page<RevisionRow>>('/api/admin/revisions')
-      .then((r) => setRecent(r.data.slice(0, 6)))
-      .catch(() => setRecent(null))
+    adminFetch<{ data: DashboardSummary }>('/api/admin/dashboard')
+      .then((r) => {
+        setSummary(r.data)
+        setError('')
+      })
+      .catch((e) => setError((e as Error).message))
+    // 범위가 바뀌면(60초 재검) 보이는 칸이 달라진다.
   }, [me.role])
 
   const quick = boards.filter((b) => QUICK.includes(b.key))
+  const inq = summary?.inquiries ?? null
+  const counting = <p className="dvd_sub">세는 중…</p>
 
   return (
     <div className="dvd">
       <div className="dva_head">
         <h1>홈</h1>
       </div>
+      {error && (
+        <div className="dva_error" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="dvd_grid">
         {me.role !== 'hr' && (
           <section className="dvd_card is-inquiry" aria-labelledby="dvd-inq">
             <h2 id="dvd-inq">새 문의</h2>
             <p className="dvd_big">
-              {newInquiries === null ? '—' : newInquiries}
+              {inq === null ? '—' : inq.new}
               <small>건</small>
             </p>
-            <p className="dvd_sub">{mine ? `내가 맡아 진행 중인 문의 ${mine}건` : '접수 상태로 남은 문의입니다.'}</p>
+            <p className="dvd_sub">{inq && inq.mine_open > 0 ? `내가 맡아 아직 끝나지 않은 문의 ${inq.mine_open}건` : '접수 상태로 남은 문의입니다.'}</p>
             <div className="dvd_actions">
               <Link href="/admin/inquiries?status=new" className="dva_btn is-primary">
                 새 문의 보기
               </Link>
-              {mine ? (
-                <Link href="/admin/inquiries?assignee=me&status=in_progress" className="dva_btn">
+              {inq && inq.mine_open > 0 ? (
+                <Link href="/admin/inquiries?assignee=me" className="dva_btn">
                   내 담당 보기
                 </Link>
               ) : null}
@@ -79,17 +69,37 @@ export default function AdminHome() {
 
         <section className="dvd_card" aria-labelledby="dvd-draft">
           <h2 id="dvd-draft">초안</h2>
-          {drafts === null ? (
-            <p className="dvd_sub">세는 중…</p>
-          ) : drafts.length === 0 ? (
+          {summary === null ? (
+            counting
+          ) : summary.drafts.length === 0 ? (
             <p className="dvd_sub">사이트에 올리지 않은 초안이 없습니다.</p>
           ) : (
             <ul className="dvd_list">
-              {drafts.map((d) => (
-                <li key={d.key}>
-                  <Link href={`/admin/posts/${d.key}?status=draft`}>
-                    <span>{d.label}</span>
-                    <b>{d.n}건</b>
+              {summary.drafts.map((d) => (
+                <li key={d.board}>
+                  <Link href={`/admin/posts/${d.board}?status=draft`}>
+                    <span>{boardLabel(d.board)}</span>
+                    <b>{d.count}건</b>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="dvd_card" aria-labelledby="dvd-sched">
+          <h2 id="dvd-sched">예약 게시</h2>
+          {summary === null ? (
+            counting
+          ) : summary.scheduled.length === 0 ? (
+            <p className="dvd_sub">예약해 둔 글이 없습니다.</p>
+          ) : (
+            <ul className="dvd_list">
+              {summary.scheduled.map((d) => (
+                <li key={d.board}>
+                  <Link href={`/admin/posts/${d.board}?schedule=scheduled`}>
+                    <span>{boardLabel(d.board)}</span>
+                    <b>{d.count}건</b>
                   </Link>
                 </li>
               ))}
@@ -118,13 +128,13 @@ export default function AdminHome() {
         {me.role === 'admin' && (
           <section className="dvd_card is-wide" aria-labelledby="dvd-recent">
             <h2 id="dvd-recent">최근 변경</h2>
-            {recent === null ? (
+            {summary === null ? (
               <p className="dvd_sub">불러오는 중…</p>
-            ) : recent.length === 0 ? (
+            ) : !summary.recent || summary.recent.length === 0 ? (
               <p className="dvd_sub">아직 바뀐 것이 없습니다.</p>
             ) : (
               <ul className="dvd_recent">
-                {recent.map((r) => (
+                {summary.recent.map((r) => (
                   <li key={r.id}>
                     <span className={`dva_pill dvh_act is-${r.action}`}>{ACTION_LABEL[r.action] ?? r.action}</span>
                     <span className="dvd_what">

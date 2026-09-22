@@ -24,5 +24,7 @@ import { AdminRevisionDefaultService } from './service/admin-revision-default.se
   ],
   controllers: [AdminRevisionDefaultController],
   providers: [AdminRevisionDefaultService],
+  // 홈(admin-dashboard)이 최근 변경을 같은 모양으로 보여 주려고 쓴다.
+  exports: [AdminRevisionDefaultService],
 })
 export class AdminRevisionModule {}

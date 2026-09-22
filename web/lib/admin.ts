@@ -115,9 +115,12 @@ export type Page<T> = { data: T[]; total: number; page: number; pageSize: number
 
 export class AdminError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** api 의 `resultCode`(예: ADMIN_POST_FILE_GONE). 화면이 어느 칸을 짚을지 문구가 아니라 이것으로 고른다. */
+  code: string | null
+  constructor(status: number, message: string, code: string | null = null) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
@@ -140,11 +143,13 @@ export async function adminFetch<T = unknown>(path: string, init: RequestInit = 
   }
   if (!res.ok) {
     let message = '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    let code: string | null = null
     try {
-      const body = (await res.json()) as { message?: unknown }
+      const body = (await res.json()) as { message?: unknown; resultCode?: unknown }
       if (typeof body.message === 'string' && body.message) message = body.message
+      if (typeof body.resultCode === 'string') code = body.resultCode
     } catch {}
-    throw new AdminError(res.status, message)
+    throw new AdminError(res.status, message, code)
   }
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
@@ -192,3 +197,13 @@ export function shortWhen(iso: string | null | undefined): string {
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
+
+/** ISO → '10/1'. 날짜만(이 컴퓨터 시간대) — 「내림 예정」 배지. */
+export function shortDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+/** 아직 오지 않은 시각인가. 목록의 예약·내림 배지가 쓴다. */
+export const isFuture = (iso: string | null | undefined): boolean => !!iso && new Date(iso).getTime() > Date.now()

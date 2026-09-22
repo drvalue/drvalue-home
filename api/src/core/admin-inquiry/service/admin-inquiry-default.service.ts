@@ -79,6 +79,15 @@ export class AdminInquiryDefaultService {
     };
   }
 
+  /** 문의 하나. 없으면 404. */
+  async get(id: number): Promise<AdminInquiryView> {
+    const row = await this.inquiryDefaultRepository.repository.findOne({
+      where: { id },
+    });
+    if (!row) throw CommonError.createByErrorCode(AdminInquiryError.NOT_FOUND);
+    return this.present(row);
+  }
+
   /** 담당자로 고를 수 있는 사람 — admin_users 중 켜진 계정. */
   async assignees() {
     const users = await this.adminUserService.list();

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, PostFull, today, Translation, uploadFile } from '@/lib/admin'
+import { AdminError, adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, PostFull, today, Translation, uploadFile } from '@/lib/admin'
 import FileDrop from '../../ui/FileDrop'
 import { useLeaveGuard } from '../../ui/leave'
 import { useToast } from '../../ui/toast'
@@ -63,6 +63,9 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   const [lang, setLang] = useState<Lang>('ko-KR')
   const [error, setError] = useState('')
   const [titleError, setTitleError] = useState(false)
+  // 저장했더니 api 가 「지워진 파일」이라고 했다 — 첨부 칸(또는 증서 그림 칸)을 짚고, 첨부는 어느 것인지 표시한다.
+  const [fileError, setFileError] = useState<'files' | 'thumb' | null>(null)
+  const [goneIds, setGoneIds] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   // 수행실적 「구분」 · FAQ 「분류」에 지금까지 쓴 값. 입력하면서 고르게 해 같은 말을 다르게 적지 않는다.
   const [labels, setLabels] = useState<string[]>([])
@@ -141,6 +144,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       set({ thumbnail: f.id })
       setThumbPreview(`/api/admin/files/${f.id}`)
       setError('')
+      if (fileError === 'thumb') setFileError(null)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -232,12 +236,25 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       )
       router.push(`/admin/posts/${board!.key}`)
     } catch (e) {
-      const message = (e as Error).message
-      if (message.includes('제목')) {
+      const code = e instanceof AdminError ? e.code : null
+      if (code === 'ADMIN_POST_NEED_KO') {
         setLang('ko-KR')
         setTitleError(true)
       }
-      setError(message)
+      if (code === 'ADMIN_POST_THUMB_GONE') setFileError('thumb')
+      if (code === 'ADMIN_POST_FILE_GONE') {
+        setFileError('files')
+        // 어느 첨부가 지워졌는지 api 는 안 알려 준다 — 미리보기 주소가 404 인 것을 짚는다.
+        const gone = await Promise.all(
+          post.files.map((f) =>
+            fetch(f.url, { method: 'HEAD', credentials: 'include' })
+              .then((r) => (r.status === 404 ? f.id : null))
+              .catch(() => null),
+          ),
+        )
+        setGoneIds(gone.filter((x): x is string => x !== null))
+      }
+      setError((e as Error).message)
       setBusy(false)
     }
   }
@@ -421,8 +438,13 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             </>
           )}
           {WITH_CERT.includes(k) && (
-            <div className="dva_field">
+            <div className={`dva_field${fileError === 'thumb' ? ' is-invalid' : ''}`}>
               <span className="dva_label">증서 그림</span>
+              {fileError === 'thumb' && (
+                <small className="dva_field_err" role="status">
+                  그림 파일이 지워졌습니다. 그림을 다시 올려 주세요.
+                </small>
+              )}
               {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
               <FileDrop
                 label={post.thumbnail ? '다른 그림으로 바꾸기' : '증서 그림 올리기'}
@@ -438,6 +460,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
                   onClick={() => {
                     set({ thumbnail: null })
                     setThumbPreview(null)
+                    if (fileError === 'thumb') setFileError(null)
                   }}
                 >
                   그림 빼기
@@ -471,20 +494,46 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             </div>
           )}
           {WITH_FILES.includes(k) && (
-            <div className="dva_field">
+            <div className={`dva_field${fileError === 'files' ? ' is-invalid' : ''}`}>
               <span className="dva_label">첨부 파일</span>
+              {fileError === 'files' && (
+                <small className="dva_field_err" role="status">
+                  {goneIds.length > 0
+                    ? `지워진 첨부 ${goneIds.length}개를 빼고 다시 저장해 주세요.`
+                    : '첨부 파일 중 지워진 것이 있습니다. 첨부 목록을 확인해 주세요.'}
+                </small>
+              )}
               {post.files.length > 0 && (
                 <ul className="dva_files">
-                  {post.files.map((f) => (
-                    <li key={f.id}>
-                      <a href={f.url} target="_blank" rel="noreferrer">
-                        {f.name}
-                      </a>
-                      <button type="button" className="dva_btn is-small" onClick={() => set({ files: post.files.filter((x) => x.id !== f.id) })}>
-                        빼기
-                      </button>
-                    </li>
-                  ))}
+                  {post.files.map((f) => {
+                    const gone = goneIds.includes(f.id)
+                    return (
+                      <li key={f.id} className={gone ? 'is-gone' : undefined}>
+                        {gone ? (
+                          <span>
+                            {f.name} <span className="dva_pill is-gone">지워진 파일</span>
+                          </span>
+                        ) : (
+                          <a href={f.url} target="_blank" rel="noreferrer">
+                            {f.name}
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          className="dva_btn is-small"
+                          onClick={() => {
+                            const rest = post.files.filter((x) => x.id !== f.id)
+                            set({ files: rest })
+                            const left = goneIds.filter((x) => x !== f.id)
+                            setGoneIds(left)
+                            if (left.length === 0 && fileError === 'files') setFileError(null)
+                          }}
+                        >
+                          빼기
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               <FileDrop label="첨부 파일 올리기" hint="누르거나 끌어다 놓으세요. 그림·PDF·텍스트 파일을 20MB 까지 올릴 수 있습니다." multiple disabled={busy} onFiles={onFiles} />
