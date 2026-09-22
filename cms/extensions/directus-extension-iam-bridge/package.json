@@ -1,0 +1,13 @@
+{
+  "name": "directus-extension-iam-bridge",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "사내 IAM 으로 Directus 관리 화면에 로그인한다. Core 가 SSO 를 막아서 확장으로 대신한다.",
+  "directus:extension": {
+    "type": "endpoint",
+    "path": "index.js",
+    "source": "index.js",
+    "host": "^12.0.0"
+  }
+}

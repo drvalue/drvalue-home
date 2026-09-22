@@ -63,6 +63,9 @@ services:
       EXTENSIONS_AUTO_RELOAD: 'true'
       # 사내 IAM 로그인 다리(extensions/directus-extension-iam-bridge).
       # Core 는 SSO 를 막지만 확장은 막지 않는다. 값이 없으면 꺼진 채로 돈다.
+      # 관리 화면은 세션 쿠키 SameSite=strict 가 기본인데, IAM 에서 돌아오는
+      # 콜백은 다른 사이트에서 오는 요청이라 strict 쿠키가 안 실린다 → lax.
+      SESSION_COOKIE_SAME_SITE: lax
       IAM_BRIDGE_ENABLED: ${IAM_BRIDGE_ENABLED:-false}
       IAM_BRIDGE_IAM_BASE: ${IAM_BRIDGE_IAM_BASE:-}
       IAM_BRIDGE_ROUTE_BASE: ${IAM_BRIDGE_ROUTE_BASE:-}

@@ -32,8 +32,7 @@
 
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
-| `cms/scripts/smoke.sh` | Directus 권한·예약 게시·다국어·공개 엔드포인트 | 109/109 |
-| `cms/scripts/verify-iam-bridge.sh` | 관리자 로그인 전체 흐름 (가짜 IAM 필요) | 11/11 |
+| `cms/scripts/smoke.sh` | Directus 권한·예약 게시·다국어·공개 엔드포인트·IAM 다리(상태·state 위조·쿠키 누출) | 112/112 |
 | `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 닫힌 기본값 | 45/45 (pages·menu·notify 검사 10건을 기능과 함께 뺐다. 55→45 는 회귀가 아니다) |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 |
 | `web/scripts/check-pages.py` | 새로 채운 24장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 98/54 |

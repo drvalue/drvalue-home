@@ -198,20 +198,28 @@ done
 check "익명이 파일 목록을 조회할 수 있다(의도된 노출)" "ok" "$(verdict "" GET /files)"
 
 echo "== IAM 로그인 다리 =="
-# Core 는 SSO 를 막지만 확장은 막지 않는다. 다리는 기본으로 꺼져 있어야 한다 —
-# 설정이 안 된 채로 켜져 있으면 관리 화면 로그인이 통째로 막힌다.
-# 전체 흐름 검증은 scripts/verify-iam-bridge.sh 가 한다(가짜 IAM 필요).
+# Core 는 SSO 를 막지만 확장은 막지 않는다. IAM 없이 잴 수 있는 것만 잰다 —
+# 실제 로그인은 사람이 IAM 계정으로 해 본다(cms/README.md).
 check "다리 확장이 로드됨" "200" "$(code "" GET /iam-bridge/status)"
-check "기본은 꺼져 있음" "False" \
-  "$(curl -s "$BASE/iam-bridge/status" --max-time 30 | pick 'print(d.get("enabled"))')"
-check "꺼진 다리로는 로그인 못 함" "503" "$(code "" GET /iam-bridge/login)"
-# 다리가 꺼져 있는데 로그인 화면에 IAM 링크가 남아 있으면 누르는 사람마다
-# 503 을 본다. 켜는 쪽(iam_bridge_sync.py)이 링크를 넣으므로, 꺼진 상태에서는
-# 없어야 한다.
-check "꺼진 상태에선 로그인 화면에 IAM 링크가 없다" "none" \
-  "$(curl -s "$BASE/server/info" --max-time 30 | pick '
+BRIDGE_ON=$(curl -s "$BASE/iam-bridge/status" --max-time 30 | pick 'print(str(d.get("enabled")).lower())')
+if [ "$BRIDGE_ON" = "true" ]; then
+  check "켜진 다리는 IAM 으로 보낸다" "302" "$(code "" GET /iam-bridge/login)"
+  check "보내는 주소에 콜백이 실려 있다" "yes" \
+    "$(curl -s -o /dev/null -w '%{redirect_url}' "$BASE/iam-bridge/login" --max-time 30 | grep -q 'redirect_url=' && echo yes || echo no)"
+else
+  check "꺼진 다리로는 로그인 못 함" "503" "$(code "" GET /iam-bridge/login)"
+  # 다리가 꺼져 있는데 로그인 화면에 IAM 링크가 남아 있으면 누르는 사람마다
+  # 503 을 본다. 켜는 쪽(iam_bridge_sync.py)이 링크를 넣으므로, 꺼진 상태에서는
+  # 없어야 한다.
+  check "꺼진 상태에선 로그인 화면에 IAM 링크가 없다" "none" \
+    "$(curl -s "$BASE/server/info" --max-time 30 | pick '
 n = d.get("data",{}).get("project",{}).get("public_note") or ""
 print("남아있음" if "/iam-bridge/login" in n else "none")')"
+fi
+check "위조 state 는 403" "403" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/iam-bridge/callback?code=x&state=forged" --max-time 30)"
+check "위조 state 에 세션 쿠키 없음" "none" \
+  "$(curl -s -D - -o /dev/null "$BASE/iam-bridge/callback?code=x&state=forged" --max-time 30 | grep -ci 'set-cookie: directus_session_token' | sed 's/^0$/none/')"
 
 echo "== 백엔드 서비스 계정 =="
 # Nest 가 Directus 를 읽을 계정. 정적 토큰은 발급 때 한 번만 보이므로 여기서는

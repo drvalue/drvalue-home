@@ -56,7 +56,7 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 ## 매번 돌리는 검사
 
 ```bash
-cd cms  && bash scripts/smoke.sh                 # 109/109
+cd cms  && bash scripts/smoke.sh                 # 112/112
 cd api  && bash scripts/verify.sh                # 45/45
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-home.py         # 21/21  (:3400 필요)
@@ -104,13 +104,14 @@ cd web  && python3 scripts/check-src.py          # 제일 먼저
 | `DIRECTUS_SECRET` | 서명 키 | 안 뜬다 |
 | `ADMIN_EMAIL` · `ADMIN_PASSWORD` | 최초 관리자. 부팅 때 한 번만 쓴다 | 계정이 안 생긴다 |
 | `PUBLIC_URL` · `CORS_ORIGIN` | 자기 주소와 허용할 출처 | 관리 화면이 깨진다 |
-| `IAM_BRIDGE_*` | 사내 IAM 로그인 | 기능이 꺼진 채 로컬 로그인만 동작 |
+| `IAM_BRIDGE_*` | 사내 IAM 로그인. `ROUTE_BASE` 는 선택(테넌트 root 확인) | 기능이 꺼진 채 로컬 로그인만 동작 |
 
 `IAM_BRIDGE_ENABLED=true` 로 켠 뒤에는 **반드시**
 `python3 scripts/iam_bridge_sync.py` 를 한 번 돌린다. Directus Core 는
 로컬 로그인 창을 못 끄므로, 계정 비밀번호를 사람이 모르는 파생값으로
 바꿔야 IAM 이 유일한 입구가 된다. 계정 자리(seat)가 3명이라 등록할 수
-있는 사람도 최대 3명이다.
+있는 사람도 최대 3명이다. 실제 로그인 확인 절차는 `cms/README.md` 의
+「실제 IAM 으로 확인하기」.
 
 ## 운영 배포
 

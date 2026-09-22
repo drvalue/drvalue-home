@@ -81,72 +81,73 @@ custom_permission_rules_enabled is a restricted resource
 
 ## 사내 IAM 으로 관리 화면에 로그인하기
 
-Core 는 SSO 를 막는다. `AUTH_PROVIDERS` 로 OIDC 를 정상 설정하고 재기동해도
-제공자 목록이 비고 기동 로그에 이렇게 뜬다.
+Core 는 SSO 를 막는다(`sso_enabled` 라이선스 게이트). 확장은 막지 않고
+`AuthenticationService` 를 그대로 받는다. 그래서 IAM 확인을
+`extensions/directus-extension-iam-bridge/` 가 직접 하고, 통과한 사람에게
+Directus 세션을 발급한다. 빌드 없이 도는 ESM 파일 하나다.
 
 ```
-WARN: you have SSO providers configured these will be unavailable
-      under the current license tier
-GET /auth → {"data":[]}
-```
-
-라이선스가 막는 것은 다섯 개뿐이다 — `ai_translations` · `custom_llms` ·
-`custom_permission_rules` · `production` · `sso`. **확장은 그 목록에 없고**
-`AuthenticationService` 를 그대로 받는다. 그래서 IAM 확인을 확장이 직접 하고,
-통과한 사람에게 Directus 세션을 발급한다.
-
-`extensions/directus-extension-iam-bridge/` 가 그것이다. 운영 중인 PHP 사이트가
-쓰는 것과 같은 4단계다.
-
-```
-GET  /iam-bridge/login      → IAM 으로 보낸다 (state 를 서명해 쿠키에 둔다)
-GET  /iam-bridge/callback   → 아래 4단계를 확인하고 세션 쿠키를 심는다
+GET  /iam-bridge/login      → state 를 서명해 쿠키에 두고 IAM 으로 보낸다
+GET  /iam-bridge/callback   → 아래를 확인하고 세션 쿠키를 심는다
 GET  /iam-bridge/status     → 켜짐 여부와 설정 유무만 (값은 안 내보낸다)
 
 1) {IAM}/auth/token/exchange {code, redirectUri}  → IAM 토큰
-2) {ROUTE}/auth/v1/login/root/iam                 → 앱 토큰    (Bearer=IAM 토큰)
-3) {ROUTE}/auth/v1/login/tenant/by-root           → 테넌트 토큰 (X-Tenant-Code)
-   실패 = 권한 없음. 이 단계가 인가 판정을 겸한다.
-4) IAM 이메일 → 미리 만들어 둔 Directus 계정으로 매핑 → 세션 발급
+2) 이메일 — 토큰 claim 에 있으면 그것, 없으면 {IAM}/auth/me
+3) (선택, IAM_BRIDGE_ROUTE_BASE 를 채웠을 때만) 게이트웨이 root/iam · tenant/by-root
+4) 이메일이 IAM_BRIDGE_ACCOUNTS 에 있어야 한다 — 이 목록이 인가다
+5) 매핑된 Directus 계정으로 파생 비밀번호 로그인(session 모드) → 세션 쿠키
 ```
 
-설정은 `.env` 의 `IAM_BRIDGE_*` 다. 비워 두면 꺼진 채로 돌고 기존 로컬
-로그인만 동작한다.
+3)은 기본이 꺼짐이다. 지금 닿는 게이트웨이는 `root/iam` 에 게이트웨이가
+넣어 주는 `x-user-*` 헤더를 요구해서 어느 쪽에서 불러도 403 이다. 그 단계를
+필수로 두면 로그인이 끝까지 안 간다. 대신 허용 목록(최대 3명)이 인가를 맡는다
+(`docs/tracking/decisions/0013`).
+
+설정은 루트 `.env` 의 `IAM_BRIDGE_*` 다. 비워 두면 꺼진 채로 돌고 로컬
+로그인만 동작한다. 세션 쿠키는 `SESSION_COOKIE_SAME_SITE=lax` 여야 한다 —
+IAM 에서 돌아오는 콜백은 다른 사이트에서 오는 요청이라 `strict` 쿠키가 안
+실린다. compose 가 그렇게 둔다.
 
 **켠 뒤에 반드시 `python3 scripts/iam_bridge_sync.py` 를 한 번 돌려야 한다.**
-다리를 켜는 것만으로는 아무것도 잠기지 않는다 — Core 는 로컬 로그인 창을 끌 수
-없어서, IAM 은 **문을 하나 더 만든 것이지 기존 문을 잠근 것이 아니다.** 아는
-비밀번호로 `/admin/login` 에 그냥 들어올 수 있다(실측). 사람이 모르는 값으로
-바꾸는 것이 유일한 방법이다. 이 스크립트가 두 가지를 한다.
+Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 만든 것이지 기존
+문을 잠근 것이 아니다.** 이 스크립트가 두 가지를 한다.
 
 1. 대상 계정 비밀번호를 `HMAC-SHA256(SECRET, "iam-bridge:<이메일>")` 로 바꾼다.
-   다리는 로그인할 때 같은 값을 다시 계산한다. **어디에도 적혀 있지 않다** —
-   설정에도 환경변수에도 비밀번호가 없다.
-2. 로그인 화면에 IAM 진입점을 만든다. Directus 는 라이선스가 있는 제공자만 SSO
-   버튼을 그려 주므로 그냥 두면 `/iam-bridge/login` 으로 가는 길이 화면에 없다.
-   `public_note` 가 마크다운 링크를 실제 `<a>` 로 렌더하는 것을 확인했다.
+   다리는 로그인할 때 같은 값을 다시 계산한다. 어디에도 적혀 있지 않다.
+2. 로그인 화면 하단(`public_note`)에 `/iam-bridge/login` 링크를 넣는다.
 
-돌리고 나면 이 저장소의 다른 스크립트(스모크·프로비저닝)가 쓰는
-`ADMIN_PASSWORD` 로는 로그인되지 않는다. 운영에 올릴 때 마지막으로 돌린다.
+돌리고 나면 매핑된 계정은 `ADMIN_PASSWORD` 로 로그인되지 않는다. 로컬에서
+써 볼 때는 `admin@` 이 아니라 `marketing@drvalue.co.kr` 에 매핑한다 —
+스모크·검증 스크립트가 admin 비밀번호로 들어간다.
 
-검증: `bash scripts/verify-iam-bridge.sh` — 가짜 IAM 을 띄워 4단계를 실제로
-통과시킨다(운영 자격증명 없이). 정상 로그인·테넌트 거부·매핑 없음·state 위조·
-주소에 토큰 누출까지 8항.
+### 실제 IAM 으로 확인하기
 
-**이 방식의 값**
+1. `.env` 에 `IAM_BRIDGE_ENABLED=true`, `IAM_BRIDGE_ACCOUNTS=<내 IAM 이메일>:marketing@drvalue.co.kr`
+2. `docker compose up -d directus` (루트에서)
+3. `set -a; . .env; set +a; cd cms && python3 scripts/iam_bridge_sync.py`
+4. 브라우저에서 `http://localhost:3350/iam-bridge/login` → IAM 로그인 → `/admin` 으로 돌아온다
+
+실패하면 `docker logs drvalue_directus | grep iam-bridge` 를 본다. 값은 안
+찍히고 단계와 응답 키 이름만 남는다.
+
+| 로그 | 뜻 |
+|---|---|
+| `exchange 4xx` | IAM 이 code 나 redirectUri 를 거부했다. 콜백 주소가 IAM 화이트리스트에 없을 때가 대부분 — IAM 쪽 등록이 필요하다 |
+| `me ... keys=` | `/auth/me` 응답에 `email` 이 없다. 키 이름을 보고 확장의 3) 을 맞춘다 |
+| `unmapped iam user` | IAM 은 통과했는데 `IAM_BRIDGE_ACCOUNTS` 에 없다 |
+| `directus login failed` | `iam_bridge_sync.py` 를 안 돌렸거나 `SECRET` 이 바뀌었다 |
+
+자동 검사는 `smoke.sh` 의 세 항목(상태·state 위조·쿠키 누출)뿐이다. 실제
+로그인은 사람이 IAM 계정으로 해 본다.
+
+**이 방식이 못 막는 것**
 
 - `SECRET` 을 아는 사람은 누구로든 로그인할 수 있다. 다만 `SECRET` 은 이미 모든
   세션 토큰을 서명하므로 권한이 늘어나지는 않는다.
-- **IAM 계정이 여럿이어도 Directus 계정은 셋이다.** 여러 사람이 같은 계정에
-  매핑되면 변경 이력(9번)에 사람이 아니라 계정만 남는다. 누가 눌렀는지는
-  다리의 서버 로그(`iam-bridge: 로그인 성공`)에만 남는다.
-- 파생값이 계정에 안 들어가 있으면 로그인 시도 제한에 걸려 **계정이
-  suspended 로 잠긴다.** 다리가 이 경우를 따로 잡아 "계정 비밀번호가
-  파생값과 다르다" 로 남기니, 공격이 아니라 설정 오류로 읽으면 된다.
-- **운영 IAM 토큰에 어떤 claim 이 있는지는 붙여 보기 전에는 모른다.**
-  다리는 `email → preferred_username → sub` 순으로 찾고, 실패하면 토큰에 있던
-  claim 이름을 로그에 남긴다. 그 목록을 보고 `IAM_BRIDGE_ACCOUNTS` 의 왼쪽
-  키를 맞추면 된다.
+- 허용 목록에 있는 사람이 사내에서 권한을 잃어도 목록을 고치기 전까지는
+  들어온다. 게이트웨이 확인(3)을 켜야 그것이 잡히는데, 지금은 못 켠다.
+- IAM 계정이 여럿이어도 Directus 계정은 셋이다. 여러 사람이 같은 계정에
+  매핑되면 활동 기록이 그 계정 하나로 찍힌다.
 
 ## 언어별 콘텐츠(11번)가 저장되는 방식
 
