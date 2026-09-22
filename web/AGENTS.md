@@ -140,6 +140,16 @@
 
 - 화면은 서버 컴포넌트가 기본이다. 브라우저에서만 되는 일(관찰·모달·
   스크롤)만 `'use client'` 로 뺀다.
+- **api 의 모양을 손으로 옮겨 적지 않는다 — 생성한다.** 응답·요청의 형은 `lib/api-types.gen.ts`
+  (api 의 OpenAPI 문서에서), 페이지 글의 형은 `lib/page-types.gen.ts`(api 의 칸 구조에서)다. 둘 다 손대지 않는다.
+  - 쓰는 법: 스키마 이름 그대로(`Api.ControllerAdminPostDefaultRowResponseDto`)에 화면 쪽 이름을 붙이거나
+    (`lib/admin.ts` 의 `PostRow`), 주소로 응답·본문을 집는다 — `ApiResponse<'GET /api/admin/inquiries'>` ·
+    `ApiBody<'PUT /api/admin/menu'>`. 목록 봉투(`{ data, total, page, pageSize }`)도 주소마다 이것으로 받는다.
+  - 페이지 글: `cmsPageContent(key)` 의 결과 형은 key 가 정한다(`PageContentMap[key]`). 부품 이름
+    (`ShellContent` · `LeadContent` …)은 `pageContentParts.ts` 가 그 형에서 뽑아 붙인다.
+  - api 의 DTO·칸 구조를 바꿨으면: `(cd api && npm run build && node scripts/openapi.js) && (cd web && node scripts/gen-types.mjs)`.
+    잊으면 `scripts/check-types.py` 가 낡은 파일을 적고 실패한다. 형이 틀리면 web 이 아니라 api 의 문서(`@ApiProperty`)를 고친다.
+  - 생성기는 직접 짰다(`scripts/gen-types.mjs`) — openapi-typescript 는 TypeScript 5 컴파일러 API 를 쓰는데 web 은 TypeScript 7 이다.
 - **공개 화면은 route group `app/(site)/` 아래다**(루트 레이아웃 `app/(site)/layout.tsx` · 홈 `app/(site)/page.tsx` ·
   장 `app/(site)/page/**` · 404 `app/(site)/not-found.tsx`). 괄호 폴더는 주소에 안 나온다 — 주소는 그대로다.
   관리 화면(`app/admin`)과 루트 레이아웃을 가르려고 옮겼다. 어느 쪽에도 안 맞는 주소의 404 는 `app/global-not-found.tsx`
@@ -214,6 +224,7 @@ python3 scripts/check-assets.py   # 빠진 파일 0
 NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 110/110
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
+python3 scripts/check-types.py    # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버 없이)
 npx tsc --noEmit && npx next build
 ```
 

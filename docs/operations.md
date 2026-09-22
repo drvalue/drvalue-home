@@ -85,6 +85,7 @@ cd api  && npm run typecheck && npm run build
         && python3 scripts/check-pattern.py      # 모듈 모양 문제 0 (서버 없이 돈다)
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-copy.py         # 화면으로 가는 문구의 반말 0건 (서버 없이 돈다)
+        && python3 scripts/check-types.py        # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버·DB 없이)
         && npx tsc --noEmit && npx next build
         && python3 scripts/check-home.py         # 23/23  (:3400 필요 — 다른 포트는 NEXT_ORIGIN)
         && python3 scripts/check-header.py       # 107/107

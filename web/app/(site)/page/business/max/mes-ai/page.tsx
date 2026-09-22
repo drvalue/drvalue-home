@@ -3,7 +3,7 @@ import SolutionShell from '../SolutionShell'
 import { Bento, FlowCard } from '../Patterns'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, texts, toHeroShots, toLead, toShot, toTone, type MesAiContent } from '../../../pageContentParts'
+import { orUndefined, texts, toHeroShots, toLead, toShot, toTone } from '../../../pageContentParts'
 import { MES_AI_DEFAULT, MES_AI_KEY } from './content'
 
 /**
@@ -29,7 +29,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<MesAiContent>(MES_AI_KEY)) ?? MES_AI_DEFAULT
+  const c = (await cmsPageContent(MES_AI_KEY)) ?? MES_AI_DEFAULT
   const { shell, bento } = c
   return (
     <>

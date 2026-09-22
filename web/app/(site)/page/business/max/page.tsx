@@ -7,7 +7,7 @@ import { MENU_ITEMS } from '@/lib/menu'
 import { menuLabelOf } from '@/lib/menu-cms'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, toHeroShots, toShot, type IndustryContent, type MaxHubContent, type MesAiContent, type ShowcaseCardContent } from '../../pageContentParts'
+import { orUndefined, toHeroShots, toShot, type ShowcaseCardContent } from '../../pageContentParts'
 import { MAX_HUB_DEFAULT, MAX_HUB_KEY } from './content'
 import { PCB_MES_DEFAULT, PCB_MES_KEY } from './pcb-mes/content'
 import { COSMETICS_MES_DEFAULT, COSMETICS_MES_KEY } from './cosmetics-mes/content'
@@ -47,10 +47,10 @@ const cardShot = (card: ShowcaseCardContent, fallback: ShowcaseCardContent) => (
 export default async function Page() {
   const [labelOf, hub, pcbPage, cosPage, aiPage] = await Promise.all([
     menuLabelOf(),
-    cmsPageContent<MaxHubContent>(MAX_HUB_KEY),
-    cmsPageContent<IndustryContent>(PCB_MES_KEY),
-    cmsPageContent<IndustryContent>(COSMETICS_MES_KEY),
-    cmsPageContent<MesAiContent>(MES_AI_KEY),
+    cmsPageContent(MAX_HUB_KEY),
+    cmsPageContent(PCB_MES_KEY),
+    cmsPageContent(COSMETICS_MES_KEY),
+    cmsPageContent(MES_AI_KEY),
   ])
   const c = hub ?? MAX_HUB_DEFAULT
   const pcb = (pcbPage ?? PCB_MES_DEFAULT).shell

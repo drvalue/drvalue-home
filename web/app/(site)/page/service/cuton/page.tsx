@@ -7,7 +7,7 @@ import { Statement } from '../../business/max/V4'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
-import { orUndefined, toHeroShots, toLead, type ServiceDemoContent } from '../../pageContentParts'
+import { orUndefined, toHeroShots, toLead } from '../../pageContentParts'
 import { CUTON_DEFAULT, CUTON_KEY } from './content'
 
 /**
@@ -33,7 +33,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<ServiceDemoContent>(CUTON_KEY)) ?? CUTON_DEFAULT
+  const c = (await cmsPageContent(CUTON_KEY)) ?? CUTON_DEFAULT
   const { shell, demo, compareStatement, extra } = c
   return (
     <>

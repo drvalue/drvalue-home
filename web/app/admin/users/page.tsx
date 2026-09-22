@@ -5,6 +5,7 @@ import { adminFetch, adminJson } from '@/lib/admin'
 import { AdminUserRow, ROLE_HINT, ROLE_LABEL, when } from '@/lib/admin-extra'
 import { useToast } from '../ui/toast'
 import './users.css'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 const ROLES: AdminUserRow['role'][] = ['admin', 'marketing', 'hr']
 
@@ -21,7 +22,7 @@ export default function UsersPage() {
 
   const load = useCallback(async () => {
     try {
-      setRows((await adminFetch<{ data: AdminUserRow[] }>('/api/admin/users')).data)
+      setRows((await adminFetch<ApiResponse<'GET /api/admin/users'>>('/api/admin/users')).data)
       setError('')
     } catch (e) {
       setError((e as Error).message)
@@ -36,7 +37,7 @@ export default function UsersPage() {
     setSaving(email)
     setError('')
     try {
-      const r = await adminJson<{ data: AdminUserRow }>(`/api/admin/users/${encodeURIComponent(email)}`, 'PATCH', { role })
+      const r = await adminJson<ApiResponse<'PATCH /api/admin/users/{email}'>>(`/api/admin/users/${encodeURIComponent(email)}`, 'PATCH', { role })
       setRows((xs) => (xs ? xs.map((x) => (x.email === email ? r.data : x)) : xs))
       toast(`${r.data.name || email} 님의 범위를 바꿨습니다. 지금 범위는 ${ROLE_LABEL[role]}입니다.`)
     } catch (e) {

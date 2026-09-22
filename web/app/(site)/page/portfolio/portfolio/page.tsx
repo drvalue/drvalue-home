@@ -99,7 +99,7 @@ export default async function Page() {
   const cms = await cmsBoard('case')
   const rows: readonly Row[] = cms
     ? cms.map((r) => ({
-        과제명: r.title,
+        과제명: r.title ?? '',
         기간: `${yymm(r.period_start)}~${yymm(r.period_end)}`,
         구분: r.case_category_label ?? '',
       }))

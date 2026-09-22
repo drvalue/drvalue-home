@@ -1,22 +1,10 @@
 import { adminFetch, adminJson } from '@/lib/admin'
+import type * as Api from './api-types.gen'
+import type { ApiResponse } from './api-types.gen'
 
-/** /api/admin/files 목록의 한 줄. */
-export type AdminFile = {
-  id: string
-  title: string | null
-  filename_download: string
-  type: string | null
-  filesize: number | null
-  width: number | null
-  height: number | null
-  created_on: string
-  /** 공개 주소 — 게시된 글이 참조해야 열린다. 본문·그림 칸에 넣는 값. */
-  url: string
-  /** 관리 화면 미리보기 — 참조와 무관하게 열린다. */
-  preview_url: string
-  /** 대표 이미지 · 공유 이미지 · 첨부로 쓰는 글 수. 본문 안 그림은 세지 않는다. */
-  used: number
-}
+/** /api/admin/files 목록의 한 줄 — 모양은 api 문서의 것. */
+export type AdminFile = Api.ControllerAdminFileDefaultResponseDto
+export type FilePage = ApiResponse<'GET /api/admin/files'>
 
 export type FileKind = 'image' | 'pdf' | 'video' | 'other'
 
@@ -54,14 +42,14 @@ export function bytes(n: number | null): string {
 export async function uploadMedia(file: File): Promise<AdminFile> {
   const form = new FormData()
   form.append('file', file)
-  const res = await adminFetch<{ data: AdminFile }>('/api/admin/files', { method: 'POST', body: form })
+  const res = await adminFetch<ApiResponse<'POST /api/admin/files'>>('/api/admin/files', { method: 'POST', body: form })
   return res.data
 }
 
 export function renameMedia(id: string, title: string) {
-  return adminJson<{ data: AdminFile }>(`/api/admin/files/${id}`, 'PATCH', { title })
+  return adminJson<ApiResponse<'PATCH /api/admin/files/{id}'>>(`/api/admin/files/${id}`, 'PATCH', { title })
 }
 
 export function deleteMedia(id: string, force: boolean) {
-  return adminFetch<{ ok: true }>(`/api/admin/files/${id}${force ? '?force=1' : ''}`, { method: 'DELETE' })
+  return adminFetch<ApiResponse<'DELETE /api/admin/files/{id}'>>(`/api/admin/files/${id}${force ? '?force=1' : ''}`, { method: 'DELETE' })
 }

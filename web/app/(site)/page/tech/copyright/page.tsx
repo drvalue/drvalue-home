@@ -140,7 +140,7 @@ function fromCms(rows: CmsPost[]): CopyrightCert[] {
     .filter((r) => r.thumbnail && r.title)
     .map((r) => ({
       img: r.thumbnail as string,
-      title: r.title,
+      title: r.title ?? '',
       kind: r.cert_kind ?? '',
       made: dots(r.cert_made_date),
       reg: dots(r.cert_date),

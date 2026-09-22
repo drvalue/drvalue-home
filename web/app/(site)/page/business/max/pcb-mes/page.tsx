@@ -2,7 +2,7 @@ import { PAGE_CSS } from '../maxStyles'
 import IndustryPage from '../IndustryPage'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, toGroups, toHeroShots, toIndustry, type IndustryContent } from '../../../pageContentParts'
+import { orUndefined, toGroups, toHeroShots, toIndustry } from '../../../pageContentParts'
 import { PCB_MES_DEFAULT, PCB_MES_KEY } from './content'
 
 /** 원본 PHP 에 없는 새 페이지다. M.AX 페이지의 「PCB 업종」 탭을 떼어 냈다.
@@ -19,7 +19,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<IndustryContent>(PCB_MES_KEY)) ?? PCB_MES_DEFAULT
+  const c = (await cmsPageContent(PCB_MES_KEY)) ?? PCB_MES_DEFAULT
   const { shell } = c
   return (
     <>

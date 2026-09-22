@@ -7,7 +7,7 @@ import { Statement } from '../../business/max/V4'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
-import { orUndefined, toShot, type ChatContent } from '../../pageContentParts'
+import { orUndefined, toShot } from '../../pageContentParts'
 import { AGENT_SHOT, CHAT_DEFAULT, CHAT_KEY, CUSTOMER_SHOT } from './content'
 
 /**
@@ -33,7 +33,7 @@ export const generateMetadata = seoMeta({
 
 
 export default async function Page() {
-  const c = (await cmsPageContent<ChatContent>(CHAT_KEY)) ?? CHAT_DEFAULT
+  const c = (await cmsPageContent(CHAT_KEY)) ?? CHAT_DEFAULT
   const { shell, lead, compareStatement } = c
   // 그림 칸이 비면 기본 그림 — 머리 그림 짜임(두 창 겹침)은 그림 둘을 전제로 한다.
   const agent = toShot(c.agentShot) ?? AGENT_SHOT

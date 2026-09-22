@@ -7,6 +7,7 @@ import {
   emptyBannerText,
   emptyPopupText,
   fromLocal,
+  type Lang,
   LIVE_LABEL,
   type LiveState,
   listBanners,
@@ -166,7 +167,7 @@ function useListEditor<T>(load: () => Promise<T[]>, save: (items: T[]) => Promis
 }
 
 /** 한 언어의 글 칸을 고친다(없으면 만든다). */
-function withText<X extends { languages_code: string }>(rows: X[], lang: string, empty: (l: string) => X, patch: Partial<X>): X[] {
+function withText<X extends { languages_code: Lang }>(rows: X[], lang: Lang, empty: (l: Lang) => X, patch: Partial<X>): X[] {
   const has = rows.some((t) => t.languages_code === lang)
   return has ? rows.map((t) => (t.languages_code === lang ? { ...t, ...patch } : t)) : [...rows, { ...empty(lang), ...patch }]
 }
@@ -233,7 +234,7 @@ function Period({ id, item, onChange }: { id: string; item: { starts_at: string 
   )
 }
 
-function LangTabs({ lang, onChange }: { lang: string; onChange: (l: string) => void }) {
+function LangTabs({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
   return (
     <div className="dva_tabs dvhm_lang" role="tablist" aria-label="글 언어">
       {LANGS.map((l) => (
@@ -290,7 +291,7 @@ function ItemHead({
 
 function BannersPanel() {
   const ed = useListEditor<Banner>(listBanners, saveBanners, '배너를 저장했습니다. 사이트에 바로 반영됩니다.')
-  const [lang, setLang] = useState<string>('ko-KR')
+  const [lang, setLang] = useState<Lang>('ko-KR')
   const [asking, setAsking] = useState<number | null>(null)
   const { items, setItems } = ed
   if (!items) return ed.error ? <div className="dva_error" role="alert">{ed.error}</div> : <div className="dva_empty">불러오는 중…</div>
@@ -392,7 +393,7 @@ function BannersPanel() {
 
 function PopupsPanel() {
   const ed = useListEditor<Popup>(listPopups, savePopups, '팝업을 저장했습니다. 사이트에 바로 반영됩니다.')
-  const [lang, setLang] = useState<string>('ko-KR')
+  const [lang, setLang] = useState<Lang>('ko-KR')
   const [asking, setAsking] = useState<number | null>(null)
   const [preview, setPreview] = useState<number | null>(null)
   const { items, setItems } = ed

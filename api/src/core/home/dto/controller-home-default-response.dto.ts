@@ -1,8 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { HomeBannerEntity } from '../../../common/entity/home-banner.entity';
 import type { HomePopupEntity } from '../../../common/entity/home-popup.entity';
+import { LANGUAGES } from '../../../common/entity/post-translation.entity';
 
 const DEFAULT_LANGUAGE = 'ko-KR';
+/** 이 사이트의 언어(ko-KR · en-US). 웹이 이 목록을 형으로 받는다. */
+type Language = (typeof LANGUAGES)[number];
 
 const iso = (d: Date | string | null | undefined): string | null =>
   d ? new Date(d).toISOString() : null;
@@ -63,7 +66,8 @@ export class ControllerHomeDefaultImageResponseDto {
 }
 
 export class ControllerHomeDefaultBannerTextResponseDto {
-  @ApiProperty() languages_code!: string;
+  @ApiProperty({ enum: LANGUAGES, example: 'ko-KR' })
+  languages_code!: Language;
   @ApiProperty({ nullable: true, type: String }) title!: string | null;
   @ApiProperty({ nullable: true, type: String }) description!: string | null;
   @ApiProperty({ nullable: true, type: String }) alt!: string | null;
@@ -109,7 +113,7 @@ export class ControllerHomeDefaultBannerResponseDto {
       ends_at: iso(row.endsAt),
       translations: (row.translations ?? [])
         .map((t) => ({
-          languages_code: t.languagesCode,
+          languages_code: t.languagesCode as Language,
           title: t.title,
           description: t.description,
           alt: t.alt,
@@ -123,7 +127,8 @@ export class ControllerHomeDefaultBannerResponseDto {
 }
 
 export class ControllerHomeDefaultPopupTextResponseDto {
-  @ApiProperty() languages_code!: string;
+  @ApiProperty({ enum: LANGUAGES, example: 'ko-KR' })
+  languages_code!: Language;
   @ApiProperty({ nullable: true, type: String }) title!: string | null;
   @ApiProperty({ nullable: true, type: String }) body!: string | null;
   @ApiProperty({ nullable: true, type: String }) alt!: string | null;
@@ -173,7 +178,7 @@ export class ControllerHomeDefaultPopupResponseDto {
       dismiss_days: row.dismissDays,
       translations: (row.translations ?? [])
         .map((t) => ({
-          languages_code: t.languagesCode,
+          languages_code: t.languagesCode as Language,
           title: t.title,
           body: t.body,
           alt: t.alt,

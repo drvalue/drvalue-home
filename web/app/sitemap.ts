@@ -3,6 +3,7 @@ import { CLEAN_PATHS } from '@/lib/phpRoutes.mjs'
 import { MENU_ITEMS } from '@/lib/menu'
 import { pageOverrides, SITE_ORIGIN } from '@/lib/seo'
 import type { CmsPost } from '@/lib/cms'
+import type { ApiResponse } from '@/lib/api-types.gen'
 import { BOARDS, detailPath, isBoardKey } from './(site)/page/support/board/boards'
 
 /**
@@ -59,7 +60,7 @@ async function allPosts(board: string): Promise<CmsPost[] | null> {
     for (let page = 1; page <= 50; page++) {
       const res = await fetch(`${API}/api/content/posts?board=${board}&limit=100&page=${page}`, { cache: 'no-store' })
       if (!res.ok) return null
-      const body = (await res.json()) as { data?: CmsPost[]; total?: number }
+      const body = (await res.json()) as Partial<ApiResponse<'GET /api/content/posts'>>
       const rows = Array.isArray(body.data) ? body.data : []
       out.push(...rows)
       if (rows.length < 100 || out.length >= Number(body.total ?? 0)) break

@@ -3,13 +3,11 @@
  * core/page/schema/intro-pages.schema.ts 와 같다. 씨앗(db/migrations/0008)이자 예비 글.
  */
 import { VISION_LEAD, VISION_STRATEGY } from '../companyContent'
-import { leadOf, type Card, type LeadContent, type ShellContent } from '../../pageContentParts'
+import { leadOf } from '../../pageContentParts'
+import type { PageContentMap } from '../../../../../lib/page-types.gen'
 
-export type CompanyVisionContent = {
-  shell: ShellContent
-  lead: LeadContent
-  strategy: { title: string; items: Card[] }
-}
+/** 모양은 api 의 칸 구조에서 만든 형(lib/page-types.gen.ts). */
+export type CompanyVisionContent = PageContentMap['company-vision']
 
 export const COMPANY_VISION_KEY = 'company-vision'
 

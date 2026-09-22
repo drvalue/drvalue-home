@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { PostEntity } from '../../../common/entity/post.entity';
+import { LANGUAGES } from '../../../common/entity/post-translation.entity';
+
+type Language = (typeof LANGUAGES)[number];
+const CERT_STATES = ['registered', 'applied'] as const;
+type CertState = (typeof CERT_STATES)[number];
 
 /**
  * 관리 화면이 받는 글의 모양. 칸 이름은 DB 칸 그대로(snake_case) — 웹이 이 이름을 쓴다.
@@ -83,7 +88,8 @@ export class ControllerAdminPostDefaultPageResponseDto {
 }
 
 export class ControllerAdminPostTranslationResponseDto {
-  @ApiProperty({ example: 'ko-KR' }) languages_code!: string;
+  @ApiProperty({ enum: LANGUAGES, example: 'ko-KR' })
+  languages_code!: Language;
   @ApiProperty({ nullable: true, type: String }) title!: string | null;
   @ApiProperty({ nullable: true, type: String }) summary!: string | null;
   @ApiProperty({ nullable: true, type: String }) body!: string | null;
@@ -137,7 +143,8 @@ export class ControllerAdminPostDefaultDetailResponseDto {
   @ApiProperty({ nullable: true, type: String }) press_media!: string | null;
   @ApiProperty({ nullable: true, type: String }) period_start!: string | null;
   @ApiProperty({ nullable: true, type: String }) period_end!: string | null;
-  @ApiProperty({ nullable: true, type: String }) cert_state!: string | null;
+  @ApiProperty({ enum: CERT_STATES, nullable: true })
+  cert_state!: CertState | null;
   @ApiProperty({ nullable: true, type: String }) cert_no!: string | null;
   @ApiProperty({ nullable: true, type: String }) cert_date!: string | null;
   @ApiProperty({ nullable: true, type: String }) cert_made_date!: string | null;
@@ -174,7 +181,7 @@ export class ControllerAdminPostDefaultDetailResponseDto {
       press_media: r.pressMedia,
       period_start: r.periodStart,
       period_end: r.periodEnd,
-      cert_state: r.certState,
+      cert_state: r.certState as CertState | null,
       cert_no: r.certNo,
       cert_date: r.certDate,
       cert_made_date: r.certMadeDate,
@@ -186,7 +193,7 @@ export class ControllerAdminPostDefaultDetailResponseDto {
       publish_at: iso(r.publishAt),
       unpublish_at: iso(r.unpublishAt),
       translations: (r.translations ?? []).map((t) => ({
-        languages_code: t.languagesCode,
+        languages_code: t.languagesCode as Language,
         title: t.title,
         summary: t.summary,
         body: t.body,

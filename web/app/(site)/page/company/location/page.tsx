@@ -4,7 +4,7 @@ import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent, pageImageSrc } from '@/lib/cms'
-import { LOCATION_DEFAULT, LOCATION_PAGE_KEY, mapEmbedSrc, telHref, type LocationContent } from './content'
+import { LOCATION_DEFAULT, LOCATION_PAGE_KEY, mapEmbedSrc, telHref } from './content'
 
 /**
  * /page/company/location.php 를 옮긴 것. 글은 관리 화면(페이지 → 찾아오시는 길)에서 고친다 —
@@ -23,7 +23,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<LocationContent>(LOCATION_PAGE_KEY)) ?? LOCATION_DEFAULT
+  const c = (await cmsPageContent(LOCATION_PAGE_KEY)) ?? LOCATION_DEFAULT
   const { shell, place, guide } = c
   const photo = pageImageSrc(guide.photo)
   return (

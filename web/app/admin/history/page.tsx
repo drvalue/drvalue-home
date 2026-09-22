@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, Page } from '@/lib/admin'
+import { adminFetch } from '@/lib/admin'
 import { refreshSiteMenu } from '@/lib/admin-menu'
 import InlineConfirm from '../ui/InlineConfirm'
 import { pageOf, useQuery } from '../ui/query'
@@ -13,10 +13,12 @@ import {
   COLLECTION_LABEL,
   diffRows,
   RevisionFull,
+  RevisionPage,
   RevisionRow,
   when,
 } from '@/lib/admin-extra'
 import './history.css'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 /**
  * 변경 이력. 누가 · 언제 · 무엇을 바꿨나 → 한 줄을 누르면 칸별 전후 비교와 되돌리기.
@@ -28,7 +30,7 @@ export default function HistoryPage() {
   const collection = query.get('collection')
   const actor = query.get('actor')
   const page = pageOf(query.get('page'))
-  const [rows, setRows] = useState<Page<RevisionRow> | null>(null)
+  const [rows, setRows] = useState<RevisionPage | null>(null)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<RevisionFull | null>(null)
   const [openErr, setOpenErr] = useState('')
@@ -38,7 +40,7 @@ export default function HistoryPage() {
     if (collection) qs.set('collection', collection)
     if (actor) qs.set('actor', actor)
     try {
-      setRows(await adminFetch<Page<RevisionRow>>(`/api/admin/revisions?${qs}`))
+      setRows(await adminFetch<RevisionPage>(`/api/admin/revisions?${qs}`))
       setError('')
     } catch (e) {
       setError((e as Error).message)
@@ -55,7 +57,7 @@ export default function HistoryPage() {
       return
     }
     try {
-      const r = await adminFetch<{ data: RevisionFull }>(`/api/admin/revisions/${id}`)
+      const r = await adminFetch<ApiResponse<'GET /api/admin/revisions/{id}'>>(`/api/admin/revisions/${id}`)
       setOpen(r.data)
       setOpenErr('')
     } catch (e) {
@@ -181,7 +183,7 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
     setBusy(true)
     setErr('')
     try {
-      const r = await adminFetch<{ warnings?: string[] }>(`/api/admin/revisions/${rev.id}/restore`, { method: 'POST' })
+      const r = await adminFetch<ApiResponse<'POST /api/admin/revisions/{id}/restore'>>(`/api/admin/revisions/${rev.id}/restore`, { method: 'POST' })
       // 사이트 머리글은 메뉴를 60초 캐시한다 — 메뉴 저장 화면처럼 바로 비운다(실패해도 1분 안에 바뀐다).
       if (rev.collection === 'menu') await refreshSiteMenu()
       const w = r.warnings?.length ? ' ' + r.warnings.join(' ') : ''

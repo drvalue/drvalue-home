@@ -1,13 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, adminJson, INQUIRY_STATUS, Page } from '@/lib/admin'
+import { adminFetch, adminJson, INQUIRY_STATUS, InquiryPage } from '@/lib/admin'
 import { useMe } from '../ui/me'
 import { pageOf, useQuery } from '../ui/query'
 import SearchBox from '../ui/SearchBox'
 import { useToast } from '../ui/toast'
 import { Assignee, InquiryDetail, replyHref, when } from './types'
 import './inquiries.css'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 /**
  * 문의. 왼쪽 목록 · 오른쪽 상세(좁으면 아래). 상태·담당자는 고르면 바로 저장되고,
@@ -22,7 +23,7 @@ export default function InquiriesPage() {
   const page = pageOf(query.get('page'))
   const selId = Number(query.get('id')) || null
   const { refreshCounts } = useMe()
-  const [rows, setRows] = useState<Page<InquiryDetail> | null>(null)
+  const [rows, setRows] = useState<InquiryPage | null>(null)
   const [people, setPeople] = useState<Assignee[]>([])
   const [error, setError] = useState('')
   const detail = useRef<HTMLElement>(null)
@@ -33,7 +34,7 @@ export default function InquiriesPage() {
     if (assignee) qs.set('assignee', assignee)
     if (q) qs.set('q', q)
     try {
-      setRows(await adminFetch<Page<InquiryDetail>>(`/api/admin/inquiries?${qs}`))
+      setRows(await adminFetch<InquiryPage>(`/api/admin/inquiries?${qs}`))
       setError('')
     } catch (e) {
       setError((e as Error).message)
@@ -45,7 +46,7 @@ export default function InquiriesPage() {
   }, [load])
 
   useEffect(() => {
-    adminFetch<{ data: Assignee[] }>('/api/admin/inquiries/assignees')
+    adminFetch<ApiResponse<'GET /api/admin/inquiries/assignees'>>('/api/admin/inquiries/assignees')
       .then((r) => setPeople(r.data))
       .catch(() => {})
   }, [])
@@ -61,7 +62,7 @@ export default function InquiriesPage() {
       return
     }
     let alive = true
-    adminFetch<{ data: InquiryDetail }>(`/api/admin/inquiries/${selId}`)
+    adminFetch<ApiResponse<'GET /api/admin/inquiries/{id}'>>(`/api/admin/inquiries/${selId}`)
       .then((r) => {
         if (!alive) return
         setOutside(r.data)
@@ -216,7 +217,7 @@ function Detail({
     setBusy(true)
     setErr('')
     try {
-      const r = await adminJson<{ data: InquiryDetail }>(`/api/admin/inquiries/${item.id}`, 'PATCH', body)
+      const r = await adminJson<ApiResponse<'PATCH /api/admin/inquiries/{id}'>>(`/api/admin/inquiries/${item.id}`, 'PATCH', body)
       onSaved(r.data)
       toast(done)
     } catch (e) {

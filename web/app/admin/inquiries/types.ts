@@ -1,22 +1,7 @@
-/** /api/admin/inquiries 의 한 건. lib/admin 의 Inquiry 에 담당자·메모·시각이 붙은 것. */
-export type InquiryDetail = {
-  id: number
-  type: string
-  status: string
-  name: string
-  email: string | null
-  company: string | null
-  phone: string | null
-  message: string
-  consent: boolean
-  source_path: string | null
-  assignee_email: string | null
-  note: string | null
-  created_on: string
-  updated_on: string
-}
-
-export type Assignee = { email: string; name: string | null; role: string }
+import type * as Api from '@/lib/api-types.gen'
+/** /api/admin/inquiries 의 한 건 — 모양은 api 문서의 것. */
+export type InquiryDetail = Api.ControllerAdminInquiryDefaultResponseDto
+export type Assignee = Api.ControllerAdminInquiryAssigneeResponseDto
 
 /** '2026-09-22T08:01:24Z' → '2026.09.22 17:01' (서울). */
 export function when(iso: string): string {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, Page } from '@/lib/admin'
+import { adminFetch } from '@/lib/admin'
 import InlineConfirm from '../ui/InlineConfirm'
 import { pageOf, useQuery } from '../ui/query'
 import SearchBox from '../ui/SearchBox'
@@ -10,6 +10,7 @@ import {
   ACCEPT,
   AdminFile,
   bytes,
+  FilePage,
   deleteMedia,
   KIND_LABEL,
   kindOf,
@@ -40,7 +41,7 @@ export default function MediaPage() {
   const q = query.get('q')
   const page = pageOf(query.get('page'))
   const toast = useToast()
-  const [rows, setRows] = useState<Page<AdminFile> | null>(null)
+  const [rows, setRows] = useState<FilePage | null>(null)
   const [error, setError] = useState('')
   const [sel, setSel] = useState<AdminFile | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
@@ -63,7 +64,7 @@ export default function MediaPage() {
     if (filter) qs.set('type', filter)
     if (q) qs.set('q', q)
     try {
-      const r = await adminFetch<Page<AdminFile>>(`/api/admin/files?${qs}`)
+      const r = await adminFetch<FilePage>(`/api/admin/files?${qs}`)
       setRows(r)
       setError('')
       // 고른 것이 목록에 있으면 새 값으로 바꿔 둔다(이름·쓰이는 곳이 바뀌었을 수 있다).

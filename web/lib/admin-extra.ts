@@ -1,46 +1,21 @@
 import { EMPLOYMENT_LABEL, INQUIRY_STATUS } from './admin'
+import type * as Api from './api-types.gen'
+import type { ApiResponse } from './api-types.gen'
 
 /**
  * 변경 이력 · 권한 화면의 타입과 헬퍼. lib/admin.ts 는 공용이라 여기 따로 둔다.
  */
 
-export type RevisionRow = {
-  id: number
-  actor: string
-  action: 'create' | 'update' | 'delete' | 'restore' | string
-  collection: 'posts' | 'inquiries' | 'files' | 'admin_users' | 'pages' | 'menu' | 'page_meta' | 'home_banners' | 'home_popups' | string
-  item_id: string
-  created_on: string
-  label: string
-  board: string | null
-}
-
+// 모양은 api 문서에서 만든 형(lib/api-types.gen.ts)을 쓴다. 손으로 옮겨 적지 않는다.
+export type RevisionRow = Api.ControllerAdminRevisionDefaultRowResponseDto
+export type RevisionFull = Api.ControllerAdminRevisionDefaultDetailResponseDto
+export type RevisionPage = ApiResponse<'GET /api/admin/revisions'>
 /**
  * 홈 요약(`GET /api/admin/dashboard`). 범위가 못 보는 칸은 api 가 비운다 —
  * 문의는 인사에게 null, 최근 변경은 전체 권한이 아니면 null. 게시판 수는 0 인 게시판이 빠진다.
  */
-export type DashboardSummary = {
-  inquiries: { new: number; mine_open: number } | null
-  drafts: { board: string; count: number }[]
-  scheduled: { board: string; count: number }[]
-  recent: RevisionRow[] | null
-}
-
-export type RevisionFull = RevisionRow & {
-  before: Record<string, unknown> | null
-  after: Record<string, unknown> | null
-  restorable: boolean
-  /** 되돌릴 수 없을 때 api 가 주는 까닭(파일 · 권한 · 처음 만든 기록 …). */
-  restore_note?: string | null
-}
-
-export type AdminUserRow = {
-  email: string
-  name: string | null
-  role: 'admin' | 'marketing' | 'hr'
-  enabled: boolean
-  last_login_on: string | null
-}
+export type DashboardSummary = Api.ControllerAdminDashboardDefaultResponseDto
+export type AdminUserRow = Api.ControllerAdminUserDefaultResponseDto
 
 export const ACTION_LABEL: Record<string, string> = {
   create: '작성',
@@ -178,7 +153,8 @@ export type DiffRow = { key: string; label: string; before: string; after: strin
  * 변경 전·후를 칸별로 편다. 글은 번역을 언어별 칸으로(제목 · 한국어 …).
  * 두 쪽 중 한 쪽에만 있는 칸도 싣는다 — 만들기(전 없음)·지우기(후 없음)도 같은 표로 보인다.
  */
-export function diffRows(before: Record<string, unknown> | null, after: Record<string, unknown> | null): DiffRow[] {
+/** before·after 는 그 기능의 관리 응답 모양 그대로 — 객체 또는 목록(배너·팝업처럼 목록째 저장하는 것). */
+export function diffRows(before: RevisionFull['before'], after: RevisionFull['after']): DiffRow[] {
   const b = flatten(before)
   const a = flatten(after)
   const keys = [...new Set([...Object.keys(b), ...Object.keys(a)])]
@@ -197,14 +173,15 @@ export function diffRows(before: Record<string, unknown> | null, after: Record<s
   })
 }
 
-function flatten(s: Record<string, unknown> | null): Record<string, string> {
+function flatten(s: RevisionFull['before']): Record<string, string> {
   const out: Record<string, string> = {}
   if (!s) return out
   for (const [k, v] of Object.entries(s)) {
     if (SKIP.has(k)) continue
     out[k] = show(k, v)
   }
-  const ts = s.translations
+  // 번역 칸을 언어별로 편다(글 스냅숏). 목록째 저장한 스냅숏(배너·팝업)에는 없다.
+  const ts = Array.isArray(s) ? undefined : s.translations
   if (Array.isArray(ts)) {
     for (const t of ts as Record<string, unknown>[]) {
       const lang = String(t.languages_code ?? '')

@@ -4,7 +4,6 @@ import SolutionShell from '../max/SolutionShell'
 import FeaturePage from '../max/FeaturePage'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import type { FeaturePageContent } from '../../pageContentParts'
 import { SMART_FAC_DEFAULT, SMART_FAC_KEY } from './content'
 
 /**
@@ -23,7 +22,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<FeaturePageContent>(SMART_FAC_KEY)) ?? SMART_FAC_DEFAULT
+  const c = (await cmsPageContent(SMART_FAC_KEY)) ?? SMART_FAC_DEFAULT
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />

@@ -1,4 +1,6 @@
 import { adminFetch, adminJson } from '@/lib/admin'
+import type * as Api from './api-types.gen'
+import type { ApiBody, ApiResponse } from './api-types.gen'
 
 /**
  * 관리 화면 「메뉴」의 자료. api(/api/admin/menu)는 메뉴 전체를 한 번에 주고받는다.
@@ -8,10 +10,10 @@ import { adminFetch, adminJson } from '@/lib/admin'
 
 // ── api 모양 ─────────────────────────────────────────────────────────
 
-type ApiLabel = { languages_code: string; label: string; description: string | null }
-type ApiChild = { id: number; href: string; visible: boolean; hidden_in_dropdown: boolean; translations: ApiLabel[] }
-type ApiNode = ApiChild & { match: string[] | null; children: ApiChild[] }
-type ApiTree = { top: ApiNode[]; footer: ApiChild[]; updated_on: string | null }
+// api 문서에서 만든 형(lib/api-types.gen.ts). 손으로 옮겨 적지 않는다.
+type ApiLabel = Api.ControllerMenuDefaultLabelResponseDto
+type ApiChild = Api.ControllerMenuDefaultAdminChildResponseDto
+type ApiTree = Api.ControllerMenuDefaultAdminTreeResponseDto
 
 // ── 화면 모양 ────────────────────────────────────────────────────────
 
@@ -73,7 +75,7 @@ export const blankChild = (): EditChild => ({
 export const blankNode = (): EditNode => ({ ...blankChild(), match: '', children: [] })
 
 function labels(c: EditChild) {
-  const out: { languages_code: string; label: string; description: string | null }[] = [
+  const out: Api.ControllerMenuDefaultLabelDto[] = [
     { languages_code: 'ko-KR', label: c.ko.trim(), description: c.koDesc.trim() || null },
   ]
   // 영어 이름을 비우면 보내지 않는다 — 공개 메뉴가 한국어 이름으로 떨어진다.
@@ -87,7 +89,7 @@ const childBody = (c: EditChild) => ({
   translations: labels(c),
 })
 
-function toBody(m: EditMenu) {
+function toBody(m: EditMenu): ApiBody<'PUT /api/admin/menu'> {
   return {
     top: m.top.map((n) => {
       const match = n.match
@@ -107,11 +109,11 @@ function toBody(m: EditMenu) {
 }
 
 export async function loadMenu(): Promise<EditMenu> {
-  return fromApi((await adminFetch<{ data: ApiTree }>('/api/admin/menu')).data)
+  return fromApi((await adminFetch<ApiResponse<'GET /api/admin/menu'>>('/api/admin/menu')).data)
 }
 
 export async function saveMenu(m: EditMenu): Promise<EditMenu> {
-  return fromApi((await adminJson<{ data: ApiTree }>('/api/admin/menu', 'PUT', toBody(m))).data)
+  return fromApi((await adminJson<ApiResponse<'PUT /api/admin/menu'>>('/api/admin/menu', 'PUT', toBody(m))).data)
 }
 
 /** 사이트의 메뉴 캐시를 비운다(web 의 route handler). 실패해도 1분 안에 저절로 바뀐다. */

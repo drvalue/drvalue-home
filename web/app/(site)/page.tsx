@@ -6,7 +6,7 @@ import HomeHero, { type HeroCounts } from '../home/HomeHero'
 import HomeNews from '../home/HomeNews'
 import HomePopups from '../home/HomePopups'
 import HomeProof from '../home/HomeProof'
-import { HOME_DEFAULT, HOME_PAGE_KEY, sectionOrder, type HomeContent, type HomeSectionKey } from '../home/content'
+import { HOME_DEFAULT, HOME_PAGE_KEY, sectionOrder, type HomeSectionKey } from '../home/content'
 import { HOME_ADD_CSS, HOME_POPUP_CSS } from '../home/homeStyles'
 import { latestNews } from '../home/news'
 import { cmsBoardTotal, cmsHome, cmsPageContent } from '@/lib/cms'
@@ -209,7 +209,7 @@ export default async function Page() {
   // CMS 가 죽어도 빈 배열·예비 글이 온다. 메인이 같이 죽지 않는다.
   const [news, cms, home, counts] = await Promise.all([
     latestNews(6),
-    cmsPageContent<HomeContent>(HOME_PAGE_KEY),
+    cmsPageContent(HOME_PAGE_KEY),
     cmsHome(),
     heroCounts(),
   ])

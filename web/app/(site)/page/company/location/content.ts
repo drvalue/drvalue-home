@@ -8,30 +8,12 @@
  * 이 파일은 다른 모듈을 `@/` 로 부르지 않는다 — 씨앗 스크립트가 node 로 바로 읽는다.
  */
 import { LOCATION, LOCATION_LEAD } from '../companyContent'
+import type { ImageValue, PageContentMap } from '../../../../../lib/page-types.gen'
 
 /** 그림 칸. 치수는 저장할 때 api 가 미디어 파일에서 적는다. */
-export type PageImage = { id: string | null; alt: string; width?: number | null; height?: number | null } | null
-
-export type LocationContent = {
-  shell: {
-    kicker: string
-    kickerSub: string
-    headLead: string
-    headStrong: string
-    desc: string
-    leadTitle: string
-    ctaTitle: string
-    ctaDesc: string
-  }
-  place: {
-    company: string
-    address: { line: string }[]
-    tel: string
-    email: string
-    mapQuery: string
-  }
-  guide: { title: string; desc: string; photo: PageImage }
-}
+export type PageImage = ImageValue | null
+/** 모양은 api 의 칸 구조에서 만든 형(lib/page-types.gen.ts). */
+export type LocationContent = PageContentMap['company-location']
 
 export const LOCATION_PAGE_KEY = 'company-location'
 

@@ -10,17 +10,12 @@ import { useLeaveGuard } from '../ui/leave'
 import { useQuery } from '../ui/query'
 import { useToast } from '../ui/toast'
 import './seo.css'
+import type * as Api from '@/lib/api-types.gen'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 type Lang = 'ko-KR' | 'en-US'
-type Override = {
-  path: string
-  no_index: boolean
-  og_image: string | null
-  og_image_url: string | null
-  updated_on: string | null
-  updated_by: string | null
-  translations: { languages_code: Lang; title: string | null; description: string | null }[]
-}
+/** 한 장의 덮어쓰기 — 모양은 api 문서의 것(lib/api-types.gen.ts). */
+type Override = Api.ControllerSeoDefaultPageResponseDto
 type Live = { title: string; description: string; image: string | null; robots: string } | 'error' | null
 
 const TITLE_MAX = 60
@@ -80,7 +75,7 @@ export default function SeoPage() {
 
   const load = useCallback(async () => {
     try {
-      setOverrides((await adminFetch<{ data: Override[] }>('/api/admin/seo/pages')).data)
+      setOverrides((await adminFetch<ApiResponse<'GET /api/admin/seo/pages'>>('/api/admin/seo/pages')).data)
       setError('')
     } catch (e) {
       setError((e as Error).message)
