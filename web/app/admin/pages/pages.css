@@ -136,3 +136,15 @@
     min-width: 44px;
   }
 }
+
+/* 다른 화면에 끼워 넣은 편집기(/admin/home 「문구 · 구역 차례」)의 머리 제목 */
+.dva .dvp_embedded_title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+/* 목록 항목 머리의 고른 값(「구역 1 · 신뢰의 근거」) */
+.dva .dvp_item_pick {
+  font-weight: 600;
+  color: var(--dva-muted);
+}

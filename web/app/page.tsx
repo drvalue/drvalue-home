@@ -2,11 +2,14 @@ import ClientAction from '@/components/ClientAction'
 import SiteFooter from '@/components/SiteFooter'
 import SiteHeader from '@/components/SiteHeader'
 import HomeBiz from './home/HomeBiz'
-import HomeHero from './home/HomeHero'
+import HomeHero, { type HeroCounts } from './home/HomeHero'
 import HomeNews from './home/HomeNews'
+import HomePopups from './home/HomePopups'
 import HomeProof from './home/HomeProof'
-import { HOME_ADD_CSS } from './home/homeStyles'
+import { HOME_DEFAULT, HOME_PAGE_KEY, sectionOrder, type HomeContent, type HomeSectionKey } from './home/content'
+import { HOME_ADD_CSS, HOME_POPUP_CSS } from './home/homeStyles'
 import { latestNews } from './home/news'
+import { cmsBoardTotal, cmsHome, cmsPageContent } from '@/lib/cms'
 import { seoMeta } from '@/lib/seo'
 
 /** 소식 카드가 CMS 저장 즉시 보이게 요청마다 그린다(home/news.ts). */
@@ -28,12 +31,29 @@ export const dynamic = 'force-dynamic'
 
 const PATH = '/'
 
-export const generateMetadata = seoMeta({
-  title: '제조 AI·DX 구축',
-  description:
-    'MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat, 상담 솔루션. 특허·출원 6건·저작권 5건·수행실적 9건으로 검증된 제조 AI·DX 파트너, 디알밸류.',
-  path: PATH,
-})
+/**
+ * 머리 그림과 검색 설명의 숫자 — 특허·저작권·수행실적 게시판의 공개 글 수(화면에 적는 숫자는 자료에서 센다).
+ * api 가 안 닿으면 2026-09-22 에 센 값을 쓴다(그때 화면에 손으로 적혀 있던 값과 같다).
+ */
+const COUNTS_FALLBACK: HeroCounts = { patent: 6, copyright: 5, cases: 9 }
+async function heroCounts(): Promise<HeroCounts> {
+  const [patent, copyright, cases] = await Promise.all([cmsBoardTotal('patent'), cmsBoardTotal('copyright'), cmsBoardTotal('case')])
+  return {
+    patent: patent ?? COUNTS_FALLBACK.patent,
+    copyright: copyright ?? COUNTS_FALLBACK.copyright,
+    cases: cases ?? COUNTS_FALLBACK.cases,
+  }
+}
+
+/** 설명의 숫자는 자료에서 세고, 관리 화면 「SEO」 덮어쓰기(seoMeta)는 그 위에 얹는다. */
+export async function generateMetadata() {
+  const c = await heroCounts()
+  return seoMeta({
+    title: '제조 AI·DX 구축',
+    description: `MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat, 상담 솔루션. 특허·출원 ${c.patent}건·저작권 ${c.copyright}건·수행실적 ${c.cases}건으로 검증된 제조 AI·DX 파트너, 디알밸류.`,
+    path: PATH,
+  })()
+}
 
 const PAGE_CSS = `
 /* ── 새로 붙인 두 구역(소식·신뢰의 근거)의 꾸밈 ──────────────────────
@@ -186,81 +206,104 @@ const PAGE_CSS = `
 `
 
 export default async function Page() {
-  // CMS 가 죽어도 빈 배열이 온다. 메인이 같이 죽지 않는다.
-  const news = await latestNews(6)
+  // CMS 가 죽어도 빈 배열·예비 글이 온다. 메인이 같이 죽지 않는다.
+  const [news, cms, home, counts] = await Promise.all([
+    latestNews(6),
+    cmsPageContent<HomeContent>(HOME_PAGE_KEY),
+    cmsHome(),
+    heroCounts(),
+  ])
+  const c = cms ?? HOME_DEFAULT
+  const sections: Record<HomeSectionKey, React.ReactNode> = {
+    proof: (
+      <section className="t_section dvproof" aria-labelledby="dvproof_h" key="proof">
+        <div className="t_inner">
+          <div className="dvnews_head">
+            <div>
+              {c.proof.kicker && <span className="dvnews_kicker">{c.proof.kicker}</span>}
+              <h3 id="dvproof_h">{c.proof.title}</h3>
+            </div>
+            {c.proof.more.href && (
+              <a className="dvnews_all" href={c.proof.more.href}>
+                {c.proof.more.label}
+                <i className="fa fa-angle-right" />
+              </a>
+            )}
+          </div>
+          <div data-rv>
+            <HomeProof cards={c.proof.cards} />
+          </div>
+        </div>
+      </section>
+    ),
+    biz: (
+      <section className="t_section dvbiz" aria-labelledby="dvbiz_h" key="biz">
+        <div className="t_inner">
+          <div className="dvnews_head">
+            <div>
+              {c.biz.kicker && <span className="dvnews_kicker">{c.biz.kicker}</span>}
+              <h3 id="dvbiz_h">{c.biz.title}</h3>
+            </div>
+          </div>
+          <div data-rv>
+            <HomeBiz cards={c.biz.cards} />
+          </div>
+        </div>
+      </section>
+    ),
+    news: (
+      <section className="t_section dvnews" aria-labelledby="dvnews_h" key="news">
+        <div className="t_inner">
+          <div className="dvnews_head">
+            <div>
+              {c.news.kicker && <span className="dvnews_kicker">{c.news.kicker}</span>}
+              <h3 id="dvnews_h">{c.news.title}</h3>
+            </div>
+            {c.news.more.href && (
+              <a className="dvnews_all" href={c.news.more.href}>
+                {c.news.more.label}
+                <i className="fa fa-angle-right" />
+              </a>
+            )}
+          </div>
+          <div data-rv>
+            <HomeNews items={news} />
+          </div>
+        </div>
+      </section>
+    ),
+    cta: (
+      <section className="dvcta" key="cta">
+        <div className="t_inner">
+          <h3>{c.cta.title}</h3>
+          {c.cta.desc && <p>{c.cta.desc}</p>}
+          <ClientAction type="button" className="dvcta_btn" calls={[{ fn: 'openContactModal' }]}>
+            {c.cta.buttonLabel}
+          </ClientAction>
+        </div>
+      </section>
+    ),
+  }
 
   return (
     <>
       <SiteHeader currentPath={PATH} />
 
-<style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
-<style dangerouslySetInnerHTML={{ __html: HOME_ADD_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: HOME_ADD_CSS }} />
+      {home.popups.length > 0 && <style dangerouslySetInnerHTML={{ __html: HOME_POPUP_CSS }} />}
 
-<div id="toss_container">
-    {/* 원본 홈의 머리 그림은 swiper 두 장짜리로 들어 있다가 주석으로 꺼져
-        있었다. 글은 그대로 살리고 슬라이드만 뺐다 — 자세한 이유는
-        home/HomeHero.tsx 주석에 적었다. */}
-    <HomeHero />
-
-    <section className="t_section dvproof" aria-labelledby="dvproof_h">
-        <div className="t_inner">
-            <div className="dvnews_head">
-                <div>
-                    <span className="dvnews_kicker">CREDENTIALS</span>
-                    <h3 id="dvproof_h">말보다 먼저 쌓아 온 것들</h3>
-                </div>
-                <a className="dvnews_all" href="/page/company/history">
-                    연혁 전체 보기<i className="fa fa-angle-right" />
-                </a>
-            </div>
-            <div data-rv>
-                <HomeProof />
-            </div>
-        </div>
-    </section>
-
-    <section className="t_section dvbiz" aria-labelledby="dvbiz_h">
-        <div className="t_inner">
-            <div className="dvnews_head">
-                <div>
-                    <span className="dvnews_kicker">BUSINESS</span>
-                    <h3 id="dvbiz_h">무엇을 만드는가</h3>
-                </div>
-            </div>
-            <div data-rv>
-                <HomeBiz />
-            </div>
-        </div>
-    </section>
-
-    <section className="t_section dvnews" aria-labelledby="dvnews_h">
-        <div className="t_inner">
-            <div className="dvnews_head">
-                <div>
-                    <span className="dvnews_kicker">NEWS</span>
-                    <h3 id="dvnews_h">디알밸류의 최근 소식</h3>
-                </div>
-                <a className="dvnews_all" href="/page/support/notice">
-                    전체 보기<i className="fa fa-angle-right" />
-                </a>
-            </div>
-            <div data-rv>
-                <HomeNews items={news} />
-            </div>
-        </div>
-    </section>
-
-    <section className="dvcta">
-        <div className="t_inner">
-            <h3>우리 공장에, 우리 업무에 맞는 구성이 궁금하신가요?</h3>
-            <p>현장 상황을 알려주시면 맞는 방식을 제안해 드립니다.</p>
-            <ClientAction type="button" className="dvcta_btn" calls={[{ fn: 'openContactModal' }]}>
-                문의하기
-            </ClientAction>
-        </div>
-    </section>
-</div>
-
+      <div id="toss_container">
+        {/* 원본 홈의 머리 그림은 swiper 두 장짜리로 들어 있다가 주석으로 꺼져
+            있었다. 글은 그대로 살리고 슬라이드만 뺐다 — 자세한 이유는
+            home/HomeHero.tsx 주석에 적었다. 기간 배너도 슬라이드가 아니라 한 장이다. */}
+        <HomeHero hero={c.hero} banner={home.banner} counts={counts} />
+        {/* 구역 차례·보이기는 관리 화면 「메인 화면 › 문구 · 구역 차례」. */}
+        {sectionOrder(c)
+          .filter((s) => s.visible)
+          .map((s) => sections[s.section])}
+      </div>
+      {home.popups.length > 0 && <HomePopups popups={home.popups} />}
 
       <SiteFooter />
     </>

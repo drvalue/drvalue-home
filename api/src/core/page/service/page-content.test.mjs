@@ -4,12 +4,18 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { checkContent, emptyContent, PageContentError, withImageSizes } = require(
-  '../../../../dist/core/page/service/page-content.js',
-);
-const { COMPANY_LOCATION_SCHEMA } = require(
-  '../../../../dist/core/page/schema/company-location.schema.js',
-);
+const {
+  checkContent,
+  emptyContent,
+  PageContentError,
+  withImageSizes,
+} = require('../../../../dist/core/page/service/page-content.js');
+const {
+  HOME_SCHEMA,
+} = require('../../../../dist/core/page/schema/home.schema.js');
+const {
+  COMPANY_LOCATION_SCHEMA,
+} = require('../../../../dist/core/page/schema/company-location.schema.js');
 
 const fields = [
   { type: 'text', key: 'title', label: '제목', max: 10, required: true },
@@ -59,7 +65,10 @@ test('필수·길이·목록 개수', () => {
   fails({ ...ok, title: '가'.repeat(11) }, /10자까지/);
   fails({ ...ok, items: [] }, /1개 이상/);
   fails({ ...ok, items: [{ t: 'a' }, { t: 'b' }, { t: 'c' }] }, /2개까지/);
-  fails({ ...ok, items: [{ t: '' }] }, /「항목」 1번째 항목의 「이름」 칸을 입력해 주세요/);
+  fails(
+    { ...ok, items: [{ t: '' }] },
+    /「항목」 1번째 항목의 「이름」 칸을 입력해 주세요/,
+  );
 });
 
 test('richtext 는 스크립트·이벤트 속성을 버린다', () => {
@@ -83,8 +92,14 @@ test('richtext 의 그림은 우리 파일·https 만', () => {
 
 test('링크 주소는 / · https · mailto · tel 만', () => {
   checkContent(fields, { ...ok, cta: { label: '보기', href: '/page/x' } });
-  checkContent(fields, { ...ok, cta: { label: '메일', href: 'mailto:a@b.co' } });
-  fails({ ...ok, cta: { label: 'x', href: 'javascript:alert(1)' } }, /링크 주소/);
+  checkContent(fields, {
+    ...ok,
+    cta: { label: '메일', href: 'mailto:a@b.co' },
+  });
+  fails(
+    { ...ok, cta: { label: 'x', href: 'javascript:alert(1)' } },
+    /링크 주소/,
+  );
   fails({ ...ok, cta: { label: 'x', href: '//evil.com' } }, /링크 주소/);
   fails({ ...ok, cta: { label: 'x', href: 'http://plain.com' } }, /링크 주소/);
 });
@@ -95,7 +110,10 @@ test('그림은 uuid 만 받고 fileIds 로 모은다', () => {
   assert.deepEqual(r.content.photo, { id: id.toLowerCase(), alt: '건물' });
   assert.deepEqual(r.fileIds, [id.toLowerCase()]);
   fails({ ...ok, photo: { id: '../etc/passwd', alt: '' } }, /그림 값/);
-  assert.equal(checkContent(fields, { ...ok, photo: { id: null, alt: '' } }).content.photo, null);
+  assert.equal(
+    checkContent(fields, { ...ok, photo: { id: null, alt: '' } }).content.photo,
+    null,
+  );
 });
 
 test('오시는 길 스키마: 전화·이메일 형식', () => {
@@ -161,7 +179,7 @@ test('소개 장 15장 스키마 — 칸 이름이 겹치지 않고, 키가 하�
   const { PAGE_SCHEMAS } = require('../../../../dist/core/page/schema/index.js');
   const keys = PAGE_SCHEMAS.map((s) => s.key);
   assert.equal(new Set(keys).size, keys.length);
-  assert.equal(keys.length, 16);
+  assert.equal(keys.length, 17); // 메인 1 + 소개 장 16(오시는 길 포함)
   const dup = (fs) => {
     const ks = fs.map((f) => f.key);
     assert.equal(new Set(ks).size, ks.length, ks.join(','));
@@ -171,4 +189,72 @@ test('소개 장 15장 스키마 — 칸 이름이 겹치지 않고, 키가 하�
     }
   };
   for (const s of PAGE_SCHEMAS) dup(s.fields);
+});
+
+// ── boolean · select · uniqueBy (메인 구역 차례)
+const order = [
+  {
+    type: 'list',
+    key: 'sections',
+    label: '구역 차례',
+    min: 2,
+    max: 2,
+    uniqueBy: 'section',
+    item: [
+      {
+        type: 'select',
+        key: 'section',
+        label: '구역',
+        required: true,
+        options: [
+          { value: 'a', label: '가' },
+          { value: 'b', label: '나' },
+        ],
+      },
+      { type: 'boolean', key: 'visible', label: '보이기' },
+    ],
+  },
+];
+const orderFails = (value, re) =>
+  assert.throws(
+    () => checkContent(order, value),
+    (e) => e instanceof PageContentError && re.test(e.message),
+  );
+
+test('boolean 은 참·거짓만, 빠지면 false', () => {
+  const { content } = checkContent(order, {
+    sections: [{ section: 'a' }, { section: 'b', visible: true }],
+  });
+  assert.deepEqual(content.sections, [
+    { section: 'a', visible: false },
+    { section: 'b', visible: true },
+  ]);
+  orderFails(
+    { sections: [{ section: 'a', visible: 'yes' }, { section: 'b' }] },
+    /값이 올바르지/,
+  );
+});
+
+test('select 는 목록에 있는 값만, 필수면 비울 수 없다', () => {
+  orderFails(
+    { sections: [{ section: 'z' }, { section: 'b' }] },
+    /목록에 있는 값만/,
+  );
+  orderFails({ sections: [{ section: '' }, { section: 'b' }] }, /골라 주세요/);
+});
+
+test('uniqueBy — 같은 구역이 두 번 오면 거부한다', () => {
+  orderFails(
+    { sections: [{ section: 'a' }, { section: 'a' }] },
+    /2번째 항목이 앞의 항목과 겹칩니다/,
+  );
+});
+
+test('메인 스키마의 빈 글은 필수 칸에 걸린다', () => {
+  const empty = emptyContent(HOME_SCHEMA.fields);
+  assert.deepEqual(empty.sections, []);
+  assert.throws(
+    () => checkContent(HOME_SCHEMA.fields, empty),
+    (e) => e instanceof PageContentError && /입력해 주세요/.test(e.message),
+  );
 });

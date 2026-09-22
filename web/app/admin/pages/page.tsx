@@ -46,7 +46,7 @@ export default function PagesPage() {
               {rows.map((r) => (
                 <tr key={r.key}>
                   <td data-label="장">
-                    <Link href={`/admin/pages/${r.key}`} className="dvp_name">
+                    <Link href={r.admin_path || `/admin/pages/${r.key}`} className="dvp_name">
                       {r.label}
                     </Link>
                   </td>

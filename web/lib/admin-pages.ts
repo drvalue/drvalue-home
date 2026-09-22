@@ -15,16 +15,18 @@ export type PageField =
   | (Base & { type: 'richtext'; max: number })
   | (Base & { type: 'image' })
   | (Base & { type: 'link' })
-  | (Base & { type: 'list'; min?: number; max: number; itemLabel?: string; item: PageField[] })
+  | (Base & { type: 'boolean' })
+  | (Base & { type: 'select'; options: { value: string; label: string }[] })
+  | (Base & { type: 'list'; min?: number; max: number; itemLabel?: string; uniqueBy?: string; item: PageField[] })
   | (Base & { type: 'group'; fields: PageField[] })
 
-export type PageSchema = { key: string; label: string; path: string; fields: PageField[] }
+export type PageSchema = { key: string; label: string; path: string; adminPath?: string; fields: PageField[] }
 /** 미디어 파일(id) 이거나, 기본 글처럼 사이트에 이미 있는 그림(src — 새로 올리면 id 로 바뀐다). */
 export type PageImageValue = { id: string | null; alt: string; src?: string; width?: number | null; height?: number | null } | null
 export type PageLinkValue = { label: string; href: string }
 export type PageContent = Record<string, unknown>
 
-export type PageRow = { key: string; label: string; path: string; updated_on: string | null; updated_by: string | null }
+export type PageRow = { key: string; label: string; path: string; admin_path: string; updated_on: string | null; updated_by: string | null }
 export type PageLang = { content: PageContent; updated_on: string | null; updated_by: string | null }
 export type PageDetail = { schema: PageSchema; languages: Record<string, PageLang> }
 
@@ -50,6 +52,10 @@ function emptyValue(f: PageField): unknown {
       return null
     case 'link':
       return { label: '', href: '' }
+    case 'boolean':
+      return false
+    case 'select':
+      return ''
     case 'list':
       return []
     case 'group':

@@ -10,6 +10,11 @@ export class ControllerPageDefaultRowResponseDto {
   @ApiProperty({ example: 'company-location' }) key!: string;
   @ApiProperty({ example: '찾아오시는 길' }) label!: string;
   @ApiProperty({ example: '/page/company/location' }) path!: string;
+  @ApiProperty({
+    example: '/admin/pages/company-location',
+    description: '관리 화면에서 이 장을 고치는 주소',
+  })
+  admin_path!: string;
   @ApiProperty({ nullable: true, type: String, format: 'date-time' })
   updated_on!: string | null;
   @ApiProperty({ nullable: true, type: String }) updated_by!: string | null;
@@ -22,6 +27,7 @@ export class ControllerPageDefaultRowResponseDto {
       key: schema.key,
       label: schema.label,
       path: schema.path,
+      admin_path: schema.adminPath ?? `/admin/pages/${schema.key}`,
       updated_on: iso(latest?.updatedOn),
       updated_by: latest?.updatedBy ?? null,
     };

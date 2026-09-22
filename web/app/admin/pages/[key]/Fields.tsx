@@ -121,6 +121,31 @@ function Field({ field: f, value, onChange, id, onError }: Props) {
         </fieldset>
       )
     }
+    case 'boolean':
+      return (
+        <div className="dva_field">
+          <label className="dva_check" htmlFor={id}>
+            <input id={id} type="checkbox" checked={value === true} aria-describedby={described} onChange={(e) => onChange(e.target.checked)} />{' '}
+            {f.label}
+          </label>
+          {help}
+        </div>
+      )
+    case 'select':
+      return (
+        <div className="dva_field">
+          <Label field={f} htmlFor={id} />
+          <select id={id} value={typeof value === 'string' ? value : ''} required={f.required} aria-describedby={described} onChange={(e) => onChange(e.target.value)}>
+            {(!f.required || !value) && <option value="">고르세요</option>}
+            {f.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {help}
+        </div>
+      )
     case 'list':
       return <ListField field={f} value={Array.isArray(value) ? (value as PageContent[]) : []} onChange={onChange} id={id} onError={onError} />
     case 'group':
@@ -196,6 +221,13 @@ function ImageField({
   )
 }
 
+/** 항목 머리에 붙일 이름 — 항목 안 첫 고르기 칸의 고른 값(메인 「구역 1 · 신뢰의 근거」). */
+function pickLabel(item: PageField[], value: PageContent): string {
+  const sel = item.find((f): f is Extract<PageField, { type: 'select' }> => f.type === 'select')
+  if (!sel) return ''
+  return sel.options.find((o) => o.value === value?.[sel.key])?.label ?? ''
+}
+
 function ListField({
   field: f,
   value,
@@ -230,6 +262,7 @@ function ListField({
             <div className="dvp_item_head">
               <b>
                 {name} {i + 1}
+                {pickLabel(f.item, item) && <span className="dvp_item_pick"> · {pickLabel(f.item, item)}</span>}
               </b>
               <div className="dvp_item_btns">
                 <button type="button" className="dva_btn is-small" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`${name} ${i + 1} 위로`}>

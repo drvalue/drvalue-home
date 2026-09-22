@@ -1,0 +1,99 @@
+/* 관리 화면 「메인 화면」(/admin/home). 전부 .dva 아래 — 공개 화면 CSS 와 섞이지 않게. */
+
+.dva .dvhm_tabs {
+  margin: 4px 0 18px;
+}
+.dva .dvhm_bar {
+  margin-top: 0;
+}
+.dva .dvhm_note {
+  margin: 0 0 14px;
+  color: var(--dva-muted);
+  font-size: 13.5px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.dva .dvhm_lang {
+  margin-bottom: 12px;
+}
+
+/* 상태 배지 — 진행 중 · 예약 · 끝남 · 꺼짐 */
+.dva .dvhm_state {
+  margin-left: 6px;
+  font-size: 12px;
+  vertical-align: 1px;
+}
+.dva .dvhm_state.is-live {
+  background: var(--dva-ok-bg);
+  color: var(--dva-ok);
+}
+.dva .dvhm_state.is-scheduled {
+  background: var(--dva-warn-bg);
+  color: var(--dva-warn);
+}
+.dva .dvhm_state.is-ended,
+.dva .dvhm_state.is-off {
+  background: var(--dva-bg);
+  color: var(--dva-muted);
+}
+
+.dva .dvhm_image {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+.dva .dvhm_image img {
+  display: block;
+  max-width: min(100%, 320px);
+  height: auto;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* 팝업 미리 보기 — 사이트의 창과 같은 비율로 가운데에 */
+.dva .dvhm_preview {
+  margin-top: 12px;
+  padding: 18px;
+  border-radius: 12px;
+  background: rgba(20, 26, 36, 0.55);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+.dva .dvhm_pop {
+  max-width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+.dva .dvhm_pop img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.dva .dvhm_pop strong {
+  display: block;
+  padding: 0 16px;
+  font-size: 17px;
+  word-break: keep-all;
+}
+.dva .dvhm_pop_body {
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.dva .dvhm_pop_btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px;
+}

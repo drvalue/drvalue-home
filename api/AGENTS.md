@@ -26,7 +26,7 @@ src/
 │   ├── response/                # IApiCommonResponse (응답 본문 모양)
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
-│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations)
+│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
 │   ├── revision/                # 변경 이력 기록기 (admin_revisions)
@@ -48,7 +48,8 @@ src/
 `admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리) ·
 `menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘) ·
 `page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
-`seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`).
+`seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`) ·
+`home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -149,7 +150,9 @@ src/
   폼을 그린다. 저장은 `service/page-content.ts` 가 검사한다: 모르는 칸 거부 · 길이·필수·pattern ·
   richtext 허용 태그(`richtext.ts`, sanitize-html) · link 는 `/`·`https://`·`mailto:`·`tel:` 만 ·
   image 는 `{ id, alt }` 이고 미디어에 있는 파일만, 치수는 저장할 때 api 가 적는다.
-  칸 종류: text · textarea · richtext · image · link · list(min·max·item) · group.
+  칸 종류: text · textarea · richtext · image · link · boolean · select(options) · list(min·max·item, uniqueBy) · group.
+  `uniqueBy` 는 항목 안 한 칸의 값이 겹치면 거부한다(메인 「구역 차례」가 구역을 한 번씩만 갖게).
+  스키마의 `adminPath` 는 관리 목록이 그 장을 여는 주소다(메인은 `/admin/home` — 배너·팝업과 한 화면).
   - image 는 기본 글(씨앗)에 한해 사이트에 이미 있는 그림도 가리킨다: `{ id: null, src: '/screens/…', width, height }`.
     폴더는 screens·photo·brand·img·icon·images 만, `..` 금지, 개인정보 증서 원본(patent2·patent3)은 거부. 치수는
     보낸 값 그대로(api 가 web/public 을 못 읽는다). 관리 화면에서 새로 올리면 `{ id }` 로 바뀐다.
@@ -166,6 +169,17 @@ src/
     `cmsPageContent(key) ?? 기본 글` 로 그린다(`export const dynamic = 'force-dynamic'`) ⑤ verify 로
     「씨앗 글이 스키마를 통과한다」(GET 한 글을 그대로 PUT → 200)를 본다.
   - 페이지 그림은 공개 관문(`fileIsPublic`)과 미디어 「쓰이는 곳」에 잡히고, 강제 삭제는 그 칸의 id 를 null 로 바꾼다.
+- **메인(`core/home` + 페이지 글 `home`)** — 문구 · 구역 차례(보이기) · 신뢰의 근거·사업 카드 · 링크는 페이지 글 엔진
+  (`schema/home.schema.ts`), 기간 배너 · 팝업은 `home_banners` · `home_popups`(+ 언어별 번역 표). 머리 그림의 숫자
+  셋은 스키마에 없다 — web 이 특허·저작권·수행실적 게시판의 공개 글 수를 센다.
+  - 배너 = 머리 그림 사진의 기간 한정 교체(+ 있으면 제목·설명·첫째 버튼). 살아 있는(보이기 · 그림 · 기간 안) 것 중
+    차례가 앞선 **하나**만 나간다 — 슬라이드가 아니다(원본 홈의 두 장 슬라이드를 일부러 되살리지 않았다).
+  - 팝업은 살아 있는 것을 뜨는 차례로 전부 내고, 화면이 하나씩 띄운다. 「N일 동안 보지 않기」가 id 에 걸려 있어서
+    저장은 **id 를 지킨다**(메뉴처럼 지우고 다시 넣지 않는다 — 받은 id 는 고치고, 없는 id 는 새로, 빠진 것은 지운다).
+  - 팝업 내용은 page 의 `sanitizeRichtext` 로 허용 태그만 남긴다. 링크는 `/` · `https://` 만.
+  - 그림은 살아 있는 동안만 공개 관문을 통과한다(`fileIsPublic`) — 예약 배너 그림이 시작 전에 새지 않는다.
+    미디어 「쓰이는 곳」은 꺼진 것·기간 밖도 센다. 파일을 지우면 FK(`ON DELETE SET NULL`)가 그림 칸을 비운다.
+  - 표 이름이 `home_*` 인 이유는 migrations/0005 머리말(옛 Directus `popups` · `home_settings` 와 겹친다).
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
   프로세스당 한도가 된다 — 그때 공유 저장소로 바꾼다.
 - 칸 이름을 그대로 내보낸다(`is_pinned` · `published_date`). 예외 하나: `thumbnail`
@@ -198,8 +212,8 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 32 (6 + 9 + 5 + 12)
-bash scripts/verify.sh          # 측정 대기(E7·E8 합친 뒤 잰다) (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 36 (6 + 9 + 5 + 16)
+bash scripts/verify.sh          # 282 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

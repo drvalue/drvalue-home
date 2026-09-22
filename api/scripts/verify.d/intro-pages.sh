@@ -19,7 +19,7 @@ print(json.dumps({"languages_code": "ko-KR", "content": c}, ensure_ascii=False))
 ip_put() { admj PUT "/pages/$1"; }
 ip_msg() { pick 'print((d or {}).get("resultCode"), (d or {}).get("message"))'; }
 
-check "관리 목록에 페이지 16장(오시는 길 + 15)" "16" \
+check "관리 목록에 페이지 17장(메인 + 오시는 길 + 15)" "17" \
   "$(adm "/pages" | pick 'print(len(d.get("data") or []))')"
 
 IP_SEEDED=0

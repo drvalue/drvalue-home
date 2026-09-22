@@ -14,6 +14,7 @@ import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.mo
 import { MenuModule } from '../core/menu/menu.module';
 import { PageModule } from '../core/page/page.module';
 import { SeoModule } from '../core/seo/seo.module';
+import { HomeModule } from '../core/home/home.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SeoModule } from '../core/seo/seo.module';
     MenuModule,
     PageModule,
     SeoModule,
+    HomeModule,
   ],
 })
 export class AppModule {}
