@@ -1,7 +1,7 @@
 import { INTRO_FILM, INTRO_LEAD, INTRO_SHOT, COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import VideoFacade from '@/components/VideoFacade'
 
 /**
@@ -11,7 +11,7 @@ import VideoFacade from '@/components/VideoFacade'
  */
 const PATH = '/page/company/intro'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '회사소개',
   description:
     '디알밸류는 제조 현장의 언어를 데이터로 통일합니다. MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat 을 실제 현장에서 운영해 온 회사입니다.',

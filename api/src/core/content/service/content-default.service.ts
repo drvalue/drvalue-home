@@ -167,6 +167,12 @@ export class ContentDefaultService {
   }
 
   private async fileIsPublic(id: string): Promise<boolean> {
+    // 정적 장의 공유 그림(관리 화면 「SEO」). 장은 늘 공개라 조건이 없다.
+    const pageRows: unknown[] = await this.files.manager.query(
+      'SELECT 1 FROM page_meta WHERE og_image = $1 LIMIT 1',
+      [id],
+    );
+    if (pageRows.length > 0) return true;
     const n = await this.posts
       .createQueryBuilder('p')
       .leftJoin('p.files', 'pf')
@@ -266,6 +272,10 @@ export class ContentDefaultService {
       faq_category: t?.faqCategory ?? null,
       seo_title: t?.seoTitle ?? null,
       seo_description: t?.seoDescription ?? null,
+      // 공유 카드 그림(없으면 화면이 대표 이미지 → 사이트 기본 그림) · 검색 제외 · 사이트맵 lastmod.
+      og_image: r.ogImage ? `/api/content/assets/${r.ogImage}` : null,
+      no_index: r.noIndex,
+      updated_on: r.updatedOn ? new Date(r.updatedOn).toISOString() : null,
     };
     if (withBody) out.body = t?.body ?? null;
     return out;

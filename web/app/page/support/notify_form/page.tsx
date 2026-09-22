@@ -2,7 +2,7 @@ import ClientAction from '@/components/ClientAction'
 import Script from 'next/script'
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/support/notify_form.php 를 옮긴 것.
@@ -29,7 +29,7 @@ import { pageMeta } from '@/lib/seo'
 
 const PATH = '/page/support/notify_form'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '글 작성',
   description:
     '게시판 글 작성은 관리 화면에서 합니다.',

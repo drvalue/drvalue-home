@@ -454,6 +454,74 @@
   gap: 18px;
   align-items: start;
 }
+/* 폼 오른쪽 기둥 — 설정 · 검색 노출 카드를 위아래로. */
+.dva_aside {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+/* 검색 결과 미리 보기 — 구글 결과 한 줄의 모양을 흉내 낸다(색·크기만). */
+.dva_serp {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: #fff;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dva_serp_url {
+  font-size: 12px;
+  color: #4d5156;
+}
+.dva_serp_title {
+  font-size: 16px;
+  line-height: 1.35;
+  color: #1a0dab;
+}
+.dva_serp_desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4d5156;
+}
+.dva_counter.is-over {
+  color: var(--dva-crit);
+  font-weight: 700;
+}
+.dva_hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--dva-muted);
+  font-size: 12px;
+}
+/* 본문 그림에서 공유 그림 고르기. */
+.dva_pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.dva .dva_pick_item {
+  padding: 0;
+  border: 2px solid var(--dva-line);
+  border-radius: 6px;
+  background: #fff;
+  line-height: 0;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+}
+.dva .dva_pick_item.is-on {
+  border-color: var(--dva-accent);
+}
+.dva_pick_item img {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+}
 .dva_card {
   background: var(--dva-panel);
   border: 1px solid var(--dva-line);

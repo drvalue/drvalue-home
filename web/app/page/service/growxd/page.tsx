@@ -2,7 +2,7 @@ import { GROWXD, GROWXD_LEAD } from '../solutionContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { FeatureBlock } from '../../business/max/FeatureBlocks'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/service/growxd.php 를 옮긴 것. 2026-09-18 옛 꾸밈(가운데 정렬 사진 머리 + 아이콘 카드 + AOS)
@@ -11,7 +11,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/growxd'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'GrowXD 생산관리시스템',
   description: '실적 수집(MES)을 넘어 AI 분석·예측을 결합한 차세대 제조실행시스템. 현장 장비부터 전사 지표까지 한 흐름으로 잇습니다.',
   path: PATH,

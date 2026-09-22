@@ -1,7 +1,7 @@
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import CertGrid from '../CertGrid'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { cmsBoard, dots, type CmsPost } from '@/lib/cms'
 
 /** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
@@ -32,7 +32,7 @@ const DIMS: Record<string, { w: number; h: number }> = {
 
 const PATH = '/page/tech/patent'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '특허 등록 및 출원',
   description:
     '마이크로서비스 아키텍처 기반 SaaS, AI 에이전트 도면인식 BOM·공정 자동 매칭 등 디알밸류의 특허 등록 1건·출원 5건을 공개합니다.',

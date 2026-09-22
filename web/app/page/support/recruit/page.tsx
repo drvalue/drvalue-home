@@ -1,6 +1,7 @@
+import type { Metadata } from 'next'
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { cmsBoard } from '@/lib/cms'
 import { PAGE_CSS } from './recruitStyles'
 import { dueOf, EMPLOYMENT_LABEL } from './recruit'
@@ -14,11 +15,18 @@ export const dynamic = 'force-dynamic'
 
 const PATH = '/page/support/recruit'
 
-export const metadata = pageMeta({
+const baseMeta = seoMeta({
   title: '채용',
-  description: '디알밸류와 함께 제조 현장의 데이터를 바꿀 사람을 찾습니다. 진행 중인 채용 공고입니다.',
+  description:
+    '디알밸류와 함께 제조 현장의 데이터를 바꿀 사람을 찾습니다. 진행 중인 채용 공고를 고용 형태·마감일과 함께 안내합니다. 회사는 경기도 안산 한양대학교 ERICA 창업보육센터에 있습니다.',
   path: PATH,
 })
+
+/** 공고가 하나도 없는 동안은 색인하지 않는다 — 빈 장이 검색 결과에 잡힌다. */
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, rows] = await Promise.all([baseMeta(), cmsBoard('recruit')])
+  return rows && rows.length === 0 ? { ...meta, robots: { index: false, follow: true } } : meta
+}
 
 export default async function Page() {
   const rows = await cmsBoard('recruit')

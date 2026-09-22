@@ -39,6 +39,8 @@
 특허·저작권: `cert_state`(`registered`|`applied`) · `cert_no` · `cert_date` ·
 `cert_made_date` · `cert_kind`. 연혁: `history_year`. 수행실적:
 `period_start` · `period_end` · `case_category_label`. 없는 칸은 `null`.
+검색 칸은 모든 글에 온다: `seo_title` · `seo_description`(비면 `null`) · `og_image`(공유 그림
+주소 또는 `null`) · `no_index`(검색에서 제외 — 사이트에는 보인다) · `updated_on`(마지막 저장, ISO).
 `total` 은 조건에 맞는 전체 건수다.
 
 정렬은 게시판이 정한다. 공지·보도자료는 **고정 글 먼저, 표시 날짜 내림차순**.
@@ -64,7 +66,15 @@
 
 `:id` 는 36자 UUID 다. 모양이 아니면 `400`. 없는 파일과 **공개가 아닌 파일은
 둘 다 `404`** 다 — 어느 쪽인지 알려 주지 않는다. 공개 = 게시된 글의 대표
-이미지·공유 이미지·첨부가 가리키는 파일.
+이미지·공유 이미지·첨부·본문 그림이 가리키는 파일, 그리고 정적 장의 공유 그림(`page_meta`).
+
+## `GET /api/content/page-meta`
+
+정적 장(회사소개·사업·서비스…)의 검색 정보 덮어쓰기 전부. 무인증 — `<head>` 에 그대로 나가는 값이다.
+`?lang=` 으로 언어 하나로 편다(없으면 `ko-KR`). 덮어쓰지 않은 장은 목록에 없다.
+
+`data` 의 각 항목: `path` · `no_index` · `og_image`(공개 주소 또는 `null`) · `title` · `description`
+(비운 칸은 `null` — 화면이 코드의 값을 쓴다). 웹은 1분 캐시로 읽는다(`web/lib/seo.ts`).
 
 ## `POST /api/inquiry`
 
@@ -126,8 +136,20 @@
 `press_media` · `period_start` · `period_end` · `cert_state`(`registered` · `applied`) ·
 `cert_no` · `cert_date` · `cert_made_date` · `cert_kind` · `history_year` ·
 `translations: [{ languages_code, title, summary, body(HTML), case_category_label,
-seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]`.
+seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]` ·
+`og_image`(공유 그림 파일 uuid 또는 `null`. 없는 파일이면 `400 ADMIN_POST_OG_IMAGE_NOT_FOUND`) ·
+`no_index`(검색에서 제외).
 같은 `slug` 가 있으면 `409`. 만들기·고치기·지우기는 `admin_revisions` 에 before/after 를 남긴다.
+
+### 정적 장 SEO `/api/admin/seo/pages` (전체 권한 · 마케팅. 인사는 `403`)
+
+| 경로 | 뜻 |
+|---|---|
+| `GET` | 덮어쓴 장 전부 `{ data: [{ path, no_index, og_image, og_image_url, updated_on, updated_by, translations }] }` |
+| `PUT` `{ path, no_index, og_image, translations: [{ languages_code, title, description }] }` | 한 장을 통째로 저장(없으면 만든다). `path` 는 쿼리 없는 장 주소(`/page/...`, 홈은 `/`, 64자). 비운 제목·설명은 코드의 값 |
+| `DELETE ?path=` | 덮어쓰기를 지운다 — 코드의 값으로 돌아간다. 없으면 `404 SEO_PAGE_NOT_FOUND` |
+
+저장·지우기는 `admin_revisions`(collection `page_meta`, item_id = path)에 남는다.
 
 ### 파일 `/api/admin/files`
 

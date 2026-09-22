@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { PostFileEntity } from './post-file.entity';
 import { PostTranslationEntity } from './post-translation.entity';
 
@@ -58,11 +64,17 @@ export class PostEntity {
   @Column({ type: 'integer', nullable: true })
   sort: number | null;
 
+  /** 공유 카드 그림(directus_files.id). 비우면 대표 이미지 → 사이트 기본 그림. */
   @Column({ name: 'og_image', type: 'uuid', nullable: true })
   ogImage: string | null;
 
+  /** 검색에서 제외 — 공개 장에 noindex, 사이트맵에서 뺀다. 사이트에는 그대로 보인다. */
   @Column({ name: 'no_index', type: 'boolean', default: false })
   noIndex: boolean;
+
+  /** 마지막 저장 시각. 사이트맵 lastmod(migrations/0007). 저장·예약 전환 때마다 바뀐다. */
+  @UpdateDateColumn({ name: 'updated_on', type: 'timestamptz' })
+  updatedOn: Date;
 
   @Column({ name: 'en_ready', type: 'boolean', default: false })
   enReady: boolean;

@@ -6,7 +6,7 @@ import { AUTOFORM_CSS } from '../autoformStyles'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 오토폼 — 쓰던 한글 양식 그대로 업무 데이터를 채우는 문서 자동화.
@@ -22,7 +22,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/autoform'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '오토폼',
   description: '쓰던 한글(HWP·HWPX) 양식을 그대로 등록하고 문서 칸과 업무 데이터를 한 번 맺어 두면, 레코드를 고르는 것만으로 서식 그대로 문서가 나옵니다.',
   path: PATH,

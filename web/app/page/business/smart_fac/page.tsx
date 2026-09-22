@@ -2,7 +2,7 @@ import { SMARTFAC, SMARTFAC_LEAD } from '../../service/solutionContent'
 import { PAGE_CSS } from '../max/maxStyles'
 import SolutionShell from '../max/SolutionShell'
 import { FeatureBlock } from '../max/FeatureBlocks'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/business/smart_fac.php 를 옮긴 것. 2026-09-18 옛 꾸밈(가운데 정렬 사진 머리 + 아이콘 카드 + AOS)
@@ -11,7 +11,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/business/smart_fac'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '스마트 팩토리 사업',
   description: '설비와 공정을 디지털로 연결해 실시간 최적화를 실현합니다. AI 자동 견적, IoT 통합 모니터링, MES/ERP 실시간 연계를 제공합니다.',
   path: PATH,

@@ -1,12 +1,12 @@
 import { INDUSTRIES } from '../maxContent'
 import { PAGE_CSS } from '../maxStyles'
 import IndustryPage from '../IndustryPage'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /** 원본 PHP 에 없는 새 페이지다. M.AX 페이지의 「PCB 업종」 탭을 떼어 냈다. */
 const PATH = '/page/business/max/pcb-mes'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'PCB MES',
   description:
     '소량 다품종 샘플 PCB 를 위한 MES. 수십 항목의 사양 검증, 수율을 높이는 원판 배치, 내·외주 공정 진척과 거래 명세를 하나의 흐름으로 관리합니다.',

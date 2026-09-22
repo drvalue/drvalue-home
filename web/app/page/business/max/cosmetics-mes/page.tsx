@@ -1,12 +1,12 @@
 import { INDUSTRIES } from '../maxContent'
 import { PAGE_CSS } from '../maxStyles'
 import IndustryPage from '../IndustryPage'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /** 원본 PHP 에 없는 새 페이지다. M.AX 페이지의 「화장품 업종」 탭을 떼어 냈다. */
 const PATH = '/page/business/max/cosmetics-mes'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '화장품 MES',
   description:
     '화장품 제조를 위한 MES. 배합과 LOT 이력, 원료·부자재 입출고, 공정과 품질 기록을 이어 붙여 출하까지의 근거를 남깁니다.',

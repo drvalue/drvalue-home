@@ -1,7 +1,7 @@
 import { VISION_LEAD, VISION_STRATEGY, COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/company/vision.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
@@ -11,7 +11,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/company/vision'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '비전',
   description:
     '단순한 자동화를 넘어 제조 현장의 모든 데이터를 살아있는 정보로 전환합니다. 디알밸류가 그리는 지능형 제조의 방향과 전략을 소개합니다.',

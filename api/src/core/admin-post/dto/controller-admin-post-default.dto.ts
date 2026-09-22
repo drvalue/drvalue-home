@@ -181,6 +181,25 @@ export class ControllerAdminPostDefaultSaveDto {
   thumbnail?: string | null;
 
   @IsString({
+    propertyName: '공유 그림',
+    description:
+      '공유 카드(og:image) 파일 id. 비우면 대표 이미지 → 사이트 기본 그림',
+    optional: true,
+    nullable: true,
+    pattern: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    patternMessage: '공유 그림을 다시 골라 주세요.',
+  })
+  og_image?: string | null;
+
+  @IsBoolean({
+    propertyName: '검색에서 제외',
+    description:
+      '공개 장에 noindex, 사이트맵에서 뺀다. 사이트에는 그대로 보인다',
+    optional: true,
+  })
+  no_index?: boolean;
+
+  @IsString({
     propertyName: '매체명',
     description: '보도·뉴스의 매체',
     optional: true,

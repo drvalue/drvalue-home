@@ -1,7 +1,10 @@
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import type { Metadata } from 'next'
+import { seoMeta } from '@/lib/seo'
 import { cmsBoard, type CmsPost } from '@/lib/cms'
+import JsonLd from '@/components/JsonLd'
+import { plainText } from '../board/text'
 
 /**
  * 자주 묻는 질문. 분류별로 묶어 접기(<details>)로 보인다 — 스크립트 없이 열고 닫힌다.
@@ -11,11 +14,16 @@ export const dynamic = 'force-dynamic'
 
 const PATH = '/page/support/faq'
 
-export const metadata = pageMeta({
-  title: 'FAQ',
-  description: '도입 절차, 견적, 기술 지원 등 디알밸류에 자주 묻는 질문과 답입니다.',
-  path: PATH,
-})
+const DESCRIPTION =
+  '도입 절차, 견적, 기술 지원 등 디알밸류에 자주 묻는 질문과 답입니다. MES·제조 AI 도입 전에 궁금한 점을 먼저 확인하세요.'
+
+const baseMeta = seoMeta({ title: 'FAQ', description: DESCRIPTION, path: PATH })
+
+/** 질문이 하나도 없는 동안은 색인하지 않는다 — 빈 장이 검색 결과에 「질문이 없습니다」로 잡힌다. */
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, rows] = await Promise.all([baseMeta(), cmsBoard('faq')])
+  return rows && rows.length === 0 ? { ...meta, robots: { index: false, follow: true } } : meta
+}
 
 /** 장 전용 CSS — 템플릿 문자열이다. 안에 역따옴표를 넣지 않는다. */
 const PAGE_CSS = `
@@ -53,6 +61,19 @@ export default async function Page() {
   const rows = await cmsBoard('faq')
   return (
     <>
+      {/* 화면에 펼쳐지는 질문·답 그대로. 질문이 없으면 싣지 않는다(빈 FAQPage 는 오류다). */}
+      {rows && rows.length > 0 && (
+        <JsonLd
+          data={{
+            '@type': 'FAQPage',
+            mainEntity: rows.map((q) => ({
+              '@type': 'Question',
+              name: q.title,
+              acceptedAnswer: { '@type': 'Answer', text: plainText(q.body, 1000) },
+            })),
+          }}
+        />
+      )}
       <style dangerouslySetInnerHTML={{ __html: MAX_CSS + PAGE_CSS }} />
       <SolutionShell
         path={PATH}

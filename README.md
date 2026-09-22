@@ -18,7 +18,7 @@ docker compose up -d --build web api   # DB 는 그대로 두고 앞·뒤만
 ```
 
 `web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(db · api · web).
-api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 일곱 개뿐이다.
+api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 필수 일곱 개 + 선택 하나(`NEXT_PUBLIC_GTM_ID`)뿐이다.
 컨테이너 안에서는 web → `http://api:3500`, api → `db:5432` 로 부른다(compose 가 .env 값을 덮는다).
 web 의 `/api` 프록시 주소는 빌드 때 굳어서 compose 가 빌드 인자로도 넘긴다. 3400 이 차 있으면
 `WEB_PORT=3410 docker compose up -d --build`(콜백 주소도 같은 포트로).
@@ -586,7 +586,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 161 통과 · 판정불가 1 |
+| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 176 통과 · 판정불가 1 |
 | `api: node --test …/transactional.test.mjs …/authorize.test.mjs …/last-admin.test.mjs` | 트랜잭션·서비스 예외 데코레이터 · IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 20/20 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
@@ -633,5 +633,5 @@ api  npm run build && node dist/main.js → http://localhost:3500
 web  npm run build && npm start        → http://localhost:3400  (/admin 포함)
 ```
 
-`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(일곱 개)을 복사해서 채운다.
+`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(필수 일곱 개 + 선택 하나)을 복사해서 채운다.
 처음이면 `db/schema.sql` 다음에 `db/migrations/0001-admin-foundation.sql` 도 돌린다.

@@ -44,7 +44,9 @@ src/
 ```
 
 기능: `content` · `inquiry`(공개) · `admin-auth` · `admin-post` · `admin-file` ·
-`admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user`(관리).
+`admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user`(관리) ·
+`seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`,
+A1 모양으로 새로 지었다).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -149,8 +151,12 @@ src/
 - 공지·보도·뉴스의 대표 이미지(`thumbnail`)는 저장할 때 **본문의 첫 그림**으로 정한다
   (`/api/content/assets/<uuid>`, 한국어 본문 먼저). 보낸 `thumbnail` 은 보지 않는다. 본문에 그림이
   없으면 비운다. 증서(특허·저작권)만 `thumbnail` 을 직접 받는다.
-- 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 센다. `force` 삭제는
-  본문의 `<img>` 까지 걷어 낸다 — 남기면 글에 깨진 그림이 보인다.
+- 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 세고, 정적 장의 공유 그림
+  (`page_meta.og_image`)을 더한다. `force` 삭제는 본문의 `<img>` 까지 걷어 낸다 — 남기면 글에 깨진 그림이 보인다.
+- 검색 정보: 글은 `posts_translations.seo_title·seo_description` + `posts.og_image·no_index`(글 저장에 같이),
+  정적 장은 `page_meta`(+ 언어별 `page_meta_translations`). 공유 그림은 저장 전에 파일이 있는지 본다 —
+  FK(migrations/0007) 가 500 을 내기 전에 400. 공개 파일 관문은 `page_meta.og_image` 도 연다.
+  `posts.updated_on`(사이트맵 lastmod)은 `@UpdateDateColumn` 이라 저장·예약 전환 때 저절로 바뀐다.
 - 업로드는 `AppConfig.uploadsDir` 폴더에 `<uuid>.<ext>` + `directus_files` 행(compose 는
   `/data/uploads`, 로컬은 저장소 `data/uploads`). 치수는 헤더에서 직접 읽는다. cwd 기준으로
   잡지 않는다(api/ 에서 띄우면 빈 폴더를 본다).
@@ -162,7 +168,7 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-bash scripts/verify.sh          # 161 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 176 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

@@ -3,6 +3,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import SiteFooter from '@/components/SiteFooter'
 import SiteHeader from '@/components/SiteHeader'
 import Script from 'next/script'
+import { pageMeta } from '@/lib/seo'
 
 /**
  * /page/tech/patent_old.php 를 옮긴 것.
@@ -15,6 +16,17 @@ import Script from 'next/script'
  */
 
 const PATH = '/page/tech/patent_old'
+
+/**
+ * 메뉴에 없는 옛 화면이고 특허 장(/page/tech/patent)과 같은 내용이다. 주소는 살려 두되 색인하지 않는다 —
+ * 두 장이 같은 검색어를 두고 다투지 않게. 308 로 돌리지 않는 것은 AOS 등장 효과를 남긴 비교용 장이라서다.
+ */
+export const metadata = pageMeta({
+  title: '특허(옛 화면)',
+  description: '디알밸류 특허 목록의 옛 화면입니다. 최신 목록은 특허 장에 있습니다.',
+  path: PATH,
+  noIndex: true,
+})
 
 const FEATURE_LIST = [
   { 'title': 'SaaS · 마이크로서비스', 'badge': '특허 3건', 'desc': '마이크로서비스 아키텍처를 활용한 SaaS 서비스 제공·제공방법·통합관리 시스템 특허로, 클라우드 네이티브 웹 플랫폼을 안정적으로 구축·확장합니다.', 'icon': '<svg width="46" height="46" viewBox="0 0 46 46" fill="none"><rect x="7" y="8" width="32" height="9" rx="2.8" stroke="#191f28" stroke-width="2.5"/><rect x="7" y="18.5" width="32" height="9" rx="2.8" stroke="#F26F21" stroke-width="2.5"/><rect x="7" y="29" width="32" height="9" rx="2.8" stroke="#191f28" stroke-width="2.5"/><circle cx="12.5" cy="12.5" r="1.6" fill="#F26F21"/><circle cx="12.5" cy="23" r="1.6" fill="#191f28"/><circle cx="12.5" cy="33.5" r="1.6" fill="#F26F21"/></svg>' },

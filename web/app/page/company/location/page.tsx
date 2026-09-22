@@ -1,7 +1,7 @@
 import { LOCATION, LOCATION_LEAD, COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/company/location.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
@@ -10,7 +10,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/company/location'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '찾아오시는 길',
   description:
     '디알밸류는 한양대학교 ERICA 창업보육센터에 있습니다. 주소·전화·이메일과 방문 안내를 확인하세요. 경기도 안산시 상록구 한양대학로 55.',

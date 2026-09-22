@@ -1,0 +1,120 @@
+/* SEO(정적 장의 검색 정보). 전부 .dva 아래. 목록 + 편집 두 칸, 좁으면 위아래. */
+.dva .dvs_lead {
+  margin: 0 0 14px;
+  max-width: 72ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dva-muted);
+}
+.dva .dvs_split {
+  display: grid;
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.dva .dvs_list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.dva .dvs_row {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  min-height: 44px;
+  text-align: left;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: var(--dva-panel);
+  color: inherit;
+  cursor: pointer;
+}
+.dva .dvs_row:hover {
+  border-color: #c3cad3;
+}
+.dva .dvs_row.is-on {
+  border-color: var(--dva-accent);
+  box-shadow: 0 0 0 1px var(--dva-accent) inset;
+}
+.dva .dvs_row_name {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.dva .dvs_row_name em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--dva-muted);
+}
+.dva .dvs_row_path {
+  font-size: 12px;
+  color: var(--dva-muted);
+  overflow-wrap: anywhere;
+}
+.dva .dvs_row_tags {
+  display: flex;
+  gap: 6px;
+}
+.dva .dvs_row_tags:empty {
+  display: none;
+}
+.dva .dvs_detail {
+  min-width: 0;
+}
+.dva .dvs_editor_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dva .dvs_editor_head h2 {
+  margin: 0;
+}
+.dva .dvs_path,
+.dva .dvs_meta {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: var(--dva-muted);
+  overflow-wrap: anywhere;
+}
+.dva .dvs_live {
+  border: 1px dashed var(--dva-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.dva .dvs_live h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--dva-muted);
+}
+.dva .dvs_live dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 13px;
+}
+.dva .dvs_live dt {
+  color: var(--dva-muted);
+}
+.dva .dvs_live dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dva .dvs_actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+}
+@media (max-width: 860px) {
+  .dva .dvs_split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

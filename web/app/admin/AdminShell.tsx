@@ -128,6 +128,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       items: [
         { href: '/admin/inquiries', label: '문의', badge: newInquiries },
         { href: '/admin/media', label: '미디어' },
+        // 정적 장의 검색 제목·설명·공유 그림(api 가 전체 권한·마케팅만 받는다).
+        { href: '/admin/seo', label: 'SEO' },
       ],
     })
   }

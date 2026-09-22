@@ -5,7 +5,7 @@ import BizShowcase from '../BizShowcase'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 한건(hankeon.com) — 디알밸류가 만들어 상용 운영 중인 건설 AI.
@@ -22,7 +22,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/hangeon'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '한건 AI Chat',
   description:
     'LLM·RAG 기반 건설 AI. KCS·KDS·표준품셈과 법령을 근거로 답하고, 나라장터 공고를 면허 기준으로 가려 줍니다. 디알밸류가 만들어 상용으로 운영 중입니다.',

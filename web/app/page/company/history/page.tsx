@@ -1,7 +1,7 @@
 import { HISTORY, HISTORY_LEAD, COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { cmsBoard, type CmsPost } from '@/lib/cms'
 
 /** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
@@ -16,12 +16,10 @@ export const dynamic = 'force-dynamic'
  */
 const PATH = '/page/company/history'
 
-export const metadata = pageMeta({
-  title: '연혁',
-  description:
-    '2024년 법인 설립부터 기업부설연구소, ISO 9001·14001 인증, AI 바우처·클라우드 바우처 선정까지 디알밸류가 걸어온 기록입니다.',
-  path: PATH,
-})
+const DESCRIPTION =
+  '2024년 법인 설립부터 기업부설연구소, ISO 9001·14001 인증, AI 바우처·클라우드 바우처 선정까지 디알밸류가 걸어온 기록입니다.'
+
+export const generateMetadata = seoMeta({ title: '연혁', description: DESCRIPTION, path: PATH })
 
 /**
  * CMS(게시판 「연혁」)가 우선. 연도 내림차순, 한 해 안은 관리 화면의 순서(sort).
@@ -53,7 +51,7 @@ export default async function Page() {
         kickerSub="회사소개"
         headLead="디알밸류가 걸어온 "
         headStrong="혁신과 성장의 기록입니다."
-        desc={metadata.description as string}
+        desc={DESCRIPTION}
         lead={HISTORY_LEAD}
         ctaTitle="문의사항이 있으신가요?"
         ctaDesc="프로젝트 문의는 문의하기에서 남길 수 있습니다."

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
+import { SITE_ORIGIN } from '@/lib/seo'
+import JsonLd from './JsonLd'
 
 /**
  * breadcrumb.php 를 그대로 옮긴 것. 판정 규칙(첫 일치 대분류, 없으면 첫 하위)
@@ -16,6 +18,13 @@ export default function Breadcrumb({ currentPath }: { currentPath: string }) {
   const curSub = curMenu.sub
     ? curMenu.sub.find((s) => isSubActive(currentPath, s.l)) ?? visible[0] ?? curMenu.sub[0]
     : null
+
+  // 줄에 찍힌 것 그대로(홈 › 대분류 › 하위)를 검색엔진에도 준다. 링크가 같은 곳을 두 번 가리키면 하나만.
+  const trail = [
+    { name: '홈', url: '/' },
+    { name: curMenu.title, url: curMenu.link },
+    ...(curSub && curSub.l !== curMenu.link ? [{ name: curSub.t, url: curSub.l }] : []),
+  ]
 
   return (
     <nav className="dv_breadcrumb" aria-label="현재 위치">
@@ -54,6 +63,17 @@ export default function Breadcrumb({ currentPath }: { currentPath: string }) {
           </div>
         )}
       </div>
+      <JsonLd
+        data={{
+          '@type': 'BreadcrumbList',
+          itemListElement: trail.map((t, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: t.name,
+            item: `${SITE_ORIGIN}${t.url}`,
+          })),
+        }}
+      />
     </nav>
   )
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect, redirect } from 'next/navigation'
-import { cmsPost, type CmsPostFull } from '@/lib/cms'
-import { pageMeta } from '@/lib/seo'
+import { cmsBoardPage, cmsPost, type CmsPostFull } from '@/lib/cms'
+import { pageMeta, seoMeta } from '@/lib/seo'
 import { BOARDS, detailPath, isBoardKey, type BoardConf } from './boards'
 import { plainText } from './text'
 
@@ -48,28 +48,40 @@ export async function loadPost(conf: BoardConf, slug: string): Promise<CmsPostFu
 
 /**
  * 목록 장의 머리 정보. 2쪽부터는 그 쪽이 대표주소다. 검색 결과(검색어·기간)는 색인하지
- * 않는다 — 같은 글이 조건마다 다른 주소로 잡힌다.
+ * 않는다 — 같은 글이 조건마다 다른 주소로 잡힌다. 글이 하나도 없는 동안도 색인하지 않는다
+ * (빈 장이 「아직 등록된 … 없습니다」로 검색 결과에 잡힌다). 1쪽은 관리 화면 「SEO」의 덮어쓰기를 얹는다.
  */
-export function boardListMetadata(conf: BoardConf, sp: SP): Metadata {
+export async function boardListMetadata(conf: BoardConf, sp: SP): Promise<Metadata> {
   const page = Math.max(1, parseInt(one(sp.page), 10) || 1)
   const searching = Boolean(one(sp.q) || one(sp.startDate) || one(sp.endDate))
-  return pageMeta({
+  // 목록 장이 그리는 요청과 같은 주소라 한 번만 나간다(요청 안의 fetch 는 합쳐진다).
+  const first = await cmsBoardPage(conf.key)
+  const empty = first !== null && first.total === 0
+  const input = {
     title: page > 1 ? `${conf.label} ${page}쪽` : conf.label,
-    description: conf.description,
+    description: conf.seoDescription,
     path: page > 1 ? `${conf.path}?page=${page}` : conf.path,
-    noIndex: searching,
-  })
+    noIndex: searching || empty,
+  }
+  return page > 1 ? pageMeta(input) : seoMeta(input)()
 }
 
-/** 글 한 건의 머리 정보. 관리 화면의 검색 제목·설명이 있으면 그것, 없으면 제목·요약·본문 앞부분. */
+/**
+ * 글 한 건의 머리 정보. 관리 화면의 검색 제목·설명이 있으면 그것, 없으면 제목·요약·본문 앞부분.
+ * 공유 그림은 글의 공유 그림 → 대표 이미지(본문 첫 그림) → 사이트 기본 그림. 없는 글은 여기서 404 —
+ * 안 그러면 404 장이 목록 제목(「공지사항」)을 달고 나간다.
+ */
 export async function boardPostMetadata(conf: BoardConf, slug: string): Promise<Metadata> {
   const p = await cmsPost(slug)
+  if (p === 'missing') notFound()
   const path = detailPath(conf, slug)
-  if (!p || p === 'missing') return pageMeta({ title: conf.label, description: conf.description, path })
+  if (!p) return pageMeta({ title: conf.label, description: conf.seoDescription, path })
   return pageMeta({
     title: p.seo_title?.trim() || `${p.title} | ${conf.label}`,
-    description: p.seo_description?.trim() || p.summary?.trim() || plainText(p.body) || conf.description,
+    description: p.seo_description?.trim() || p.summary?.trim() || plainText(p.body) || conf.seoDescription,
     path: detailPath(isBoardKey(p.board) ? BOARDS[p.board] : conf, p.slug),
-    article: { publishedTime: p.published_date },
+    article: { publishedTime: p.published_date, modifiedTime: p.updated_on },
+    image: p.og_image || p.thumbnail,
+    noIndex: Boolean(p.no_index),
   })
 }

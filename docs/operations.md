@@ -19,6 +19,7 @@ docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms < db/schema.sq
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0001-admin-foundation.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0002-admin-users-iam-sync.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0003-posts-files-fk.sql
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0007-seo.sql
 
 # 3. 백엔드
 cd api
@@ -74,7 +75,7 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 ```bash
 cd api  && npm run typecheck && npm run build
         && node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-        && bash scripts/verify.sh                # 161 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+        && bash scripts/verify.sh                # 176 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-copy.py         # 화면으로 가는 문구의 반말 0건 (서버 없이 돈다)
         && npx tsc --noEmit && npx next build
@@ -93,8 +94,8 @@ verify.sh 의 판정불가 1건은 「마지막 전체 권한을 내리면 409�
 
 ## 환경변수
 
-루트 `.env` 하나. 정본은 `.env.example` — **일곱 개**다. 읽는 곳은 `api/src/common/config/app-config.ts`
-하나다. 나머지는 코드 상수이거나
+루트 `.env` 하나. 정본은 `.env.example` — **필수 일곱 개 + 선택 하나**(`NEXT_PUBLIC_GTM_ID`)다.
+api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머지는 코드 상수이거나
 `docker-compose.yml` 이 컨테이너끼리 잇는 배선이다.
 
 | 이름 | 뜻 | 비우면 |
@@ -103,6 +104,7 @@ verify.sh 의 판정불가 1건은 「마지막 전체 권한을 내리면 409�
 | `ADMIN_SESSION_SECRET` | 관리 화면 로그인 쿠키(`dv_admin`) 서명 키. SSE 와 무관하다 — 이 값을 아는 사람은 관리자 쿠키를 만들 수 있다 | api 가 **안 뜬다** |
 | `ADMIN_IAM_CALLBACK_URL` | IAM 이 로그인 뒤 돌려보낼 주소. IAM 화이트리스트와 같아야 한다. `https` 면 쿠키에 Secure | 로그인 버튼이 로그인 화면으로 돌아와 「로그인 설정이 끝나지 않았습니다.」(`ADMIN_AUTH_NOT_CONFIGURED`) |
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
+| `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
 
 compose 가 넣는 배선: `DB_HOST=db` · `DB_PORT=5432` · `UPLOADS_DIR=/data/uploads` ·
 `TRUST_PROXY=1` · `PORT=3500` · web 의 `API_ORIGIN=http://api:3500`(실행 환경 **과** 빌드 인자 —

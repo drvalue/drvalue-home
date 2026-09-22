@@ -5,7 +5,7 @@ import { GROWCHAT_CSS } from '../growchatStyles'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 채팅(GrowChat) — 디알밸류가 만들어 홈페이지 오른쪽 아래 상담 버블로 실제 쓰는 채팅 솔루션.
@@ -19,7 +19,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/chat'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '채팅',
   description: '고객이 홈페이지 상담 버블로 문의하면 상담원이 한 화면에서 배정받아 답하는 채팅 솔루션. 실시간 상담과 게시판형 문의, 고객 이력과 진행 상태를 같이 봅니다. 디알밸류가 만들어 홈페이지에 쓰고 있습니다.',
   path: PATH,

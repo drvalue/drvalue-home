@@ -1,7 +1,7 @@
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import PortfolioTable from './PortfolioTable'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { PORTFOLIO_LIST } from './list'
 import { cmsBoard, yymm } from '@/lib/cms'
 import type { Row } from './PortfolioTable'
@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic'
 
 const PATH = '/page/portfolio/portfolio'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '주요 수행실적',
   description:
     '안산스마트공장 보급, 경기도형 스마트공장 공급기술 상용화, 한양대학교 R&D 등 9건의 수행 과제와 기간·발주 유형을 공개합니다.',

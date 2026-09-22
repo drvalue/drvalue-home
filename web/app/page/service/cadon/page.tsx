@@ -6,7 +6,7 @@ import { CADON_CSS } from '../cadonStyles'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * CADON — AutoCAD 안에서 판금을 펴고 되접는 CutON 플러그인.
@@ -23,7 +23,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/cadon'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'CADON',
   description: 'AutoCAD 안에서 판금 STEP 을 열어 전개하고, 절단선·절곡선을 레이어로 작도하고, 절곡 시뮬레이션과 3D 되접기로 검토합니다. 도면은 외부 서버로 나가지 않습니다.',
   path: PATH,
