@@ -1,0 +1,19 @@
+/*
+ * 새 디자인(머리·발·메인)만 Tailwind 를 쓴다.
+ *
+ * `@import "tailwindcss"` 를 통째로 쓰면 **preflight** 가 딸려 온다. 그것은
+ * 모든 태그의 margin·font·border 를 0 으로 밀어 버리는 전역 초기화다. 이
+ * 사이트의 나머지 17장은 PHP 에서 가져온 전역 CSS 로 그려지므로, 그걸 깔면
+ * 17장이 통째로 틀어진다(그래서 도구를 넣기 전후로 대조 검사를 돌린다).
+ *
+ * 그래서 layer 를 직접 골라 불러온다 — theme(변수)과 utilities(클래스)만.
+ */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* 훑을 파일. Tailwind 4 는 설정 파일 대신 CSS 에서 정한다. */
+@source "../app";
+@source "../components";
+@source "../dv";

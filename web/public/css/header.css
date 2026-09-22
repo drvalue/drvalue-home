@@ -1,0 +1,558 @@
+@charset "utf-8";
+
+#toss_header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #f2f4f6;
+    z-index: 1000;
+    transition: background-color .5s ease-in-out, border-color .5s ease-in-out, backdrop-filter .5s ease-in-out;
+}
+
+/* ── 맨 위에서는 히어로 위에 얹힌다 ─────────────────────────────
+   거의 모든 장이 헤더 바로 아래가 어둡다(실측: 짙은 남색 #152238 /
+   #191f28). 그 위에 흰 막대를 덧대면 사진이 잘린 것처럼 보인다.
+
+   **투명이 기본값이고, 조건은 CSS 안에 있다.**
+   `html:has(.mx_hero, .hero_sub_banner, .dv_hero)` — 어두운 머리 그림이 실제로 있는
+   장에서만 걸린다. 홈은 맨 위가 밝은 회색이라 여기 안 걸리고, 스크립트가
+   죽어도 흰 글씨가 밝은 배경에 남는 일이 없다.
+
+   서버가 그린 화면부터 투명하다. 반대로(스크립트가 붙어야 투명) 두었더니
+   장을 열 때마다 흰 막대가 한 번 번쩍이고 사라졌다. 스크립트가 하는 일은
+   **내렸을 때 `data-hdr="scrolled"` 를 붙이는 것 하나**다.
+
+   `:has()` 를 못 쓰는 브라우저에서는 이 규칙이 통째로 죽어 흰 막대로 남는다 —
+   안전한 쪽으로 실패한다.
+
+   메뉴판이 열리면 다시 흰 막대로 돌아온다. 판이 흰색인데 그 위 막대만
+   투명하면 글자가 사진과 겹쳐 읽힌다. `:has()` 로 판이 열렸는지 본다. */
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) {
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+}
+
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .main_a {
+    color: rgba(255, 255, 255, .88);
+}
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .gnb_li.is-active > .main_a,
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .gnb_li:hover > .main_a {
+    color: #fff;
+}
+/* 현재 위치 밑줄도 흰색으로. 어두운 사진 위에서 빨강은 잘 안 보인다. */
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .main_a > span::after {
+    background: #fff;
+}
+/* 문의 단추는 검정 ↔ 흰색으로 뒤집는다. */
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .btn_header_cta {
+    background: #fff;
+    color: #14161a;
+}
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .m_menu_btn span {
+    background: #fff;
+}
+
+/* ── 로고 두 장 ────────────────────────────────────────────── */
+.hdr_logo_wrap {
+    position: relative;
+    display: block;
+    width: 138px;
+    height: 32px;
+}
+.hdr_logo_wrap img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity .28s ease;
+}
+.hdr_logo_white { opacity: 0; }
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .hdr_logo_red { opacity: 0; }
+html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_header:not(:has(.gnb_li:hover)):not(:has(.gnb_li:focus-within)):not(:has(.m_menu_btn.open)) .hdr_logo_white { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    #toss_header,
+    .hdr_logo_wrap img { transition: none; }
+}
+
+/* 로고 · 탭 · 문의 세 칸. 가운데 칸이 남는 폭을 다 먹어서 탭이 늘 한가운데
+   온다. flex + space-between 이었을 때는 탭 글자 길이가 바뀌면 묶음 전체가
+   좌우로 밀렸다 — 「서비스」가 「AI솔루션」이 되면서 그게 눈에 띄었다.
+   `max-width` 는 1280 그대로 둔다. 아래 서비스 영역과 홈 비주얼이 이 폭에
+   맞춰져 있다(style.css 의 .dvcap_wrap 참고). */
+.header_container {
+    max-width: 1280px;
+    margin: 0 auto;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 200px 1fr 200px;
+    align-items: center;
+    padding: 0 20px;
+}
+
+
+
+.desktop_only { display: block; }
+.mobile_only { display: none; }
+
+/* ── 탭 막대 ──────────────────────────────────────────────
+   호버하면 헤더 폭 전체로 판이 내려온다. 옛 방식은 탭 아래에만 작은
+   상자가 떴는데, 하위 항목에 설명 한 줄이 붙으면서 그 안에 안 들어간다.
+
+   자바스크립트를 안 쓴다. :hover 와 :focus-within 만으로 연다 —
+   그래서 키보드로도 열리고, 스크립트가 죽어도 메뉴는 산다.
+   ------------------------------------------------------------------ */
+#toss_gnb { height: 100%; }
+
+/* 여섯 칸을 똑같이 나눈다. 글자 길이와 상관없이 칸 폭이 같아서 현재 위치
+   밑줄도 늘 같은 길이로 그어진다. */
+.gnb_list {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    height: 100%;
+    align-items: center;
+}
+
+/* static 이어야 한다. 판이 `#toss_header` 를 기준으로 좌우 끝까지 벌어진다 —
+   여기가 relative 면 탭 한 칸 폭에 갇힌다. */
+.gnb_li {
+    position: static;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.main_a {
+    position: relative;
+    /* 칸을 꽉 채워야 한다. 안 채우면 밑줄이 글자 폭으로 줄어서 탭마다
+       길이가 달라진다(실측 53·35·54·53·40·53px). */
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    white-space: nowrap;
+    font-size: 15.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #333d4b;
+    transition: color 0.2s ease;
+}
+
+/* 현재 위치 표시. 글자 폭만큼만, 글자 바로 밑에 긋는다.
+   칸(140px) 전체에 그으면 참조 시안보다 훨씬 길고, 현재 탭과 호버 탭이
+   나란히 붙었을 때 두 밑줄이 한 줄로 이어져 버린다. */
+.main_a > span {
+    position: relative;
+    display: inline-block;
+}
+
+.main_a > span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -11px;
+    height: 3px;
+    background: #d71920;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.2s ease;
+}
+
+.gnb_li:hover > .main_a,
+.gnb_li:focus-within > .main_a,
+.gnb_li.is-active > .main_a {
+    color: #d71920;
+}
+
+.gnb_li:hover > .main_a > span::after,
+.gnb_li:focus-within > .main_a > span::after,
+.gnb_li.is-active > .main_a > span::after {
+    transform: scaleX(1);
+}
+
+.gnb_li.is-active > .main_a { font-weight: 700; }
+
+/* ── 내려오는 판 ─────────────────────────────────────── */
+.sub_menu_box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border-bottom: 1px solid rgba(229, 232, 235, 0.6);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    /* **닫힘은 즉시.** 판이 탭마다 따로 있고 전부 같은 자리에 뜬다. 닫는
+       쪽도 0.2s 페이드를 주면 탭을 옮길 때 두 판이 겹친다 — 실측으로
+       40ms 지점에 0.7 과 0.29 가 동시에 보였다. 카드 내용이 서로 달라서
+       글자가 겹쳐 읽힌다. 참조 코드가 판 한 장을 유지하고 내용만 바꾼
+       이유가 이것이다. 우리는 자바스크립트를 안 쓰므로 닫힘을 0s 로 둔다. */
+    transition: opacity 0s, visibility 0s;
+}
+
+/* 판 뒤쪽을 어둡게 깔아 준다. `position: fixed` 를 쓰면 안 된다 —
+   헤더에 backdrop-filter 가 걸려 있어서 fixed 의 기준이 뷰포트가 아니라
+   헤더가 된다(높이 80px 안에 갇힌다). 그래서 absolute + 100vh 다. */
+.sub_menu_box::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.gnb_li:hover > .sub_menu_box,
+.gnb_li:focus-within > .sub_menu_box {
+    opacity: 1;
+    visibility: visible;
+    /* 여는 쪽만 페이드. */
+    transition: opacity 0.2s ease, visibility 0s;
+}
+
+.sub_menu_list {
+    max-width: 1280px;
+    margin: 0 auto;
+    /* 좌우 패딩을 ul 이 아니라 **카드**가 갖는다. 그래야 첫 카드의 글자가
+       로고와 같은 세로선에 선다(둘 다 화면에서 100px 지점). */
+    padding: 16px 0 26px;
+    display: grid;
+    /* 250px × 5 + 틈 = 1258 로 1280 안에 들어간다. 268 이었을 때는 하위가
+       다섯인 AI솔루션 에서 마지막 하나가 둘째 줄로 혼자 내려갔다. */
+    grid-template-columns: repeat(auto-fit, minmax(0, 250px));
+    justify-content: start;
+    gap: 2px;
+}
+
+.sub_menu_list li a {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 88px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: transparent;
+    transition: background 0.18s ease;
+}
+
+.sub_menu_list li a:hover,
+.sub_menu_list li a:focus-visible {
+    background: #f3f4f6;
+}
+
+.sub_menu_list li a b {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #333d4b;
+    word-break: keep-all;
+    transition: color 0.2s ease;
+}
+
+.sub_menu_list li a:hover b,
+.sub_menu_list li a:focus-visible b {
+    color: #d71920;
+}
+
+/* 설명 한 줄. 제목보다 확실히 뒤에 있어야 두 줄이 안 싸운다. */
+.sub_menu_list li a span {
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #8b95a1;
+    word-break: keep-all;
+}
+
+.sub_menu_list li.is-sub-active a b {
+    color: #d71920;
+    font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main_a > span::after,
+    .sub_menu_box,
+    .sub_menu_list li a { transition: none; }
+}
+
+.toss_hd_right {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+}
+.toss_hd_right .dv_hdr_auth {
+    height: auto;
+    padding: 10px 22px;
+    font-size: 14px;
+}
+.btn_header_cta {
+    position: relative;
+    /* 참조 시안이 검정 알약이다. 빨강은 탭의 현재 위치 표시가 이미 쓰고
+       있어서, 단추까지 빨강이면 눈이 갈 곳이 둘이 된다. */
+    background: #14161a;
+    color: #fff;
+    padding: 11px 26px;
+    border-radius: 999px;
+    border: 0;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+/* 문의하기 호버 툴팁 */
+.btn_header_cta[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    white-space: nowrap;
+    background: #191f28;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    z-index: 10001;
+}
+.btn_header_cta[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 20px;
+    border: 6px solid transparent;
+    border-bottom-color: #191f28;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 10001;
+}
+.btn_header_cta[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.btn_header_cta[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 1024px) {
+    .desktop_only { display: none !important; }
+    .mobile_only { display: block; }
+
+    /* 탭 막대가 숨으면 가운데 칸이 빈다. 그대로 두면 200px 두 칸이 남아
+       좁은 화면(390px)에서 폭을 넘긴다 — 로고와 햄버거 두 칸으로 바꾼다. */
+    .header_container {
+        grid-template-columns: 1fr auto;
+    }
+
+    /* 누르는 자리는 44×44 다. 막대 세 줄만 두면 20px 이라 손끝(약 44px)보다
+       작아서 옆이 눌린다(실측 24×20). 상자만 키우고 **막대는 24px 그대로**
+       둔다 — width:100% 로 두면 막대가 44px 까지 늘어난다(실제로 늘어났다). */
+    .m_menu_btn {
+        background: none;
+        border: 0;
+        width: 44px;
+        height: 44px;
+        margin-right: -10px;
+        position: relative;
+        cursor: pointer;
+        z-index: 10002;
+    }
+
+    .m_menu_btn span {
+        position: absolute;
+        left: 10px;
+        width: 24px;
+        height: 2px;
+        border-radius: 2px;
+        background: #191f28;
+        /* transition: 0.3s 는 all 이다 — 속성을 적는다. */
+        transition: top 0.3s ease, transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* 44px 상자의 한가운데(21px)를 기준으로 위아래 8px. */
+    .m_menu_btn span:nth-child(1) { top: 13px; }
+    .m_menu_btn span:nth-child(2) { top: 21px; }
+    .m_menu_btn span:nth-child(3) { top: 29px; }
+
+    .m_menu_btn.open span:nth-child(1) { top: 21px; transform: rotate(45deg); }
+    .m_menu_btn.open span:nth-child(2) { opacity: 0; }
+    .m_menu_btn.open span:nth-child(3) { top: 21px; transform: rotate(-45deg); }
+
+    #mobile_menu_layer {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100vh;
+        background: #fff;
+        z-index: 10001;
+        padding: 96px 24px 40px;
+        transition: right 0.35s ease;
+        overflow-y: auto;
+    }
+
+    #mobile_menu_layer.active { right: 0; }
+
+    .m_gnb_li { border-bottom: 1px solid #f2f4f6; }
+
+    .m_main_a {
+        display: block;
+        position: relative;
+        padding: 20px 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #191f28;
+    }
+
+    .m_main_a::after {
+        content: "∨";
+        position: absolute;
+        right: 0;
+        color: #b0b8c1;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+    .m_main_a.active::after {
+        transform: rotate(180deg);
+        color: #d71920;
+    }
+
+    .m_sub_list {
+        display: none;
+        padding: 0 0 18px 8px;
+    }
+
+    .m_sub_list li a {
+        display: block;
+        padding: 10px 0;
+        color: #6b7684;
+        font-size: 17px;
+    }
+
+    .m_menu_bottom { margin-top: 36px; }
+
+    .m_btn_contact {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+        border: 0;
+        background: #d71920;
+        color: #fff;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+}
+/* ===== 서브페이지 브레드크럼 네비게이션 ===== */
+.dv_breadcrumb {
+    background: #fff;
+    border-bottom: 1px solid #ececec;
+    position: relative;
+    z-index: 50;
+}
+.dv_bc_inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: stretch;
+}
+.dv_bc_home {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    color: #fff;
+    font-size: 16px;
+    background: #d71920;
+    border-left: 1px solid #ececec;
+    border-right: 1px solid #ececec;
+    transition: background 0.3s;
+}
+.dv_bc_home:hover { color: #fff; background: #b80000; }
+.dv_bc_item {
+    position: relative;
+    border-right: 1px solid #ececec;
+}
+.dv_bc_cur {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 36px;
+    min-width: 190px;
+    width: 100%;
+    padding: 17px 22px;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    color: #191f28;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.dv_bc_cur .fa {
+    color: #999;
+    font-size: 14px;
+    transition: transform 0.3s;
+}
+.dv_bc_drop {
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    background: #fff;
+    border: 1px solid #ececec;
+    border-top: none;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.07);
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    z-index: 100;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+.dv_bc_item:hover .dv_bc_drop { visibility: visible; opacity: 1; transform: translateY(0); }
+.dv_bc_item:hover .dv_bc_cur .fa { transform: rotate(180deg); }
+.dv_bc_drop li a {
+    display: block;
+    padding: 11px 22px;
+    font-size: 15px;
+    color: #4e5968;
+    white-space: nowrap;
+    transition: background 0.3s, color 0.3s;
+}
+.dv_bc_drop li a:hover { background: #f7f8fa; color: #d71920; }
+.dv_bc_drop li.on a { color: #d71920; font-weight: 700; }
+
+@media (max-width: 768px) {
+    .dv_bc_inner { overflow-x: auto; }
+    .dv_bc_cur { min-width: 0; gap: 18px; padding: 14px 16px; font-size: 14px; }
+    .dv_bc_home { padding: 0 16px; }
+}

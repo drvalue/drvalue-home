@@ -1,0 +1,1476 @@
+@charset "utf-8";
+
+
+/* --- 기본 초기화 --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Pretendard", sans-serif;
+  color: #191f28;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+ul,
+li {
+  list-style: none;
+}
+
+.t_inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+}
+.t_section {
+  padding: 120px 0;
+}
+
+/* --- 메인 히어로 섹션 --- */
+.t_hero {
+  position: relative;
+  width: 100%;
+  height: 750px;
+  margin-top: 80px;
+  background: #191f28;
+  overflow: hidden;
+}
+.main_slider,
+.swiper-wrapper,
+.swiper-slide {
+  width: 100%;
+  height: 100%;
+}
+.swiper-slide {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.hero_overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* 텍스트 노출 고정 */
+.hero_content {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: #fff;
+}
+.hero_content h2 {
+  font-size: 56px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+.hero_content p {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- 서비스 그리드 --- */
+.t_grid {
+  display: flex;
+  gap: 26px;
+  justify-content: center;
+}
+.t_box {
+  flex: 1;
+  padding: 50px 40px;
+  background: #f9fafb;
+  border-radius: 20px;
+  transition: transform 0.4s, box-shadow 0.4s;
+  border: 1px solid #f2f4f6;
+}
+.t_box:hover {
+  transform: translateY(-10px);
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+}
+.t_box h3 {
+  color: #d71920;
+  font-size: 23px;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+/* 하단 서비스 영역 폭을 상단 헤더(.header_container) 및 비주얼(.dvcap_wrap)과 일치 */
+
+/* --- 애니메이션 효과 --- */
+.reveal,
+.hero_reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.reveal.active,
+.hero_reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.delay1 {
+  transition-delay: 0.2s;
+}
+.delay2 {
+  transition-delay: 0.4s;
+}
+
+@media (max-width: 1024px) {
+  .t_section {
+    padding: 88px 0;
+  }
+  .t_hero {
+    height: 620px;
+    margin-top: 80px;
+  }
+  .hero_content h2 {
+    font-size: 42px;
+    letter-spacing: -1px;
+  }
+  .hero_content p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .t_inner {
+    padding: 0 16px;
+  }
+  .t_section {
+    padding: 72px 0;
+  }
+  .t_hero {
+    height: 520px;
+  }
+  .hero_content h2 {
+    font-size: 32px;
+    line-height: 1.28;
+  }
+  .hero_content p {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .t_grid {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .t_box {
+    padding: 34px 24px;
+    border-radius: 18px;
+  }
+  .t_box h3 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .hero_reveal {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* --- 메인 비주얼 (검증된 제조 AI·DX 구축 역량) --- */
+#dvcap_visual {
+  font-family: "Pretendard", sans-serif;
+  color: #191f28;
+  margin-top: 80px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.015) 1px, transparent 1px) 0
+      0 / 100% 56px,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.015) 1px, transparent 1px) 0 0 / 56px
+      100%,
+    #f7f8fa;
+  overflow: hidden;
+}
+.dvcap_wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 50px 20px;
+  display: grid;
+  grid-template-columns: minmax(330px, 420px) 1fr;
+  gap: 56px;
+  align-items: center;
+}
+
+/* 좌측 텍스트 */
+.dvcap_left h2 {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -1.5px;
+  margin: 0;
+}
+.dvcap_left h2 .red {
+  color: #d71920;
+  display: block;
+}
+.dvcap_left > p.lead {
+  font-size: 16px;
+  color: #4e5968;
+  line-height: 1.7;
+  margin: 22px 0 0;
+  word-break: keep-all;
+}
+
+.dvcap_stats {
+  background: #fff;
+  border: 1px solid #eceef1;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin: 24px 0 30px;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: start;
+  column-gap: 48px;
+  row-gap: 12px;
+}
+.dvcap_stat {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #4e5968;
+  padding: 4px 0;
+  position: relative;
+  white-space: nowrap;
+}
+/* 우측 열(2·4번) 앞, 두 열 사이 gap 정중앙에 구분선 */
+.dvcap_stat:nth-child(even)::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 14px;
+  background: #e5e8eb;
+}
+.dvcap_stat .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d71920;
+  margin-right: 9px;
+}
+.dvcap_stat b {
+  color: #191f28;
+  font-weight: 800;
+  margin-left: 6px;
+}
+
+/* 탭 */
+.dvcap_tabs {
+  display: flex;
+  gap: 22px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0;
+  flex-wrap: wrap;
+  position: relative;
+}
+.dvcap_tab {
+  background: none;
+  border: none;
+  padding: 0 0 12px;
+  font-family: inherit;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: #8b95a1;
+  position: relative;
+  transition: color 0.25s;
+}
+.dvcap_tab:hover {
+  color: #4e5968;
+}
+.dvcap_tab.active {
+  color: #191f28;
+}
+/* 슬라이딩 인디케이터 바 */
+.dvcap_tabbar {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 3px;
+  width: 0;
+  background: #d71920;
+  transform: translateX(0);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 설명: grid 겹침으로 영역 고정 + 전환 애니 */
+.dvcap_descwrap {
+  display: grid;
+  margin: 24px 0 0;
+}
+.dvcap_desc {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: 15px;
+  color: #4e5968;
+  line-height: 1.7;
+  word-break: keep-all;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.dvcap_desc.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.dvcap_desc.leaving {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dvcap_btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+  background: #191f28;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 15px 26px;
+  border-radius: 999px;
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.dvcap_btn .arr {
+  transition: transform 0.3s;
+}
+.dvcap_btn:hover {
+  background: #d71920;
+}
+.dvcap_btn:hover .arr {
+  transform: translateX(5px);
+}
+.dvcap_caption {
+  display: block;
+  margin-top: 18px;
+  font-size: 13px;
+  color: #adb5bd;
+  letter-spacing: 0.2px;
+}
+
+/* --- 우측 mac 윈도우 패널 --- */
+.dvcap_window {
+  background: #0e0f13;
+  border-radius: 22px;
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.28);
+  border: 1px solid #1d1f26;
+  overflow: hidden;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+.dvcap_winbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #1d1f26;
+}
+.dvcap_dots {
+  display: flex;
+  gap: 7px;
+}
+.dvcap_dots span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #2c2f38;
+}
+.dvcap_wintitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d6d9e0;
+}
+.dvcap_winbadge {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa0ac;
+  background: #1a1c22;
+  border: 1px solid #262932;
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+/* 패널을 같은 grid 셀에 겹쳐 높이를 가장 큰 패널로 고정 */
+.dvcap_winbody {
+  padding: 22px;
+  flex: 1;
+  display: grid;
+}
+.dvcap_panel {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.dvcap_panel.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.dvcap_panel.leaving {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* 패널 공통 카드 */
+.dvcap_row {
+  background: #16181e;
+  border: 1px solid #23262f;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: 0.3s;
+}
+.dvcap_row + .dvcap_row {
+  margin-top: 12px;
+}
+.dvcap_row:hover {
+  background: #1b1e25;
+  border-color: #333742;
+}
+.dvcap_ico {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #2a1416;
+  color: #ff5a5f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+.dvcap_row h5 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f3f6;
+  line-height: 1.4;
+}
+.dvcap_row p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #8b909c;
+  line-height: 1.5;
+}
+.dvcap_tag {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ff5a5f;
+  background: #2a1416;
+  border: 1px solid #4a2023;
+  border-radius: 8px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+/* 요약/그리드 */
+.dvcap_subhead {
+  margin: 26px 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6c727e;
+  letter-spacing: 0.5px;
+  border-top: 1px solid #1d1f26;
+  padding-top: 22px;
+}
+.dvcap_grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.dvcap_cell {
+  background: #16181e;
+  border: 1px solid #23262f;
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: 0.3s;
+}
+.dvcap_cell:hover {
+  border-color: #333742;
+}
+.dvcap_cell h6 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f3f6;
+}
+.dvcap_cell span {
+  font-size: 13px;
+  color: #8b909c;
+  line-height: 1.5;
+}
+
+/* 번호형(특허) */
+.dvcap_numgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.dvcap_numcard {
+  background: #16181e;
+  border: 1px solid #23262f;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  transition: 0.3s;
+}
+.dvcap_numcard:hover {
+  background: #1b1e25;
+  border-color: #333742;
+}
+.dvcap_num {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #2a1416;
+  color: #ff5a5f;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dvcap_numcard p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e7e9ee;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 특허 기반 기술 카드 그리드 (2 x 2, 블랙 테마) */
+.dvcap_featgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.dvcap_featcard {
+  background: #16181e;
+  border: 1px solid #23262f;
+  border-radius: 14px;
+  padding: 20px 20px;
+  display: flex;
+  flex-direction: column;
+  transition: 0.3s;
+}
+.dvcap_featcard:hover {
+  background: #1b1e25;
+  border-color: #333742;
+  transform: translateY(-4px);
+}
+.dvcap_featico {
+  margin-bottom: 16px;
+  line-height: 0;
+}
+.dvcap_feattop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.dvcap_feattitle {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f1f3f6;
+  letter-spacing: -0.3px;
+}
+.dvcap_featbadge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff5a5f;
+  background: #2a1416;
+  border: 1px solid #4a2023;
+  border-radius: 8px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+.dvcap_featdesc {
+  margin: 0;
+  font-size: 13px;
+  color: #8b909c;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+/* 카드 그리드(운영) */
+.dvcap_solgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-content: start;
+}
+.dvcap_sol {
+  background: #16181e;
+  border: 1px solid #23262f;
+  border-radius: 12px;
+  padding: 18px 20px;
+  transition: 0.3s;
+}
+.dvcap_sol:hover {
+  background: #1b1e25;
+  border-color: #333742;
+}
+.dvcap_sol .sol_top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dvcap_sol h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #f1f3f6;
+}
+.dvcap_sol p {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #8b909c;
+  line-height: 1.5;
+}
+
+.dvcap_winfoot {
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid #1d1f26;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.dvcap_winfoot .note {
+  font-size: 12px;
+  color: #6c727e;
+}
+.dvcap_winfoot .seal {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ff5a5f;
+  letter-spacing: 1px;
+}
+.dvcap_winfoot.center {
+  justify-content: center;
+}
+.dvcap_winfoot.center .note {
+  color: #8b909c;
+}
+
+/* 반응형 */
+@media (max-width: 1080px) {
+  .dvcap_wrap {
+    grid-template-columns: 1fr;
+    gap: 50px;
+    padding: 60px 24px;
+  }
+  .dvcap_left h2 {
+    font-size: 34px;
+  }
+  .dvcap_window {
+    min-height: 0;
+  }
+  .dvcap_winbody {
+    min-height: 0;
+  }
+}
+@media (max-width: 600px) {
+  .dvcap_grid2,
+  .dvcap_numgrid,
+  .dvcap_featgrid,
+  .dvcap_solgrid {
+    grid-template-columns: 1fr;
+  }
+  .dvcap_tabs {
+    gap: 16px;
+  }
+  .dvcap_tab {
+    font-size: 14px;
+  }
+}
+
+/* --- /page/support/_board.php --- */
+#dv_board {
+  margin-top: 80px;
+  color: #191f28;
+  font-family: "Pretendard", sans-serif;
+  overflow-x: hidden;
+}
+#dv_board .t_inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+#dv_board .section_padding {
+  padding: 100px 0;
+  background: #f4f6f8;
+  min-height: 50vh;
+}
+.hero_sub_banner {
+  position: relative;
+  height: 320px;
+  background-color: #191f28;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+}
+.hero_sub_banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+.hero_sub_banner .hero_text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+}
+.hero_sub_banner h2 {
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1.5px;
+}
+.hero_sub_banner p {
+  margin-top: 14px;
+  font-size: 18px;
+  color: #e5e8eb;
+}
+
+.dv_search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+}
+.dv_search input {
+  height: 46px;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #fff;
+  font-family: "Pretendard";
+  box-sizing: border-box;
+}
+.dv_qwrap {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 160px;
+}
+.dv_qwrap input {
+  width: 100%;
+  padding-right: 46px;
+}
+.dv_qicon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dv_qicon img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.45;
+}
+.dv_search input[type="date"] {
+  width: 160px;
+}
+.dv_search .dv_btn {
+  height: 46px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Pretendard";
+  font-size: 15px;
+}
+.dv_btn_reset {
+  background: #e5e8eb;
+  color: #4e5968;
+}
+@media (max-width: 700px) {
+  .dv_qwrap {
+    flex-basis: 100%;
+  }
+  .dv_search input[type="date"] {
+    flex: 1;
+    width: auto;
+  }
+}
+
+.dv_btn_write {
+  height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 12px;
+  background: #191f28;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Pretendard";
+  font-size: 15px;
+}
+
+.dv_tbl {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+}
+.dv_tbl th,
+.dv_tbl td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef0f3;
+  font-size: 15px;
+}
+.dv_tbl th {
+  background: #f9fafb;
+  color: #4e5968;
+  font-weight: 700;
+  text-align: left;
+}
+.dv_tbl td.c,
+.dv_tbl th.c {
+  text-align: center;
+  white-space: nowrap;
+  color: #8b95a1;
+}
+.dv_tbl tr.is-pinned td {
+  background: #fff7f5;
+}
+.dv_pin {
+  display: inline-block;
+  background: #ffe7d9;
+  color: #f26f21;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-right: 8px;
+}
+.dv_tbl a.dv_title {
+  color: #191f28;
+  font-weight: 600;
+  text-decoration: none;
+}
+.dv_tbl a.dv_title:hover {
+  color: #d71920;
+  text-decoration: underline;
+}
+
+.dv_empty {
+  text-align: center;
+  padding: 80px 0;
+  color: #8b95a1;
+  font-size: 16px;
+}
+
+/* 글이 없거나 못 불러왔을 때의 자리.
+   예전에는 백지에 회색 한 줄만 떠서 "고장 난 화면" 으로 읽혔다.
+   무엇이 없는지, 앞으로 무엇이 보일지, 지금 무엇을 할 수 있는지를 적는다. */
+.dv_state {
+  text-align: center;
+  padding: 72px 20px 78px;
+  color: #4e5968;
+}
+.dv_state_ico {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #f2f5f8;
+  color: #97a5b4;
+}
+.dv_state_ico svg { width: 26px; height: 26px; }
+.dv_state_t {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #191f28;
+  word-break: keep-all;
+}
+.dv_state_d {
+  margin: 7px 0 0;
+  font-size: 14.5px;
+  color: #8b95a1;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.dv_state_act {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #22364d;
+  background: #fff;
+  border: 1px solid #cfdfe8;
+  border-radius: 7px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+}
+.dv_state_act:hover { background: #f4f7fa; }
+/* 표 안에 들어갈 때는 위아래 여백을 줄인다 — 표 머리가 이미 있다. */
+td .dv_state { padding: 54px 20px 58px; }
+
+.dv_pager {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 34px;
+}
+.dv_pager button {
+  min-width: 38px;
+  height: 38px;
+  border: 1px solid #e5e8eb;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: "Pretendard";
+  color: #4e5968;
+}
+.dv_pager button.on {
+  background: #d71920;
+  color: #fff;
+  border-color: #d71920;
+  font-weight: 700;
+}
+.dv_pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dv_detail {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+  padding: 48px 44px;
+}
+.dv_detail h3 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+.dv_detail_meta {
+  display: flex;
+  gap: 18px;
+  color: #8b95a1;
+  font-size: 14px;
+  border-bottom: 1px solid #eef0f3;
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+.dv_detail_body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333d4b;
+  word-break: keep-all;
+}
+.dv_detail_body img {
+  max-width: 100%;
+  height: auto;
+}
+.dv_admin_actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 28px;
+  border-top: 1px solid #eef0f3;
+  padding-top: 20px;
+}
+.dv_admin_actions button {
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Pretendard";
+}
+.dv_edit {
+  background: #191f28;
+  color: #fff;
+}
+.dv_del {
+  background: #d71920;
+  color: #fff;
+}
+
+.dv_toast {
+  position: fixed;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  background: #d71920;
+  color: #fff;
+  padding: 13px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "Pretendard";
+  z-index: 1000000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 10px 30px rgba(208, 0, 0, 0.32);
+}
+.dv_toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dv_authbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.dv_authbtn {
+  height: 44px;
+  padding: 0 22px;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  background: #fff;
+  color: #4e5968;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Pretendard";
+  font-size: 15px;
+}
+
+.dv_ov {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+.dv_modal {
+  background: #fff;
+  width: 90%;
+  max-width: 380px;
+  border-radius: 18px;
+  padding: 30px;
+  box-sizing: border-box;
+}
+.dv_modal h3 {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 800;
+}
+.dv_modal input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #e5e8eb;
+  border-radius: 10px;
+  padding: 0 13px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  font-family: "Pretendard";
+  font-size: 15px;
+}
+.dv_modal .dv_mbtns {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.dv_modal .dv_mbtns button {
+  flex: 1;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Pretendard";
+  font-size: 15px;
+}
+.dv_mok {
+  background: #d71920;
+  color: #fff;
+}
+.dv_mno {
+  background: #e5e8eb;
+  color: #4e5968;
+}
+.dv_merr {
+  color: #d71920;
+  font-size: 13px;
+  min-height: 16px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 900px) {
+  .hero_sub_banner h2 {
+    font-size: 26px;
+  }
+  .hero_sub_banner p {
+    font-size: 15px;
+  }
+  .dv_tbl .hide-m {
+    display: none;
+  }
+  .dv_detail {
+    padding: 30px 22px;
+  }
+}
+
+/* --- 게시판: 뉴스룸 목록 + 기사 꼴 상세 (2026-09-18) ---
+   표(번호·시작일·종료일)와 그림자 카드를 기사 모양으로 바꿨다. 옛 .dv_tbl · .dv_detail
+   규칙은 다른 장이 아직 써서 남겨 둔다. */
+.dv_news { list-style: none; margin: 0; padding: 0; border-top: 2px solid #191f28; }
+.dv_news_row {
+  display: grid; grid-template-columns: 112px minmax(0, 1fr) 24px; gap: 0 24px; align-items: start;
+  padding: 26px 4px; border-bottom: 1px solid #e5e8eb;
+}
+.dv_news_row.is-pinned { background: #fafbfc; }
+.dv_news_date { font-size: 14px; color: #62707e; font-variant-numeric: tabular-nums; padding-top: 4px; }
+.dv_news_txt { min-width: 0; }
+.dv_news_title { display: block; font-size: 19px; font-weight: 700; color: #191f28; line-height: 1.45; text-decoration: none; word-break: keep-all; }
+.dv_news_title:hover { text-decoration: underline; text-underline-offset: 4px; }
+.dv_news_sum {
+  margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: #6b7684; word-break: keep-all;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dv_news_sum { color: #62707e; }
+.dv_news_media, .dv_news .dv_pin {
+  display: inline-block; margin: 0 8px 0 0; padding: 2px 8px; border-radius: 6px; vertical-align: 3px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0; line-height: 1.5;
+}
+.dv_news_media { background: #fdecec; color: #d71920; }
+.dv_news_arrow { color: #8b95a1; font-size: 18px; padding-top: 2px; transition: transform .15s ease, color .15s ease; }
+.dv_news_row:hover .dv_news_arrow { transform: translateX(4px); color: #191f28; }
+.dv_news .dv_state { padding: 56px 0; }
+
+.dv_art { max-width: 760px; margin: 0 auto; padding: 8px 0 24px; }
+.dv_art_head { border-bottom: 1px solid #e5e8eb; padding-bottom: 22px; margin-bottom: 34px; }
+.dv_art_kicker { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: #d71920; letter-spacing: .02em; }
+.dv_art_kicker i, .dv_art_byline i { font-style: normal; color: #b0b8c1; margin: 0 2px; }
+.dv_art_title { margin: 0; font-size: 36px; font-weight: 800; line-height: 1.32; letter-spacing: -1.2px; color: #191f28; word-break: keep-all; text-wrap: balance; }
+.dv_art_deck { margin: 16px 0 0; font-size: 18px; line-height: 1.65; color: #4e5968; word-break: keep-all; }
+.dv_art_byline { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; font-size: 14px; color: #62707e; }
+.dv_art_byline b { color: #333d4b; font-weight: 700; margin-right: 8px; }
+.dv_art_byline time { font-variant-numeric: tabular-nums; }
+.dv_art_copy {
+  border: 1px solid #e5e8eb; background: #fff; color: #4e5968; border-radius: 999px; padding: 7px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; min-height: 44px;
+}
+.dv_art_copy:hover { border-color: #b0b8c1; color: #191f28; }
+.dv_art_body { font-size: 17px; line-height: 1.85; color: #333d4b; word-break: keep-all; }
+.dv_art_body p { margin: 0 0 1.25em; }
+.dv_art_body p:last-child { margin-bottom: 0; }
+.dv_art_body ul { list-style: disc; margin: 0 0 1.25em; padding-left: 22px; }
+.dv_art_body li { margin: 4px 0; }
+.dv_art_body img { max-width: 100%; height: auto; border-radius: 8px; }
+.dv_art_link { color: #1b64da; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+.dv_art_foot { margin-top: 44px; padding-top: 22px; border-top: 1px solid #e5e8eb; }
+.dv_art_back { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; color: #4e5968; text-decoration: none; }
+.dv_art_back:hover { color: #191f28; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 768px) {
+  .dv_news_row { grid-template-columns: minmax(0, 1fr) 20px; gap: 0 12px; padding: 20px 0; }
+  .dv_news_date { grid-column: 1 / -1; order: -1; padding: 0 0 6px; font-size: 13px; }
+  .dv_news_title { font-size: 17px; }
+  .dv_art_title { font-size: 26px; letter-spacing: -.8px; }
+  .dv_art_deck { font-size: 16px; }
+  .dv_art_body { font-size: 16px; line-height: 1.8; }
+  .dv_art_byline { flex-wrap: wrap; }
+}
+
+/* --- /page/support/notify_form.php --- */
+#dv_form {
+  margin-top: 80px;
+  color: #191f28;
+  font-family: "Pretendard", sans-serif;
+  overflow-x: hidden;
+}
+#dv_form .t_inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 20px 120px;
+  width: 100%;
+}
+
+#dv_form .hero_sub_banner {
+  position: relative;
+  height: 320px;
+  background-color: #191f28;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+}
+#dv_form .hero_sub_banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+#dv_form .hero_sub_banner .hero_inner {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+#dv_form .hero_sub_banner h2 {
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1.5px;
+  color: #fff;
+}
+#dv_form .hero_sub_banner p {
+  margin-top: 14px;
+  font-size: 18px;
+  color: #e5e8eb;
+}
+
+#dvFormTitle {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 0 0 32px;
+}
+.dv_field {
+  margin-bottom: 22px;
+}
+.dv_field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4e5968;
+  margin-bottom: 8px;
+}
+.dv_field input[type="text"],
+.dv_field textarea,
+.dv_field select,
+.dv_field input[type="date"] {
+  width: 100%;
+  border: 1px solid #e5e8eb;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 15px;
+  background: #fff;
+  font-family: "Pretendard";
+  box-sizing: border-box;
+}
+.dv_field textarea {
+  min-height: 280px;
+  resize: vertical;
+}
+.dv_row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dv_row .dv_field {
+  flex: 1;
+  min-width: 200px;
+}
+.dv_form_top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.dv_checks {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.dv_checks label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dv_actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 34px;
+  justify-content: flex-end;
+}
+.dv_actions button {
+  height: 50px;
+  padding: 0 30px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: "Pretendard";
+}
+.dv_save {
+  background: #d71920;
+  color: #fff;
+}
+.dv_cancel {
+  background: #e5e8eb;
+  color: #4e5968;
+}
+.dv_err {
+  color: #d71920;
+  font-size: 14px;
+  margin-top: 14px;
+  min-height: 18px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  #dv_form .hero_sub_banner h2 {
+    font-size: 26px;
+  }
+  #dv_form .hero_sub_banner p {
+    font-size: 15px;
+  }
+}
+
+
+/* ── 등장 효과를 뒤집는다 ─────────────────────────────────────────────
+   AOS 는 요소를 opacity:0 으로 감춰 두고 화면에 들어올 때 걷어낸다.
+   스크립트가 늦거나 실패하면 **영영 안 걷힌다** — JS 를 끄고 재 보니
+   회사소개가 백지였다(글자 592자는 DOM 에 멀쩡히 있었다). 운영 중인
+   PHP 사이트도 똑같았으니 물려받은 문제다.
+
+   감추지 않고 **조금 내려 두기만** 한다. JS 가 죽어도 화면은 멀쩡하고,
+   돌면 제자리로 올라온다. 옮겨지는 거리도 100px 에서 16px 로 줄였다 —
+   실패했을 때 어긋난 티가 덜 나야 한다.
+
+   속성 선택자를 두 번 겹쳐 쓴다. AOS 쪽도 그렇게 해서 특이도를 올려
+   두었기 때문에, 싣는 차례에 기대지 않으려면 이쪽이 더 높아야 한다. */
+[data-aos][data-aos] { opacity: 1 !important; }
+[data-aos^="fade-up"][data-aos^="fade-up"]       { transform: translate3d(0, 16px, 0); }
+[data-aos^="fade-down"][data-aos^="fade-down"]   { transform: translate3d(0, -16px, 0); }
+[data-aos^="fade-right"][data-aos^="fade-right"] { transform: translate3d(-16px, 0, 0); }
+[data-aos^="fade-left"][data-aos^="fade-left"]   { transform: translate3d(16px, 0, 0); }
+[data-aos^="zoom-in"][data-aos^="zoom-in"]       { transform: scale(.985); }
+[data-aos][data-aos].aos-animate { transform: none; }
+
+/* 움직임을 줄여 달라는 설정. 예전에는 17곳 중 3곳만 지켰다 —
+   페이지마다 적는 대신 여기 한 번 적어서 전부 지키게 한다. */
+@media (prefers-reduced-motion: reduce) {
+  [data-aos][data-aos] { transform: none !important; transition: none !important; }
+}
+
+
+/* ── 머리 그림을 헤더 밑으로 ─────────────────────────────────────
+   맨 위에서 헤더가 투명해지면(components/HeaderScroll.tsx) 그 자리에
+   그림이 이어져 보여야 한다. 지금은 바깥 상자가 헤더 높이(80px)만큼
+   밀어 두고 있어서, 투명해진 자리에 흰 여백만 남는다.
+
+   상자 이름이 장마다 다르다(#toss_sub_intro · #dv_board · #toss_portfolio
+   …). 이름을 다 적는 대신 **배너를 품은 상자**를 짚는다 — 새 장을 만들 때
+   여기 이름을 더하는 것을 잊어도 저절로 맞는다.
+
+   홈은 대상이 아니다. 맨 위가 밝은 회색이라 헤더가 투명해지지 않는다.
+
+   `!important` 를 쓰는 이유: 밀어 두는 쪽이 `#dv_board`·`#toss_sub_intro`
+   처럼 **ID 규칙**이다(특정도 1,0,0). `:has(> …)` 는 (0,1,0) 이라 무조건 진다.
+   ID 이름을 여섯 개 다 적으면 새 장을 만들 때 또 잊는다. */
+:has(> .hero_sub_banner) {
+  margin-top: 0 !important;
+}
+
+.hero_sub_banner {
+  height: auto;
+  min-height: 400px;
+  padding-top: 80px;
+}
+
+/* `.reveal` / `.hero_reveal` 은 `opacity:0` 으로 시작하는데 `.active` 를 붙이는
+   코드가 이 저장소에 **한 곳도 없다**(실측 0곳). 붙이는 순간 그 글은 영원히
+   안 보인다 — 덫이다. 켜 둔다. 스크롤 등장은 components/Reveal.tsx 의
+   `data-rv` 가 맡는다(첫 화면 것은 건드리지 않고, 스크립트가 죽으면 다 보인다). */
+.reveal,
+.hero_reveal {
+  opacity: 1;
+  transform: none;
+}
+
+/* 손가락으로 누르는 기기에서 누를 것을 44px 이상으로 만든다.
+   실측: 고르개 알약 30px · 「전체 보기」 28px — 손끝(약 44px)보다 작아서
+   옆 것이 눌린다. 마우스 화면은 그대로 둔다 — 그쪽은 이미 충분하다. */
+@media (pointer: coarse) {
+  .dvcap_tab,
+  .dvnews_tab,
+  .dvproof_tab,
+  .pf_fbtn {
+    min-height: 44px;
+  }
+  .dvnews_all,
+  .dvcap_btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* 푸터의 전화·메일은 실제로 눌러서 거는 것이다. 16px 이면 옆 줄이 눌린다. */
+  .tel a,
+  .email a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

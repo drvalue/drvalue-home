@@ -1,0 +1,4 @@
+
+# Vercel 연결 정보. 사람마다 다르다.
+.vercel
+.env*

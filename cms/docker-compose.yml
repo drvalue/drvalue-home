@@ -1,0 +1,83 @@
+# 디알밸류 홈페이지 CMS — Directus 12
+#
+# 운영 DB 는 iwinv 클라우드 DBMS 이고 PostgreSQL 10 만 제공한다.
+# 로컬도 같은 10 으로 맞춘다 — 17 로 개발하면 운영에서만 깨지는 것을 못 잡는다.
+#
+# 이 머신에는 3306/3315/3320/3401/3402/5432 를 쓰는 컨테이너가 이미 있어
+# 3330(DB), 3350(Directus) 을 쓴다.
+# compose 프로젝트 이름을 폴더 이름(cms)이 아니라 directus 로 고정한다.
+# 볼륨(drvalue_directus_pgdata·uploads)이 그 이름으로 만들어져 있어서,
+# 이름이 바뀌면 컨테이너 이름이 충돌하고 로컬 CMS 데이터가 통째로
+# 새 빈 볼륨으로 갈아 끼워진다.
+name: directus
+
+services:
+  db:
+    image: postgres:10-alpine
+    container_name: drvalue_directus_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: drvalue
+      POSTGRES_PASSWORD: drvalue
+      POSTGRES_DB: drvalue_cms
+      TZ: Asia/Seoul
+    ports:
+      - '3330:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U drvalue -d drvalue_cms']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  directus:
+    image: directus/directus:12
+    container_name: drvalue_directus
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '3350:8055'
+    volumes:
+      - uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    environment:
+      SECRET: ${DIRECTUS_SECRET}
+      DB_CLIENT: pg
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: drvalue_cms
+      DB_USER: drvalue
+      DB_PASSWORD: drvalue
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PUBLIC_URL: ${PUBLIC_URL}
+      # 관리 화면 기본 언어
+      USER_DEFAULT_LANGUAGE: ko-KR
+      # 공개 사이트가 읽어야 하므로 CORS 를 연다.
+      CORS_ENABLED: 'true'
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      # PostGIS 가 없어 지리 타입은 안 쓴다. 경고만 줄인다.
+      EXTENSIONS_AUTO_RELOAD: 'true'
+      # 사내 IAM 로그인 다리(extensions/directus-extension-iam-bridge).
+      # Core 는 SSO 를 막지만 확장은 막지 않는다. 값이 없으면 꺼진 채로 돈다.
+      IAM_BRIDGE_ENABLED: ${IAM_BRIDGE_ENABLED:-false}
+      IAM_BRIDGE_IAM_BASE: ${IAM_BRIDGE_IAM_BASE:-}
+      IAM_BRIDGE_ROUTE_BASE: ${IAM_BRIDGE_ROUTE_BASE:-}
+      IAM_BRIDGE_CALLBACK_URL: ${IAM_BRIDGE_CALLBACK_URL:-}
+      IAM_BRIDGE_TENANT_CODE: ${IAM_BRIDGE_TENANT_CODE:-}
+      IAM_BRIDGE_ACCOUNTS: ${IAM_BRIDGE_ACCOUNTS:-}
+    healthcheck:
+      # /server/health 는 인증을 요구해 403 이 난다. 로그인 없이 200 을 주는 것은 ping 이다.
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8055/server/ping']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pgdata:
+    name: drvalue_directus_pgdata
+  uploads:
+    name: drvalue_directus_uploads
