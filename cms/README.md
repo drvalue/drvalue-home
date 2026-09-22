@@ -123,22 +123,25 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 
 1. 대상 계정 비밀번호를 `HMAC-SHA256(SECRET, "iam-bridge:<이메일>")` 로 바꾼다.
    다리는 로그인할 때 같은 값을 다시 계산한다. 어디에도 적혀 있지 않다.
-2. 로그인 화면 하단(`public_note`)에 `/iam-bridge/login` 링크를 넣는다.
-   (입구 자체는 `directus-extension-iam-bridge-entry` 훅이 돌린다 — 세션 쿠키 없이
-   `/admin`·`/admin/login` 을 열면 IAM 으로 간다. 로컬 폼은 `?local=1`.)
+2. 로그인 화면의 안내 문구(`public_note`)를 지운다. 입구는
+   `directus-extension-iam-bridge-entry` 훅이 돌린다.
 
-돌리고 나면 매핑된 계정은 `ADMIN_PASSWORD` 로 로그인되지 않는다. 로컬에서
-써 볼 때는 `admin@` 이 아니라 `marketing@drvalue.co.kr` 에 매핑한다 —
-스모크·검증 스크립트가 admin 비밀번호로 들어간다.
+돌리고 나면 대상 계정(기본 admin)은 `ADMIN_PASSWORD` 로 로그인되지 않는다.
+스크립트는 `directus.py`·`verify.sh`·`smoke.sh` 가 시드 비밀번호가 막히면 같은
+파생값으로 다시 시도하므로 계속 돈다 — 환경에 `DIRECTUS_SECRET` 이 있어야 한다.
+
+**브라우저의 비밀번호 폼은 죽어 있다.** `iam-bridge-entry` 훅이 세션 없는
+`/admin`·`/admin/login` 을 IAM 으로 보내고, 브라우저(Origin 헤더가 있는 요청)의
+`POST /auth/login` 을 403 으로 막는다. 스크립트 요청에는 Origin 이 없어 통과한다.
+IAM 이 죽어 아무도 못 들어가면 `IAM_BRIDGE_ENABLED=false` 로 재기동한다.
 
 ### 실제 IAM 으로 확인하기
 
-1. `.env`: `IAM_BRIDGE_ENABLED=true`, `IAM_BRIDGE_DEFAULT_ACCOUNT=marketing@drvalue.co.kr`,
+1. `.env`: `IAM_BRIDGE_ENABLED=true`, `IAM_BRIDGE_DEFAULT_ACCOUNT=admin@drvalue.co.kr`,
    `IAM_BRIDGE_GROUP` 은 알면 넣고 모르면 비운다
 2. `docker compose up -d directus` (루트에서)
 3. `set -a; . .env; set +a; cd cms && python3 scripts/iam_bridge_sync.py`
 4. 브라우저에서 `http://localhost:3350/admin` → 바로 IAM 으로 간다 → 돌아오면 `/admin`
-   (로컬 폼이 필요하면 `/admin/login?local=1`. `extensions/directus-extension-iam-bridge-entry` 가 입구를 돌린다)
 5. 거부되면 `docker logs drvalue_directus | grep iam-bridge` 의 `denied … groups=[…]` 에서
    그룹 id 를 읽어 `IAM_BRIDGE_GROUP` 에 넣고 2 부터 다시
 

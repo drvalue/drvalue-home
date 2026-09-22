@@ -46,9 +46,26 @@ class Directus:
                 return err.code, {"raw": raw.decode("utf-8", "replace")[:300]}
 
     def login(self) -> None:
+        """시드 비밀번호로 먼저, 안 되면 IAM 다리 파생값으로.
+
+        iam_bridge_sync.py 가 admin 비밀번호를 HMAC(SECRET, "iam-bridge:<email>")
+        로 바꾼 뒤에도 스크립트가 계속 돌아야 한다. DIRECTUS_SECRET 이 환경에 있으면
+        같은 값을 계산해 다시 시도한다.
+        """
         status, body = self.request(
             "POST", "/auth/login", {"email": EMAIL, "password": PASSWORD}, auth=False
         )
+        secret = os.environ.get("DIRECTUS_SECRET") or os.environ.get("SECRET")
+        if status != 200 and secret:
+            import hashlib
+            import hmac
+
+            derived = hmac.new(
+                secret.encode(), f"iam-bridge:{EMAIL.strip().lower()}".encode(), hashlib.sha256
+            ).hexdigest()
+            status, body = self.request(
+                "POST", "/auth/login", {"email": EMAIL, "password": derived}, auth=False
+            )
         if status != 200:
             raise SystemExit(f"로그인 실패 HTTP {status}: {body}")
         self.token = body["data"]["access_token"]

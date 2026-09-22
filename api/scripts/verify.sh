@@ -18,16 +18,24 @@ CMS="${DIRECTUS_URL:-http://localhost:3350}"
 # 되므로(그게 설계다) 검증용 쓰기에는 .env 의 관리자 계정을 쓴다.
 if [ -z "${ADMIN_EMAIL:-}" ] || [ -z "${ADMIN_PASSWORD:-}" ]; then echo "루트 .env 에 ADMIN_EMAIL·ADMIN_PASSWORD 가 없다." >&2; exit 2; fi
 # 셸에서 JSON 리터럴을 만들지 않는다 — zsh 가 중괄호를 확장해서 몸통이 깨진다.
+# 시드 비밀번호로 먼저, 안 되면 IAM 다리 파생값으로(iam_bridge_sync.py 가 admin 을 바꾼 뒤).
 ADMIN=$(CMS="$CMS" python3 <<'EOF'
-import json, os, urllib.request
-body = json.dumps({"email": os.environ["ADMIN_EMAIL"], "password": os.environ["ADMIN_PASSWORD"]})
-req = urllib.request.Request(
-    os.environ["CMS"] + "/auth/login", data=body.encode(),
-    headers={"Content-Type": "application/json"}, method="POST")
-try:
-    print(json.load(urllib.request.urlopen(req, timeout=30))["data"]["access_token"])
-except Exception:
-    pass
+import hashlib, hmac, json, os, urllib.request
+def login(pw):
+    body = json.dumps({"email": os.environ["ADMIN_EMAIL"], "password": pw})
+    req = urllib.request.Request(
+        os.environ["CMS"] + "/auth/login", data=body.encode(),
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=30))["data"]["access_token"]
+    except Exception:
+        return ""
+tok = login(os.environ["ADMIN_PASSWORD"])
+if not tok and os.environ.get("DIRECTUS_SECRET"):
+    tok = login(hmac.new(os.environ["DIRECTUS_SECRET"].encode(),
+                         ("iam-bridge:" + os.environ["ADMIN_EMAIL"].strip().lower()).encode(),
+                         hashlib.sha256).hexdigest())
+print(tok)
 EOF
 )
 if [ -z "$ADMIN" ]; then echo "Directus 관리자 로그인 실패" >&2; exit 2; fi

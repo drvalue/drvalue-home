@@ -12,16 +12,12 @@ Directus Core 는 로컬 로그인 창을 끌 수 없다. 다리를 켜도 `/adm
 
     파생값 = HMAC-SHA256(SECRET, "iam-bridge:<directus 이메일 소문자>")
 
-로그인 화면에 IAM 진입점도 만든다. Directus 는 라이선스가 있는 제공자만 SSO
-버튼을 그려 주므로, 확장이 만든 `/iam-bridge/login` 으로 가는 길이 화면 어디에도
-없다. `public_note` 가 마크다운 링크를 실제 `<a>` 로 렌더하는 것을 확인했고
-(로그인 화면 하단), 거기에 링크를 넣는다.
+입구는 확장(iam-bridge-entry)이 IAM 으로 돌린다. 로그인 화면의 안내 문구는 지운다.
 
-되돌리려면 관리 화면에서 비밀번호를 다시 정하면 된다.
-
-주의: 돌리고 나면 이 저장소의 다른 스크립트(스모크·프로비저닝)가 쓰는
-`ADMIN_PASSWORD` 로는 더 이상 로그인되지 않는다. 운영에 올릴 때 마지막으로
-돌리는 것을 전제로 한다.
+돌리고 나면 대상 계정(기본 admin)은 `ADMIN_PASSWORD` 로 로그인되지 않는다.
+이 저장소의 스크립트는 `directus.py` 가 시드 비밀번호가 안 통하면 같은 파생값으로
+다시 시도하므로 계속 돈다 — `DIRECTUS_SECRET` 이 환경에 있어야 한다.
+되돌리려면 IAM_BRIDGE_ENABLED=false 로 재기동한 뒤 관리 화면에서 비밀번호를 다시 정한다.
 
 실행: python3 scripts/iam_bridge_sync.py
 """
@@ -92,17 +88,15 @@ def main() -> None:
         else:
             failed.append(f"{email}: HTTP {st2} {res}")
 
-    # 로그인 화면 진입점. 없으면 사람이 다리를 쓸 방법이 없다.
-    note = "사내 IAM 으로 로그인하려면 [여기](/iam-bridge/login)를 누르세요."
+    # 로그인 화면의 안내 문구는 지운다. 입구 자체를 iam-bridge-entry 훅이 IAM 으로
+    # 돌리므로 링크가 필요 없고, 남아 있으면 폼이 살아 있는 것처럼 보인다.
     st, body = d.request("GET", "/settings?fields=public_note")
-    if st == 200 and (body.get("data") or {}).get("public_note") == note:
-        pass
-    else:
-        st2, res = d.request("PATCH", "/settings", {"public_note": note})
+    if st == 200 and (body.get("data") or {}).get("public_note"):
+        st2, res = d.request("PATCH", "/settings", {"public_note": None})
         if st2 == 200:
-            made.append("로그인 화면에 IAM 링크")
+            made.append("로그인 화면 안내 문구 제거")
         else:
-            failed.append(f"로그인 화면 링크: HTTP {st2} {res}")
+            failed.append(f"로그인 화면 문구: HTTP {st2} {res}")
 
     print(f"맞춘 계정 {len(made)}개, 실패 {len(failed)}개")
     for line in made:
