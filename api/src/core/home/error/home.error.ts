@@ -58,4 +58,11 @@ export const HomeError = {
       '메인 화면 설정을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
     status: HttpStatus.INTERNAL_SERVER_ERROR,
   } as ICommonErrorCode,
+
+  RESTORE_UNKNOWN: {
+    code: 'HOME_RESTORE_UNKNOWN',
+    message:
+      '메인 화면 설정을 되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
 };

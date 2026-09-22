@@ -18,6 +18,11 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ApiDataResponse,
+  ApiDataStringsResponse,
+  ApiOkFlagResponse,
+} from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -73,7 +78,7 @@ export class AdminPostDefaultController {
     operationId: 'adminPostDefaultCategoryLabels',
     summary: '수행실적 「구분」에 쓴 값',
   })
-  @ApiOkResponse({ schema: { example: { data: ['안산스마트공장 보급'] } } })
+  @ApiDataStringsResponse()
   async categoryLabels(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: string[] }> {
@@ -85,7 +90,7 @@ export class AdminPostDefaultController {
     operationId: 'adminPostDefaultFaqCategories',
     summary: 'FAQ 「분류」에 쓴 값',
   })
-  @ApiOkResponse({ schema: { example: { data: ['도입·견적'] } } })
+  @ApiDataStringsResponse()
   async faqCategories(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: string[] }> {
@@ -94,7 +99,7 @@ export class AdminPostDefaultController {
 
   @Get(':id')
   @ApiOperation({ operationId: 'adminPostDefaultGet', summary: '글 하나' })
-  @ApiOkResponse({ type: ControllerAdminPostDefaultDetailResponseDto })
+  @ApiDataResponse(ControllerAdminPostDefaultDetailResponseDto)
   async get(
     @TransactionContext() ctx: ITransactionContext,
     @Param('id', ParseIntPipe) id: number,
@@ -105,7 +110,9 @@ export class AdminPostDefaultController {
 
   @Post()
   @ApiOperation({ operationId: 'adminPostDefaultCreate', summary: '글 만들기' })
-  @ApiOkResponse({ type: ControllerAdminPostDefaultDetailResponseDto })
+  @ApiDataResponse(ControllerAdminPostDefaultDetailResponseDto, {
+    status: 201,
+  })
   async create(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerAdminPostDefaultSaveDto,
@@ -118,7 +125,7 @@ export class AdminPostDefaultController {
 
   @Put(':id')
   @ApiOperation({ operationId: 'adminPostDefaultUpdate', summary: '글 고치기' })
-  @ApiOkResponse({ type: ControllerAdminPostDefaultDetailResponseDto })
+  @ApiDataResponse(ControllerAdminPostDefaultDetailResponseDto)
   async update(
     @TransactionContext() ctx: ITransactionContext,
     @Param('id', ParseIntPipe) id: number,
@@ -133,7 +140,7 @@ export class AdminPostDefaultController {
   @Delete(':id')
   @HttpCode(200)
   @ApiOperation({ operationId: 'adminPostDefaultRemove', summary: '글 지우기' })
-  @ApiOkResponse({ schema: { example: { ok: true } } })
+  @ApiOkFlagResponse()
   async remove(
     @TransactionContext() ctx: ITransactionContext,
     @Param('id', ParseIntPipe) id: number,
@@ -150,7 +157,7 @@ export class AdminPostDefaultController {
     operationId: 'adminPostDefaultReorder',
     summary: '순서 바꾸기(sort = 1..n)',
   })
-  @ApiOkResponse({ schema: { example: { ok: true } } })
+  @ApiOkFlagResponse()
   async reorder(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerAdminPostDefaultReorderDto,

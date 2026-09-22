@@ -92,6 +92,22 @@ export function withImageSizes(
   return walk(content) as Obj;
 }
 
+/**
+ * 이 파일들을 가리키는 그림 칸을 비운다(null). 변경 이력으로 되돌릴 때, 그 사이에 미디어에서 지운
+ * 파일을 빼는 데 쓴다. 그림 칸은 `{ id, alt, … }` 모양이라 id 가 uuid 문자열인 객체만 본다.
+ */
+export function dropImages(content: unknown, gone: Set<string>): unknown {
+  const walk = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!isObj(v)) return v;
+    if (typeof v.id === 'string' && 'alt' in v && gone.has(v.id)) return null;
+    const out: Obj = {};
+    for (const k of Object.keys(v)) out[k] = walk(v[k]);
+    return out;
+  };
+  return walk(content);
+}
+
 /** 검사 결과. `fileIds` 는 글이 가리키는 그림 — 서비스가 실제로 있는 파일인지 본다. */
 export interface CheckedContent {
   content: Obj;

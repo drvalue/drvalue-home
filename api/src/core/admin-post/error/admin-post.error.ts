@@ -44,7 +44,21 @@ export const AdminPostError = {
     status: HttpStatus.CONFLICT,
   } as ICommonErrorCode,
 
+  RESTORE_SLUG_TAKEN: {
+    code: 'ADMIN_POST_RESTORE_SLUG_TAKEN',
+    message:
+      '같은 주소를 쓰는 다른 글이 있어 되돌릴 수 없습니다. 그 글의 주소를 먼저 바꿔 주세요.',
+    detail: '스냅샷의 slug 가 다른 글과 겹친다',
+    status: HttpStatus.CONFLICT,
+  } as ICommonErrorCode,
+
   // ── 예상 못 한 실패(@ServiceException 이 바꾼다). 원인은 로그의 스택을 본다.
+  RESTORE_UNKNOWN: {
+    code: 'ADMIN_POST_RESTORE_UNKNOWN',
+    message: '글을 되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
+
   LIST_UNKNOWN: {
     code: 'ADMIN_POST_LIST_UNKNOWN',
     message: '글 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',

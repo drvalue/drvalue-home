@@ -6,6 +6,7 @@ import { SeoDefaultController } from './controller/seo-default.controller';
 import { SeoFileDefaultRepository } from './repository/file-default.repository';
 import { PageMetaDefaultRepository } from './repository/page-meta-default.repository';
 import { PageMetaTranslationDefaultRepository } from './repository/page-meta-translation-default.repository';
+import { SeoRevisionHandler } from './revision/seo-revision.handler';
 import { SeoDefaultService } from './service/seo-default.service';
 
 /** 정적 장의 검색 정보(page_meta). 공개 읽기 + 관리 저장. 글의 검색 정보는 admin-post 에 있다. */
@@ -17,6 +18,7 @@ import { SeoDefaultService } from './service/seo-default.service';
     PageMetaTranslationDefaultRepository,
     SeoFileDefaultRepository,
     SeoDefaultService,
+    SeoRevisionHandler,
   ],
 })
 export class SeoModule {}

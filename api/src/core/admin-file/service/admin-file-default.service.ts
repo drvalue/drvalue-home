@@ -2,13 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import { Brackets } from 'typeorm';
+import { AppConfig } from '../../../common/config/app-config';
 import { FileEntity } from '../../../common/entity/file.entity';
 import { CommonError } from '../../../common/error/common-error';
+import { ServiceException } from '../../../common/error/service-exception.decorator';
 import { imageSize } from '../../../common/image/image-size';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
-import { AppConfig } from '../../../common/config/app-config';
+import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
+import { Transactional } from '../../../common/typeorm/transactional.decorator';
+import {
+  AdminFilePreview,
+  ControllerAdminFileDefaultResponseDto,
+} from '../dto/controller-admin-file-default-response.dto';
+import { ControllerAdminFileDefaultListQueryDto } from '../dto/controller-admin-file-default.dto';
 import { AdminFileError } from '../error/admin-file.error';
 import { FileDefaultRepository } from '../repository/file-default.repository';
 
@@ -32,22 +39,19 @@ function limitOf(mime: string): number {
 
 const PAGE = 40;
 
-export interface AdminFileView {
-  id: string;
-  title: string | null;
-  filename_download: string;
-  type: string | null;
-  filesize: number | null;
-  width: number | null;
-  height: number | null;
-  created_on: Date;
-  /** 공개 주소 — 게시된 글이 참조해야 열린다(/api/content/assets 의 관문). */
-  url: string;
-  /** 관리 화면 미리보기 — 참조 여부와 무관하게 열린다. */
-  preview_url: string;
-  used: number;
+/** multer 가 넘기는 파일 중 쓰는 칸. */
+export interface UploadedFileInput {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
 }
 
+/**
+ * 관리 화면 미디어. 업로드 폴더에 `<uuid>.<ext>` 로 쓰고 directus_files 에 한 행.
+ * 디스크와 DB 는 한 트랜잭션이 아니다 — 행을 못 만들면 쓴 파일을 지우고, 행을 지운 뒤에 파일을 지운다
+ * (파일이 먼저 사라지면 살아 있는 행이 깨진 파일을 가리킨다).
+ */
 @Injectable()
 export class AdminFileDefaultService {
   constructor(
@@ -55,14 +59,14 @@ export class AdminFileDefaultService {
     private readonly revisionService: RevisionService,
   ) {}
 
-  /** 디스크에 `<uuid>.<ext>` 로 쓰고 directus_files 행을 만든다. 그림이면 치수까지. */
+  /** 파일 하나를 올린다. 형식·크기(그림·PDF 20MB · 영상 200MB)를 보고, 그림이면 치수까지 적는다. */
+  @ServiceException({ errorCode: AdminFileError.UPLOAD_UNKNOWN })
   async upload(
-    file:
-      | { originalname: string; mimetype: string; size: number; buffer: Buffer }
-      | undefined,
-    title?: string,
-    who?: SessionPayload,
-  ): Promise<FileEntity> {
+    ctx: ITransactionContext,
+    file: UploadedFileInput | undefined,
+    title: string | undefined,
+    who: SessionPayload,
+  ): Promise<ControllerAdminFileDefaultResponseDto> {
     if (!file) throw CommonError.createByErrorCode(AdminFileError.NO_FILE);
     const ext = ALLOWED[file.mimetype];
     if (!ext)
@@ -71,156 +75,198 @@ export class AdminFileDefaultService {
       throw CommonError.createByErrorCode(AdminFileError.TOO_LARGE);
     const id = randomUUID();
     const filenameDisk = `${id}${ext}`;
+    const path = join(AppConfig.uploadsDir, filenameDisk);
     mkdirSync(AppConfig.uploadsDir, { recursive: true });
-    writeFileSync(join(AppConfig.uploadsDir, filenameDisk), file.buffer);
-    const size = file.mimetype.startsWith('image/')
-      ? imageSize(file.buffer)
-      : null;
-    // multer 는 파일 이름을 latin1 로 준다 — 한글 이름이 깨진다. utf8 로 되돌린다.
-    const original = decodeName(file.originalname) || `upload${ext}`;
-    const row = this.fileDefaultRepository.repository.create({
-      id,
-      storage: 'local',
-      filenameDisk,
-      filenameDownload: extname(original) ? original : original + ext,
-      title: title || original.replace(/\.[^.]+$/, ''),
-      type: file.mimetype,
-      filesize: String(file.size),
-      width: size?.width ?? null,
-      height: size?.height ?? null,
-      createdOn: new Date(),
-      modifiedOn: new Date(),
-    });
-    const saved = await this.fileDefaultRepository.repository.save(row);
-    if (who) {
-      await this.revisionService.record({
-        actor: who.email,
-        action: 'create',
-        collection: 'files',
-        itemId: id,
-        after: this.view(saved, 0),
-      });
+    writeFileSync(path, file.buffer);
+    try {
+      return await this.insertRow(ctx, id, filenameDisk, ext, file, title, who);
+    } catch (e) {
+      rmSync(path, { force: true });
+      throw e;
     }
-    return saved;
   }
 
-  /** 최신순. type 은 image · pdf · video, q 는 이름·원본 파일명. */
-  async list(options: { q?: string; type?: string; page?: number }) {
-    const page = Math.max(1, options.page ?? 1);
-    const qb = this.fileDefaultRepository.repository
-      .createQueryBuilder('f')
-      .orderBy('f.createdOn', 'DESC')
-      .addOrderBy('f.id', 'ASC');
-    if (options.type === 'image') qb.andWhere("f.type LIKE 'image/%'");
-    else if (options.type === 'pdf') qb.andWhere("f.type = 'application/pdf'");
-    else if (options.type === 'video') qb.andWhere("f.type LIKE 'video/%'");
-    const q = (options.q ?? '').trim();
-    if (q) {
-      qb.andWhere(
-        new Brackets((w) => {
-          w.where('f.title ILIKE :q', { q: `%${q}%` }).orWhere(
-            'f.filenameDownload ILIKE :q',
-            {
-              q: `%${q}%`,
-            },
-          );
-        }),
-      );
-    }
-    const [rows, total] = await qb
-      .skip((page - 1) * PAGE)
-      .take(PAGE)
-      .getManyAndCount();
-    const used = await this.fileDefaultRepository.usage(rows.map((r) => r.id));
+  /** 최신순 한 쪽(40). 쓰는 곳의 수를 같이 싣는다. */
+  @ServiceException({ errorCode: AdminFileError.LIST_UNKNOWN })
+  async list(
+    ctx: ITransactionContext,
+    query: ControllerAdminFileDefaultListQueryDto,
+  ): Promise<{
+    data: ControllerAdminFileDefaultResponseDto[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    const page = query.page ?? 1;
+    const [rows, total] = await this.fileDefaultRepository.findPage(ctx, {
+      type: query.type,
+      q: (query.q ?? '').trim() || undefined,
+      skip: (page - 1) * PAGE,
+      take: PAGE,
+    });
+    const used = await this.fileDefaultRepository.usage(
+      ctx,
+      rows.map((r) => r.id),
+    );
     return {
-      data: rows.map((r) => this.view(r, used.get(r.id) ?? 0)),
+      data: rows.map((r) =>
+        ControllerAdminFileDefaultResponseDto.from(r, used.get(r.id) ?? 0),
+      ),
       total,
       page,
       pageSize: PAGE,
     };
   }
 
-  async get(id: string): Promise<FileEntity> {
-    const row = await this.fileDefaultRepository.findById(id);
-    if (!row) throw CommonError.createByErrorCode(AdminFileError.NOT_FOUND);
-    return row;
+  /** 관리 화면 미리보기로 보낼 파일(가리키는 곳과 상관없이). 없으면 404. */
+  @ServiceException({ errorCode: AdminFileError.GET_UNKNOWN })
+  async preview(
+    ctx: ITransactionContext,
+    id: string,
+  ): Promise<AdminFilePreview> {
+    const row = await this.findOrThrow(ctx, id);
+    return {
+      type: row.type ?? 'application/octet-stream',
+      path: this.diskPath(row),
+    };
   }
 
+  /** 보이는 이름만 바꾼다. 디스크 이름(uuid)은 그대로 — 이미 박힌 주소가 안 깨진다. */
+  @ServiceException({ errorCode: AdminFileError.RENAME_UNKNOWN })
+  @Transactional()
   async rename(
+    ctx: ITransactionContext,
     id: string,
     title: string,
     who: SessionPayload,
-  ): Promise<AdminFileView> {
-    const row = await this.get(id);
-    const used = (await this.fileDefaultRepository.usage([id])).get(id) ?? 0;
-    const before = this.view(row, used);
+  ): Promise<ControllerAdminFileDefaultResponseDto> {
+    const row = await this.findOrThrow(ctx, id);
+    const used =
+      (await this.fileDefaultRepository.usage(ctx, [id])).get(id) ?? 0;
+    const before = ControllerAdminFileDefaultResponseDto.from(row, used);
     row.title = title.trim();
     row.modifiedOn = new Date();
-    const saved = await this.fileDefaultRepository.repository.save(row);
-    const after = this.view(saved, used);
-    await this.revisionService.record({
-      actor: who.email,
-      action: 'update',
-      collection: 'files',
-      itemId: id,
-      before,
-      after,
-    });
+    const after = ControllerAdminFileDefaultResponseDto.from(
+      await this.fileDefaultRepository.save(ctx, row),
+      used,
+    );
+    await this.revisionService.record(
+      {
+        actor: who.email,
+        action: 'update',
+        collection: 'files',
+        itemId: id,
+        before,
+        after,
+      },
+      ctx,
+    );
     return after;
   }
 
   /**
-   * 행과 디스크 파일을 같이 지운다. 글에서 쓰는 파일이면 409 — force 면 그 글들에서
-   * 빼고(그림 비움 · 첨부 제거) 지운다.
+   * 행과 디스크 파일을 지운다. 쓰는 곳이 있으면 409 — force 면 그곳에서 빼고(그림 칸 비움 · 첨부 제거 ·
+   * 본문 그림 걷음) 지운다. 행을 지우는 트랜잭션이 끝난 뒤에 디스크 파일을 지운다.
    */
+  @ServiceException({ errorCode: AdminFileError.DELETE_UNKNOWN })
   async remove(
+    ctx: ITransactionContext,
     id: string,
     force: boolean,
-    who?: SessionPayload,
+    who: SessionPayload,
   ): Promise<void> {
-    const row = await this.get(id);
-    const used = (await this.fileDefaultRepository.usage([id])).get(id) ?? 0;
+    const path = await this.deleteRow(ctx, id, force, who);
+    rmSync(path, { force: true });
+  }
+
+  @Transactional()
+  private async insertRow(
+    ctx: ITransactionContext,
+    id: string,
+    filenameDisk: string,
+    ext: string,
+    file: UploadedFileInput,
+    title: string | undefined,
+    who: SessionPayload,
+  ): Promise<ControllerAdminFileDefaultResponseDto> {
+    const size = file.mimetype.startsWith('image/')
+      ? imageSize(file.buffer)
+      : null;
+    // multer 는 파일 이름을 latin1 로 준다 — 한글 이름이 깨진다. utf8 로 되돌린다.
+    const original = decodeName(file.originalname) || `upload${ext}`;
+    const saved = await this.fileDefaultRepository.save(
+      ctx,
+      this.fileDefaultRepository.newRow(ctx, {
+        id,
+        storage: 'local',
+        filenameDisk,
+        filenameDownload: extname(original) ? original : original + ext,
+        title: title || original.replace(/\.[^.]+$/, ''),
+        type: file.mimetype,
+        filesize: String(file.size),
+        width: size?.width ?? null,
+        height: size?.height ?? null,
+        createdOn: new Date(),
+        modifiedOn: new Date(),
+      }),
+    );
+    const view = ControllerAdminFileDefaultResponseDto.from(saved, 0);
+    await this.revisionService.record(
+      {
+        actor: who.email,
+        action: 'create',
+        collection: 'files',
+        itemId: id,
+        after: view,
+      },
+      ctx,
+    );
+    return view;
+  }
+
+  /** 행을 지우고(필요하면 쓰는 곳에서 먼저 뺀다) 디스크 경로를 돌려준다. */
+  @Transactional()
+  private async deleteRow(
+    ctx: ITransactionContext,
+    id: string,
+    force: boolean,
+    who: SessionPayload,
+  ): Promise<string> {
+    const row = await this.findOrThrow(ctx, id);
+    const used =
+      (await this.fileDefaultRepository.usage(ctx, [id])).get(id) ?? 0;
     if (used > 0 && !force)
       throw CommonError.createByErrorCode(AdminFileError.IN_USE);
-    const before = this.view(row, used);
-    await this.fileDefaultRepository.repository.manager.transaction(
-      async (m) => {
-        if (used > 0) await this.fileDefaultRepository.detach(m, id);
-        await m.remove(row);
-      },
-    );
-    rmSync(this.diskPath(row), { force: true });
-    if (who) {
-      await this.revisionService.record({
+    const before = ControllerAdminFileDefaultResponseDto.from(row, used);
+    const path = this.diskPath(row);
+    if (used > 0) await this.fileDefaultRepository.detach(ctx, id);
+    await this.fileDefaultRepository.remove(ctx, row);
+    await this.revisionService.record(
+      {
         actor: who.email,
         action: 'delete',
         collection: 'files',
         itemId: id,
         before,
-      });
-    }
+      },
+      ctx,
+    );
+    return path;
+  }
+
+  private async findOrThrow(
+    ctx: ITransactionContext,
+    id: string,
+  ): Promise<FileEntity> {
+    const row = await this.fileDefaultRepository.findById(ctx, id);
+    if (!row) throw CommonError.createByErrorCode(AdminFileError.NOT_FOUND);
+    return row;
   }
 
   /** 디스크 경로. filename_disk 에 경로 문자가 들어 있으면 거른다. */
-  diskPath(row: FileEntity): string {
+  private diskPath(row: FileEntity): string {
     const name = String(row.filenameDisk ?? '').replace(/[/\\]/g, '');
     return join(AppConfig.uploadsDir, name);
-  }
-
-  view(r: FileEntity, used: number): AdminFileView {
-    return {
-      id: r.id,
-      title: r.title,
-      filename_download: r.filenameDownload,
-      type: r.type,
-      filesize: r.filesize === null ? null : Number(r.filesize),
-      width: r.width,
-      height: r.height,
-      created_on: r.createdOn,
-      url: `/api/content/assets/${r.id}`,
-      preview_url: `/api/admin/files/${r.id}`,
-      used,
-    };
   }
 }
 

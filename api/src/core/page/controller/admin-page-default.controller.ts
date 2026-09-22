@@ -7,12 +7,11 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiDataListResponse,
+  ApiDataResponse,
+} from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -48,7 +47,7 @@ export class AdminPageDefaultController {
     operationId: 'adminPageDefaultList',
     summary: '편집할 수 있는 페이지 목록',
   })
-  @ApiOkResponse({ type: ControllerPageDefaultRowResponseDto, isArray: true })
+  @ApiDataListResponse(ControllerPageDefaultRowResponseDto)
   async list(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: ControllerPageDefaultRowResponseDto[] }> {
@@ -60,7 +59,7 @@ export class AdminPageDefaultController {
     operationId: 'adminPageDefaultGet',
     summary: '페이지 한 장 — 칸 구조와 언어별 글',
   })
-  @ApiOkResponse({ type: ControllerPageDefaultDetailResponseDto })
+  @ApiDataResponse(ControllerPageDefaultDetailResponseDto)
   async get(
     @TransactionContext() ctx: ITransactionContext,
     @Param('key') key: string,
@@ -73,7 +72,7 @@ export class AdminPageDefaultController {
     operationId: 'adminPageDefaultSave',
     summary: '한 언어의 페이지 글 저장',
   })
-  @ApiOkResponse({ type: ControllerPageDefaultLangResponseDto })
+  @ApiDataResponse(ControllerPageDefaultLangResponseDto)
   async save(
     @TransactionContext() ctx: ITransactionContext,
     @Param('key') key: string,

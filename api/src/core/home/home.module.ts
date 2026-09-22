@@ -9,6 +9,10 @@ import { HomeFileDefaultRepository } from './repository/home-file-default.reposi
 import { HomePopupDefaultRepository } from './repository/home-popup-default.repository';
 import { HomePopupTranslationDefaultRepository } from './repository/home-popup-translation-default.repository';
 import { HomeDefaultService } from './service/home-default.service';
+import {
+  HomeBannerRevisionHandler,
+  HomePopupRevisionHandler,
+} from './revision/home-revision.handler';
 
 /**
  * 메인 화면의 기간 배너·팝업(E8). 공개 읽기(`/api/content/home`)와 관리(`/api/admin/home/*`)가
@@ -24,6 +28,8 @@ import { HomeDefaultService } from './service/home-default.service';
     HomePopupTranslationDefaultRepository,
     HomeFileDefaultRepository,
     HomeDefaultService,
+    HomeBannerRevisionHandler,
+    HomePopupRevisionHandler,
   ],
 })
 export class HomeModule {}

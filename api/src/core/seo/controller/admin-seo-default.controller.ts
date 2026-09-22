@@ -9,12 +9,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiDataListResponse,
+  ApiDataResponse,
+  ApiOkFlagResponse,
+} from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -49,7 +49,7 @@ export class AdminSeoDefaultController {
     operationId: 'adminSeoDefaultList',
     summary: '덮어쓴 장 전부',
   })
-  @ApiOkResponse({ type: [ControllerSeoDefaultPageResponseDto] })
+  @ApiDataListResponse(ControllerSeoDefaultPageResponseDto)
   async list(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: ControllerSeoDefaultPageResponseDto[] }> {
@@ -62,7 +62,7 @@ export class AdminSeoDefaultController {
     operationId: 'adminSeoDefaultSave',
     summary: '한 장의 검색 설정 저장(없으면 만든다)',
   })
-  @ApiOkResponse({ type: ControllerSeoDefaultPageResponseDto })
+  @ApiDataResponse(ControllerSeoDefaultPageResponseDto)
   async save(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerSeoDefaultSaveDto,
@@ -78,6 +78,7 @@ export class AdminSeoDefaultController {
     operationId: 'adminSeoDefaultRemove',
     summary: '덮어쓰기 지우기(코드의 값으로 돌아간다)',
   })
+  @ApiOkFlagResponse()
   async remove(
     @TransactionContext() ctx: ITransactionContext,
     @Query() query: ControllerSeoDefaultPathQueryDto,

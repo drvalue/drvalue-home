@@ -23,13 +23,16 @@ src/
 │   ├── error/                   # ICommonErrorCode · CommonError(createByErrorCode) · COMMON_* 코드
 │   │                            #   · 전역 CommonExceptionFilter · ValidationPipe 실패 변환
 │   │                            #   · @ServiceException(서비스 예외 → 에러 코드)
-│   ├── response/                # IApiCommonResponse (응답 본문 모양)
+│   ├── response/                # IApiCommonResponse (응답 본문 모양) · 성공 응답 Swagger 데코레이터
+│   │                            #   (ApiDataResponse · ApiDataListResponse · ApiPageResponse · ApiOkFlagResponse …)
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
+│   │                            #   · TransactionContextFactory(요청 밖 — cron)
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
 │   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
-│   ├── revision/                # 변경 이력 기록기 (admin_revisions)
+│   ├── revision/                # 변경 이력 기록기 (admin_revisions) · 되돌리기 핸들러 모음(RevisionRestoreRegistry)
+│   │                            #   · snapshotToDto(이력 스냅샷 → 저장 DTO, 요청과 같은 검사)
 │   ├── image/                   # PNG·JPEG·WebP·GIF 치수 읽기
 │   └── ncp-mail/                # 네이버 클라우드 메일
 └── core/<기능>/
@@ -40,6 +43,7 @@ src/
     ├── dto/controller-<기능>-default.dto.ts          # 요청(검증 + Swagger)
     ├── dto/controller-<기능>-default-response.dto.ts # 응답(Swagger + 엔티티 → 응답 변환 `from`)
     ├── error/<기능>.error.ts
+    ├── revision/<표>-revision.handler.ts            # 그 표의 변경 이력 이름·범위·되돌리기(있으면)
     └── filter/                  # 그 기능에만 거는 예외 필터 (admin-auth 의 로그인 되돌리기)
 ```
 
@@ -50,8 +54,9 @@ src/
 `page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
 `seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`) ·
 `home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`).
-**기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
-2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
+**기준 모듈은 `core/admin-post`** 다. 새 모듈은 이 파일들을 그대로 따라 한다.
+2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 같은 날 R1 로 모듈 14개가 전부 이 모양이다 —
+`python3 scripts/check-pattern.py` 가 모듈마다 재고(`--table` 은 표만), 어긋나면 종료코드 1 이다.
 
 | 층 | 규칙 | bmes 실측(apps) |
 |---|---|---|
@@ -65,8 +70,14 @@ src/
 - 트랜잭션은 bmes 의 typeorm-transactional(CLS) 대신 `dataSource.transaction()` 이다. 한 DB 라 테넌트가
   없고, 트랜잭션 manager 를 문맥(`ctx.manager`)에 실어 넘긴다 — 저장소의 `repository(ctx)` 가 그 manager 를 쓴다.
   변경 이력도 `revisionService.record(entry, ctx)` 로 같은 트랜잭션에 쓴다.
-- 요청 밖(cron)에서는 `createTransactionContext(dataSource)` 로 문맥을 만든다(`admin-schedule`).
+- 요청 밖(cron)에서는 `TransactionContextFactory.create()` 로 문맥을 만든다(`admin-schedule`). `@Cron` 진입점에는
+  `@ServiceException` 을 겹쳐 붙이지 않는다(cron 메타데이터가 사라질 수 있다) — 진입점이 잡고, 일은 `run(ctx)` 가 한다.
 - Swagger: `/api/docs`(JSON `/api/docs-json`). `NODE_ENV=production`(api 이미지)에서는 안 뜬다.
+  웹의 타입을 이 문서에서 만든다(C1) — **응답 문서는 실제로 나가는 JSON 과 같아야 한다.** `{ data }` 를 내는
+  핸들러에 `@ApiOkResponse({ type: Dto })` 를 적으면 봉투가 빠진다. `common/response` 의 데코레이터를 쓴다:
+  `ApiDataResponse(Dto)`(`{ data }` · `language: true` 면 `{ data, language }` · `@HttpCode` 없는 POST 는 `status: 201`) ·
+  `ApiDataListResponse` · `ApiPageResponse` · `ApiDataStringsResponse` · `ApiOkFlagResponse`. 봉투까지 담은 DTO
+  (`…PageResponseDto` 처럼)는 `@ApiOkResponse({ type })` 그대로. 로그인 이동은 `ApiResponse({ status: 302 })`.
 - **컨트롤러는 서비스만 주입한다.** 규칙은 서비스에, 질의는 저장소에, 응답 모양은 응답 DTO 의 `from` 에.
 - **에러는 `error/*.error.ts` 의 코드 객체를 `CommonError.createByErrorCode()` 로 던진다.**
   Nest 내장 예외를 직접 던지지 않는다. 코드 한 건은 `{ code, message, detail, status }`:
@@ -120,7 +131,8 @@ src/
 5. 범위: admin 전부 · marketing 채용(`recruit`) 빼고 · hr 채용만(`service/board-access.ts`).
    `@AdminRoles()` 가 붙은 핸들러는 그 역할만. **역할 없는 세션은 거부한다** — 조용히
    admin 으로 올리지 않는다.
-6. 변경 이력: 글 만들기·고치기·지우기가 `admin_revisions` 에 actor · before · after 를 남긴다.
+6. 변경 이력: 관리 화면의 쓰기(글·문의·파일·권한·페이지 글·메뉴·검색 정보·메인 배너·팝업)가 `admin_revisions` 에
+   actor · before · after 를 남긴다. 목록·되돌리기는 전체 권한만, 한 항목의 이력은 마케팅도(볼 수 있는 것만).
 
 **IAM 을 안 거치는 문은 없다.** 토큰 우회 경로를 두지 않는다. 검사(verify.sh)는
 `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만들어 들어간다 — 그 키를 가진 사람은
@@ -145,11 +157,23 @@ src/
 
 ## 방식
 
+- **변경 이력 되돌리기(`admin-revision`)** — 표마다 다른 것(목록 이름 · 게시판 · 누가 보나 · 되돌리기)은 그 기능이
+  `<기능>/revision/*.handler.ts` 로 `RevisionRestoreRegistry` 에 건다(`onModuleInit`). `admin-revision` 은 표 이름으로
+  분기하지 않고 다른 기능 모듈을 import 하지 않는다. 새 표를 이력에 남기기 시작하면 핸들러를 하나 더 건다 —
+  안 걸면 목록에는 항목 id 로 보이고 되돌리기는 400 이다.
+  - 되돌리기 = 그 이력의 before 를 **그 기능의 저장 규칙으로 다시 저장**한다(글 · 문의 · 페이지 글 · 메뉴 · 검색 정보 ·
+    메인 배너 · 팝업). 규칙에 안 맞으면 저장과 같은 400, 되돌림도 이력 한 줄(action `restore`)이다. 한 트랜잭션.
+  - 그사이 미디어에서 지운 그림·첨부는 빼고 되돌리며 `warnings` 로 알린다(주소가 다른 글에 넘어간 글은 409).
+  - 파일(`files`)은 본체가 없어 · 권한(`admin_users`)은 마지막 전체 권한 규칙을 거치게 되돌리지 않는다 — 핸들러가
+    `restorable: false` 와 그 기능의 거절 코드를 준다. 한 건 조회의 `restorable` · `restore_note` 와 되돌리기 거절은
+    한 규칙(`refusal`)을 본다. 만들기 이력(before 없음)은 `ADMIN_REVISION_NO_BEFORE`.
+  - 보기 범위: 전체 권한은 전부, 그 밖은 핸들러의 `canSee`(글은 만질 수 있는 게시판만 · 권한 이력은 전체 권한만).
 - **본문 HTML 소독(`common/html/sanitize-body.ts`)** — 게시판 본문 · 페이지 글 richtext · 팝업 내용이 같은 규칙이다.
   편집기(Quill)가 만드는 태그만 남기고(p·br·h2·h3·강조·목록·인용·a·img·span, class 는 ql-align·ql-indent 만),
   script·style·iframe·이벤트 속성·`javascript:`·`data:` 는 버린다. 그림은 `/api/content/assets/<uuid>` 와 사이트 그림
   경로(screens·photo·brand·img·icon·images, patent2·3 제외)만. 새 창 링크는 `rel="noopener noreferrer"`.
-  게시판 본문은 **저장할 때와 공개로 낼 때 둘 다** 거른다(되돌리기·옛 행·DB 직접 수정이 저장 길을 비켜 간다).
+  게시판 본문은 **저장할 때와 공개로 낼 때 둘 다** 거른다(옛 행·DB 직접 수정이 저장 길을 비켜 간다). 변경 이력
+  되돌리기도 저장과 같이 거른다(`restoreSnapshot` — 이력의 본문은 소독 규칙이 생기기 전 글일 수 있다).
   - 엔티티는 풀어서 본다 — 끄면 `jav&#x61;script:` 가 주소 검사를 지나간다(실측). 편집기 글이 바이트 그대로
     돌아오도록 NBSP 를 `&nbsp;` 로, `<br />`·`<img … />` 를 `<br>`·`<img …>` 로 되돌린다.
   - 태그 없는 맨 글자(옛 글)는 손대지 않는다 — 화면이 이스케이프한다.
@@ -213,7 +237,7 @@ src/
   순서). 깊이 2 는 DTO 모양으로 막는다(하위 DTO 에 `children` 이 비어 있어야 한다 — 조용히 버리지 않고 400).
   링크는 모양만 본다(`/` 로 시작 · `//` 아님 · http(s)) — 사이트에 그 장이 있는지는 web 만 알아서 관리 화면이
   저장 전에 HEAD 로 확인한다. 표 이름이 `site_menu_*` 인 이유는 migrations/0006 머리말(옛 Directus 표와 겹친다).
-  변경 이력은 collection `menu` · item `site` 한 줄(되돌리기는 아직 없다 — R1).
+  변경 이력은 collection `menu` · item `site` 한 줄. 되돌리기는 이력의 before 를 저장 DTO 로 검사해 같은 저장 길로 쓴다.
 - 상수: IAM 주소 `https://iam.drvalue.co.kr` · 기본 언어 `ko-KR` · NCP 메일 주소 ·
   문의 한도 분 5 / 시 30. 환경변수로 빼지 않는다.
 
@@ -222,7 +246,8 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
-bash scripts/verify.sh          # 288 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 331 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

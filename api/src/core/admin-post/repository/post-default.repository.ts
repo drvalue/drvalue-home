@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
+import type { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { PostEntity } from '../../../common/entity/post.entity';
 import { BaseRepository } from '../../../common/typeorm/base.repository';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
@@ -42,6 +43,37 @@ export class PostDefaultRepository extends BaseRepository<PostEntity> {
     slug: string,
   ): Promise<PostEntity | null> {
     return this.repository(ctx).findOne({ where: { slug } });
+  }
+
+  /** posts 의 칸 메타데이터 — 변경 이력 스냅샷을 칸 이름으로 맞출 때 쓴다. */
+  columns(ctx: ITransactionContext): ColumnMetadata[] {
+    return this.repository(ctx).metadata.columns;
+  }
+
+  async updateColumns(
+    ctx: ITransactionContext,
+    id: number,
+    values: Partial<PostEntity>,
+  ): Promise<void> {
+    await this.repository(ctx).update({ id }, values);
+  }
+
+  /**
+   * 지운 글을 원래 번호로 되살린다 — 변경 이력이 번호로 이어져 있다. TypeORM 은 자동 증가 칸에 준
+   * 값을 버리므로(실측) 넣은 뒤 번호를 옮긴다. 딸린 행(번역·첨부)을 넣기 전에 부른다.
+   */
+  async insertWithId(
+    ctx: ITransactionContext,
+    id: number,
+    values: Partial<PostEntity>,
+  ): Promise<void> {
+    const r = await this.repository(ctx).insert(values);
+    const newId = Number((r.identifiers[0] as { id: number }).id);
+    if (newId !== id)
+      await this.repository(ctx).query(
+        'UPDATE posts SET id = $1 WHERE id = $2',
+        [id, newId],
+      );
   }
 
   /** 게시판 안의 가장 큰 sort. 새 글은 그다음 번호로 맨 뒤에 붙는다. */

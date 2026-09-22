@@ -8,7 +8,7 @@ export type RevisionRow = {
   id: number
   actor: string
   action: 'create' | 'update' | 'delete' | 'restore' | string
-  collection: 'posts' | 'inquiries' | 'files' | 'admin_users' | string
+  collection: 'posts' | 'inquiries' | 'files' | 'admin_users' | 'pages' | 'menu' | 'page_meta' | 'home_banners' | 'home_popups' | string
   item_id: string
   created_on: string
   label: string
@@ -30,6 +30,8 @@ export type RevisionFull = RevisionRow & {
   before: Record<string, unknown> | null
   after: Record<string, unknown> | null
   restorable: boolean
+  /** 되돌릴 수 없을 때 api 가 주는 까닭(파일 · 권한 · 처음 만든 기록 …). */
+  restore_note?: string | null
 }
 
 export type AdminUserRow = {

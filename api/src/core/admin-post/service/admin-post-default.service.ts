@@ -28,6 +28,7 @@ import { FileDefaultRepository } from '../repository/file-default.repository';
 import { PostDefaultRepository } from '../repository/post-default.repository';
 import { PostFileDefaultRepository } from '../repository/post-file-default.repository';
 import { PostTranslationDefaultRepository } from '../repository/post-translation-default.repository';
+import { fromSnap, pickLike, Snap, toSnap } from './post-snapshot';
 
 const PAGE_SIZE = 30;
 
@@ -267,6 +268,115 @@ export class AdminPostDefaultService {
       this.assertBoard(who, board);
     for (const [i, id] of ids.entries())
       await this.postDefaultRepository.updateSort(ctx, id, i + 1);
+  }
+
+  /**
+   * 변경 이력의 스냅샷(글 화면 모양)으로 글을 되돌린다. 지운 글은 원래 번호로 되살린다.
+   * 주소가 다른 글과 겹치면 409. 지워진 대표 그림·첨부는 빼고 되돌리고 그 사실을 경고로 돌려준다.
+   * 되돌림도 변경 이력(action restore) 한 줄이다. 호출자(변경 이력)가 연 트랜잭션에 탄다.
+   */
+  @ServiceException({ errorCode: AdminPostError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restoreSnapshot(
+    ctx: ITransactionContext,
+    snap: Snap,
+    who: SessionPayload,
+  ): Promise<{ data: Snap | null; warnings: string[] }> {
+    const id = Number(snap.id);
+    const warnings: string[] = [];
+    const current = await this.snapshotOf(ctx, id, snap);
+    const slug = String(snap.slug ?? '');
+    if (slug && (!current || current.slug !== slug)) {
+      const clash = await this.postDefaultRepository.findBySlug(ctx, slug);
+      if (clash && clash.id !== id)
+        throw CommonError.createByErrorCode(AdminPostError.RESTORE_SLUG_TAKEN);
+    }
+
+    const values = fromSnap(this.postDefaultRepository.columns(ctx), snap, [
+      'id',
+    ]) as Partial<PostEntity>;
+    if (
+      values.thumbnail &&
+      !(await this.fileDefaultRepository.exists(ctx, values.thumbnail))
+    ) {
+      values.thumbnail = null;
+      warnings.push('대표 이미지 파일이 지워져 있어 비워 두었습니다.');
+    }
+    if (current)
+      await this.postDefaultRepository.updateColumns(ctx, id, values);
+    else await this.postDefaultRepository.insertWithId(ctx, id, values);
+
+    const tCols = this.postTranslationDefaultRepository.columns(ctx);
+    await this.postTranslationDefaultRepository.replaceForPost(
+      ctx,
+      id,
+      ((snap.translations as Snap[] | undefined) ?? []).map((t) => {
+        const row = fromSnap(tCols, t, [
+          'id',
+          'posts',
+        ]) as Partial<PostTranslationEntity>;
+        // 저장과 같은 소독 — 이력의 본문은 소독 규칙이 생기기 전 글일 수 있다.
+        if ('body' in row) row.body = sanitizeBody(row.body);
+        return row;
+      }),
+    );
+
+    await this.postFileDefaultRepository.deleteByPost(ctx, id);
+    const wanted = ((snap.files as Snap[] | undefined) ?? [])
+      .map((f) => String(f.id ?? ''))
+      .filter(Boolean);
+    const have = await this.fileDefaultRepository.findExistingIds(ctx, wanted);
+    const gone = wanted.filter((f) => !have.has(f));
+    if (gone.length)
+      warnings.push(`첨부 ${gone.length}개는 파일이 지워져 있어 뺐습니다.`);
+    await this.postFileDefaultRepository.attach(
+      ctx,
+      id,
+      wanted.filter((f) => have.has(f)),
+    );
+
+    const after = await this.snapshotOf(ctx, id, snap);
+    await this.revisionService.record(
+      {
+        actor: who.email,
+        action: 'restore',
+        collection: 'posts',
+        itemId: id,
+        before: current,
+        after,
+      },
+      ctx,
+    );
+    return { data: after, warnings };
+  }
+
+  /** 지금 글을 스냅샷 모양으로(되돌릴 스냅샷 ref 의 칸만). 없으면 null. */
+  private async snapshotOf(
+    ctx: ITransactionContext,
+    id: number,
+    ref: Snap,
+  ): Promise<Snap | null> {
+    const row = await this.postDefaultRepository.findOneFull(ctx, id);
+    if (!row) return null;
+    const out = toSnap(this.postDefaultRepository.columns(ctx), row);
+    out.thumbnail_url = row.thumbnail
+      ? `/api/admin/files/${row.thumbnail}`
+      : null;
+    const tCols = this.postTranslationDefaultRepository.columns(ctx);
+    out.translations = (row.translations ?? []).map((t) => {
+      const o = toSnap(tCols, t);
+      delete o.id;
+      delete o.posts;
+      return o;
+    });
+    out.files = (row.files ?? [])
+      .filter((f) => f.fileId)
+      .map((f) => ({
+        id: f.fileId as string,
+        name: f.file?.title || f.file?.filenameDownload || '첨부파일',
+        url: `/api/admin/files/${f.fileId}`,
+      }));
+    return pickLike(out, ref);
   }
 
   private async findOrThrow(

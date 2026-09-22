@@ -4,6 +4,7 @@ import type { MenuLocation } from '../../../common/entity/menu-item.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
 import { RevisionService } from '../../../common/revision/revision.service';
+import { snapshotToDto } from '../../../common/revision/snapshot-dto';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { Transactional } from '../../../common/typeorm/transactional.decorator';
@@ -76,6 +77,37 @@ export class MenuDefaultService {
     dto: ControllerMenuDefaultSaveDto,
     who: SessionPayload,
   ): Promise<ControllerMenuDefaultAdminTreeResponseDto> {
+    return this.write(ctx, dto, who, 'update');
+  }
+
+  /**
+   * 변경 이력의 메뉴 전체(관리 화면 모양)로 되돌린다. 저장 DTO 로 바꿔 같은 규칙(깊이 2 · 한국어 이름 ·
+   * 링크 모양)으로 검사한다. 화면(web)의 메뉴 캐시는 호출한 화면이 비운다.
+   */
+  @ServiceException({ errorCode: MenuError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restoreTree(
+    ctx: ITransactionContext,
+    snapshot: Record<string, unknown>,
+    who: SessionPayload,
+  ): Promise<{
+    data: ControllerMenuDefaultAdminTreeResponseDto;
+    warnings: string[];
+  }> {
+    const dto = await snapshotToDto(ControllerMenuDefaultSaveDto, {
+      top: snapshot.top ?? [],
+      footer: snapshot.footer ?? [],
+    });
+    return { data: await this.write(ctx, dto, who, 'restore'), warnings: [] };
+  }
+
+  /** 검사하고 지금 메뉴를 지운 뒤 받은 순서로 다시 넣는다. 저장과 되돌리기가 같이 쓴다. */
+  private async write(
+    ctx: ITransactionContext,
+    dto: ControllerMenuDefaultSaveDto,
+    who: SessionPayload,
+    action: 'update' | 'restore',
+  ): Promise<ControllerMenuDefaultAdminTreeResponseDto> {
     for (const node of dto.top) {
       this.assertNode(node);
       if (node.match?.some((m) => !isMatchPath(m)))
@@ -112,7 +144,7 @@ export class MenuDefaultService {
     await this.revisionService.record(
       {
         actor: who.email,
-        action: 'update',
+        action,
         collection: 'menu',
         itemId: 'site',
         before,

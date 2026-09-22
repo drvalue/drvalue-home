@@ -20,6 +20,7 @@ import { PAGE_SCHEMAS, pageSchemaOf } from '../schema';
 import type { PageSchema } from '../schema/page-schema';
 import {
   checkContent,
+  dropImages,
   emptyContent,
   PageContentError,
   withImageSizes,
@@ -93,7 +94,57 @@ export class PageDefaultService {
     who: SessionPayload,
   ): Promise<ControllerPageDefaultLangResponseDto> {
     const schema = this.schemaOrThrow(key);
-    const checked = this.check(schema, dto.content);
+    return this.write(ctx, schema, key, dto.languages_code, dto.content, who);
+  }
+
+  /**
+   * 변경 이력의 글(한 장 · 한 언어)로 되돌린다. 저장과 같은 검사를 거친다. 그 사이에 미디어에서
+   * 지운 그림은 비우고 경고로 알린다(비운 칸이 필수면 검사에서 400). 되돌림도 이력(restore) 한 줄이다.
+   */
+  @ServiceException({ errorCode: PageError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restoreContent(
+    ctx: ITransactionContext,
+    key: string,
+    languagesCode: string,
+    content: unknown,
+    who: SessionPayload,
+  ): Promise<{
+    data: ControllerPageDefaultLangResponseDto;
+    warnings: string[];
+  }> {
+    const schema = this.schemaOrThrow(key);
+    const { fileIds } = this.check(schema, content);
+    const sizes = await this.pageFileDefaultRepository.findSizes(ctx, fileIds);
+    const gone = new Set(fileIds.filter((id) => !sizes.has(id)));
+    const data = await this.write(
+      ctx,
+      schema,
+      key,
+      languagesCode,
+      gone.size ? dropImages(content, gone) : content,
+      who,
+      'restore',
+    );
+    return {
+      data,
+      warnings: gone.size
+        ? [`그림 ${gone.size}개는 파일이 지워져 있어 비워 두었습니다.`]
+        : [],
+    };
+  }
+
+  /** 검사·치수 적기·덮어쓰기·변경 이력. 저장과 되돌리기가 같이 쓴다. */
+  private async write(
+    ctx: ITransactionContext,
+    schema: PageSchema,
+    key: string,
+    languagesCode: string,
+    raw: unknown,
+    who: SessionPayload,
+    action?: 'restore',
+  ): Promise<ControllerPageDefaultLangResponseDto> {
+    const checked = this.check(schema, raw);
     const sizes = await this.pageFileDefaultRepository.findSizes(
       ctx,
       checked.fileIds,
@@ -106,12 +157,12 @@ export class PageDefaultService {
     const before = await this.pageDefaultRepository.findOne(
       ctx,
       key,
-      dto.languages_code,
+      languagesCode,
     );
     const saved = await pages.save(
       pages.create({
         key,
-        languagesCode: dto.languages_code,
+        languagesCode,
         content,
         updatedOn: new Date(),
         updatedBy: who.email,
@@ -120,9 +171,9 @@ export class PageDefaultService {
     await this.revisionService.record(
       {
         actor: who.email,
-        action: before ? 'update' : 'create',
+        action: action ?? (before ? 'update' : 'create'),
         collection: 'pages',
-        itemId: `${key}/${dto.languages_code}`,
+        itemId: `${key}/${languagesCode}`,
         before: before?.content ?? null,
         after: saved.content,
       },

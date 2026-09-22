@@ -40,7 +40,7 @@ export class AdminDashboardDefaultService {
       this.postDefaultRepository.countScheduledByBoard(ctx, boards),
       seesInquiries ? this.inquiryCounts(ctx, who) : Promise.resolve(null),
       who.role === 'admin'
-        ? this.adminRevisionDefaultService.recent(RECENT)
+        ? this.adminRevisionDefaultService.recent(ctx, RECENT)
         : Promise.resolve(null),
     ]);
     return { inquiries, drafts, scheduled, recent };

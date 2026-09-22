@@ -6,6 +6,7 @@ import { FileDefaultRepository } from './repository/file-default.repository';
 import { PostDefaultRepository } from './repository/post-default.repository';
 import { PostFileDefaultRepository } from './repository/post-file-default.repository';
 import { PostTranslationDefaultRepository } from './repository/post-translation-default.repository';
+import { PostRevisionHandler } from './revision/post-revision.handler';
 import { AdminPostDefaultService } from './service/admin-post-default.service';
 
 @Module({
@@ -17,6 +18,7 @@ import { AdminPostDefaultService } from './service/admin-post-default.service';
     PostFileDefaultRepository,
     FileDefaultRepository,
     AdminPostDefaultService,
+    PostRevisionHandler,
   ],
   // 예약 게시(admin-schedule)가 이력의 before/after 를 같은 모양으로 남기려고 서비스를 쓴다.
   exports: [AdminPostDefaultService],

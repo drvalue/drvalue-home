@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { InquiryEntity } from '../../common/entity/inquiry.entity';
 import { NcpMailModule } from '../../common/ncp-mail/ncp-mail.module';
 import { InquiryDefaultController } from './controller/inquiry-default.controller';
+import { InquiryDefaultRepository } from './repository/inquiry-default.repository';
 import { InquiryDefaultService } from './service/inquiry-default.service';
 
 /** IP 당 분·시 한도. 메일은 건당 과금이라 창구를 열어 두면 안 된다. */
@@ -12,7 +11,6 @@ const perHour = 30;
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([InquiryEntity]),
     NcpMailModule,
     ThrottlerModule.forRoot([
       { name: 'minute', ttl: 60_000, limit: perMinute },
@@ -20,6 +18,6 @@ const perHour = 30;
     ]),
   ],
   controllers: [InquiryDefaultController],
-  providers: [InquiryDefaultService],
+  providers: [InquiryDefaultService, InquiryDefaultRepository],
 })
 export class InquiryModule {}

@@ -3,6 +3,7 @@ import { LANGUAGES } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
 import { RevisionService } from '../../../common/revision/revision.service';
+import { snapshotToDto } from '../../../common/revision/snapshot-dto';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { Transactional } from '../../../common/typeorm/transactional.decorator';
@@ -61,6 +62,44 @@ export class SeoDefaultService {
     dto: ControllerSeoDefaultSaveDto,
     who: SessionPayload,
   ): Promise<Page> {
+    return this.write(ctx, dto, who);
+  }
+
+  /**
+   * 변경 이력의 한 장(관리 화면 모양)으로 되돌린다 — 지운 덮어쓰기도 되살린다. 저장 DTO 로 바꿔 같은
+   * 규칙으로 검사하고, 그 사이에 지운 공유 그림은 비우고 경고로 알린다.
+   */
+  @ServiceException({ errorCode: SeoError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restoreSnapshot(
+    ctx: ITransactionContext,
+    snapshot: Record<string, unknown>,
+    who: SessionPayload,
+  ): Promise<{ data: Page; warnings: string[] }> {
+    const dto = await snapshotToDto(ControllerSeoDefaultSaveDto, {
+      path: snapshot.path,
+      no_index: snapshot.no_index ?? false,
+      og_image: snapshot.og_image ?? null,
+      translations: snapshot.translations ?? [],
+    });
+    const warnings: string[] = [];
+    if (
+      dto.og_image &&
+      !(await this.seoFileDefaultRepository.exists(ctx, dto.og_image))
+    ) {
+      dto.og_image = null;
+      warnings.push('공유 그림 파일이 지워져 있어 비워 두었습니다.');
+    }
+    return { data: await this.write(ctx, dto, who, 'restore'), warnings };
+  }
+
+  /** 공유 그림 확인 · 장 한 줄 · 번역 줄 · 변경 이력. 저장과 되돌리기가 같이 쓴다. */
+  private async write(
+    ctx: ITransactionContext,
+    dto: ControllerSeoDefaultSaveDto,
+    who: SessionPayload,
+    action?: 'restore',
+  ): Promise<Page> {
     if (
       dto.og_image &&
       !(await this.seoFileDefaultRepository.exists(ctx, dto.og_image))
@@ -109,7 +148,7 @@ export class SeoDefaultService {
     await this.revisionService.record(
       {
         actor: who.email,
-        action: existing ? 'update' : 'create',
+        action: action ?? (existing ? 'update' : 'create'),
         collection: 'page_meta',
         itemId: dto.path,
         before,

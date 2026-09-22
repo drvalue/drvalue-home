@@ -5,8 +5,9 @@ import type { ITransactionContext } from '../typeorm/transaction-context';
 import { RevisionEntity } from '../entity/revision.entity';
 
 /**
- * 변경 이력. 관리 서비스가 저장·삭제할 때마다 한 줄 남긴다.
- * before/after 는 화면이 돌려주는 모양(full) 그대로 — 복구가 그걸 다시 PUT 한다.
+ * 변경 이력 기록기. 관리 서비스가 저장·삭제·되돌릴 때마다 한 줄 남긴다.
+ * before/after 는 그 기능의 관리 화면 응답 모양 그대로 — 되돌리기가 그걸 다시 저장한다.
+ * 읽기(목록·한 건)는 admin-revision 모듈의 저장소가 한다.
  */
 @Injectable()
 export class RevisionService {
@@ -16,8 +17,7 @@ export class RevisionService {
   ) {}
 
   /**
-   * 한 줄 남긴다. `ctx` 를 주면 그 트랜잭션 안에서 쓴다 — 글 저장이 롤백되면 이력도 같이 사라진다.
-   * 안 주면 따로 쓴다(아직 문맥을 안 넘기는 모듈).
+   * 한 줄 남긴다. `ctx` 를 주면 그 트랜잭션 안에서 쓴다 — 저장이 롤백되면 이력도 같이 사라진다.
    */
   async record(
     input: {
@@ -43,41 +43,5 @@ export class RevisionService {
         after: input.after ?? null,
       }),
     );
-  }
-
-  async listFor(
-    collection: string,
-    itemId: string | number,
-    limit = 50,
-  ): Promise<RevisionEntity[]> {
-    return this.revisions.find({
-      where: { collection, itemId: String(itemId) },
-      order: { id: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async listRecent(options: {
-    collection?: string;
-    actor?: string;
-    page?: number;
-    pageSize?: number;
-  }) {
-    const page = Math.max(1, options.page ?? 1);
-    const take = Math.min(100, options.pageSize ?? 50);
-    const where: Record<string, string> = {};
-    if (options.collection) where.collection = options.collection;
-    if (options.actor) where.actor = options.actor;
-    const [rows, total] = await this.revisions.findAndCount({
-      where,
-      order: { id: 'DESC' },
-      skip: (page - 1) * take,
-      take,
-    });
-    return { data: rows, total, page, pageSize: take };
-  }
-
-  async get(id: number): Promise<RevisionEntity | null> {
-    return this.revisions.findOne({ where: { id } });
   }
 }
