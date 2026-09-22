@@ -42,19 +42,88 @@ function toMenuItem(n: ApiNode): MenuItem {
 
 export const CODE_MENU: SiteMenu = { top: MENU_ITEMS, footer: [], source: 'code' }
 
+/**
+ * 메뉴 설명의 숫자 자리표시 — 화면에 적는 숫자는 자료에서 센다(손으로 적은 「등록 1건 · 출원 5건」 이 글이
+ * 늘어도 그대로였다). 설명에 `{patent.registered}` 처럼 적으면 공개 게시판의 글 수로 바꾼다.
+ *   {patent} 특허 전체 · {patent.registered} 등록 · {patent.applied} 출원 · {copyright} 저작권 · {case} 수행실적
+ * 수를 못 읽으면(api 가 안 닿으면) 그 자리표시가 든 토막(「 · 」로 나뉜 한 조각)을 빼고, 틀린 숫자를 안 보인다.
+ */
+export const COUNT_TOKENS = ['patent', 'patent.registered', 'patent.applied', 'copyright', 'case'] as const
+type Counts = Partial<Record<(typeof COUNT_TOKENS)[number], number>>
+
+async function boardRows(board: string, limit: number): Promise<{ total: number; data: { cert_state?: string | null }[] } | null> {
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/posts?board=${board}&limit=${limit}`, {
+      next: { revalidate: 60, tags: [MENU_TAG] },
+      signal: AbortSignal.timeout(2000),
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { total?: number; data?: { cert_state?: string | null }[] }
+    return typeof body.total === 'number' ? { total: body.total, data: body.data ?? [] } : null
+  } catch {
+    return null
+  }
+}
+
+const menuCounts = cache(async (): Promise<Counts> => {
+  const [patent, copyright, cases] = await Promise.all([boardRows('patent', 100), boardRows('copyright', 1), boardRows('case', 1)])
+  const out: Counts = {}
+  // 특허는 목록 한 쪽(100)에 다 들어올 때만 등록·출원을 나눠 센다 — 넘치면 나눈 수가 틀린다.
+  if (patent) {
+    out.patent = patent.total
+    if (patent.data.length === patent.total) {
+      out['patent.registered'] = patent.data.filter((r) => r.cert_state === 'registered').length
+      out['patent.applied'] = patent.data.filter((r) => r.cert_state === 'applied').length
+    }
+  }
+  if (copyright) out.copyright = copyright.total
+  if (cases) out.case = cases.total
+  return out
+})
+
+const TOKEN_RE = /\{([a-z.]+)\}/g
+
+/** 설명 한 줄의 자리표시를 수로 바꾼다. 못 바꾼 자리표시가 든 토막은 뺀다. 자리표시가 없으면 그대로. */
+export function fillCounts(text: string, counts: Counts): string {
+  if (!text.includes('{')) return text
+  return text
+    .split(' · ')
+    .map((part) => {
+      let missing = false
+      const filled = part.replace(TOKEN_RE, (_, key: string) => {
+        const n = counts[key as keyof Counts]
+        if (typeof n !== 'number') missing = true
+        return typeof n === 'number' ? String(n) : ''
+      })
+      return missing ? null : filled
+    })
+    .filter((x): x is string => x !== null && x.trim() !== '')
+    .join(' · ')
+}
+
+async function withCounts(menu: SiteMenu): Promise<SiteMenu> {
+  const needs = menu.top.some((m) => (m.sub ?? []).some((s) => s.d?.includes('{')))
+  if (!needs) return menu
+  const counts = await menuCounts()
+  return {
+    ...menu,
+    top: menu.top.map((m) => (m.sub ? { ...m, sub: m.sub.map((s) => (s.d ? { ...s, d: fillCounts(s.d, counts) } : s)) } : m)),
+  }
+}
+
 export const getMenu = cache(async (): Promise<SiteMenu> => {
   try {
     const res = await fetch(`${ORIGIN}/api/content/menu`, {
       next: { revalidate: 60, tags: [MENU_TAG] },
       signal: AbortSignal.timeout(2000),
     })
-    if (!res.ok) return CODE_MENU
+    if (!res.ok) return withCounts(CODE_MENU)
     const body = (await res.json()) as { data?: { top?: ApiNode[]; footer?: FooterLink[] } }
     const top = body.data?.top ?? []
-    if (!top.length) return CODE_MENU
-    return { top: top.map(toMenuItem), footer: body.data?.footer ?? [], source: 'cms' }
+    if (!top.length) return withCounts(CODE_MENU)
+    return withCounts({ top: top.map(toMenuItem), footer: body.data?.footer ?? [], source: 'cms' })
   } catch {
-    return CODE_MENU
+    return withCounts(CODE_MENU)
   }
 })
 

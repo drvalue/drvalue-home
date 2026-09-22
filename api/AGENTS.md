@@ -168,6 +168,16 @@ src/
     `restorable: false` 와 그 기능의 거절 코드를 준다. 한 건 조회의 `restorable` · `restore_note` 와 되돌리기 거절은
     한 규칙(`refusal`)을 본다. 만들기 이력(before 없음)은 `ADMIN_REVISION_NO_BEFORE`.
   - 보기 범위: 전체 권한은 전부, 그 밖은 핸들러의 `canSee`(글은 만질 수 있는 게시판만 · 권한 이력은 전체 권한만).
+- **본문 HTML 소독(`common/html/sanitize-body.ts`)** — 게시판 본문 · 페이지 글 richtext · 팝업 내용이 같은 규칙이다.
+  편집기(Quill)가 만드는 태그만 남기고(p·br·h2·h3·강조·목록·인용·a·img·span, class 는 ql-align·ql-indent 만),
+  script·style·iframe·이벤트 속성·`javascript:`·`data:` 는 버린다. 그림은 `/api/content/assets/<uuid>` 와 사이트 그림
+  경로(screens·photo·brand·img·icon·images, patent2·3 제외)만. 새 창 링크는 `rel="noopener noreferrer"`.
+  게시판 본문은 **저장할 때와 공개로 낼 때 둘 다** 거른다(옛 행·DB 직접 수정이 저장 길을 비켜 간다). 변경 이력
+  되돌리기도 저장과 같이 거른다(`restoreSnapshot` — 이력의 본문은 소독 규칙이 생기기 전 글일 수 있다).
+  - 엔티티는 풀어서 본다 — 끄면 `jav&#x61;script:` 가 주소 검사를 지나간다(실측). 편집기 글이 바이트 그대로
+    돌아오도록 NBSP 를 `&nbsp;` 로, `<br />`·`<img … />` 를 `<br>`·`<img …>` 로 되돌린다.
+  - 태그 없는 맨 글자(옛 글)는 손대지 않는다 — 화면이 이스케이프한다.
+  - 규칙을 바꾸면 `node scripts/sanitize-bodies.js`(보기) → `--apply`(고침, 두 번째는 0 행)로 저장된 본문을 맞춘다.
 - **페이지 글(`core/page`)** — 게시판이 아닌 장의 글. 한 장 · 한 언어가 `page_contents` 한 행(jsonb).
   칸 구조(스키마)는 `core/page/schema/<key>.schema.ts` 한 곳에만 있고, 관리 화면은 그 구조를 받아
   폼을 그린다. 저장은 `service/page-content.ts` 가 검사한다: 모르는 칸 거부 · 길이·필수·pattern ·
@@ -182,7 +192,7 @@ src/
   - **소개 장 15장**(E7 — 회사 안내·비전, M.AX 소개·PCB·화장품·MES AI·스마트 팩토리, AI 솔루션 개발·오토폼·
     컷온·CADON·채팅·한건·GrowTalk·GrowXD)은 `schema/intro-pages.schema.ts` 한 파일이다. 칸 묶음은
     `schema/parts.ts`(머리말·요약·화면 판·큰 문장·카드·기능 줄·게이지 탭·전/후)를 조립한다 — web 의
-    `app/page/pageContentParts.ts` 가 같은 모양의 형·변환을 갖는다. 씨앗은 `db/migrations/0008`.
+    `app/(site)/page/pageContentParts.ts` 가 같은 모양의 형·변환을 갖는다. 씨앗은 `db/migrations/0008`.
     허브 둘(M.AX 소개·AI 솔루션 개발)의 제품 카드·구역 제목은 하위 장의 머리말·요약을 읽는다(두 곳에 안 적는다).
     움직이는 시연·실제 응답 기록(한건 「모르면 모른다」 등)·흐름도(FlowBand)는 코드다.
   - 표 이름이 `pages` 가 아닌 이유: Directus 를 시험할 때 만든 `pages`·`page_blocks` 가 남은 DB 가 있다.
@@ -235,8 +245,8 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 36 (6 + 9 + 5 + 16)
-bash scripts/verify.sh          # 322 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
+bash scripts/verify.sh          # 331 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```

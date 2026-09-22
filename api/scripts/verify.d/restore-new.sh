@@ -3,6 +3,7 @@
 # 변경 이력 되돌리기 — 글·문의 밖의 표(R1). 페이지 글 · 메뉴 · 검색 정보(page_meta) · 메인 배너 · 메인 팝업을
 # 바꾸고 → 이력으로 되돌리고 → 내용이 돌아왔는지 본다. 되돌리는 글도 그 기능의 저장 규칙을 거친다(틀린 이력은
 # 합니다체 400), 지워진 그림은 비우고 알린다, 인사·마케팅은 되돌리지 못한다. 바꾼 것은 전부 원래대로 돌린다.
+# 글 되돌리기는 이력의 본문이 소독 전 글이어도 저장과 같이 거른다.
 #
 # 중간에 죽어도 원래대로 돌리는 명령은 CLEANUP 앞에 붙인다 — 뒷정리는 순서대로 돌고, 본체가 먼저 검사 계정을
 # 지우면 저장이 막힌다. 정상으로 돌려 두었으면(…_DONE=1) 건너뛴다.
@@ -40,6 +41,25 @@ rn_upload() { # 제목 → 파일 id (1×1 PNG)
   curl -s -X POST -H "$AUTH" -F "file=@$RN_TMP/$1.png;type=image/png" -F "title=$1" "$API/api/admin/files" --max-time 60 \
     | pick 'print((d.get("data") or {}).get("id",""))'
 }
+
+# ── 글: 이력의 본문이 소독 전 글이어도 되돌리면 저장과 같이 거른다(S1 소독 규칙)
+RN_POST=$(SLUG="$RUN-rn-post" python3 -c '
+import json, os
+print(json.dumps({"board": "notice", "slug": os.environ["SLUG"], "status": "draft", "published_date": "2026-01-01",
+                  "translations": [{"languages_code": "ko-KR", "title": "되돌리기 소독 검사", "body": "<p>처음</p>"}]}))' \
+  | admj POST /posts | pick 'print((d.get("data") or {}).get("id",""))')
+if [ -z "$RN_POST" ]; then
+  na "되돌리기: 글 본문 소독" "검사 글을 못 만들었다"
+else
+  CLEANUP=("curl -s -o /dev/null -X DELETE -H \"$AUTH\" \"$API/api/admin/posts/$RN_POST\" --max-time 30" "${CLEANUP[@]}")
+  # 만든 이력의 after(글 화면 모양)에 script 를 심은 「고침」 이력 한 줄 — 소독 전 옛 글이 이력에 남은 경우.
+  RN_POST_BAD=$(dbq "insert into admin_revisions(actor,action,collection,item_id,before,after) select '$VERIFY_EMAIL','update','posts',item_id, jsonb_set(after, '{translations,0,body}', to_jsonb('<p>안전</p><script>alert(1)</script><img src=x onerror=alert(1)>'::text)), null from admin_revisions where collection='posts' and item_id='$RN_POST' and action='create' order by id desc limit 1 returning id")
+  check "글: script 가 든 이력도 되돌리기는 된다" "200 -" "$(rn_restore "$RN_POST_BAD")"
+  check "글: 되돌린 본문에서 script·onerror 가 빠진다" "clean 안전" \
+    "$(adm "/posts/$RN_POST" | pick 'b=next((t.get("body") or "" for t in (d.get("data") or {}).get("translations") or [] if t.get("languages_code")=="ko-KR"), ""); print(("dirty" if ("script" in b or "onerror" in b) else "clean"), "안전" if "안전" in b else b)')"
+  curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$RN_POST" --max-time 30
+  check "글: 검사 글이 남지 않는다" "0" "$(dbq "select count(*) from posts where slug='$RUN-rn-post'")"
+fi
 
 # ── 페이지 글(오시는 길 · 한국어)
 RN_PG="company-location"

@@ -348,7 +348,7 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 
 ## 주소에서 `.php` 를 뺐다
 
-폴더 이름이 곧 주소다. `app/page/company/intro/page.tsx` →
+폴더 이름이 곧 주소다. `app/(site)/page/company/intro/page.tsx` →
 `/page/company/intro`. 옛 주소 `…intro.php` 는 308(영구)로 여기 넘어온다.
 
 **옛 주소를 버리지 않는 이유**는 검색에 쌓여 있어서다. **영구(308)로 주는
@@ -374,7 +374,7 @@ PHP 는 `strpos($current_uri, $sub['l'])` 로 현재 위치를 봤다. `.php` �
 
 ## 채팅 위젯은 도메인 락에 걸린다
 
-`footer.php` 와 `web/app/layout.tsx` 가 같이 싣는 `workspace.growchat.co.kr/widget.js`
+`footer.php` 와 `web/app/(site)/layout.tsx` 가 같이 싣는 `workspace.growchat.co.kr/widget.js`
 는 **현재 도메인이 허용 목록에 있어야만 화면에 뜬다.**
 
 ```js
@@ -586,7 +586,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 322 통과 · 판정불가 1 |
+| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 331 통과 · 판정불가 1 |
 | `api: node --test …/transactional.test.mjs …/authorize.test.mjs …/last-admin.test.mjs` | 트랜잭션·서비스 예외 데코레이터 · IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 20/20 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에

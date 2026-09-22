@@ -3,6 +3,7 @@ import { BOARDS, PostEntity } from '../../../common/entity/post.entity';
 import { PostTranslationEntity } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
+import { sanitizeBody } from '../../../common/html/sanitize-body';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
@@ -309,10 +310,15 @@ export class AdminPostDefaultService {
     await this.postTranslationDefaultRepository.replaceForPost(
       ctx,
       id,
-      ((snap.translations as Snap[] | undefined) ?? []).map(
-        (t) =>
-          fromSnap(tCols, t, ['id', 'posts']) as Partial<PostTranslationEntity>,
-      ),
+      ((snap.translations as Snap[] | undefined) ?? []).map((t) => {
+        const row = fromSnap(tCols, t, [
+          'id',
+          'posts',
+        ]) as Partial<PostTranslationEntity>;
+        // 저장과 같은 소독 — 이력의 본문은 소독 규칙이 생기기 전 글일 수 있다.
+        if ('body' in row) row.body = sanitizeBody(row.body);
+        return row;
+      }),
     );
 
     await this.postFileDefaultRepository.deleteByPost(ctx, id);
@@ -470,7 +476,7 @@ export class AdminPostDefaultService {
       ...dto.translations.filter((t) => !isKo(t)),
     ];
     for (const t of ordered) {
-      const m = BODY_IMAGE_RE.exec(t.body ?? '');
+      const m = BODY_IMAGE_RE.exec(sanitizeBody(t.body) ?? '');
       if (m) return m[1].toLowerCase();
     }
     return null;
@@ -483,7 +489,8 @@ export class AdminPostDefaultService {
       languagesCode: t.languages_code,
       title: t.title ?? null,
       summary: t.summary ?? null,
-      body: t.body ?? null,
+      // 관리자 글이라도 공개 화면에 HTML 로 나간다 — 편집기가 만드는 태그만 남겨 저장한다.
+      body: sanitizeBody(t.body),
       caseCategoryLabel: t.case_category_label ?? null,
       faqCategory: t.faq_category ?? null,
       seoTitle: t.seo_title ?? null,

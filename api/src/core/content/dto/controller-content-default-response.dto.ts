@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { PostEntity } from '../../../common/entity/post.entity';
+import { sanitizeBody } from '../../../common/html/sanitize-body';
 import type { PublicPostRow } from '../repository/post-default.repository';
 
 const asset = (id: string | null | undefined): string | null =>
@@ -122,7 +123,8 @@ export class ControllerContentDefaultPostResponseDto {
       no_index: r.noIndex,
       updated_on: r.updatedOn ? new Date(r.updatedOn).toISOString() : null,
     };
-    if (withBody) out.body = t?.body ?? null;
+    // 저장할 때 이미 다듬지만, 되돌리기·옛 행·DB 직접 수정이 그 길을 비켜 갈 수 있다 — 내보낼 때 한 번 더.
+    if (withBody) out.body = sanitizeBody(t?.body);
     return out;
   }
 }

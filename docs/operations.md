@@ -24,6 +24,8 @@ docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_ST
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0006-menu.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0007-seo.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0008-intro-pages-seed.sql
+# 0009 는 web 이 메뉴 자리표시를 채우게 된 뒤에 돈다 — 옛 web 에 먼저 돌리면 머리글에 {case} 가 그대로 보인다.
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0009-menu-count-tokens.sql
 
 # 3. 백엔드
 cd api
@@ -78,8 +80,8 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 
 ```bash
 cd api  && npm run typecheck && npm run build
-        && node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 36 (6 + 9 + 5 + 16)
-        && bash scripts/verify.sh                # 322 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+        && node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
+        && bash scripts/verify.sh                # 331 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
         && python3 scripts/check-pattern.py      # 모듈 모양 문제 0 (서버 없이 돈다)
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-copy.py         # 화면으로 가는 문구의 반말 0건 (서버 없이 돈다)

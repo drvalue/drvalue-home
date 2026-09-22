@@ -1,4 +1,8 @@
 import type { ImageValue, LinkValue, PageField } from '../schema/page-schema';
+import {
+  BLOCKED_SITE_IMAGE_RE,
+  SITE_IMAGE_PATH_RE,
+} from '../../../common/html/sanitize-body';
 import { sanitizeRichtext } from './richtext';
 
 /**
@@ -23,13 +27,9 @@ export class PageContentError extends Error {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HREF_RE = /^(\/(?!\/)|https:\/\/|mailto:|tel:)[^\s]*$/i;
-/**
- * 사이트에 이미 있는 그림(web/public 아래). 기본 글이 옛 화면의 그림을 그대로 가리키는 자리다.
- * 폴더를 좁혀 두고 `..` 를 막는다. 개인정보가 찍힌 증서 원본(patent2·patent3)은 가리키지 못한다.
- */
-const SITE_IMG_RE =
-  /^\/(screens|photo|brand|img|icon|images)\/[A-Za-z0-9._\-/]+\.(png|jpe?g|webp|gif|svg)$/i;
-const BLOCKED_IMG_RE = /(^|\/)patent[23]\.png$/i;
+// 사이트에 이미 있는 그림(web/public 아래) — 기본 글이 옛 화면 그림을 가리키는 자리. 규칙은 본문 그림과 같다.
+const SITE_IMG_RE = SITE_IMAGE_PATH_RE;
+const BLOCKED_IMG_RE = BLOCKED_SITE_IMAGE_RE;
 const isSize = (n: unknown): n is number =>
   typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 10000;
 

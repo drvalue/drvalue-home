@@ -35,8 +35,8 @@
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
-| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) | 36/36 |
-| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지·SEO·메인 배너·팝업) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 322 통과 · 판정불가 1 |
+| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) | 43/43 |
+| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지·SEO·메인 배너·팝업) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 331 통과 · 판정불가 1 |
 | `api/scripts/check-pattern.py` | 모듈마다 기준 모듈(`admin-post`)의 모양인가 — 서비스 공개 메서드의 `@ServiceException`·JSDoc, 서비스 안 질의 조립 0, 핸들러마다 `@ApiOperation`·응답 문서, 저장소 `BaseRepository` 상속, `app-config` 밖 `process.env` 0. `--table` 은 표만 | 문제 0 |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |
 | `web/scripts/check-pages.py` | 새로 채운 장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 110/110 (`NEXT_ORIGIN` 으로 다른 포트) |
@@ -45,7 +45,7 @@
 | `web/scripts/check-assets.py` | 화면이 가리키는 파일이 실제로 있나 | 빠진 것 0 |
 | `web/scripts/check-boards.py` | 공지·보도·뉴스가 JS 없이 서버 HTML 에 있나 · 글 주소·canonical · 옛 ?id= 308 · 없는 글 404 | 35/35 (`NEXT_ORIGIN`) |
 | `web/scripts/check-src.py` | 페이지 CSS 문자열에 역따옴표가 섞였나 | 0건 |
-| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (775곳) |
+| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (806곳) |
 | `npx tsc --noEmit` · `npx next build` | 운영 빌드가 되는가 | 종료코드 0 |
 
 **못 돌린 검사는 통과가 아니라 판정 불가다.** 값을 0 으로 적지 않고
@@ -96,9 +96,9 @@
 
 - 상단 메뉴·현재 위치 줄·옆 차례표·바닥글 링크: `web/lib/menu-cms.ts` 의 `getMenu()`(관리 화면
   「사이트 › 메뉴」 값, 예비는 `web/lib/menu.ts`). 사이트맵은 아직 `web/lib/menu.ts` 를 읽는다.
-- 제품 기능·화면 캡처 설명: `web/app/page/business/max/maxContent.ts`,
-  `web/app/page/service/solutionContent.ts`
-- 수행 과제: `web/app/page/portfolio/portfolio/list.ts`
+- 제품 기능·화면 캡처 설명: `web/app/(site)/page/business/max/maxContent.ts`,
+  `web/app/(site)/page/service/solutionContent.ts`
+- 수행 과제: `web/app/(site)/page/portfolio/portfolio/list.ts`
 
 ## 모듈 경계
 

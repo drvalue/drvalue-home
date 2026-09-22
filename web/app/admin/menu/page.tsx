@@ -142,7 +142,18 @@ export default function MenuPage() {
           <>
             <div className="dva_field">
               <label htmlFor={`${id}-kod`}>한 줄 설명 (한국어)</label>
-              <input id={`${id}-kod`} type="text" maxLength={LIMITS.desc} value={c.koDesc} onChange={(e) => set({ koDesc: e.target.value })} />
+              <input
+                id={`${id}-kod`}
+                type="text"
+                maxLength={LIMITS.desc}
+                value={c.koDesc}
+                aria-describedby={`${id}-kod-help`}
+                onChange={(e) => set({ koDesc: e.target.value })}
+              />
+              <small id={`${id}-kod-help`}>
+                글 수는 손으로 적지 말고 자리표시로 적습니다. 사이트가 공개된 글 수로 바꿉니다 — {'{patent.registered}'} 특허 등록 ·{' '}
+                {'{patent.applied}'} 특허 출원 · {'{patent}'} 특허 전체 · {'{copyright}'} 저작권 · {'{case}'} 수행실적.
+              </small>
             </div>
             <div className="dva_field">
               <label htmlFor={`${id}-end`}>한 줄 설명 (English)</label>

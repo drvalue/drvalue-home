@@ -86,13 +86,14 @@ export const MENU_ITEMS: MenuItem[] = [
     // 하위가 하나뿐이지만 둔다. 이것만 없으면 다른 메뉴는 호버할 때 판이
     // 내려오는데 여기만 아무것도 안 떠서 막대가 고장 난 것처럼 보인다.
     title: '수행실적', link: '/page/portfolio/portfolio', match: ['/page/portfolio/'],
-    sub: [{ t: '주요 수행실적', l: '/page/portfolio/portfolio', d: '9건의 과제와 기간·발주 유형', neu: true }],
+    // 설명의 숫자는 {…} 자리표시 — getMenu() 가 공개 게시판의 글 수로 채운다(화면 숫자는 자료에서 센다).
+    sub: [{ t: '주요 수행실적', l: '/page/portfolio/portfolio', d: '{case}건의 과제와 기간·발주 유형', neu: true }],
   },
   {
     title: '기술력', link: '/page/tech/patent', match: ['/page/tech/'],
     sub: [
-      { t: '특허', l: '/page/tech/patent', d: '등록 1건 · 출원 5건' },
-      { t: '저작권', l: '/page/tech/copyright', d: '프로그램 저작권 5건' },
+      { t: '특허', l: '/page/tech/patent', d: '등록 {patent.registered}건 · 출원 {patent.applied}건' },
+      { t: '저작권', l: '/page/tech/copyright', d: '프로그램 저작권 {copyright}건' },
     ],
   },
   {

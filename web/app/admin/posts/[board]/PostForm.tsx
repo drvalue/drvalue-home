@@ -230,8 +230,12 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       file_ids: post.files.map((f) => f.id),
     }
     try {
-      if (id === undefined) await adminJson('/api/admin/posts', 'POST', body)
-      else await adminJson(`/api/admin/posts/${id}`, 'PUT', body)
+      // 저장하고 그 자리에 남는다(Strapi·Payload·WordPress 와 같다) — 쓰던 곳을 안 잃고 사이트에서 바로 확인한다.
+      // 새 글은 저장된 글의 주소로 바꿔 앉는다(다시 저장하면 새 글이 또 생기지 않게). 목록은 머리의 「목록」 단추.
+      const saved =
+        id === undefined
+          ? await adminJson<{ data?: PostFull }>('/api/admin/posts', 'POST', body)
+          : await adminJson<{ data?: PostFull }>(`/api/admin/posts/${id}`, 'PUT', body)
       initial.current = JSON.stringify(post)
       setDirty(false)
       const scheduled = post.publish_at && new Date(post.publish_at) > new Date()
@@ -242,7 +246,18 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             ? '저장했습니다. 사이트에 반영됐습니다.'
             : '초안으로 저장했습니다. 사이트에는 아직 보이지 않습니다.',
       )
-      router.push(`/admin/posts/${board!.key}`)
+      const newId = saved?.data?.id
+      if (id === undefined) {
+        router.replace(newId ? `/admin/posts/${board!.key}/${newId}` : `/admin/posts/${board!.key}`)
+      } else {
+        // api 가 정한 값(주소·대표 그림·고친 날)을 다시 받아 기준을 맞춘다.
+        const fresh = await adminFetch<{ data: PostFull }>(`/api/admin/posts/${id}`)
+        const p = fresh.data
+        for (const l of LANGS) if (!p.translations.some((x) => x.languages_code === l.code)) p.translations.push(blankTranslation(l.code))
+        start(p)
+        setThumbPreview(p.thumbnail_url)
+        setBusy(false)
+      }
     } catch (e) {
       const code = e instanceof AdminError ? e.code : null
       if (code === 'ADMIN_POST_NEED_KO') {

@@ -3,7 +3,7 @@ import { CLEAN_PATHS } from '@/lib/phpRoutes.mjs'
 import { MENU_ITEMS } from '@/lib/menu'
 import { pageOverrides, SITE_ORIGIN } from '@/lib/seo'
 import type { CmsPost } from '@/lib/cms'
-import { BOARDS, detailPath, isBoardKey } from './page/support/board/boards'
+import { BOARDS, detailPath, isBoardKey } from './(site)/page/support/board/boards'
 
 /**
  * 검색엔진에게 주는 페이지 목록.
