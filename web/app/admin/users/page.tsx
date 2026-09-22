@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { adminFetch, adminJson } from '@/lib/admin'
 import { AdminUserRow, ROLE_HINT, ROLE_LABEL, when } from '@/lib/admin-extra'
+import { useToast } from '../ui/toast'
 import './users.css'
 
 const ROLES: AdminUserRow['role'][] = ['admin', 'marketing', 'hr']
@@ -16,7 +17,7 @@ export default function UsersPage() {
   const [rows, setRows] = useState<AdminUserRow[] | null>(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null)
+  const toast = useToast()
 
   const load = useCallback(async () => {
     try {
@@ -37,8 +38,7 @@ export default function UsersPage() {
     try {
       const r = await adminJson<{ data: AdminUserRow }>(`/api/admin/users/${encodeURIComponent(email)}`, 'PATCH', { role })
       setRows((xs) => (xs ? xs.map((x) => (x.email === email ? r.data : x)) : xs))
-      setDone(email)
-      setTimeout(() => setDone((d) => (d === email ? null : d)), 1500)
+      toast(`${r.data.name || email} 님의 범위를 바꿨습니다. 지금 범위는 ${ROLE_LABEL[role]}입니다.`)
     } catch (e) {
       setError((e as Error).message)
       load()
@@ -92,7 +92,6 @@ export default function UsersPage() {
                         <option key={r} value={r}>{ROLE_LABEL[r]}</option>
                       ))}
                     </select>
-                    {done === u.email && <span className="dvu_saved">저장됨</span>}
                   </label>
                 </td>
                 <td>

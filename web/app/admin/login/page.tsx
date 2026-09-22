@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import './login.css'
 
 /**
@@ -23,12 +25,31 @@ const LOGIN_ERRORS: Record<string, string> = {
 }
 const LOGIN_ERROR_DEFAULT = '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.'
 
+const API = process.env.API_ORIGIN || 'http://localhost:3500'
+
+/**
+ * 이미 로그인한 채로 이 주소에 오면 관리 화면으로 보낸다. 세션이 살아 있는지는 api 만 안다
+ * (서명 키가 api 에만 있다) — 받은 쿠키를 그대로 /me 에 물어본다. 값은 어디에도 남기지 않는다.
+ */
+async function signedIn(): Promise<boolean> {
+  const session = (await cookies()).get('dv_admin')?.value
+  if (!session) return false
+  try {
+    const res = await fetch(`${API}/api/admin/auth/me`, { headers: { cookie: `dv_admin=${session}` }, cache: 'no-store' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export default async function AdminLogin({
   searchParams,
 }: {
   searchParams: Promise<{ signed_out?: string; error?: string }>
 }) {
   const { signed_out, error } = await searchParams
+  // 로그아웃 직후·오류 안내는 그대로 보여 준다.
+  if (!signed_out && !error && (await signedIn())) redirect('/admin')
   const errorText = error ? (LOGIN_ERRORS[error] ?? LOGIN_ERROR_DEFAULT) : null
   return (
     <main className="dva_auth">

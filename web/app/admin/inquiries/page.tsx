@@ -2,22 +2,28 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminFetch, adminJson, INQUIRY_STATUS, Page } from '@/lib/admin'
+import { useMe } from '../ui/me'
+import { pageOf, useQuery } from '../ui/query'
+import SearchBox from '../ui/SearchBox'
+import { useToast } from '../ui/toast'
 import { Assignee, InquiryDetail, replyHref, when } from './types'
 import './inquiries.css'
 
 /**
  * 문의. 왼쪽 목록 · 오른쪽 상세(좁으면 아래). 상태·담당자는 고르면 바로 저장되고,
  * 메모는 「저장」을 눌러야 저장된다. 답장은 메일 앱으로 — 제목·원문 인용이 채워진다.
+ * 거르기·검색·쪽·고른 문의(?id=)는 주소에 남는다 — 주소를 건네면 같은 문의가 열린다.
  */
 export default function InquiriesPage() {
-  const [status, setStatus] = useState('')
-  const [assignee, setAssignee] = useState('')
-  const [q, setQ] = useState('')
-  const [qInput, setQInput] = useState('')
-  const [page, setPage] = useState(1)
+  const query = useQuery()
+  const status = query.get('status')
+  const assignee = query.get('assignee')
+  const q = query.get('q')
+  const page = pageOf(query.get('page'))
+  const selId = Number(query.get('id')) || null
+  const { refreshCounts } = useMe()
   const [rows, setRows] = useState<Page<InquiryDetail> | null>(null)
   const [people, setPeople] = useState<Assignee[]>([])
-  const [selId, setSelId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const detail = useRef<HTMLElement>(null)
 
@@ -48,7 +54,7 @@ export default function InquiriesPage() {
   const pages = rows ? Math.max(1, Math.ceil(rows.total / rows.pageSize)) : 1
 
   function pick(id: number) {
-    setSelId(id)
+    query.set({ id })
     // 좁은 화면에서는 상세가 목록 아래에 있다 — 거기로 내려 준다.
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
       requestAnimationFrame(() => detail.current?.scrollIntoView({ block: 'start' }))
@@ -57,6 +63,7 @@ export default function InquiriesPage() {
 
   function replace(next: InquiryDetail) {
     setRows((r) => (r ? { ...r, data: r.data.map((x) => (x.id === next.id ? next : x)) } : r))
+    refreshCounts()
   }
 
   const nameOf = (email: string | null) => {
@@ -73,15 +80,7 @@ export default function InquiriesPage() {
       </div>
 
       <div className="dva_tools">
-        <select
-          id="dvi-status"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value)
-            setPage(1)
-          }}
-          aria-label="상태로 거르기"
-        >
+        <select id="dvi-status" value={status} onChange={(e) => query.set({ status: e.target.value, page: null, id: null })} aria-label="상태로 거르기">
           <option value="">전체 상태</option>
           {Object.entries(INQUIRY_STATUS).map(([k, v]) => (
             <option key={k} value={k}>
@@ -89,39 +88,31 @@ export default function InquiriesPage() {
             </option>
           ))}
         </select>
-        <select
-          id="dvi-assignee"
-          value={assignee}
-          onChange={(e) => {
-            setAssignee(e.target.value)
-            setPage(1)
-          }}
-          aria-label="담당자로 거르기"
-        >
+        <select id="dvi-assignee" value={assignee} onChange={(e) => query.set({ assignee: e.target.value, page: null, id: null })} aria-label="담당자로 거르기">
           <option value="">모든 담당자</option>
           <option value="me">내 담당</option>
           <option value="none">미지정</option>
         </select>
-        <input
-          id="dvi-q"
-          type="search"
-          placeholder="이름·회사·연락처·내용"
-          aria-label="문의 찾기"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              setQ(qInput.trim())
-              setPage(1)
-            }
-          }}
-        />
+        <SearchBox id="dvi-q" value={q} onSearch={(v) => query.set({ q: v, page: null, id: null })} placeholder="이름·회사·연락처·내용" label="문의 찾기" />
       </div>
-      {error && <div className="dva_error">{error}</div>}
+      {error && (
+        <div className="dva_error" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="dvi_split">
         <div className="dvi_listwrap">
-          {rows && rows.data.length === 0 && <div className="dva_empty">문의가 없습니다.</div>}
+          {rows && rows.data.length === 0 && (
+            <div className="dva_empty">
+              <p>{status || assignee || q ? '조건에 맞는 문의가 없습니다.' : '문의가 없습니다.'}</p>
+              {(status || assignee || q) && (
+                <button type="button" className="dva_btn" onClick={() => query.set({ status: null, assignee: null, q: null, page: null, id: null })}>
+                  조건 지우기
+                </button>
+              )}
+            </div>
+          )}
           <ul className="dvi_list">
             {rows?.data.map((x) => (
               <li key={x.id}>
@@ -149,13 +140,13 @@ export default function InquiriesPage() {
             ))}
           </ul>
           <div className="dva_pager">
-            <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => query.set({ page: page - 1, id: null })}>
               이전
             </button>
             <span>
               {page} / {pages}
             </span>
-            <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+            <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => query.set({ page: page + 1, id: null })}>
               다음
             </button>
           </div>
@@ -164,8 +155,10 @@ export default function InquiriesPage() {
         <aside ref={detail} className="dvi_detail" aria-label="문의 상세">
           {sel ? (
             <Detail key={sel.id} item={sel} people={people} onSaved={replace} />
+          ) : selId && rows ? (
+            <div className="dva_empty">이 쪽 목록에 없는 문의입니다. 거르기나 쪽을 바꿔 보세요.</div>
           ) : (
-            <div className="dva_empty">왼쪽 목록에서 문의를 고르면 내용이 여기에 나옵니다.</div>
+            <div className="dva_empty">목록에서 문의를 고르면 내용이 여기에 나옵니다.</div>
           )}
         </aside>
       </div>
@@ -182,19 +175,18 @@ function Detail({
   people: Assignee[]
   onSaved: (next: InquiryDetail) => void
 }) {
+  const toast = useToast()
   const [note, setNote] = useState(item.note ?? '')
-  const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function patch(body: Record<string, unknown>, done: string) {
     setBusy(true)
     setErr('')
-    setMsg('')
     try {
       const r = await adminJson<{ data: InquiryDetail }>(`/api/admin/inquiries/${item.id}`, 'PATCH', body)
       onSaved(r.data)
-      setMsg(done)
+      toast(done)
     } catch (e) {
       setErr((e as Error).message)
     } finally {
@@ -298,12 +290,11 @@ function Detail({
         </div>
       </div>
 
-      {msg && (
-        <div className="dva_notice" role="status">
-          {msg}
+      {err && (
+        <div className="dva_error" role="alert">
+          {err}
         </div>
       )}
-      {err && <div className="dva_error">{err}</div>}
     </div>
   )
 }

@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminFetch, Page } from '@/lib/admin'
+import InlineConfirm from '../ui/InlineConfirm'
+import { pageOf, useQuery } from '../ui/query'
+import SearchBox from '../ui/SearchBox'
+import { useToast } from '../ui/toast'
 import {
   ACCEPT,
   AdminFile,
@@ -26,20 +30,33 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 /**
- * 미디어. 올리기(여러 개 · 끌어다 놓기) · 형식 · 검색 · 이름 · 주소 복사 · 지우기.
+ * 미디어. 올리기(여러 개 · 끌어다 놓기) · 형식 · 검색 · 이름 · 주소 복사 · 삭제.
  * 글에서 쓰는 파일은 바로 안 지워진다 — 경고를 보고 한 번 더 눌러야 한다.
+ * 형식·검색·쪽은 주소에 남는다. 좁은 화면에서는 상세가 목록 아래에 열려서 그리로 내려 준다.
  */
 export default function MediaPage() {
-  const [filter, setFilter] = useState<Filter>('')
-  const [q, setQ] = useState('')
-  const [qInput, setQInput] = useState('')
-  const [page, setPage] = useState(1)
+  const query = useQuery()
+  const filter = query.get('type') as Filter
+  const q = query.get('q')
+  const page = pageOf(query.get('page'))
+  const toast = useToast()
   const [rows, setRows] = useState<Page<AdminFile> | null>(null)
   const [error, setError] = useState('')
   const [sel, setSel] = useState<AdminFile | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [drag, setDrag] = useState(false)
   const input = useRef<HTMLInputElement>(null)
+  const detailBox = useRef<HTMLDivElement>(null)
+
+  function open(f: AdminFile) {
+    setSel(f)
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
+      requestAnimationFrame(() => {
+        detailBox.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        detailBox.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true })
+      })
+    }
+  }
 
   const load = useCallback(async () => {
     const qs = new URLSearchParams({ page: String(page) })
@@ -64,6 +81,7 @@ export default function MediaPage() {
     const list = Array.from(files)
     if (list.length === 0) return
     setJobs(list.map((f) => ({ name: f.name, state: 'up' })))
+    let ok = 0
     for (const [i, f] of list.entries()) {
       const set = (j: Partial<Job>) => setJobs((js) => js.map((x, k) => (k === i ? { ...x, ...j } : x)))
       if (tooLarge(f)) {
@@ -72,13 +90,16 @@ export default function MediaPage() {
       }
       try {
         await uploadMedia(f)
+        ok += 1
         set({ state: 'ok' })
       } catch (e) {
         set({ state: 'err', message: (e as Error).message })
       }
     }
-    setPage(1)
-    await load()
+    if (page !== 1) query.set({ page: null })
+    else await load()
+    if (ok > 0) toast(`${ok}개 파일을 올렸습니다.`)
+    if (ok < list.length) toast(`${list.length - ok}개는 올리지 못했습니다. 아래 목록에서 이유를 확인해 주세요.`, 'err')
   }
 
   const pages = rows ? Math.max(1, Math.ceil(rows.total / rows.pageSize)) : 1
@@ -94,7 +115,7 @@ export default function MediaPage() {
             type="file"
             multiple
             accept={ACCEPT}
-            className="dvm_hidden"
+            className="dva_sr"
             onChange={(e) => {
               if (e.target.files) upload(e.target.files)
               e.target.value = ''
@@ -115,29 +136,13 @@ export default function MediaPage() {
               role="tab"
               aria-selected={filter === f.key}
               className={`dva_tab${filter === f.key ? ' is-on' : ''}`}
-              onClick={() => {
-                setFilter(f.key)
-                setPage(1)
-              }}
+              onClick={() => query.set({ type: f.key, page: null })}
             >
               {f.label}
             </button>
           ))}
         </div>
-        <input
-          id="dvm-q"
-          type="search"
-          placeholder="이름으로 찾기"
-          aria-label="이름으로 찾기"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              setQ(qInput.trim())
-              setPage(1)
-            }
-          }}
-        />
+        <SearchBox id="dvm-q" value={q} onSearch={(v) => query.set({ q: v, page: null })} placeholder="이름으로 찾기" label="이름으로 찾기" />
       </div>
 
       {jobs.length > 0 && (
@@ -174,7 +179,16 @@ export default function MediaPage() {
           {drag && <div className="dvm_drop_hint">여기에 놓으면 올라갑니다.</div>}
           {rows && rows.data.length === 0 && (
             <div className="dva_empty">
-              {q || filter ? '찾는 파일이 없습니다.' : '아직 올린 파일이 없습니다. 파일을 끌어다 놓거나 「파일 올리기」를 눌러 주세요.'}
+              <p>{q || filter ? '찾는 파일이 없습니다.' : '아직 올린 파일이 없습니다. 파일을 끌어다 놓거나 「파일 올리기」를 눌러 주세요.'}</p>
+              {q || filter ? (
+                <button type="button" className="dva_btn" onClick={() => query.set({ q: null, type: null, page: null })}>
+                  조건 지우기
+                </button>
+              ) : (
+                <button type="button" className="dva_btn is-primary" onClick={() => input.current?.click()}>
+                  파일 올리기
+                </button>
+              )}
             </div>
           )}
           <ul className="dvm_grid">
@@ -185,7 +199,7 @@ export default function MediaPage() {
                   <button
                     type="button"
                     className={`dvm_card${sel?.id === f.id ? ' is-on' : ''}`}
-                    onClick={() => setSel(f)}
+                    onClick={() => open(f)}
                     aria-label={`${f.title ?? f.filename_download} 열기`}
                   >
                     <span className="dvm_thumb">
@@ -206,19 +220,23 @@ export default function MediaPage() {
             })}
           </ul>
           <div className="dva_pager">
-            <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => query.set({ page: page - 1 })}>
               이전
             </button>
             <span>
               {page} / {pages} · {rows?.total ?? 0}개
             </span>
-            <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+            <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => query.set({ page: page + 1 })}>
               다음
             </button>
           </div>
         </div>
 
-        {sel && <Detail key={sel.id} file={sel} onClose={() => setSel(null)} onChanged={load} />}
+        {sel && (
+          <div ref={detailBox} className="dvm_detail_wrap">
+            <Detail key={sel.id} file={sel} onClose={() => setSel(null)} onChanged={load} />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -226,6 +244,8 @@ export default function MediaPage() {
 
 function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => void; onChanged: () => Promise<void> }) {
   const kind = kindOf(file.type)
+  const toast = useToast()
+  const trigger = useRef<HTMLButtonElement>(null)
   const [title, setTitle] = useState(file.title ?? '')
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
@@ -239,7 +259,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
     setErr('')
     try {
       await renameMedia(file.id, title.trim())
-      setMsg('이름을 바꿨습니다.')
+      toast('이름을 바꿨습니다.')
       await onChanged()
     } catch (e) {
       setErr((e as Error).message)
@@ -251,7 +271,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
   async function copy() {
     try {
       await navigator.clipboard.writeText(publicUrl)
-      setMsg('주소를 복사했습니다.')
+      toast('주소를 복사했습니다.')
     } catch {
       // 클립보드를 못 쓰는 창 — 칸을 골라 둬서 손으로 복사하게 한다.
       const el = document.getElementById('dvm-url') as HTMLInputElement | null
@@ -265,6 +285,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
     setErr('')
     try {
       await deleteMedia(file.id, file.used > 0)
+      toast(`「${file.title || file.filename_download}」 파일을 삭제했습니다.`)
       onClose()
       await onChanged()
     } catch (e) {
@@ -276,7 +297,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
   return (
     <aside className="dvm_detail" aria-label="파일 상세">
       <div className="dvm_detail_head">
-        <h2>{file.title || file.filename_download}</h2>
+        <h2 tabIndex={-1}>{file.title || file.filename_download}</h2>
         <button type="button" className="dva_btn is-small" onClick={onClose}>
           닫기
         </button>
@@ -334,24 +355,26 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
 
       <div className="dvm_danger">
         {!confirm ? (
-          <button type="button" className="dva_btn is-danger" onClick={() => setConfirm(true)}>
-            지우기
+          <button ref={trigger} type="button" className="dva_btn is-danger" onClick={() => setConfirm(true)}>
+            삭제
           </button>
         ) : (
           <div className="dvm_confirm">
             <p>
               {file.used > 0
-                ? `글 ${file.used}곳에서 쓰는 파일입니다. 지우면 그 글의 대표 이미지와 첨부에서도 빠집니다.`
-                : '지우면 되돌릴 수 없습니다.'}
+                ? `글 ${file.used}곳에서 쓰는 파일입니다. 삭제하면 그 글의 본문 그림·대표 이미지·첨부에서도 빠집니다. 되돌릴 수 없습니다.`
+                : '삭제하면 되돌릴 수 없습니다.'}
             </p>
-            <div className="dvm_row">
-              <button type="button" className="dva_btn is-danger" disabled={busy} onClick={remove}>
-                {file.used > 0 ? '그래도 지우기' : '지우기'}
-              </button>
-              <button type="button" className="dva_btn" onClick={() => setConfirm(false)}>
-                취소
-              </button>
-            </div>
+            <InlineConfirm
+              message="이 파일을 삭제할까요?"
+              confirmLabel={file.used > 0 ? '그래도 삭제' : '삭제'}
+              busy={busy}
+              onConfirm={remove}
+              onCancel={() => {
+                setConfirm(false)
+                requestAnimationFrame(() => trigger.current?.focus())
+              }}
+            />
           </div>
         )}
       </div>

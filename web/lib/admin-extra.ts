@@ -1,3 +1,5 @@
+import { EMPLOYMENT_LABEL, INQUIRY_STATUS } from './admin'
+
 /**
  * 변경 이력 · 권한 화면의 타입과 헬퍼. lib/admin.ts 는 공용이라 여기 따로 둔다.
  */
@@ -130,9 +132,21 @@ export function htmlText(v: string): string {
     .trim()
 }
 
+/** 칸 값 → 사람이 읽는 말. 비교 표에 `published`·`faq` 같은 코드가 그대로 나오지 않게. */
+const VALUE_LABEL: Record<string, Record<string, string>> = {
+  status: { published: '공개', draft: '초안', ...INQUIRY_STATUS },
+  board: BOARD_LABEL,
+  role: ROLE_LABEL,
+  cert_state: { registered: '등록', applied: '출원' },
+  employment_type: EMPLOYMENT_LABEL,
+}
+const WHEN_KEYS = new Set(['publish_at', 'unpublish_at'])
+
 function show(key: string, v: unknown): string {
   if (v === null || v === undefined || v === '') return ''
   if (typeof v === 'boolean') return v ? '예' : '아니오'
+  if (typeof v === 'string' && VALUE_LABEL[key]?.[v]) return VALUE_LABEL[key][v]
+  if (typeof v === 'string' && WHEN_KEYS.has(key)) return when(v)
   if (key === 'body' && typeof v === 'string') return htmlText(v)
   if (key === 'files' && Array.isArray(v))
     return v.map((f) => String((f as { name?: string; id?: string }).name ?? (f as { id?: string }).id ?? '')).join(', ')
