@@ -148,3 +148,175 @@
   font-weight: 600;
   color: var(--dva-muted);
 }
+
+/* ── 접는 구역 · 접는 항목 ─────────────────────────────────────────────────────
+   긴 장(칸 100개 넘게)을 한 벽으로 펼치지 않는다. 맨 위 묶음·목록은 구역(첫째만 열림),
+   목록 항목은 한 줄 요약. 접힌 몸은 hidden 이라 탭 이동에서도 빠진다. */
+.dva .dvp_section {
+  min-width: 0;
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  background: var(--dva-panel);
+  scroll-margin-top: 84px;
+}
+.dva .dvp_section.is-open {
+  border-color: #cfd5de;
+}
+.dva .dvp_section_head {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+.dva .dvp_section_head button {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dva-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dva .dvp_section_head button:hover {
+  background: var(--dva-bg);
+}
+.dva .dvp_section_state {
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dva-accent);
+}
+.dva .dvp_section_state::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+}
+.dva .dvp_section.is-open .dvp_section_state::after {
+  transform: translateY(1px) rotate(225deg);
+}
+.dva .dvp_section_body {
+  display: grid;
+  gap: 12px;
+  padding: 4px 16px 16px;
+}
+.dva .dvp_section_body > .dvp_list,
+.dva .dvp_section_body > .dvp_group.is-top {
+  border: 0;
+  padding: 0;
+}
+.dva .dvp_group.is-top {
+  display: grid;
+  gap: 12px;
+}
+.dva .dvp_item_toggle {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--dva-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+.dva .dvp_item_toggle > .dvp_item_pick {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dva .dvp_item_toggle::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 10px;
+  border-right: 2px solid var(--dva-muted);
+  border-bottom: 2px solid var(--dva-muted);
+  transform: rotate(-45deg);
+}
+.dva .dvp_item.is-open > .dvp_item_head > .dvp_item_toggle::before {
+  transform: rotate(45deg);
+}
+.dva .dvp_item_body {
+  display: grid;
+  gap: 10px;
+}
+/* 위의 display: grid 가 브라우저 기본 [hidden]{display:none} 을 이긴다(실측: 접어도 높이 그대로) — 되돌린다. */
+.dva .dvp_section_body[hidden],
+.dva .dvp_item_body[hidden] {
+  display: none;
+}
+/* 구역 바로 가기 — 머리 막대 아래 한 줄. 좁은 화면에서는 가로로 민다(자기 칸 안에서만). */
+.dva .dvp_toc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.dva .dvp_toc ul {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.dva .dvp_toc li {
+  flex: none;
+}
+.dva .dvp_toc_link {
+  white-space: nowrap;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--dva-line);
+  border-radius: 999px;
+  background: var(--dva-panel);
+  color: var(--dva-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dva .dvp_toc_link:hover {
+  border-color: var(--dva-accent);
+  color: var(--dva-accent);
+}
+.dva .dvp_toc_all {
+  display: flex;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .dva .dvp_toc ul {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    width: 100%;
+  }
+  .dva .dvp_toc_link {
+    flex: none;
+    min-height: 44px;
+  }
+  .dva .dvp_toc_all .dva_btn {
+    min-height: 44px;
+  }
+  .dva .dvp_item_toggle {
+    min-height: 44px;
+  }
+}

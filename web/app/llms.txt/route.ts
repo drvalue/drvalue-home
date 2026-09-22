@@ -1,11 +1,11 @@
-import { MENU_ITEMS } from '@/lib/menu'
+import { getMenu } from '@/lib/menu-cms'
 import { ORG, SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN } from '@/lib/seo'
 import { cmsBoard } from '@/lib/cms'
-import { BOARDS, detailPath } from '../page/support/board/boards'
+import { BOARDS, detailPath } from '../(site)/page/support/board/boards'
 
 /**
  * /llms.txt — AI 답변 엔진이 읽는 사이트 요약(llmstxt.org 형식: 마크다운).
- * 새로 지은 말은 없다: 회사 정보는 푸터·Organization(lib/seo.ts), 장 설명은 메뉴의 한 줄(lib/menu.ts),
+ * 새로 지은 말은 없다: 회사 정보는 푸터·Organization(lib/seo.ts), 장 설명은 메뉴의 한 줄(getMenu — 관리 화면 값),
  * 소식은 게시된 공지·보도·뉴스 제목이다. 요청마다 만든다 — 글을 올리면 바로 들어간다.
  */
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,9 @@ export async function GET(): Promise<Response> {
     '',
   ]
 
-  for (const m of MENU_ITEMS) {
+  // 메뉴는 머리글과 같은 것(관리 화면 값, 설명의 숫자는 자료에서 센 값) — 코드의 예비를 직접 읽으면 자리표시가 그대로 나간다.
+  const { top } = await getMenu()
+  for (const m of top) {
     const subs = (m.sub ?? []).filter((s) => !s.hidden)
     lines.push(`## ${m.title}`, '')
     if (!subs.length) lines.push(`- [${m.title}](${SITE_ORIGIN}${m.link})`)

@@ -7,6 +7,7 @@ import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, isFuture, Page, PostR
 import InlineConfirm from '../../ui/InlineConfirm'
 import { pageOf, useQuery } from '../../ui/query'
 import SearchBox from '../../ui/SearchBox'
+import { useMe } from '../../ui/me'
 import { useToast } from '../../ui/toast'
 
 /** 목록에 대표 그림 칸이 있는 게시판. 나머지는 빈 칸을 두지 않는다. */
@@ -38,6 +39,7 @@ export default function PostListPage() {
   const schedule = SCHEDULES.includes(scheduleRaw) ? scheduleRaw : ''
   const page = pageOf(query.get('page'))
   const toast = useToast()
+  const { me } = useMe()
   const [rows, setRows] = useState<Page<PostRow> | null>(null)
   const [error, setError] = useState('')
   const [asking, setAsking] = useState<number | null>(null)
@@ -72,12 +74,29 @@ export default function PostListPage() {
     requestAnimationFrame(() => triggers.current.get(id)?.focus())
   }
 
+  /** 방금 지운 글을 되돌린다 — 그 글의 「삭제」 이력을 찾아 되돌리기(변경 이력 화면과 같은 api, 전체 권한만). */
+  async function undoRemove(r: PostRow) {
+    try {
+      const hist = await adminFetch<{ data: { id: number; action: string }[] }>(`/api/admin/revisions/item/posts/${r.id}`)
+      const del = hist.data.find((x) => x.action === 'delete')
+      if (!del) throw new Error('되돌릴 삭제 기록을 찾지 못했습니다. 변경 이력 화면에서 확인해 주세요.')
+      await adminFetch(`/api/admin/revisions/${del.id}/restore`, { method: 'POST' })
+      toast(`「${r.title || '제목 없음'}」 글을 되돌렸습니다.`)
+      await load()
+    } catch (e) {
+      toast((e as Error).message, 'err')
+    }
+  }
+
   async function remove(r: PostRow) {
     setBusy(true)
     try {
       await adminFetch(`/api/admin/posts/${r.id}`, { method: 'DELETE' })
       setAsking(null)
-      toast(`「${r.title || '제목 없음'}」 글을 삭제했습니다. 변경 이력에서 되돌릴 수 있습니다.`)
+      const name = `「${r.title || '제목 없음'}」 글을 삭제했습니다.`
+      // 되돌리기는 변경 이력 권한(전체 권한)이 있어야 한다. 없는 범위에는 할 수 없는 일을 안내하지 않는다.
+      if (me.role === 'admin') toast(name, 'ok', { label: '되돌리기', onClick: () => void undoRemove(r) })
+      else toast(`${name} 되돌리려면 전체 권한 관리자에게 요청해 주세요.`)
       await load()
     } catch (e) {
       setError((e as Error).message)
@@ -113,7 +132,8 @@ export default function PostListPage() {
   }
 
   const pages = rows ? Math.max(1, Math.ceil(rows.total / rows.pageSize)) : 1
-  const withThumb = WITH_THUMB.includes(board.key)
+  // 그림 칸은 이 쪽에 그림 있는 글이 하나라도 있을 때만 — 모두 비면 빈 칸이 제목 자리만 먹는다.
+  const withThumb = WITH_THUMB.includes(board.key) && Boolean(rows?.data.some((r) => r.thumbnail))
   const extra: { label: string; cell: (r: PostRow) => React.ReactNode; num?: boolean }[] = []
   if (board.key === 'patent' || board.key === 'copyright') extra.push({ label: '번호', cell: (r) => r.cert_no ?? '', num: true })
   if (board.key === 'case') extra.push({ label: '기간', cell: (r) => `${yymm(r.period_start)}~${yymm(r.period_end)}`, num: true })

@@ -78,6 +78,19 @@
 .dva .dvmn_title.is-static {
   cursor: default;
 }
+/* 줄을 누르면 고칠 칸이 펼쳐진다 — 그걸 알 수 있게 끝에 펼침 표시(열림은 aria-expanded 그대로). */
+.dva .dvmn_title[aria-expanded]::after {
+  content: '';
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--dva-muted);
+  border-bottom: 2px solid var(--dva-muted);
+  transform: translateY(-2px) rotate(45deg);
+}
+.dva .dvmn_title[aria-expanded='true']::after {
+  transform: translateY(2px) rotate(225deg);
+}
 .dva .dvmn_title:not(.is-static):hover {
   background: #f5f6f8;
 }

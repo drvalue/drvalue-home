@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adminFetch, adminJson, uploadFile } from '@/lib/admin'
 import { when } from '@/lib/admin-extra'
 import { MENU_ITEMS } from '@/lib/menu'
@@ -65,7 +65,18 @@ export default function SeoPage() {
   const all = useMemo(routes, [])
   const [overrides, setOverrides] = useState<Override[] | null>(null)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState('')
   const selected = all.find((r) => r.path === q.get('path')) ?? null
+  const detailBox = useRef<HTMLDivElement>(null)
+  // 좁은 화면은 목록 아래에 편집 칸이 온다 — 장을 고르면 거기로 내려 준다(26장 목록 밑에서 안 헤매게).
+  useEffect(() => {
+    if (!selected || !window.matchMedia('(max-width: 860px)').matches) return
+    detailBox.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [selected])
+  const needle = filter.trim().toLowerCase()
+  const shown = needle
+    ? all.filter((r) => `${r.group} ${r.name} ${r.path}`.toLowerCase().includes(needle))
+    : all
 
   const load = useCallback(async () => {
     try {
@@ -97,8 +108,21 @@ export default function SeoPage() {
         </div>
       )}
       <div className="dvs_split">
+        <div className="dvs_side">
+          <label className="dva_sr" htmlFor="dvs-filter">
+            장 찾기
+          </label>
+          <input
+            id="dvs-filter"
+            type="search"
+            className="dvs_filter"
+            placeholder="장 이름이나 주소로 찾기"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          {shown.length === 0 && <p className="dva_empty">맞는 장이 없습니다.</p>}
         <ul className="dvs_list" aria-label="장 목록">
-          {all.map((r) => {
+          {shown.map((r) => {
             const o = byPath.get(r.path)
             return (
               <li key={r.path}>
@@ -122,7 +146,8 @@ export default function SeoPage() {
             )
           })}
         </ul>
-        <div className="dvs_detail">
+        </div>
+        <div className="dvs_detail" ref={detailBox}>
           {selected ? (
             <Editor
               key={selected.path}
@@ -135,7 +160,7 @@ export default function SeoPage() {
               }}
             />
           ) : (
-            <div className="dva_empty">왼쪽 목록에서 장을 고르면 지금 나가는 검색 정보와 바꿀 칸이 나옵니다.</div>
+            <div className="dva_empty">목록에서 장을 고르면 지금 나가는 검색 정보와 바꿀 칸이 나옵니다.</div>
           )}
         </div>
       </div>
