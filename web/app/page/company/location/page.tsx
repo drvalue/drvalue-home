@@ -1,14 +1,19 @@
-import { LOCATION, LOCATION_LEAD, COMPANY_CSS } from '../companyContent'
+import { Fragment } from 'react'
+import { COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { pageMeta } from '@/lib/seo'
+import { cmsPageContent, pageImageSrc } from '@/lib/cms'
+import { LOCATION_DEFAULT, LOCATION_PAGE_KEY, mapEmbedSrc, telHref, type LocationContent } from './content'
 
 /**
- * /page/company/location.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
- * 에서 M.AX 계열과 같은 틀로 옮겼다 — 메뉴를 옮겨 다닐 때 두 꾸밈이 섞여 난잡했다.
- * 지도·주소·교통 안내는 companyContent.ts 에 그대로 옮겨 두었다. 새로 지은 문장은 없다.
+ * /page/company/location.php 를 옮긴 것. 글은 관리 화면(페이지 → 찾아오시는 길)에서 고친다 —
+ * 요청마다 api 의 페이지 글을 읽고, 못 읽으면 content.ts 의 기본 글로 그린다(api 가 죽어도 장이 안 빈다).
+ * 꾸밈(SolutionShell + 지도·주소 칸)은 그대로다.
  */
 const PATH = '/page/company/location'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = pageMeta({
   title: '찾아오시는 길',
@@ -17,27 +22,31 @@ export const metadata = pageMeta({
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const c = (await cmsPageContent<LocationContent>(LOCATION_PAGE_KEY)) ?? LOCATION_DEFAULT
+  const { shell, place, guide } = c
+  const photo = pageImageSrc(guide.photo)
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
       <style dangerouslySetInnerHTML={{ __html: COMPANY_CSS }} />
       <SolutionShell
         path={PATH}
-        kicker="찾아오시는 길"
-        kickerSub="회사소개"
-        headLead="디알밸류로 찾아오시는 길을 "
-        headStrong="상세히 안내해 드립니다."
-        desc={LOCATION.intro}
-        lead={LOCATION_LEAD}
-        ctaTitle="방문 전에 미리 연락 주세요."
-        ctaDesc="방문 전 일정을 협의하시면 보다 원활한 상담이 가능합니다."
+        kicker={shell.kicker}
+        kickerSub={shell.kickerSub}
+        headLead={shell.headLead}
+        headStrong={shell.headStrong}
+        desc={shell.desc}
+        lead={shell.leadTitle ? { title: shell.leadTitle } : undefined}
+        // 비우면 틀의 기본 문구를 쓴다.
+        ctaTitle={shell.ctaTitle || undefined}
+        ctaDesc={shell.ctaDesc || undefined}
       >
         <div className="location_box">
           <div className="map_box" data-rv="shot">
             <iframe
-              src={LOCATION.mapSrc}
-              title={`${LOCATION.company} 위치 지도`}
+              src={mapEmbedSrc(place.mapQuery)}
+              title={`${place.company} 위치 지도`}
               allowFullScreen={true}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -45,24 +54,41 @@ export default function Page() {
           </div>
 
           <div className="info_box" data-rv>
-            <h3>{LOCATION.company}</h3>
+            <h3>{place.company}</h3>
             <dl className="info_list">
               <div className="info_item">
                 <dt>주소</dt>
-                <dd>{LOCATION.address[0]}<br />{LOCATION.address[1]}</dd>
+                <dd>
+                  {place.address.map((a, i) => (
+                    <Fragment key={i}>
+                      {i > 0 && <br />}
+                      {a.line}
+                    </Fragment>
+                  ))}
+                </dd>
               </div>
               <div className="info_item">
                 <dt>대표전화</dt>
-                <dd><a href={LOCATION.tel.href}>{LOCATION.tel.text}</a></dd>
+                <dd><a href={telHref(place.tel)}>{place.tel}</a></dd>
               </div>
               <div className="info_item">
                 <dt>이메일</dt>
-                <dd>{LOCATION.email}</dd>
+                <dd>{place.email}</dd>
               </div>
             </dl>
             <div className="guide_box">
-              <h4>{LOCATION.guide.title}</h4>
-              <p>{LOCATION.guide.desc}</p>
+              <h4>{guide.title}</h4>
+              {guide.desc && <p>{guide.desc}</p>}
+              {photo && guide.photo && (
+                <img
+                  className="guide_photo"
+                  src={photo}
+                  alt={guide.photo.alt}
+                  width={guide.photo.width ?? 1200}
+                  height={guide.photo.height ?? 800}
+                  loading="lazy"
+                />
+              )}
             </div>
           </div>
         </div>

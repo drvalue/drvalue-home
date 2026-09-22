@@ -123,6 +123,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     },
   ]
   if (me.role !== 'hr') {
+    // 게시판이 아닌 사이트 글. 메인 화면·메뉴·검색 노출도 이 묶음에 붙는다(api 의 페이지 범위: 전체 권한·마케팅).
+    groups.push({ title: '사이트', items: [{ href: '/admin/pages', label: '페이지' }] })
     groups.push({
       title: '운영',
       items: [

@@ -207,6 +207,8 @@ const PAGE_CSS = `
 #dvmax .guide_box { margin-top: 24px; padding: 20px 22px; border-radius: 12px; background: #f9fafb; }
 #dvmax .guide_box h4 { margin: 0 0 8px; font-size: 16px; font-weight: 800; }
 #dvmax .guide_box p { margin: 0; font-size: 14.5px; color: #6b7684; line-height: 1.7; word-break: keep-all; }
+/* 건물 사진 — 관리 화면에서 넣었을 때만 있다 */
+#dvmax .guide_photo { display: block; width: 100%; height: auto; margin-top: 14px; border-radius: 10px; }
 
 @media (max-width: 991px) {
   #dvmax .location_box { grid-template-columns: 1fr; }

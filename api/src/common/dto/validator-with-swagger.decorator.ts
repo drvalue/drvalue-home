@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString as IsStringValidator,
+  IsObject as IsObjectValidator,
   Matches,
   Max,
   MaxLength,
@@ -252,6 +253,26 @@ export function IsArray(
       isArray: true,
       required: !opts.optional,
       ...(maxSize !== undefined && { maxItems: maxSize }),
+    })(target, key);
+  };
+}
+
+/**
+ * 모양을 여기서 못 정하는 객체(페이지 글 JSON 처럼 스키마가 따로 있는 것).
+ * 객체인지만 본다 — 안쪽 검사는 그 기능의 검사기가 한다.
+ */
+export function IsObject(opts: Common): PropertyDecorator {
+  return (target, propertyKey) => {
+    const key = propertyKey as string;
+    optionality(target, key, opts);
+    IsObjectValidator({
+      message: `${opts.propertyName} 형식이 올바르지 않습니다.`,
+    })(target, key);
+    ApiProperty({
+      description: opts.description,
+      example: opts.example,
+      type: Object,
+      required: !opts.optional,
     })(target, key);
   };
 }

@@ -98,6 +98,27 @@ export async function cmsBoardPage(
   }
 }
 
+/**
+ * 페이지 글(관리 화면 「페이지」에서 고친 것). 칸 모양은 api 의 core/page/schema 그대로다.
+ * 못 읽거나 행이 없으면 null — 그 장은 코드의 기본 글(content.ts)로 그린다.
+ * 요청 언어의 글이 없으면 api 가 기본 언어(ko-KR) 글을 준다.
+ */
+export async function cmsPageContent<T>(key: string, lang = 'ko-KR'): Promise<T | null> {
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/pages/${encodeURIComponent(key)}?lang=${lang}`, { cache: 'no-store' })
+    if (!res.ok) return null
+    const body = (await res.json()) as { data?: T }
+    return body.data && typeof body.data === 'object' ? body.data : null
+  } catch {
+    return null
+  }
+}
+
+/** 페이지 글의 그림 칸 → 공개 주소. 비었으면 null. */
+export function pageImageSrc(img: { id: string | null } | null | undefined): string | null {
+  return img?.id ? `/api/content/assets/${img.id}` : null
+}
+
 /** '2025-06-10' → '2025.06.10'. 증서 장의 표기다. */
 export function dots(iso: string | null | undefined): string {
   return (iso ?? '').slice(0, 10).replace(/-/g, '.')

@@ -85,6 +85,10 @@
   그 말로 에러를 던지니 화면은 `e.message` 만 쓴다. 로그인 실패만 예외다: api 가
   `/admin/login?error=<코드>` 로 돌려보내고 `login/page.tsx` 의 `LOGIN_ERRORS` 가 코드로 문구를
   고른다. `scripts/check-copy.py` 가 반말을 잡는다.
+- **페이지**(`/admin/pages`, 메뉴 묶음 「사이트」 — 전체 권한·마케팅): 게시판이 아닌 장의 글. 폼은 api 가 주는
+  칸 구조로 그린다(`pages/[key]/Fields.tsx` — 칸 종류마다 부품 하나, 칸 이름을 화면에 적지 않는다).
+  언어마다 따로 저장하고, 영어 글이 없으면 사이트 영어 화면에도 한국어 글이 나온다. 공개 장은
+  `lib/cms.ts` 의 `cmsPageContent(key) ?? content.ts 기본 글` 로 그린다 — api 가 죽어도 장이 안 빈다.
 - 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · growchat 위젯)는 `components/SiteScripts.tsx`
   가 싣고 `/admin` 아래에서는 아무것도 싣지 않는다. `robots.ts` 가 `/admin` 을 막는다.
 
