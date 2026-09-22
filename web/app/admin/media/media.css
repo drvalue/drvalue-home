@@ -1,11 +1,6 @@
-/* 미디어 화면. 전부 .dva 아래 — 공개 화면 css 와 안 섞인다. 가로 스크롤 없음(390px). */
-.dva .dvm_hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
+/* 미디어 화면. 전부 .dva 아래 — 공개 화면 css 와 안 섞인다. 가로 스크롤 없음(390px).
+   올리기 입력은 .dva_sr 로 감춘다 — 전에 쓰던 감춤 규칙은 `.dva input[type='file'] { width: 100% }`
+   에 져서 절대 위치 입력이 화면 폭만큼 늘어나 269px 가로 스크롤을 만들었다. */
 .dva .dvm_split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
@@ -14,6 +9,10 @@
 }
 .dva .dvm_split > * {
   min-width: 0;
+}
+/* 좁은 화면에서 상세로 내려갈 때 위 막대(52px)에 가리지 않게. */
+.dva .dvm_detail_wrap {
+  scroll-margin-top: 64px;
 }
 .dva .dvm_split:not(:has(.dvm_detail)) {
   grid-template-columns: minmax(0, 1fr);

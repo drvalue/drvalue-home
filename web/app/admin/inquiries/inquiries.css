@@ -202,6 +202,8 @@
   }
   .dva .dvi_detail {
     position: static;
+    /* 위 막대(52px)에 가리지 않게 */
+    scroll-margin-top: 64px;
   }
 }
 @media (max-width: 480px) {

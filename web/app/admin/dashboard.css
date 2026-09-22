@@ -1,0 +1,101 @@
+/* 관리 화면 첫 장(홈). 카드 몇 장 — 새 문의 · 초안 · 바로 쓰기 · 최근 변경. */
+.dva .dvd_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.dva .dvd_card {
+  background: var(--dva-panel);
+  border: 1px solid var(--dva-line);
+  border-radius: 12px;
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.dva .dvd_card.is-wide {
+  grid-column: 1 / -1;
+}
+.dva .dvd_card.is-inquiry {
+  border-color: #d8d0ff;
+  box-shadow: inset 4px 0 0 var(--dva-accent);
+}
+.dva .dvd_card h2 {
+  font-size: 13px;
+  color: var(--dva-muted);
+  letter-spacing: 0.02em;
+}
+.dva .dvd_big {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.dva .dvd_big small {
+  font-size: 15px;
+  font-weight: 700;
+  margin-left: 4px;
+  color: var(--dva-muted);
+}
+.dva .dvd_sub {
+  margin: 0;
+  color: var(--dva-muted);
+}
+.dva .dvd_actions,
+.dva .dvd_quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dva .dvd_list,
+.dva .dvd_recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.dva .dvd_list a {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f7f8fa;
+  min-height: 44px;
+  align-items: center;
+}
+.dva .dvd_list a:hover {
+  background: #eef0f4;
+}
+.dva .dvd_recent li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dva-line);
+}
+.dva .dvd_recent li:last-child {
+  border-bottom: 0;
+}
+.dva .dvd_what {
+  font-weight: 600;
+  min-width: 0;
+}
+.dva .dvd_who {
+  color: var(--dva-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .dva .dvd_recent li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .dva .dvd_who {
+    grid-column: 2;
+    white-space: normal;
+  }
+}

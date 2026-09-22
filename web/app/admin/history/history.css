@@ -4,15 +4,6 @@
   color: var(--dva-muted);
   font-size: 13.5px;
 }
-.dva .dvh_actor {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
-}
-.dva .dvh_actor input {
-  width: min(260px, 100%);
-}
 .dva .dvh_table td.dvh_actor_cell {
   color: var(--dva-muted);
   font-size: 12.5px;
@@ -38,24 +29,15 @@
   outline: 2px solid var(--dva-accent);
   outline-offset: 2px;
 }
+/* 줄 어디를 눌러도 열린다(버튼은 키보드용). */
+.dva .dvh_row {
+  cursor: pointer;
+}
+.dva .dvh_row:hover td {
+  background: #f7f8fa;
+}
 .dva .dvh_row.is-open td {
   background: #f7f8fb;
-}
-.dva .dvh_act.is-create {
-  background: var(--dva-ok-bg);
-  color: var(--dva-ok);
-}
-.dva .dvh_act.is-update {
-  background: #eef3f8;
-  color: #3d5a80;
-}
-.dva .dvh_act.is-delete {
-  background: #fde8e6;
-  color: #b3261e;
-}
-.dva .dvh_act.is-restore {
-  background: var(--dva-warn-bg);
-  color: var(--dva-warn);
 }
 .dva .dvh_detail > td {
   background: #f7f8fb;

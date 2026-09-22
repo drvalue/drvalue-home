@@ -1,7 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminFetch, Page } from '@/lib/admin'
+import InlineConfirm from '../ui/InlineConfirm'
+import { pageOf, useQuery } from '../ui/query'
+import SearchBox from '../ui/SearchBox'
+import { useToast } from '../ui/toast'
 import {
   ACTION_LABEL,
   boardLabel,
@@ -16,12 +20,13 @@ import './history.css'
 /**
  * 변경 이력. 누가 · 언제 · 무엇을 바꿨나 → 한 줄을 누르면 칸별 전후 비교와 되돌리기.
  * 되돌리기는 그 변경 「전」 상태로 돌린다. 되돌리기도 이력 한 줄로 남는다.
+ * 대상·바꾼 사람·쪽은 주소에 남는다.
  */
 export default function HistoryPage() {
-  const [collection, setCollection] = useState('')
-  const [actor, setActor] = useState('')
-  const [actorInput, setActorInput] = useState('')
-  const [page, setPage] = useState(1)
+  const query = useQuery()
+  const collection = query.get('collection')
+  const actor = query.get('actor')
+  const page = pageOf(query.get('page'))
   const [rows, setRows] = useState<Page<RevisionRow> | null>(null)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<RevisionFull | null>(null)
@@ -64,42 +69,31 @@ export default function HistoryPage() {
       <div className="dva_head">
         <h1>변경 이력</h1>
       </div>
-      <p className="dvh_lead">누가 언제 무엇을 바꿨는지 보여 줍니다. 한 줄을 누르면 바뀐 칸과 되돌리기 버튼이 나옵니다.</p>
+      <p className="dvh_lead">누가 언제 무엇을 바꿨는지 보여 줍니다. 줄을 누르면 바뀐 칸과 되돌리기 버튼이 나옵니다.</p>
       <div className="dva_tools">
         <select
           value={collection}
           onChange={(e) => {
-            setCollection(e.target.value)
-            setPage(1)
+            query.set({ collection: e.target.value, page: null })
             setOpen(null)
           }}
           aria-label="대상으로 거르기"
-          style={{ width: 'auto' }}
         >
           <option value="">전체 대상</option>
           {Object.entries(COLLECTION_LABEL).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
-        <form
-          className="dvh_actor"
-          onSubmit={(e) => {
-            e.preventDefault()
-            setActor(actorInput.trim())
-            setPage(1)
+        <SearchBox
+          id="h-actor"
+          value={actor}
+          onSearch={(v) => {
+            query.set({ actor: v, page: null })
             setOpen(null)
           }}
-        >
-          <input
-            id="h-actor"
-            type="search"
-            placeholder="바꾼 사람 이메일"
-            value={actorInput}
-            onChange={(e) => setActorInput(e.target.value)}
-            aria-label="바꾼 사람으로 거르기"
-          />
-          <button type="submit" className="dva_btn is-small">거르기</button>
-        </form>
+          placeholder="바꾼 사람 이메일"
+          label="바꾼 사람으로 거르기"
+        />
       </div>
       {error && <div className="dva_error">{error}</div>}
       <div className="dva_tw">
@@ -119,9 +113,9 @@ export default function HistoryPage() {
       </div>
       {openErr && <div className="dva_error">{openErr}</div>}
       <div className="dva_pager">
-        <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => setPage(page - 1)}>이전</button>
+        <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => query.set({ page: page - 1 })}>이전</button>
         <span>{page} / {pages} · {rows?.total ?? 0}건</span>
-        <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => setPage(page + 1)}>다음</button>
+        <button type="button" className="dva_btn is-small" disabled={page >= pages} onClick={() => query.set({ page: page + 1 })}>다음</button>
       </div>
     </>
   )
@@ -141,11 +135,20 @@ function HistoryRow({
   const what = r.collection === 'posts' ? `${boardLabel(r.board)} · ${r.label}` : `${COLLECTION_LABEL[r.collection] ?? r.collection} · ${r.label}`
   return (
     <>
-      <tr className={`dvh_row${open ? ' is-open' : ''}`}>
+      {/* 줄 어디를 눌러도 열린다. 키보드는 가운데 칸의 버튼으로 연다. */}
+      <tr className={`dvh_row${open ? ' is-open' : ''}`} onClick={onPick}>
         <td className="is-num">{when(r.created_on)}</td>
         <td className="dvh_actor_cell">{r.actor}</td>
         <td className="is-title">
-          <button type="button" className="dvh_pick" aria-expanded={Boolean(open)} onClick={onPick}>
+          <button
+            type="button"
+            className="dvh_pick"
+            aria-expanded={Boolean(open)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onPick()
+            }}
+          >
             {what}
           </button>
         </td>
@@ -163,6 +166,8 @@ function HistoryRow({
 }
 
 function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void }) {
+  const toast = useToast()
+  const trigger = useRef<HTMLButtonElement>(null)
   const [all, setAll] = useState(false)
   const [asking, setAsking] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -178,6 +183,7 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
       const r = await adminFetch<{ warnings?: string[] }>(`/api/admin/revisions/${rev.id}/restore`, { method: 'POST' })
       const w = r.warnings?.length ? ' ' + r.warnings.join(' ') : ''
       setMsg(`이 변경 전 상태로 되돌렸습니다.${w}`)
+      toast(`되돌렸습니다.${w}`)
       setAsking(false)
       setTimeout(onRestored, 900)
     } catch (e) {
@@ -215,13 +221,20 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
           <span className="dva_notice">{msg}</span>
         ) : rev.restorable ? (
           asking ? (
-            <span className="dva_confirm">
-              이 변경 전 상태로 되돌릴까요?
-              <button type="button" className="dva_btn is-small is-danger" disabled={busy} onClick={restore}>되돌리기</button>
-              <button type="button" className="dva_btn is-small" onClick={() => setAsking(false)}>취소</button>
-            </span>
+            <InlineConfirm
+              message="이 변경 전 상태로 되돌릴까요?"
+              confirmLabel="되돌리기"
+              busy={busy}
+              onConfirm={restore}
+              onCancel={() => {
+                setAsking(false)
+                requestAnimationFrame(() => trigger.current?.focus())
+              }}
+            />
           ) : (
-            <button type="button" className="dva_btn is-small" onClick={() => setAsking(true)}>이 버전으로 되돌리기</button>
+            <button ref={trigger} type="button" className="dva_btn is-small" onClick={() => setAsking(true)}>
+              이 버전으로 되돌리기
+            </button>
           )
         ) : (
           <span className="dvh_muted">

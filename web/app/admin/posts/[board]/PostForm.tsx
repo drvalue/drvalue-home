@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, PostFull, today, Translation, uploadFile } from '@/lib/admin'
+import FileDrop from '../../ui/FileDrop'
+import { useLeaveGuard } from '../../ui/leave'
+import { useToast } from '../../ui/toast'
 import HtmlEditor from './HtmlEditor'
 
 type Lang = 'ko-KR' | 'en-US'
@@ -40,26 +43,43 @@ const WITH_CERT = ['patent', 'copyright']
  */
 const THUMB_FROM_BODY = ['notice', 'press', 'news']
 const BODY_IMAGE_RE = /\/api\/content\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+/**
+ * 사이트에 글 한 장씩 주소가 있는 게시판 — 주소(slug)·표시 날짜·예약이 사이트에서 보인다.
+ * 나머지(순서로 세우는 증서·수행실적·FAQ·연혁)는 그 칸들을 「고급 설정」 안에 접어 둔다.
+ */
+const DATED = ['notice', 'press', 'news', 'recruit']
 
 /**
  * 만들기와 고치기가 같은 폼. 본문은 편집기(Quill)로 쓰고 HTML 로도 볼 수 있다.
- * 저장 성공이면 목록으로. 오류는 서버 문장을 그대로 위에 띄운다.
+ * 저장 막대는 화면 위에 붙어 따라온다. 저장 안 한 입력이 있으면 떠날 때 묻는다.
+ * 저장하면 목록으로 가서 「저장했습니다」를 띄운다. 오류는 그 줄로 스크롤하고 포커스를 옮긴다.
  */
 export default function PostForm({ boardKey, id }: { boardKey: string; id?: number }) {
   const board = boardOf(boardKey)
   const router = useRouter()
+  const toast = useToast()
+  const { setDirty } = useLeaveGuard()
   const [post, setPost] = useState<PostFull | null>(null)
   const [lang, setLang] = useState<Lang>('ko-KR')
   const [error, setError] = useState('')
+  const [titleError, setTitleError] = useState(false)
   const [busy, setBusy] = useState(false)
   // 수행실적 「구분」 · FAQ 「분류」에 지금까지 쓴 값. 입력하면서 고르게 해 같은 말을 다르게 적지 않는다.
   const [labels, setLabels] = useState<string[]>([])
   const [thumbPreview, setThumbPreview] = useState<string | null>(null)
+  const initial = useRef<string | null>(null)
+  const errorBox = useRef<HTMLDivElement>(null)
+  const titleInput = useRef<HTMLInputElement>(null)
+
+  function start(p: PostFull) {
+    initial.current = JSON.stringify(p)
+    setPost(p)
+  }
 
   useEffect(() => {
     if (!board) return
     if (id === undefined) {
-      setPost({
+      start({
         id: 0, board: board.key, slug: '', status: 'draft', published_date: today(), sort: null,
         is_pinned: false, is_featured: false, thumbnail: null, thumbnail_url: null, press_media: null,
         period_start: null, period_end: null, cert_state: board.key === 'patent' ? 'applied' : null,
@@ -74,7 +94,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       .then((r) => {
         const p = r.data
         for (const l of LANGS) if (!p.translations.some((t) => t.languages_code === l.code)) p.translations.push(blankTranslation(l.code))
-        setPost(p)
+        start(p)
         setThumbPreview(p.thumbnail_url)
       })
       .catch((e) => setError((e as Error).message))
@@ -84,6 +104,19 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     if (!src) return
     adminFetch<{ data: string[] }>(`/api/admin/posts/${src}`).then((r) => setLabels(r.data)).catch(() => {})
   }, [board])
+
+  const dirty = Boolean(post && initial.current !== null && JSON.stringify(post) !== initial.current)
+  useEffect(() => {
+    setDirty(dirty)
+  }, [dirty, setDirty])
+  useEffect(() => () => setDirty(false), [setDirty])
+
+  // 오류가 뜨면 그 줄로 스크롤하고 읽히게 포커스를 준다 — 아래를 보고 있어도 놓치지 않게.
+  useEffect(() => {
+    if (!error) return
+    errorBox.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    errorBox.current?.focus({ preventScroll: true })
+  }, [error])
 
   if (!board) return <div className="dva_error">게시판을 찾을 수 없습니다.</div>
   if (!post) return error ? <div className="dva_error">{error}</div> : <div className="dva_empty">불러오는 중…</div>
@@ -95,8 +128,10 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       .map((x) => BODY_IMAGE_RE.exec(x.body ?? '')?.[1])
       .find(Boolean) ?? null
   const set = (patch: Partial<PostFull>) => setPost({ ...post, ...patch })
-  const setT = (patch: Partial<Translation>) =>
+  const setT = (patch: Partial<Translation>) => {
+    if ('title' in patch && lang === 'ko-KR' && patch.title?.trim()) setTitleError(false)
     setPost({ ...post, translations: post.translations.map((x) => (x.languages_code === lang ? { ...x, ...patch } : x)) })
+  }
 
   async function onThumb(file: File | undefined) {
     if (!file) return
@@ -113,12 +148,12 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     }
   }
 
-  async function onFiles(list: FileList | null) {
-    if (!list || !list.length) return
+  async function onFiles(list: File[]) {
+    if (!list.length) return
     setBusy(true)
     try {
       const added = []
-      for (const file of Array.from(list)) {
+      for (const file of list) {
         const f = await uploadFile(file)
         added.push({ id: f.id, name: f.title || f.filename_download, url: `/api/admin/files/${f.id}` })
       }
@@ -131,8 +166,19 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     }
   }
 
+  /** 한국어 제목이 비었으면 보내기 전에 막는다 — api 도 막지만 칸을 짚어 주는 것은 여기다. */
+  function titleMissing(): boolean {
+    const ko = post!.translations.find((x) => x.languages_code === 'ko-KR')
+    if (ko?.title?.trim()) return false
+    setLang('ko-KR')
+    setTitleError(true)
+    setError('한국어 제목을 입력해 주세요.')
+    requestAnimationFrame(() => titleInput.current?.focus())
+    return true
+  }
+
   async function save() {
-    if (!post) return
+    if (!post || titleMissing()) return
     setBusy(true)
     setError('')
     const body = {
@@ -174,30 +220,86 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     try {
       if (id === undefined) await adminJson('/api/admin/posts', 'POST', body)
       else await adminJson(`/api/admin/posts/${id}`, 'PUT', body)
+      initial.current = JSON.stringify(post)
+      setDirty(false)
+      const scheduled = post.publish_at && new Date(post.publish_at) > new Date()
+      toast(
+        scheduled
+          ? '저장했습니다. 예약한 시각에 사이트에 나옵니다.'
+          : post.status === 'published'
+            ? '저장했습니다. 사이트에 반영됐습니다.'
+            : '초안으로 저장했습니다. 사이트에는 아직 보이지 않습니다.',
+      )
       router.push(`/admin/posts/${board!.key}`)
     } catch (e) {
-      setError((e as Error).message)
+      const message = (e as Error).message
+      if (message.includes('제목')) {
+        setLang('ko-KR')
+        setTitleError(true)
+      }
+      setError(message)
       setBusy(false)
     }
   }
 
   const k = board.key
   const val = (v: string | null) => v ?? ''
+  const dated = DATED.includes(k)
+
+  const dateField = (
+    <div className="dva_field">
+      <label htmlFor="f-date">표시 날짜</label>
+      <input id="f-date" type="date" value={post.published_date} onChange={(e) => set({ published_date: e.target.value })} />
+      {!dated && <small>사이트에는 나오지 않습니다. 순서가 같을 때 정렬에만 씁니다.</small>}
+    </div>
+  )
+  const scheduleFields = (
+    <>
+      <div className="dva_field">
+        <label htmlFor="f-pub">예약 공개</label>
+        <input id="f-pub" type="datetime-local" value={toLocal(post.publish_at)} onChange={(e) => set({ publish_at: fromLocal(e.target.value) })} />
+        <small>비워 두면 바로 반영됩니다. 시각을 정하면 상태와 관계없이 그 시각에 사이트에 나옵니다.</small>
+      </div>
+      <div className="dva_field">
+        <label htmlFor="f-unpub">자동 내림</label>
+        <input id="f-unpub" type="datetime-local" value={toLocal(post.unpublish_at)} onChange={(e) => set({ unpublish_at: fromLocal(e.target.value) })} />
+        <small>비워 두면 계속 보입니다. 시각을 정하면 그 시각에 초안으로 돌아갑니다.</small>
+      </div>
+    </>
+  )
+  const slugField = (
+    <div className="dva_field">
+      <label htmlFor="f-slug">주소 (slug)</label>
+      <input id="f-slug" type="text" value={post.slug} onChange={(e) => set({ slug: e.target.value })} aria-describedby="f-slug-hint" />
+      <small id="f-slug-hint">비워 두면 자동으로 정합니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다.</small>
+    </div>
+  )
 
   return (
     <>
-      <div className="dva_head">
-        <h1>{board.label} · {id === undefined ? '새 글' : '고치기'}</h1>
+      <div className="dva_head is-sticky">
+        <h1>
+          {board.label} · {id === undefined ? '새 글' : '수정'}
+        </h1>
         <div className="dva_actions">
-          <Link href={`/admin/posts/${k}`} className="dva_btn">목록</Link>
-          <button type="button" className="dva_btn is-primary" disabled={busy} onClick={save}>저장</button>
+          {dirty && <span className="dva_dirty">저장하지 않은 변경이 있습니다</span>}
+          <Link href={`/admin/posts/${k}`} className="dva_btn">
+            목록
+          </Link>
+          <button type="button" className="dva_btn is-primary" disabled={busy} onClick={save}>
+            {busy ? '저장하는 중…' : '저장'}
+          </button>
         </div>
       </div>
-      {error && <div className="dva_error">{error}</div>}
+      {error && (
+        <div ref={errorBox} className="dva_error" role="alert" tabIndex={-1}>
+          {error}
+        </div>
+      )}
 
       <div className="dva_form">
         <div className="dva_card">
-          <div className="dva_tabs" role="tablist">
+          <div className="dva_tabs" role="tablist" aria-label="언어">
             {LANGS.map((l) => (
               <button key={l.code} type="button" role="tab" aria-selected={lang === l.code} className={`dva_tab${lang === l.code ? ' is-on' : ''}`} onClick={() => setLang(l.code)}>
                 {l.label}
@@ -205,15 +307,34 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             ))}
           </div>
           <div className="dva_field">
-            <label htmlFor="f-title">{k === 'faq' ? '질문' : '제목'}{lang === 'ko-KR' ? ' (필수)' : ''}</label>
-            <input id="f-title" type="text" value={val(t.title)} onChange={(e) => setT({ title: e.target.value })} />
+            <label htmlFor="f-title">
+              {k === 'faq' ? '질문' : '제목'}
+              {lang === 'ko-KR' ? ' (필수)' : ''}
+            </label>
+            <input
+              ref={titleInput}
+              id="f-title"
+              type="text"
+              value={val(t.title)}
+              aria-invalid={titleError && lang === 'ko-KR' ? true : undefined}
+              aria-describedby={titleError && lang === 'ko-KR' ? 'f-title-err' : undefined}
+              className={titleError && lang === 'ko-KR' ? 'is-invalid' : undefined}
+              onChange={(e) => setT({ title: e.target.value })}
+            />
+            {titleError && lang === 'ko-KR' && (
+              <small id="f-title-err" className="dva_field_err">
+                한국어 제목을 입력해 주세요.
+              </small>
+            )}
           </div>
           {k === 'case' && (
             <div className="dva_field">
               <label htmlFor="f-cat">구분 (발주·사업 유형)</label>
               <input id="f-cat" type="text" list="f-cat-list" placeholder="예: 안산스마트공장 보급" value={val(t.case_category_label)} onChange={(e) => setT({ case_category_label: e.target.value })} />
               <datalist id="f-cat-list">
-                {labels.map((l) => <option key={l} value={l} />)}
+                {labels.map((l) => (
+                  <option key={l} value={l} />
+                ))}
               </datalist>
               <small>전에 쓴 구분이 목록에 나옵니다. 목록에 없으면 새로 적으면 됩니다.</small>
             </div>
@@ -223,7 +344,9 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <label htmlFor="f-faqcat">분류</label>
               <input id="f-faqcat" type="text" list="f-faqcat-list" placeholder="예: 도입·견적" value={val(t.faq_category)} onChange={(e) => setT({ faq_category: e.target.value })} />
               <datalist id="f-faqcat-list">
-                {labels.map((l) => <option key={l} value={l} />)}
+                {labels.map((l) => (
+                  <option key={l} value={l} />
+                ))}
               </datalist>
               <small>전에 쓴 분류가 목록에 나옵니다. 목록에 없으면 새로 적으면 됩니다.</small>
             </div>
@@ -234,108 +357,24 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <textarea id="f-summary" value={val(t.summary)} onChange={(e) => setT({ summary: e.target.value })} />
             </div>
           )}
-          {WITH_CERT.includes(k) && (
-            <div className="dva_field">
-              <span className="dva_label">증서 그림</span>
-              {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy} onChange={(e) => onThumb(e.target.files?.[0])} />
-              {post.thumbnail && (
-                <button type="button" className="dva_btn is-small" onClick={() => { set({ thumbnail: null }); setThumbPreview(null) }}>그림 제거</button>
-              )}
-              <small>사이트 목록에 이 그림이 나옵니다.</small>
-            </div>
-          )}
-          {WITH_BODY.includes(k) && (
-            <div className="dva_field">
-              <label htmlFor="f-body">{k === 'faq' ? '답' : '본문'}</label>
-              <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} onError={setError} />
-              <small>그림은 도구 막대의 그림 버튼을 누르거나, 본문에 붙여넣거나 끌어다 놓으면 들어갑니다.</small>
-              <details className="dva_editor_raw">
-                <summary>HTML 로 보기</summary>
-                <textarea id="f-body" className="is-body" value={val(t.body)} onChange={(e) => setT({ body: e.target.value })} />
-              </details>
-            </div>
-          )}
-          {THUMB_FROM_BODY.includes(k) && (
-            <div className="dva_field dva_thumb_hint">
-              <span className="dva_label">목록 썸네일</span>
-              {coverId ? (
-                <div className="dva_thumb_row">
-                  <img className="dva_thumb" src={`/api/admin/files/${coverId}`} width={96} height={72} alt="" />
-                  <small>본문의 첫 그림이 사이트 목록의 썸네일로 쓰입니다.</small>
-                </div>
-              ) : (
-                <small>본문에 그림을 넣으면 첫 그림이 사이트 목록의 썸네일이 됩니다.</small>
-              )}
-            </div>
-          )}
-          {WITH_FILES.includes(k) && (
-            <div className="dva_field">
-              <span className="dva_label">첨부 파일</span>
-              <ul className="dva_files">
-                {post.files.map((f) => (
-                  <li key={f.id}>
-                    <a href={f.url} target="_blank" rel="noreferrer">{f.name}</a>
-                    <button type="button" className="dva_btn is-small" onClick={() => set({ files: post.files.filter((x) => x.id !== f.id) })}>제거</button>
-                  </li>
-                ))}
-              </ul>
-              <input type="file" multiple disabled={busy} onChange={(e) => onFiles(e.target.files)} />
-              <small>그림·PDF·텍스트 파일을 20MB 까지 올릴 수 있습니다. 글 아래에 내려받기로 붙습니다.</small>
-            </div>
-          )}
-        </div>
 
-        <div className="dva_card">
-          <h2>설정</h2>
-          <div className="dva_field">
-            <label htmlFor="f-status">상태</label>
-            <select id="f-status" value={post.status} onChange={(e) => set({ status: e.target.value })}>
-              <option value="draft">초안 (사이트에 안 보임)</option>
-              <option value="published">공개</option>
-            </select>
-          </div>
-          <div className="dva_field">
-            <label htmlFor="f-date">표시 날짜</label>
-            <input id="f-date" type="date" value={post.published_date} onChange={(e) => set({ published_date: e.target.value })} />
-          </div>
-          <div className="dva_field">
-            <label htmlFor="f-pub">예약 공개</label>
-            <input id="f-pub" type="datetime-local" value={toLocal(post.publish_at)} onChange={(e) => set({ publish_at: fromLocal(e.target.value) })} />
-            <small>비워 두면 바로 반영됩니다. 시각을 정하면 상태와 관계없이 그 시각에 사이트에 나옵니다.</small>
-          </div>
-          <div className="dva_field">
-            <label htmlFor="f-unpub">자동 내림</label>
-            <input id="f-unpub" type="datetime-local" value={toLocal(post.unpublish_at)} onChange={(e) => set({ unpublish_at: fromLocal(e.target.value) })} />
-            <small>비워 두면 계속 보입니다. 시각을 정하면 그 시각에 초안으로 돌아갑니다.</small>
-          </div>
-          {(k === 'notice' || k === 'press' || k === 'news') && (
-            <label className="dva_check">
-              <input type="checkbox" checked={post.is_pinned} onChange={(e) => set({ is_pinned: e.target.checked })} /> 상단 고정
-            </label>
-          )}
-          {k === 'recruit' && (
-            <>
-              <div className="dva_field">
-                <label htmlFor="f-emp">고용 형태</label>
-                <select id="f-emp" value={post.employment_type ?? 'fulltime'} onChange={(e) => set({ employment_type: e.target.value })}>
-                  {Object.entries(EMPLOYMENT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </div>
-              <label className="dva_check">
-                <input type="checkbox" checked={post.is_open_ended} onChange={(e) => set({ is_open_ended: e.target.checked })} /> 상시 채용
-              </label>
-              <div className="dva_field">
-                <label htmlFor="f-deadline">마감일</label>
-                <input id="f-deadline" type="date" disabled={post.is_open_ended} value={post.is_open_ended ? '' : val(post.deadline)} onChange={(e) => set({ deadline: e.target.value || null })} />
-                {post.is_open_ended && <small>상시 채용이라 마감일이 없습니다.</small>}
-              </div>
-            </>
-          )}
-          {(k === 'press' || k === 'news') && (
+          {k === 'history' && (
             <div className="dva_field">
-              <label htmlFor="f-media">매체명</label>
-              <input id="f-media" type="text" value={val(post.press_media)} onChange={(e) => set({ press_media: e.target.value })} />
+              <label htmlFor="f-year">연도</label>
+              <input id="f-year" type="text" inputMode="numeric" maxLength={4} placeholder="2025" value={val(post.history_year)} onChange={(e) => set({ history_year: e.target.value })} />
+              <small>사이트는 연도별로 묶어 최근 연도부터 보여 줍니다.</small>
+            </div>
+          )}
+          {k === 'case' && (
+            <div className="dva_row2">
+              <div className="dva_field">
+                <label htmlFor="f-ps">시작 (월)</label>
+                <input id="f-ps" type="month" value={toMonth(post.period_start)} onChange={(e) => set({ period_start: fromMonth(e.target.value) })} />
+              </div>
+              <div className="dva_field">
+                <label htmlFor="f-pe">종료 (월)</label>
+                <input id="f-pe" type="month" value={toMonth(post.period_end)} onChange={(e) => set({ period_end: fromMonth(e.target.value) })} />
+              </div>
             </div>
           )}
           {k === 'patent' && (
@@ -347,13 +386,15 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
                   <option value="applied">출원</option>
                 </select>
               </div>
-              <div className="dva_field">
-                <label htmlFor="f-no">{post.cert_state === 'registered' ? '등록번호' : '출원번호'}</label>
-                <input id="f-no" type="text" value={val(post.cert_no)} onChange={(e) => set({ cert_no: e.target.value })} />
-              </div>
-              <div className="dva_field">
-                <label htmlFor="f-cdate">{post.cert_state === 'registered' ? '등록일' : '출원일'}</label>
-                <input id="f-cdate" type="date" value={val(post.cert_date)} onChange={(e) => set({ cert_date: e.target.value || null })} />
+              <div className="dva_row2">
+                <div className="dva_field">
+                  <label htmlFor="f-no">{post.cert_state === 'registered' ? '등록번호' : '출원번호'}</label>
+                  <input id="f-no" type="text" value={val(post.cert_no)} onChange={(e) => set({ cert_no: e.target.value })} />
+                </div>
+                <div className="dva_field">
+                  <label htmlFor="f-cdate">{post.cert_state === 'registered' ? '등록일' : '출원일'}</label>
+                  <input id="f-cdate" type="date" value={val(post.cert_date)} onChange={(e) => set({ cert_date: e.target.value || null })} />
+                </div>
               </div>
             </>
           )}
@@ -379,30 +420,135 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               </div>
             </>
           )}
-          {k === 'case' && (
-            <div className="dva_row2">
-              <div className="dva_field">
-                <label htmlFor="f-ps">시작 (월)</label>
-                <input id="f-ps" type="month" value={toMonth(post.period_start)} onChange={(e) => set({ period_start: fromMonth(e.target.value) })} />
-              </div>
-              <div className="dva_field">
-                <label htmlFor="f-pe">종료 (월)</label>
-                <input id="f-pe" type="month" value={toMonth(post.period_end)} onChange={(e) => set({ period_end: fromMonth(e.target.value) })} />
-              </div>
-            </div>
-          )}
-          {k === 'history' && (
+          {WITH_CERT.includes(k) && (
             <div className="dva_field">
-              <label htmlFor="f-year">연도</label>
-              <input id="f-year" type="text" inputMode="numeric" maxLength={4} placeholder="2025" value={val(post.history_year)} onChange={(e) => set({ history_year: e.target.value })} />
+              <span className="dva_label">증서 그림</span>
+              {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
+              <FileDrop
+                label={post.thumbnail ? '다른 그림으로 바꾸기' : '증서 그림 올리기'}
+                hint="누르거나 끌어다 놓으세요. 그림(png·jpg·webp·gif) 20MB 까지."
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                disabled={busy}
+                onFiles={(fs) => onThumb(fs[0])}
+              />
+              {post.thumbnail && (
+                <button
+                  type="button"
+                  className="dva_btn is-small"
+                  onClick={() => {
+                    set({ thumbnail: null })
+                    setThumbPreview(null)
+                  }}
+                >
+                  그림 빼기
+                </button>
+              )}
+              <small>사이트 목록에 이 그림이 나옵니다.</small>
             </div>
           )}
-          <div className="dva_field">
-            <label htmlFor="f-slug">주소 (slug)</label>
-            <small>비워 두면 자동으로 정합니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다.</small>
-            <input id="f-slug" type="text" value={post.slug} onChange={(e) => set({ slug: e.target.value })} />
-          </div>
+          {WITH_BODY.includes(k) && (
+            <div className="dva_field">
+              <label htmlFor="f-body">{k === 'faq' ? '답' : '본문'}</label>
+              <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} onError={setError} />
+              <small>그림은 도구 막대의 그림 버튼을 누르거나, 본문에 붙여넣거나 끌어다 놓으면 들어갑니다.</small>
+              <details className="dva_editor_raw">
+                <summary>HTML 로 보기</summary>
+                <textarea id="f-body" className="is-body" value={val(t.body)} onChange={(e) => setT({ body: e.target.value })} />
+              </details>
+            </div>
+          )}
+          {THUMB_FROM_BODY.includes(k) && (
+            <div className="dva_field dva_thumb_hint">
+              <span className="dva_label">목록 썸네일</span>
+              {coverId ? (
+                <div className="dva_thumb_row">
+                  <img className="dva_cover" src={`/api/admin/files/${coverId}`} width={96} height={72} alt="" />
+                  <small>본문의 첫 그림이 사이트 목록의 썸네일로 쓰입니다.</small>
+                </div>
+              ) : (
+                <small>본문에 그림을 넣으면 첫 그림이 사이트 목록의 썸네일이 됩니다.</small>
+              )}
+            </div>
+          )}
+          {WITH_FILES.includes(k) && (
+            <div className="dva_field">
+              <span className="dva_label">첨부 파일</span>
+              {post.files.length > 0 && (
+                <ul className="dva_files">
+                  {post.files.map((f) => (
+                    <li key={f.id}>
+                      <a href={f.url} target="_blank" rel="noreferrer">
+                        {f.name}
+                      </a>
+                      <button type="button" className="dva_btn is-small" onClick={() => set({ files: post.files.filter((x) => x.id !== f.id) })}>
+                        빼기
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <FileDrop label="첨부 파일 올리기" hint="누르거나 끌어다 놓으세요. 그림·PDF·텍스트 파일을 20MB 까지 올릴 수 있습니다." multiple disabled={busy} onFiles={onFiles} />
+              <small>글 아래에 내려받기로 붙습니다.</small>
+            </div>
+          )}
+        </div>
 
+        <div className="dva_card">
+          <h2>설정</h2>
+          <div className="dva_field">
+            <label htmlFor="f-status">상태</label>
+            <select id="f-status" value={post.status} onChange={(e) => set({ status: e.target.value })}>
+              <option value="draft">초안 (사이트에 안 보임)</option>
+              <option value="published">공개</option>
+            </select>
+          </div>
+          {dated && dateField}
+          {dated && scheduleFields}
+          {(k === 'notice' || k === 'press' || k === 'news') && (
+            <label className="dva_check">
+              <input type="checkbox" checked={post.is_pinned} onChange={(e) => set({ is_pinned: e.target.checked })} /> 상단 고정
+            </label>
+          )}
+          {k === 'recruit' && (
+            <>
+              <div className="dva_field">
+                <label htmlFor="f-emp">고용 형태</label>
+                <select id="f-emp" value={post.employment_type ?? 'fulltime'} onChange={(e) => set({ employment_type: e.target.value })}>
+                  {Object.entries(EMPLOYMENT_LABEL).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <label className="dva_check">
+                <input type="checkbox" checked={post.is_open_ended} onChange={(e) => set({ is_open_ended: e.target.checked })} /> 상시 채용
+              </label>
+              <div className="dva_field">
+                <label htmlFor="f-deadline">마감일</label>
+                <input id="f-deadline" type="date" disabled={post.is_open_ended} value={post.is_open_ended ? '' : val(post.deadline)} onChange={(e) => set({ deadline: e.target.value || null })} />
+                {post.is_open_ended && <small>상시 채용이라 마감일이 없습니다.</small>}
+              </div>
+            </>
+          )}
+          {(k === 'press' || k === 'news') && (
+            <div className="dva_field">
+              <label htmlFor="f-media">매체명</label>
+              <input id="f-media" type="text" value={val(post.press_media)} onChange={(e) => set({ press_media: e.target.value })} />
+            </div>
+          )}
+          {dated ? (
+            slugField
+          ) : (
+            <details className="dva_more">
+              <summary>고급 설정</summary>
+              <div className="dva_more_body">
+                {dateField}
+                {scheduleFields}
+                {slugField}
+              </div>
+            </details>
+          )}
         </div>
       </div>
     </>
