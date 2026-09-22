@@ -239,48 +239,4 @@ export class ContentController {
     // pipeline 은 소비 속도에 맞춰 멈췄다 간다.
     await pipeline(Readable.fromWeb(up.body as WebReadable), res)
   }
-
-  /**
-   * 페이지 상세. 경로를 쿼리로 받는다 — `/about` 처럼 슬래시가 들어 있어서
-   * 경로 파라미터로 받으면 Express 5 에서 와일드카드 문법이 필요하고,
-   * 그 문법이 4 와 5 사이에 바뀌었다.
-   */
-  @Public()
-  @Get('pages')
-  async page(@Query('path') path: string, @Query('lang') lang?: string) {
-    this.guard()
-    const language = this.directus.language(lang)
-    const res = await this.directus.get<unknown[]>('/items/pages', {
-      filter: JSON.stringify({
-        _and: [{ status: { _eq: 'published' } }, { path: { _eq: path.startsWith('/') ? path : `/${path}` } }],
-      }),
-      fields: '*,translations.*,blocks.*,blocks.translations.*',
-      deep: JSON.stringify({
-        translations: { _filter: { languages_code: { _eq: language } } },
-        blocks: {
-          _sort: ['sort', 'id'],
-          translations: { _filter: { languages_code: { _eq: language } } },
-        },
-      }),
-      limit: 1,
-    })
-    const page = res.data?.[0]
-    if (!page) throw new NotFoundException('없는 페이지다')
-    return { data: page, language }
-  }
-
-  @Public()
-  @Get('menu')
-  async menu(@Query('lang') lang?: string) {
-    this.guard()
-    const language = this.directus.language(lang)
-    const res = await this.directus.get<unknown[]>('/items/menu_items', {
-      filter: JSON.stringify({ is_visible: { _eq: true } }),
-      fields: '*,translations.*',
-      deep: JSON.stringify({ translations: { _filter: { languages_code: { _eq: language } } } }),
-      sort: 'location,sort,id',
-      limit: 200,
-    })
-    return { data: res.data, language }
-  }
 }

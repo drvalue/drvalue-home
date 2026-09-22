@@ -44,13 +44,6 @@ const nextConfig = {
     const origin = process.env.API_ORIGIN || 'http://localhost:3500'
     return [
       { source: '/api/:path*', destination: `${origin}/api/:path*` },
-      // 게시판 API 와 로그인 콜백. 주소가 `.php` 인 채로 Nest 가 받는다 —
-      // 콜백 주소가 IAM 화이트리스트에 글자 그대로 등록돼 있다.
-      { source: '/page/support/notice_api.php', destination: `${origin}/page/support/notice_api.php` },
-      {
-        source: '/page/support/notice_login_callback.php',
-        destination: `${origin}/page/support/notice_login_callback.php`,
-      },
     ]
   },
 }

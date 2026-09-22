@@ -8,7 +8,7 @@ import { Injectable, Logger } from '@nestjs/common'
  *
  * **초안까지 다 보인다.** Directus Core 는 권한에 조건을 못 걸어서
  * (custom_permission_rules_enabled is a restricted resource) 걸러 내는 일은
- * 여기서 한다. 그래서 공개로 내보내는 경로는 반드시 published() 를 거친다.
+ * 여기서 한다. 그래서 공개로 내보내는 조회는 반드시 `status = published` 를 건다.
  */
 @Injectable()
 export class DirectusService {
@@ -73,16 +73,6 @@ export class DirectusService {
     })
   }
 
-  /**
-   * 공개로 내보낼 조건.
-   *
-   * **`publish_at` 을 여기서 따지지 않는다.** 예약 게시는 Directus 의 1분 크론이
-   * status 를 바꾼다. 여기서 시각을 또 보면 관리 화면보다 최대 1분 먼저 공개돼
-   * 둘이 어긋난다. 판단 기준은 크론 한 곳에만 둔다.
-   */
-  published(): string {
-    return JSON.stringify({ status: { _eq: 'published' } })
-  }
 
   /**
    * 조회에 실을 언어들. 요청 언어가 먼저고 기본 언어가 예비다.

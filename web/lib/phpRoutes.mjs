@@ -8,11 +8,6 @@
  * 대조 스크립트(scripts/compare-all.sh)도 이 목록을 읽는다. 목록이 두 군데
  * 있으면 한쪽만 고쳐 놓고 "왜 안 걸리지" 를 하게 된다.
  *
- * **여기 넣으면 안 되는 것**: `/page/support/notice_api.php` 와
- * `/page/support/notice_login_callback.php`. 둘은 화면이 아니라 Nest 로
- * 넘기는 주소이고, 콜백 주소는 사내 IAM 화이트리스트에 글자 그대로 올라가
- * 있다. 주소를 바꾸면 로그인이 죽는다.
- *
  * @type {string[]}  — `.php` 를 뺀 주소. 옛 주소는 여기에 `.php` 를 붙인 것.
  */
 export const CLEAN_PATHS = [

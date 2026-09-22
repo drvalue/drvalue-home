@@ -53,17 +53,10 @@ services:
     environment:
       PORT: 3500
       DIRECTUS_URL: http://directus:8055
-      NOTIFY_STATE_DIR: /data
       # nginx 같은 프록시 뒤에 두면 1 — main.ts 의 경고 참조.
       TRUST_PROXY: ${TRUST_PROXY:-1}
     ports:
       - '3500:3500'
-    volumes:
-      - api_state:/data
     depends_on:
       directus:
         condition: service_healthy
-
-volumes:
-  api_state:
-    name: drvalue_api_state

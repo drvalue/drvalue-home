@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config'
 import { IamModule } from '@drvalue-oss/iam-nestjs'
 import { ContentModule } from './content/content.module'
 import { InquiryModule } from './inquiry/inquiry.module'
-import { NotifyModule } from './notify/notify.module'
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { NotifyModule } from './notify/notify.module'
     }),
     ContentModule,
     InquiryModule,
-    NotifyModule,
   ],
 })
 export class AppModule {}
