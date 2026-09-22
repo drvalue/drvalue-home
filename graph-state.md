@@ -80,8 +80,8 @@ A3 합친 뒤 할 것: 관리 목록 검색·상태 필터·쪽 넘김을 브라
 | A3. 관리 UX 1차 | ✅ | 서랍 메뉴·대시보드·문의 배지·저장 막대·알림·이탈 확인·모바일 카드·검색 주소·입력칸·삭제 확인·연혁 묶음·이력 말·게시판별 칸·건너뛰기 | 합침 · web 검사 8종 통과(copy 451곳 0) · 브라우저: 목록 검색·상태 필터 요청 4건 전부 200(A1 의 400 규칙과 맞음) · A3 측정표(390 미디어 375/375, 본문 시작 52px, 로그아웃 대비 16.27:1) | 일부: 이탈 보호(브라우저 뒤로 가기 못 막음) · 삭제 되돌리기 없음 · 연혁 끌어 옮기기 없음. api 요청: GET /inquiries/:id · 대시보드 요약 한 번에 |
 | A3b. 예약 글 표시·필터 | ✅ | 목록 배지·「예약」「내림 예정」 필터 · GET /admin/dashboard(한 번에) · GET /admin/inquiries/:id | 합침 · 부모 docker verify 176/0/1 · web 8종 통과 · copy 465곳 0 | 화면은 브라우저로 아직 안 봄(C2) |
 | A4. 페이지 편집 엔진 | ✅ | page_contents(0004 — 옛 Directus pages 표와 이름을 피함) · 스키마는 api(text·textarea·richtext(sanitize-html)·image·link·list·group) · /admin/pages 자동 폼 · 공개 GET /api/content/pages/:key · 오시는 길 시범 · page-seed.mjs | 합침 · 부모 docker verify 214/0/1 · node --test 30/30 · web 8종 통과 · 오시는 길 CMS 로 렌더(주소 3곳) · A4 실측: 저장→공개 즉시, api 꺼도 기본 글, 390 넘침 없음 | 페이지 이력은 날 JSON·되돌리기 불가(R1·C2). 웹 LocationContent 타입은 손으로 맞춤(C1) |
-| E7. 회사·사업·서비스 페이지 | ⬜ | 스키마 · 씨앗(지금 TS 내용) | 장마다 저장→반영 · check-pages 110/110 그대로 | |
-| E8. 메인 화면 | ⬜ | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
+| E7. 회사·사업·서비스 페이지 | 🔄 | 스키마 · 씨앗(지금 TS 내용) · 0008 | 장마다 저장→반영 · check-pages 110/110 그대로 | |
+| E8. 메인 화면 | 🔄 | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
 | E9. 메뉴 관리 | ✅ | site_menu_items(0006, 옛 Directus menu_items 와 이름을 피함) · 공개 GET /api/content/menu · 관리 GET·PUT /api/admin/menu · /admin/menu · 헤더·경로 줄·왼쪽 차례·하단이 getMenu() · 60초 캐시 + 저장 뒤 비우기 | 합침 · 부모 docker verify 194/0/1 · web 8종 통과 · 공개 메뉴 200 · E9 실측: 「뉴스」 숨김→헤더에서 사라짐→복구, api 꺼도 lib/menu.ts | 할 것: sitemap.ts 를 getMenu() 로(E10 뒤) · 메뉴 이력 되돌리기(R1) · 화면 눈 확인(C2) |
 | E10. SEO·GEO·GA | 🔄 | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
 | R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 · 새 표(pages 등) 변경 이력 되돌리기 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | 3차 물결. A4·E9·E10 합친 뒤(admin-revision 을 같이 고치므로) |
