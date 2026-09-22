@@ -8,7 +8,7 @@ import { CommonError } from '../../../common/error/common-error';
 import { imageSize } from '../../../common/image/image-size';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
-import { uploadsDir } from '../../../common/uploads';
+import { AppConfig } from '../../../common/config/app-config';
 import { AdminFileError } from '../error/admin-file.error';
 import { FileDefaultRepository } from '../repository/file-default.repository';
 
@@ -63,15 +63,16 @@ export class AdminFileDefaultService {
     title?: string,
     who?: SessionPayload,
   ): Promise<FileEntity> {
-    if (!file) throw new CommonError(AdminFileError.NO_FILE);
+    if (!file) throw CommonError.createByErrorCode(AdminFileError.NO_FILE);
     const ext = ALLOWED[file.mimetype];
-    if (!ext) throw new CommonError(AdminFileError.TYPE_NOT_ALLOWED);
+    if (!ext)
+      throw CommonError.createByErrorCode(AdminFileError.TYPE_NOT_ALLOWED);
     if (file.size > limitOf(file.mimetype))
-      throw new CommonError(AdminFileError.TOO_LARGE);
+      throw CommonError.createByErrorCode(AdminFileError.TOO_LARGE);
     const id = randomUUID();
     const filenameDisk = `${id}${ext}`;
-    mkdirSync(uploadsDir(), { recursive: true });
-    writeFileSync(join(uploadsDir(), filenameDisk), file.buffer);
+    mkdirSync(AppConfig.uploadsDir, { recursive: true });
+    writeFileSync(join(AppConfig.uploadsDir, filenameDisk), file.buffer);
     const size = file.mimetype.startsWith('image/')
       ? imageSize(file.buffer)
       : null;
@@ -141,7 +142,7 @@ export class AdminFileDefaultService {
 
   async get(id: string): Promise<FileEntity> {
     const row = await this.fileDefaultRepository.findById(id);
-    if (!row) throw new CommonError(AdminFileError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminFileError.NOT_FOUND);
     return row;
   }
 
@@ -179,7 +180,8 @@ export class AdminFileDefaultService {
   ): Promise<void> {
     const row = await this.get(id);
     const used = (await this.fileDefaultRepository.usage([id])).get(id) ?? 0;
-    if (used > 0 && !force) throw new CommonError(AdminFileError.IN_USE);
+    if (used > 0 && !force)
+      throw CommonError.createByErrorCode(AdminFileError.IN_USE);
     const before = this.view(row, used);
     await this.fileDefaultRepository.repository.manager.transaction(
       async (m) => {
@@ -202,7 +204,7 @@ export class AdminFileDefaultService {
   /** 디스크 경로. filename_disk 에 경로 문자가 들어 있으면 거른다. */
   diskPath(row: FileEntity): string {
     const name = String(row.filenameDisk ?? '').replace(/[/\\]/g, '');
-    return join(uploadsDir(), name);
+    return join(AppConfig.uploadsDir, name);
   }
 
   view(r: FileEntity, used: number): AdminFileView {

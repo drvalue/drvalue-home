@@ -31,6 +31,9 @@
   font-size: 14px;
   line-height: 1.55;
   text-align: left;
+  /* 한국어는 낱말 사이에서만 줄을 바꾼다. 칸보다 긴 낱말(주소·이메일)만 쪼갠다. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .dva a {
   color: inherit;

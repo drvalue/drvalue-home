@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { adminFetch, AdminMe, BOARDS, canEditBoard } from '@/lib/admin'
+import { ROLE_LABEL } from '@/lib/admin-extra'
 
 /**
  * 사이드바 + 세션 확인. /admin/login 은 껍데기 없이 그대로 보여 준다.
@@ -70,7 +71,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         )}
         <div className="dva_me">
           <div>{me.name ? `${me.name} · ` : ''}{me.email}</div>
-          <small>{me.role === 'admin' ? '관리자' : me.role === 'marketing' ? '마케팅' : me.role === 'hr' ? '인사' : ''}</small>
+          <small>{me.role ? ROLE_LABEL[me.role] : ''}</small>
           <button type="button" className="dva_btn is-small" onClick={logout}>로그아웃</button>
         </div>
       </aside>

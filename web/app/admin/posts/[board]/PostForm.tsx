@@ -80,7 +80,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     adminFetch<{ data: string[] }>(`/api/admin/posts/${src}`).then((r) => setLabels(r.data)).catch(() => {})
   }, [board])
 
-  if (!board) return <div className="dva_error">없는 게시판이다: {boardKey}</div>
+  if (!board) return <div className="dva_error">게시판을 찾을 수 없습니다.</div>
   if (!post) return error ? <div className="dva_error">{error}</div> : <div className="dva_empty">불러오는 중…</div>
 
   const t = post.translations.find((x) => x.languages_code === lang) ?? blankTranslation(lang)
@@ -205,7 +205,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <datalist id="f-cat-list">
                 {labels.map((l) => <option key={l} value={l} />)}
               </datalist>
-              <small>쓰던 값이 목록에 뜬다. 없으면 그대로 적으면 새 구분이 된다.</small>
+              <small>전에 쓴 구분이 목록에 나옵니다. 목록에 없으면 새로 적으면 됩니다.</small>
             </div>
           )}
           {k === 'faq' && (
@@ -215,7 +215,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <datalist id="f-faqcat-list">
                 {labels.map((l) => <option key={l} value={l} />)}
               </datalist>
-              <small>쓰던 분류가 목록에 뜬다. 없으면 그대로 적으면 새 분류가 된다.</small>
+              <small>전에 쓴 분류가 목록에 나옵니다. 목록에 없으면 새로 적으면 됩니다.</small>
             </div>
           )}
           {k !== 'faq' && (
@@ -252,12 +252,12 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           <div className="dva_field">
             <label htmlFor="f-pub">예약 공개</label>
             <input id="f-pub" type="datetime-local" value={toLocal(post.publish_at)} onChange={(e) => set({ publish_at: fromLocal(e.target.value) })} />
-            <small>비우면 바로. 정하면 상태와 상관없이 그 시각에 사이트에 나온다.</small>
+            <small>비워 두면 바로 반영됩니다. 시각을 정하면 상태와 관계없이 그 시각에 사이트에 나옵니다.</small>
           </div>
           <div className="dva_field">
             <label htmlFor="f-unpub">자동 내림</label>
             <input id="f-unpub" type="datetime-local" value={toLocal(post.unpublish_at)} onChange={(e) => set({ unpublish_at: fromLocal(e.target.value) })} />
-            <small>비우면 계속 보인다. 정하면 그 시각에 초안으로 돌아간다.</small>
+            <small>비워 두면 계속 보입니다. 시각을 정하면 그 시각에 초안으로 돌아갑니다.</small>
           </div>
           {(k === 'notice' || k === 'press' || k === 'news') && (
             <label className="dva_check">
@@ -278,7 +278,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <div className="dva_field">
                 <label htmlFor="f-deadline">마감일</label>
                 <input id="f-deadline" type="date" disabled={post.is_open_ended} value={post.is_open_ended ? '' : val(post.deadline)} onChange={(e) => set({ deadline: e.target.value || null })} />
-                {post.is_open_ended && <small>상시 채용이라 마감일이 없다.</small>}
+                {post.is_open_ended && <small>상시 채용이라 마감일이 없습니다.</small>}
               </div>
             </>
           )}

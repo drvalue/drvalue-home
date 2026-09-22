@@ -28,10 +28,10 @@ export type AdminUserRow = {
 }
 
 export const ACTION_LABEL: Record<string, string> = {
-  create: '만듦',
-  update: '고침',
-  delete: '지움',
-  restore: '되돌림',
+  create: '작성',
+  update: '수정',
+  delete: '삭제',
+  restore: '복구',
 }
 
 export const COLLECTION_LABEL: Record<string, string> = {
@@ -42,7 +42,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
 }
 
 export const ROLE_LABEL: Record<AdminUserRow['role'], string> = {
-  admin: '전부',
+  admin: '전체 권한',
   marketing: '마케팅',
   hr: '인사',
 }

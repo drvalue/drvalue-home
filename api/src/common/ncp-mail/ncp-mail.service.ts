@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHmac } from 'node:crypto';
+import { AppConfig } from '../config/app-config';
 
 export interface NcpMailInput {
   user_name: string;
@@ -19,14 +20,11 @@ export class NcpMailService {
 
   private get cfg() {
     return {
-      accessKey: process.env.NCP_ACCESS_KEY ?? '',
-      secretKey: process.env.NCP_SECRET_KEY ?? '',
+      accessKey: AppConfig.mail.accessKey,
+      secretKey: AppConfig.mail.secretKey,
       apiBase: 'https://mail.apigw.ntruss.com/api/v1',
-      sender: process.env.NCP_MAIL_SENDER_ADDRESS ?? '',
-      to: (process.env.NCP_MAIL_TO ?? '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
+      sender: AppConfig.mail.sender,
+      to: AppConfig.mail.to,
     };
   }
 

@@ -54,7 +54,7 @@ export class AdminPostDefaultService {
   /** 역할이 이 게시판을 만질 수 있나. 목록·낱개 읽기도 막는다 — hr 이 공지를 볼 이유가 없다. */
   assertBoard(who: SessionPayload, board: string): void {
     if (!canEditBoard(who.role, board))
-      throw new CommonError(AdminAuthError.FORBIDDEN);
+      throw CommonError.createByErrorCode(AdminAuthError.FORBIDDEN);
   }
 
   async list(
@@ -146,7 +146,7 @@ export class AdminPostDefaultService {
 
   async get(id: number, who?: SessionPayload) {
     const row = await this.postDefaultRepository.findOneFull(id);
-    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminPostError.NOT_FOUND);
     if (who) this.assertBoard(who, row.board);
     return this.full(row);
   }
@@ -156,7 +156,7 @@ export class AdminPostDefaultService {
     this.requireKo(dto);
     const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
     if (await this.postDefaultRepository.findBySlug(slug))
-      throw new CommonError(AdminPostError.SLUG_TAKEN);
+      throw CommonError.createByErrorCode(AdminPostError.SLUG_TAKEN);
     const row = this.postDefaultRepository.repository.create({
       ...this.columns(dto),
       slug,
@@ -196,12 +196,12 @@ export class AdminPostDefaultService {
     this.assertBoard(who, dto.board);
     this.requireKo(dto);
     const row = await this.postDefaultRepository.findOneFull(id);
-    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminPostError.NOT_FOUND);
     this.assertBoard(who, row.board);
     const before = this.full(row);
     if (dto.slug && dto.slug !== row.slug) {
       if (await this.postDefaultRepository.findBySlug(dto.slug))
-        throw new CommonError(AdminPostError.SLUG_TAKEN);
+        throw CommonError.createByErrorCode(AdminPostError.SLUG_TAKEN);
       row.slug = dto.slug;
     }
     Object.assign(row, this.columns(dto), {
@@ -240,7 +240,7 @@ export class AdminPostDefaultService {
 
   async remove(id: number, who: SessionPayload): Promise<void> {
     const row = await this.postDefaultRepository.findOneFull(id);
-    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminPostError.NOT_FOUND);
     this.assertBoard(who, row.board);
     const before = this.full(row);
     await this.postDefaultRepository.repository.remove(row);
@@ -265,7 +265,8 @@ export class AdminPostDefaultService {
 
   private requireKo(dto: ControllerAdminPostDefaultSaveDto): void {
     const ko = dto.translations.find((t) => t.languages_code === 'ko-KR');
-    if (!ko?.title?.trim()) throw new CommonError(AdminPostError.NEED_KO);
+    if (!ko?.title?.trim())
+      throw CommonError.createByErrorCode(AdminPostError.NEED_KO);
   }
 
   private columns(dto: ControllerAdminPostDefaultSaveDto): Partial<PostEntity> {

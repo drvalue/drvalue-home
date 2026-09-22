@@ -128,20 +128,28 @@ export class AdminError extends Error {
   }
 }
 
+/**
+ * 관리 API 호출. 실패하면 api 가 준 문구(`message`, 사용자에게 하는 말)를 그대로 에러로 던진다.
+ * 화면은 `e.message` 를 띄우면 된다. 문구가 없을 때만 여기 기본 문구를 쓴다.
+ */
 export async function adminFetch<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, { credentials: 'include', ...init })
+  let res: Response
+  try {
+    res = await fetch(path, { credentials: 'include', ...init })
+  } catch {
+    throw new AdminError(0, '서버에 연결하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.')
+  }
   if (res.status === 401) {
     if (typeof window !== 'undefined' && !location.pathname.startsWith('/admin/login')) {
       location.replace('/admin/login')
     }
-    throw new AdminError(401, '로그인이 필요하다')
+    throw new AdminError(401, '로그인이 필요합니다.')
   }
   if (!res.ok) {
-    let message = `HTTP ${res.status}`
+    let message = '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
     try {
-      const body = (await res.json()) as { message?: string | string[] }
-      if (Array.isArray(body.message)) message = body.message.join(' / ')
-      else if (body.message) message = body.message
+      const body = (await res.json()) as { message?: unknown }
+      if (typeof body.message === 'string' && body.message) message = body.message
     } catch {}
     throw new AdminError(res.status, message)
   }

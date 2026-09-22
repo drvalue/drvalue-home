@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { AppConfig } from '../../../common/config/app-config';
 import { CommonError } from '../../../common/error/common-error';
 import {
   issueSession,
@@ -29,9 +30,9 @@ export class AdminAuthDefaultService {
 
   constructor(private readonly adminUserService: AdminUserService) {}
 
-  readonly secret = process.env.ADMIN_SESSION_SECRET ?? '';
+  readonly secret = AppConfig.sessionSecret;
   private readonly iamBase = 'https://iam.drvalue.co.kr';
-  private readonly callbackUrl = process.env.ADMIN_IAM_CALLBACK_URL ?? '';
+  private readonly callbackUrl = AppConfig.iamCallbackUrl;
 
   get configured(): boolean {
     return Boolean(this.iamBase && this.callbackUrl && this.secret);
@@ -39,7 +40,8 @@ export class AdminAuthDefaultService {
 
   /** IAM 로그인 주소와, 쿠키에 둘 서명된 state. */
   login(): { url: string; state: string; ttlMs: number } {
-    if (!this.configured) throw new CommonError(AdminAuthError.NOT_CONFIGURED);
+    if (!this.configured)
+      throw CommonError.createByErrorCode(AdminAuthError.NOT_CONFIGURED);
     const state = this.signState(
       `${randomBytes(24).toString('hex')}.${Date.now() + STATE_TTL_MS}`,
     );
@@ -54,7 +56,8 @@ export class AdminAuthDefaultService {
     stateFromQuery: string,
     stateFromCookie: string,
   ): Promise<string> {
-    if (!this.configured) throw new CommonError(AdminAuthError.NOT_CONFIGURED);
+    if (!this.configured)
+      throw CommonError.createByErrorCode(AdminAuthError.NOT_CONFIGURED);
     if (
       !this.verifyState(stateFromQuery) &&
       !this.verifyState(stateFromCookie)
@@ -62,9 +65,10 @@ export class AdminAuthDefaultService {
       this.log.warn(
         `bad state (cookie=${stateFromCookie ? 'yes' : 'no'} query=${stateFromQuery ? 'yes' : 'no'})`,
       );
-      throw new CommonError(AdminAuthError.BAD_STATE);
+      throw CommonError.createByErrorCode(AdminAuthError.BAD_STATE);
     }
-    if (!code) throw new CommonError(AdminAuthError.EXCHANGE_FAILED);
+    if (!code)
+      throw CommonError.createByErrorCode(AdminAuthError.EXCHANGE_FAILED);
 
     const [st, json] = await this.call(
       `${this.iamBase}/auth/token/exchange`,
@@ -78,7 +82,7 @@ export class AdminAuthDefaultService {
       json?.access_token ?? json?.data?.access_token ?? null;
     if (!iamToken) {
       this.log.warn(`exchange ${st} keys=${this.keys(json)}`);
-      throw new CommonError(AdminAuthError.EXCHANGE_FAILED);
+      throw CommonError.createByErrorCode(AdminAuthError.EXCHANGE_FAILED);
     }
 
     // 사람: 토큰 claim 이 email·role·groups 를 들고 온다(실측). /api/v1/me 는 Bearer 로 302.
@@ -88,7 +92,7 @@ export class AdminAuthDefaultService {
       .toLowerCase();
     if (!email) {
       this.log.warn(`no email (claim keys=${this.keys(claims)})`);
-      throw new CommonError(AdminAuthError.NO_EMAIL);
+      throw CommonError.createByErrorCode(AdminAuthError.NO_EMAIL);
     }
     const sub = String((claims as { sub?: unknown }).sub ?? '');
     const name =
@@ -102,7 +106,7 @@ export class AdminAuthDefaultService {
       this.log.warn(
         `denied: IAM 관리자가 아니다 role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
       );
-      throw new CommonError(AdminAuthError.NOT_ALLOWED);
+      throw CommonError.createByErrorCode(AdminAuthError.NOT_ALLOWED);
     }
     const row = await this.adminUserService.syncAdmin(email, name, sub);
     const role = row.role;

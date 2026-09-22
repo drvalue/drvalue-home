@@ -67,7 +67,7 @@ export default function MediaPage() {
     for (const [i, f] of list.entries()) {
       const set = (j: Partial<Job>) => setJobs((js) => js.map((x, k) => (k === i ? { ...x, ...j } : x)))
       if (tooLarge(f)) {
-        set({ state: 'err', message: '너무 크다 (그림·PDF 20MB · 영상 200MB)' })
+        set({ state: 'err', message: '파일이 너무 큽니다. 그림·PDF 는 20MB, 영상은 200MB 까지 올릴 수 있습니다.' })
         continue
       }
       try {
@@ -171,10 +171,10 @@ export default function MediaPage() {
             if (e.dataTransfer.files?.length) upload(e.dataTransfer.files)
           }}
         >
-          {drag && <div className="dvm_drop_hint">여기에 놓으면 올린다</div>}
+          {drag && <div className="dvm_drop_hint">여기에 놓으면 올라갑니다.</div>}
           {rows && rows.data.length === 0 && (
             <div className="dva_empty">
-              {q || filter ? '맞는 파일이 없다' : '파일이 없다. 끌어다 놓거나 「파일 올리기」를 누른다.'}
+              {q || filter ? '찾는 파일이 없습니다.' : '아직 올린 파일이 없습니다. 파일을 끌어다 놓거나 「파일 올리기」를 눌러 주세요.'}
             </div>
           )}
           <ul className="dvm_grid">
@@ -239,7 +239,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
     setErr('')
     try {
       await renameMedia(file.id, title.trim())
-      setMsg('이름을 바꿨다')
+      setMsg('이름을 바꿨습니다.')
       await onChanged()
     } catch (e) {
       setErr((e as Error).message)
@@ -251,12 +251,12 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
   async function copy() {
     try {
       await navigator.clipboard.writeText(publicUrl)
-      setMsg('주소를 복사했다')
+      setMsg('주소를 복사했습니다.')
     } catch {
       // 클립보드를 못 쓰는 창 — 칸을 골라 둬서 손으로 복사하게 한다.
       const el = document.getElementById('dvm-url') as HTMLInputElement | null
       el?.select()
-      setMsg('주소 칸을 골라 뒀다 — 복사(⌘C)')
+      setMsg('자동 복사가 막혀 있습니다. 주소 칸을 선택해 두었으니 직접 복사해 주세요.')
     }
   }
 
@@ -326,7 +326,7 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
             복사
           </button>
         </div>
-        <small>게시된 글이 이 파일을 쓸 때만 사이트에서 열린다.</small>
+        <small>게시된 글에서 쓰는 파일만 사이트에서 열립니다.</small>
       </div>
 
       {msg && <div className="dva_notice">{msg}</div>}
@@ -341,8 +341,8 @@ function Detail({ file, onClose, onChanged }: { file: AdminFile; onClose: () => 
           <div className="dvm_confirm">
             <p>
               {file.used > 0
-                ? `글 ${file.used}곳에서 쓰는 파일이다. 지우면 그 글들의 대표 이미지·첨부에서 빠진다.`
-                : '지우면 되돌릴 수 없다.'}
+                ? `글 ${file.used}곳에서 쓰는 파일입니다. 지우면 그 글의 대표 이미지와 첨부에서도 빠집니다.`
+                : '지우면 되돌릴 수 없습니다.'}
             </p>
             <div className="dvm_row">
               <button type="button" className="dva_btn is-danger" disabled={busy} onClick={remove}>

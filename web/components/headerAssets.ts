@@ -186,7 +186,9 @@ $(document).ready(function() {
                     dvNotify("짧은 시간에 너무 많이 전송되었습니다. 잠시 후 다시 시도해 주세요.", 'error');
                     return;
                 }
-                dvNotify("오류가 발생했습니다. hi@drvalue.co.kr로 직접 문의 부탁드립니다.", 'error');
+                // 400 은 칸 하나가 틀린 것이다. 서버가 어느 칸인지 사용자에게 하는 말로 준다.
+                var said = xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.message;
+                dvNotify(typeof said === 'string' && said ? said : "오류가 발생했습니다. hi@drvalue.co.kr로 직접 문의 부탁드립니다.", 'error');
             },
             complete: function() {
                 $btn.text('메일 발송하기').prop('disabled', false);

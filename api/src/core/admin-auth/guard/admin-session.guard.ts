@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ADMIN_ROLES_KEY } from './roles.decorator';
 import type { Request } from 'express';
+import { AppConfig } from '../../../common/config/app-config';
 import { CommonError } from '../../../common/error/common-error';
 import {
   parseCookies,
@@ -42,9 +43,8 @@ export class AdminSessionGuard implements CanActivate {
     const req = ctx
       .switchToHttp()
       .getRequest<Request & { admin?: SessionPayload }>();
-    const secret = process.env.ADMIN_SESSION_SECRET ?? '';
     const session = readSession(
-      secret,
+      AppConfig.sessionSecret,
       parseCookies(req.headers.cookie)[ADMIN_COOKIE],
     );
     if (session) {
@@ -53,7 +53,7 @@ export class AdminSessionGuard implements CanActivate {
       req.admin = session;
       return true;
     }
-    throw new CommonError(AdminAuthError.UNAUTHORIZED);
+    throw CommonError.createByErrorCode(AdminAuthError.UNAUTHORIZED);
   }
 
   /** @AdminRoles() 가 붙은 핸들러는 그 역할만. admin 은 항상. */
@@ -65,7 +65,7 @@ export class AdminSessionGuard implements CanActivate {
     if (!need || need.length === 0) return;
     // 역할 없는 세션(옛 세션)은 아무 데도 못 간다 — 조용히 admin 으로 올리지 않는다.
     if (role === 'admin' || (role && need.includes(role))) return;
-    throw new CommonError(AdminAuthError.FORBIDDEN);
+    throw CommonError.createByErrorCode(AdminAuthError.FORBIDDEN);
   }
 
   /** admin_users 행이 없거나 꺼지면(IAM 관리자 해제) 세션이 남아 있어도 60초 안에 막힌다. 범위 변경도 여기서 따라온다. */
@@ -75,7 +75,7 @@ export class AdminSessionGuard implements CanActivate {
     const row = await this.adminUserService.find(session.email);
     if (!row || !row.enabled) {
       this.log.warn('admin_users 에서 빠진 사용자: 세션 거부');
-      throw new CommonError(AdminAuthError.NOT_ALLOWED);
+      throw CommonError.createByErrorCode(AdminAuthError.NOT_ALLOWED);
     }
     session.role = row.role;
     this.checked.set(key, Date.now());

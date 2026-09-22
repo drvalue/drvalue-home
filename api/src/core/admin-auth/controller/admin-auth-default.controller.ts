@@ -6,13 +6,16 @@ import {
   Query,
   Req,
   Res,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { sessionCookieOptions } from '../../../common/session/session-cookie';
 import {
   parseCookies,
   SessionPayload,
 } from '../../../common/session/session-token';
+import { AdminLoginRedirectFilter } from '../filter/admin-login-redirect.filter';
 import {
   ADMIN_COOKIE,
   AdminSessionGuard,
@@ -23,8 +26,8 @@ import { AdminAuthDefaultService } from '../service/admin-auth-default.service';
 const STATE_COOKIE = 'dv_admin_state';
 
 /**
- * 관리 화면 로그인. 브라우저가 직접 부른다(게이트웨이 없음).
- * 세션 쿠키는 HttpOnly · SameSite=Lax · Path=/ — IAM 에서 돌아오는 콜백에도 실린다.
+ * 관리 화면 로그인. login·callback 은 브라우저가 이동해 오는 주소라
+ * 실패하면 JSON 대신 로그인 화면(`/admin/login?error=<코드>`)으로 돌려보낸다.
  */
 @Controller('admin/auth')
 export class AdminAuthDefaultController {
@@ -32,25 +35,16 @@ export class AdminAuthDefaultController {
     private readonly adminAuthDefaultService: AdminAuthDefaultService,
   ) {}
 
-  private cookieOpts(maxAge: number) {
-    return {
-      httpOnly: true,
-      sameSite: 'lax' as const,
-      // https 로 돌아오는 배포면 secure. 로컬 http 콜백이면 끈다 — 별도 변수 없이.
-      secure: (process.env.ADMIN_IAM_CALLBACK_URL ?? '').startsWith('https://'),
-      path: '/',
-      maxAge,
-    };
-  }
-
   @Get('login')
+  @UseFilters(AdminLoginRedirectFilter)
   login(@Res() res: Response) {
     const { url, state, ttlMs } = this.adminAuthDefaultService.login();
-    res.cookie(STATE_COOKIE, state, this.cookieOpts(ttlMs));
+    res.cookie(STATE_COOKIE, state, sessionCookieOptions(ttlMs));
     return res.redirect(url);
   }
 
   @Get('callback')
+  @UseFilters(AdminLoginRedirectFilter)
   async callback(
     @Req() req: Request,
     @Res() res: Response,
@@ -67,7 +61,7 @@ export class AdminAuthDefaultController {
     res.cookie(
       ADMIN_COOKIE,
       session,
-      this.cookieOpts(this.adminAuthDefaultService.sessionTtlMs()),
+      sessionCookieOptions(this.adminAuthDefaultService.sessionTtlMs()),
     );
     return res.redirect('/admin');
   }

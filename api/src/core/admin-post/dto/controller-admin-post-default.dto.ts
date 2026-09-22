@@ -70,7 +70,7 @@ export class ControllerAdminPostDefaultSaveDto {
   @IsOptional()
   @IsString()
   @Matches(/^[a-z0-9][a-z0-9-]{0,200}$/, {
-    message: 'slug 는 소문자·숫자·하이픈',
+    message: '주소는 영문 소문자·숫자·하이픈(-)으로만 적어 주세요.',
   })
   slug?: string;
 

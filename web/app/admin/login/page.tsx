@@ -9,12 +9,27 @@ import './login.css'
  */
 const YEAR = new Date().getFullYear()
 
+/**
+ * 로그인이 실패하면 api 가 `?error=<에러 코드>` 로 돌려보낸다. 문구는 여기서 코드로 고른다 —
+ * 주소에 실린 문구를 그대로 띄우면 누구나 이 화면에 아무 말이나 쓸 수 있다.
+ */
+const LOGIN_ERRORS: Record<string, string> = {
+  ADMIN_AUTH_NOT_ALLOWED:
+    '관리자 계정이 아닙니다. 사내 IAM 에서 관리자로 지정된 계정만 들어올 수 있습니다. 권한이 필요하면 IAM 담당자에게 요청해 주세요.',
+  ADMIN_AUTH_BAD_STATE: '로그인 요청 시간이 지났습니다. 다시 로그인해 주세요.',
+  ADMIN_AUTH_EXCHANGE_FAILED: 'IAM 로그인을 확인하지 못했습니다. 다시 로그인해 주세요.',
+  ADMIN_AUTH_NO_EMAIL: 'IAM 계정에 이메일이 없어 들어올 수 없습니다. IAM 담당자에게 문의해 주세요.',
+  ADMIN_AUTH_NOT_CONFIGURED: '로그인 설정이 끝나지 않았습니다. 사이트 담당자에게 알려 주세요.',
+}
+const LOGIN_ERROR_DEFAULT = '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+
 export default async function AdminLogin({
   searchParams,
 }: {
-  searchParams: Promise<{ signed_out?: string }>
+  searchParams: Promise<{ signed_out?: string; error?: string }>
 }) {
-  const { signed_out } = await searchParams
+  const { signed_out, error } = await searchParams
+  const errorText = error ? (LOGIN_ERRORS[error] ?? LOGIN_ERROR_DEFAULT) : null
   return (
     <main className="dva_auth">
       <section className="dva_auth_brand" aria-label="디알밸류 관리 화면 소개">
@@ -30,7 +45,10 @@ export default async function AdminLogin({
           <p>저장하면 사이트에 바로 반영됩니다. 로그인은 사내 IAM 계정으로만 합니다.</p>
           <ul className="dva_auth_scope" aria-label="관리하는 것">
             <li>공지사항</li>
+            <li>뉴스</li>
             <li>보도자료</li>
+            <li>채용</li>
+            <li>FAQ</li>
             <li>특허</li>
             <li>저작권</li>
             <li>수행실적</li>
@@ -51,7 +69,12 @@ export default async function AdminLogin({
             height={137}
             aria-hidden="true"
           />
-          {signed_out === '1' && <span className="dva_auth_badge">로그아웃됐습니다</span>}
+          {signed_out === '1' && !errorText && <span className="dva_auth_badge">로그아웃되었습니다.</span>}
+          {errorText && (
+            <p className="dva_auth_alert" role="alert">
+              {errorText}
+            </p>
+          )}
           <h1>디알밸류 관리</h1>
           <p>사내 IAM 계정으로 들어갑니다. 아이디·비밀번호는 IAM 에서 묻습니다.</p>
           <a className="dva_auth_btn" href="/api/admin/auth/login">

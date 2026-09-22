@@ -43,7 +43,7 @@ export class InquiryDefaultService {
     if (stored.status === 'rejected')
       this.log.error('DB 저장 실패', stored.reason);
     if (mailed.status === 'rejected' && stored.status === 'rejected') {
-      throw new CommonError(InquiryError.SUBMIT_FAILED);
+      throw CommonError.createByErrorCode(InquiryError.SUBMIT_FAILED);
     }
   }
 }

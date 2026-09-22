@@ -121,7 +121,7 @@ export default function InquiriesPage() {
 
       <div className="dvi_split">
         <div className="dvi_listwrap">
-          {rows && rows.data.length === 0 && <div className="dva_empty">문의가 없다</div>}
+          {rows && rows.data.length === 0 && <div className="dva_empty">문의가 없습니다.</div>}
           <ul className="dvi_list">
             {rows?.data.map((x) => (
               <li key={x.id}>
@@ -165,7 +165,7 @@ export default function InquiriesPage() {
           {sel ? (
             <Detail key={sel.id} item={sel} people={people} onSaved={replace} />
           ) : (
-            <div className="dva_empty">왼쪽에서 문의를 고르면 여기 보인다.</div>
+            <div className="dva_empty">왼쪽 목록에서 문의를 고르면 내용이 여기에 나옵니다.</div>
           )}
         </aside>
       </div>
@@ -246,7 +246,7 @@ function Detail({
             id="dvi-d-status"
             value={item.status}
             disabled={busy}
-            onChange={(e) => patch({ status: e.target.value }, '상태를 바꿨다')}
+            onChange={(e) => patch({ status: e.target.value }, '상태를 바꿨습니다.')}
           >
             {Object.entries(INQUIRY_STATUS).map(([k, v]) => (
               <option key={k} value={k}>
@@ -261,7 +261,7 @@ function Detail({
             id="dvi-d-assignee"
             value={item.assignee_email ?? ''}
             disabled={busy}
-            onChange={(e) => patch({ assignee_email: e.target.value || null }, '담당자를 바꿨다')}
+            onChange={(e) => patch({ assignee_email: e.target.value || null }, '담당자를 바꿨습니다.')}
           >
             <option value="">미지정</option>
             {people.map((p) => (
@@ -273,7 +273,7 @@ function Detail({
               <option value={item.assignee_email}>{item.assignee_email} (권한 없음)</option>
             )}
           </select>
-          {people.length === 0 && <small>권한 목록에 사람이 없다 — 「권한」에서 먼저 추가한다.</small>}
+          {people.length === 0 && <small>담당자로 고를 사람이 없습니다. IAM 관리자가 한 번 로그인하면 권한 목록에 나타납니다.</small>}
         </div>
       </div>
 
@@ -284,14 +284,14 @@ function Detail({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={5000}
-          placeholder="문의한 사람에게는 안 보인다"
+          placeholder="문의한 분에게는 보이지 않습니다."
         />
         <div className="dvi_note_actions">
           <button
             type="button"
             className="dva_btn"
             disabled={busy || note === (item.note ?? '')}
-            onClick={() => patch({ note: note.trim() ? note : null }, '메모를 저장했다')}
+            onClick={() => patch({ note: note.trim() ? note : null }, '메모를 저장했습니다.')}
           >
             메모 저장
           </button>

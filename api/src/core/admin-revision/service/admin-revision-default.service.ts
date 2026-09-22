@@ -57,13 +57,13 @@ export class AdminRevisionDefaultService {
     const rows = await this.revisionService.listFor(collection, itemId, 100);
     if (rows[0]) this.assertCanSee(rows[0], who);
     else if (collection === 'admin_users' && who.role !== 'admin')
-      throw new CommonError(AdminAuthError.FORBIDDEN);
+      throw CommonError.createByErrorCode(AdminAuthError.FORBIDDEN);
     return { data: rows.map((x) => this.row(x)) };
   }
 
   async get(id: number, who: SessionPayload) {
     const rev = await this.revisionService.get(id);
-    if (!rev) throw new CommonError(AdminRevisionError.NOT_FOUND);
+    if (!rev) throw CommonError.createByErrorCode(AdminRevisionError.NOT_FOUND);
     this.assertCanSee(rev, who);
     return {
       ...this.row(rev),
@@ -78,13 +78,16 @@ export class AdminRevisionDefaultService {
   /** 이 이력의 「바꾸기 전」으로 되돌린다. 되돌리기 자체도 이력 한 줄이 된다. */
   async restore(id: number, who: SessionPayload) {
     const rev = await this.revisionService.get(id);
-    if (!rev) throw new CommonError(AdminRevisionError.NOT_FOUND);
+    if (!rev) throw CommonError.createByErrorCode(AdminRevisionError.NOT_FOUND);
     if (rev.collection === 'files')
-      throw new CommonError(AdminRevisionError.FILE_NOT_RESTORABLE);
+      throw CommonError.createByErrorCode(
+        AdminRevisionError.FILE_NOT_RESTORABLE,
+      );
     if (rev.collection !== 'posts' && rev.collection !== 'inquiries')
-      throw new CommonError(AdminRevisionError.NOT_RESTORABLE);
+      throw CommonError.createByErrorCode(AdminRevisionError.NOT_RESTORABLE);
     const snap = rev.before as Snap | null;
-    if (!snap) throw new CommonError(AdminRevisionError.NO_BEFORE);
+    if (!snap)
+      throw CommonError.createByErrorCode(AdminRevisionError.NO_BEFORE);
 
     if (rev.collection === 'posts') return this.restorePost(snap, who);
     return this.restoreInquiry(Number(rev.itemId), snap, who);
@@ -102,7 +105,7 @@ export class AdminRevisionDefaultService {
       if (slug && (!current || current.slug !== slug)) {
         const clash = await repo.findOne({ where: { slug } });
         if (clash && clash.id !== id)
-          throw new CommonError(AdminRevisionError.SLUG_TAKEN);
+          throw CommonError.createByErrorCode(AdminRevisionError.SLUG_TAKEN);
       }
 
       const values = this.fromSnap(
@@ -116,7 +119,7 @@ export class AdminRevisionDefaultService {
           .exist({ where: { id: values.thumbnail } });
         if (!ok) {
           values.thumbnail = null;
-          warnings.push('대표 이미지 파일이 지워져 있어 비웠다');
+          warnings.push('대표 이미지 파일이 지워져 있어 비워 두었습니다.');
         }
       }
       if (current) await repo.update({ id }, values);
@@ -157,7 +160,7 @@ export class AdminRevisionDefaultService {
         );
         const gone = wanted.filter((f) => !have.has(f));
         if (gone.length)
-          warnings.push(`첨부 ${gone.length}개는 파일이 지워져 있어 뺐다`);
+          warnings.push(`첨부 ${gone.length}개는 파일이 지워져 있어 뺐습니다.`);
         for (const fileId of wanted.filter((f) => have.has(f)))
           await fRepo.insert({ post: { id } as PostEntity, fileId });
       }
@@ -227,7 +230,8 @@ export class AdminRevisionDefaultService {
   private async restoreInquiry(id: number, snap: Snap, who: SessionPayload) {
     const repo = this.ds.getRepository(InquiryEntity);
     const row = await repo.findOne({ where: { id } });
-    if (!row) throw new CommonError(AdminRevisionError.TARGET_GONE);
+    if (!row)
+      throw CommonError.createByErrorCode(AdminRevisionError.TARGET_GONE);
     const view = (r: InquiryEntity) => ({
       id: r.id,
       name: r.name,
@@ -287,11 +291,11 @@ export class AdminRevisionDefaultService {
   private assertCanSee(rev: RevisionEntity, who: SessionPayload): void {
     if (who.role === 'admin') return;
     if (rev.collection === 'admin_users')
-      throw new CommonError(AdminAuthError.FORBIDDEN);
+      throw CommonError.createByErrorCode(AdminAuthError.FORBIDDEN);
     if (rev.collection === 'posts') {
       const board = this.boardOf(rev);
       if (board && !canEditBoard(who.role, board))
-        throw new CommonError(AdminAuthError.FORBIDDEN);
+        throw CommonError.createByErrorCode(AdminAuthError.FORBIDDEN);
     }
   }
 

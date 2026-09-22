@@ -54,8 +54,8 @@ export default function UsersPage() {
       </div>
       <div className="dvu_intro">
         <p>
-          관리자 여부는 사내 IAM 이 정한다(<b>PLATFORM_ADMIN</b>). IAM 관리자가 한 번 로그인하면 여기
-          나타난다. 여기서는 각자 고칠 수 있는 범위만 정한다 — 전부 / 마케팅(채용 빼고) / 인사(채용만).
+          관리자 여부는 사내 IAM 에서 정합니다. IAM 관리자가 한 번 로그인하면 이 목록에 나타납니다.
+          여기서는 각자 고칠 수 있는 범위만 정합니다.
         </p>
         <ul className="dvu_roles">
           {ROLES.map((r) => (
@@ -74,7 +74,7 @@ export default function UsersPage() {
           </thead>
           <tbody>
             {rows && rows.length === 0 && (
-              <tr><td colSpan={5} className="dva_empty">아직 아무도 로그인하지 않았다</td></tr>
+              <tr><td colSpan={5} className="dva_empty">아직 로그인한 관리자가 없습니다.</td></tr>
             )}
             {rows?.map((u) => (
               <tr key={u.email} className={u.enabled ? '' : 'is-off'}>

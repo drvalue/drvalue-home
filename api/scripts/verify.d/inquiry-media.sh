@@ -42,7 +42,7 @@ else
   # 인사(hr)는 문의를 못 본다.
   IM_HRS=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$IM_HR',role:'hr',name:'verify hr',exp:Date.now()+600000}))")
   check "인사 역할은 문의 목록 403" "ADMIN_AUTH_FORBIDDEN" \
-    "$(curl -s -H "Cookie: dv_admin=$IM_HRS" "$API/api/admin/inquiries" --max-time 30 | pick 'print(d.get("code",""))')"
+    "$(curl -s -H "Cookie: dv_admin=$IM_HRS" "$API/api/admin/inquiries" --max-time 30 | pick 'print(d.get("resultCode",""))')"
 
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/inquiries/$IM_IID" --max-time 30
   check "검사 문의가 남지 않음" "0" "$(dbq "select count(*) from inquiries where id=$IM_IID")"

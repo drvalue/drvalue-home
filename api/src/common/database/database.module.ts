@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppConfig } from '../config/app-config';
 import { FileEntity } from '../entity/file.entity';
 import { InquiryEntity } from '../entity/inquiry.entity';
 import { AdminUserEntity } from '../entity/admin-user.entity';
@@ -26,12 +27,11 @@ export const ENTITIES = [
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      // 호스트·포트는 compose 가 db:5432 로 준다. 로컬은 localhost:3330(compose 가 연 포트).
-      host: process.env.DB_HOST ?? 'localhost',
-      port: Number(process.env.DB_PORT ?? 3330),
+      host: AppConfig.db.host,
+      port: AppConfig.db.port,
       database: 'drvalue_cms',
       username: 'drvalue',
-      password: process.env.DB_PASSWORD ?? '',
+      password: AppConfig.db.password,
       entities: ENTITIES,
       synchronize: false,
     }),

@@ -47,7 +47,7 @@ export class AdminUserDefaultService {
   ): Promise<AdminUserView> {
     const key = email.trim().toLowerCase();
     const row = await this.users.findOne({ where: { email: key } });
-    if (!row) throw new CommonError(AdminUserError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminUserError.NOT_FOUND);
     const next = role as AdminRole;
     const before = this.view(row);
     // 켜져 있는 마지막 「전부」를 내리면 아무도 범위를 못 고친다.
@@ -56,7 +56,7 @@ export class AdminUserDefaultService {
         where: { enabled: true, role: 'admin' },
       });
       if (wouldLockOut(row, next, admins))
-        throw new CommonError(AdminUserError.LAST_ADMIN);
+        throw CommonError.createByErrorCode(AdminUserError.LAST_ADMIN);
     }
     if (row.role === next) return before;
     row.role = next;

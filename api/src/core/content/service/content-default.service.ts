@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { uploadsDir } from '../../../common/uploads';
+import { AppConfig } from '../../../common/config/app-config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import { FileEntity } from '../../../common/entity/file.entity';
@@ -118,7 +118,7 @@ export class ContentDefaultService {
       .leftJoinAndSelect('pf.file', 'ff')
       .andWhere('p.slug = :slug', { slug })
       .getOne();
-    if (!row) throw new CommonError(ContentError.POST_NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(ContentError.POST_NOT_FOUND);
     const post = this.present(row as PostRow, language, true);
     return { data: { ...post, attachments: this.attachments(row) }, language };
   }
@@ -130,16 +130,17 @@ export class ContentDefaultService {
    * 다른 곳의 이미지를 공개하기 시작하면 fileIsPublic 에 추가해야 한다.
    */
   async publicFile(id: string): Promise<PublicFile> {
-    if (!UUID_RE.test(id)) throw new CommonError(ContentError.FILE_ID_INVALID);
+    if (!UUID_RE.test(id))
+      throw CommonError.createByErrorCode(ContentError.FILE_ID_INVALID);
     if (!(await this.fileIsPublic(id)))
-      throw new CommonError(ContentError.FILE_NOT_FOUND);
+      throw CommonError.createByErrorCode(ContentError.FILE_NOT_FOUND);
     const row = await this.files.findOne({ where: { id } });
     const name = String(row?.filenameDisk ?? '').replace(/[/\\]/g, '');
-    const path = join(uploadsDir(), name);
+    const path = join(AppConfig.uploadsDir, name);
     if (!row || !name || !existsSync(path)) {
       // 행은 있는데 디스크에 없다 — 밖으로는 404, 원인은 로그에.
       this.log.warn(`파일 ${id}: 디스크에 없음`);
-      throw new CommonError(ContentError.FILE_NOT_FOUND);
+      throw CommonError.createByErrorCode(ContentError.FILE_NOT_FOUND);
     }
     return {
       path,

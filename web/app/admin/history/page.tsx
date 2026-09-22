@@ -64,7 +64,7 @@ export default function HistoryPage() {
       <div className="dva_head">
         <h1>변경 이력</h1>
       </div>
-      <p className="dvh_lead">누가 언제 무엇을 바꿨는지. 한 줄을 누르면 바뀐 칸과 되돌리기가 나온다.</p>
+      <p className="dvh_lead">누가 언제 무엇을 바꿨는지 보여 줍니다. 한 줄을 누르면 바뀐 칸과 되돌리기 버튼이 나옵니다.</p>
       <div className="dva_tools">
         <select
           value={collection}
@@ -109,7 +109,7 @@ export default function HistoryPage() {
           </thead>
           <tbody>
             {rows && rows.data.length === 0 && (
-              <tr><td colSpan={4} className="dva_empty">이력이 없다</td></tr>
+              <tr><td colSpan={4} className="dva_empty">변경 이력이 없습니다.</td></tr>
             )}
             {rows?.data.map((r) => (
               <HistoryRow key={r.id} r={r} open={open?.id === r.id ? open : null} onPick={() => pick(r.id)} onRestored={() => { setOpen(null); load() }} />
@@ -176,8 +176,8 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
     setErr('')
     try {
       const r = await adminFetch<{ warnings?: string[] }>(`/api/admin/revisions/${rev.id}/restore`, { method: 'POST' })
-      const w = r.warnings?.length ? ` (${r.warnings.join(' · ')})` : ''
-      setMsg(`이 변경 전으로 되돌렸다${w}`)
+      const w = r.warnings?.length ? ' ' + r.warnings.join(' ') : ''
+      setMsg(`이 변경 전 상태로 되돌렸습니다.${w}`)
       setAsking(false)
       setTimeout(onRestored, 900)
     } catch (e) {
@@ -201,7 +201,7 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
           <span role="columnheader">바꾸기 전</span>
           <span role="columnheader">바꾼 뒤</span>
         </div>
-        {shown.length === 0 && <div className="dva_empty">바뀐 칸이 없다</div>}
+        {shown.length === 0 && <div className="dva_empty">바뀐 칸이 없습니다.</div>}
         {shown.map((x) => (
           <div key={x.key} className={`dvh_diff_row${x.changed ? ' is-changed' : ''}`} role="row">
             <span role="cell" className="dvh_k">{x.label}</span>
@@ -216,9 +216,9 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
         ) : rev.restorable ? (
           asking ? (
             <span className="dva_confirm">
-              이 변경 전 상태로 되돌린다?
-              <button type="button" className="dva_btn is-small is-danger" disabled={busy} onClick={restore}>예</button>
-              <button type="button" className="dva_btn is-small" onClick={() => setAsking(false)}>아니오</button>
+              이 변경 전 상태로 되돌릴까요?
+              <button type="button" className="dva_btn is-small is-danger" disabled={busy} onClick={restore}>되돌리기</button>
+              <button type="button" className="dva_btn is-small" onClick={() => setAsking(false)}>취소</button>
             </span>
           ) : (
             <button type="button" className="dva_btn is-small" onClick={() => setAsking(true)}>이 버전으로 되돌리기</button>
@@ -226,10 +226,10 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
         ) : (
           <span className="dvh_muted">
             {rev.collection === 'files'
-              ? '파일은 되돌릴 수 없다 — 다시 올린다'
+              ? '파일은 되돌릴 수 없습니다. 필요하면 다시 올려 주세요.'
               : rev.action === 'create'
-                ? '만들기 이전 상태는 없다'
-                : '되돌리기를 지원하지 않는 대상'}
+                ? '처음 만든 기록이라 이전 상태가 없습니다.'
+                : '되돌릴 수 없는 항목입니다.'}
           </span>
         )}
         {err && <span className="dva_error dvh_inline_err">{err}</span>}

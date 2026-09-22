@@ -16,6 +16,9 @@
   --au-on-dark-soft: #9aa5b3;
   --au-ok: #1f7a4d;
   --au-ok-bg: #e6f4ec;
+  --au-err: #b3121a;
+  --au-err-bg: #fdecec;
+  --au-err-line: #f6c9cb;
 
   min-height: 100vh;
   min-height: 100dvh;
@@ -28,6 +31,9 @@
   line-height: 1.6;
   text-align: left;
   overflow-x: hidden;
+  /* 한국어는 낱말 사이에서만 줄을 바꾼다. 칸보다 긴 낱말만 쪼갠다. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .dva_auth,
 .dva_auth * {
@@ -160,6 +166,15 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+}
+.dva_auth_card p.dva_auth_alert {
+  color: var(--au-err);
+  background: var(--au-err-bg);
+  border: 1px solid var(--au-err-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.55;
 }
 .dva_auth_btn {
   display: flex;

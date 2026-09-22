@@ -95,7 +95,7 @@ export class AdminInquiryDefaultService {
     const row = await this.inquiryDefaultRepository.repository.findOne({
       where: { id },
     });
-    if (!row) throw new CommonError(AdminInquiryError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminInquiryError.NOT_FOUND);
     const before = this.present(row);
 
     if (dto.status !== undefined) row.status = dto.status;
@@ -106,7 +106,7 @@ export class AdminInquiryDefaultService {
         const email = dto.assignee_email.toLowerCase();
         const user = await this.adminUserService.find(email);
         if (!user || !user.enabled)
-          throw new CommonError(AdminInquiryError.BAD_ASSIGNEE);
+          throw CommonError.createByErrorCode(AdminInquiryError.BAD_ASSIGNEE);
         row.assigneeEmail = email;
       }
     }
@@ -130,7 +130,7 @@ export class AdminInquiryDefaultService {
     const row = await this.inquiryDefaultRepository.repository.findOne({
       where: { id },
     });
-    if (!row) throw new CommonError(AdminInquiryError.NOT_FOUND);
+    if (!row) throw CommonError.createByErrorCode(AdminInquiryError.NOT_FOUND);
     const before = this.present(row);
     await this.inquiryDefaultRepository.repository.remove(row);
     await this.revisionService.record({

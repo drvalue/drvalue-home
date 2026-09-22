@@ -37,7 +37,7 @@ export default function PostListPage() {
     load()
   }, [load])
 
-  if (!board) return <div className="dva_error">없는 게시판이다: {boardKey}</div>
+  if (!board) return <div className="dva_error">게시판을 찾을 수 없습니다.</div>
 
   async function remove(id: number) {
     setBusy(true)
@@ -96,7 +96,7 @@ export default function PostListPage() {
           <option value="published">공개</option>
           <option value="draft">초안</option>
         </select>
-        {board.ordered && <small style={{ color: 'var(--dva-muted)' }}>화살표로 옮긴 순서가 사이트의 순서다.</small>}
+        {board.ordered && <small style={{ color: 'var(--dva-muted)' }}>화살표로 바꾼 순서대로 사이트에 나옵니다.</small>}
       </div>
       {error && <div className="dva_error">{error}</div>}
       <div className="dva_tw">
@@ -120,7 +120,7 @@ export default function PostListPage() {
           </thead>
           <tbody>
             {rows && rows.data.length === 0 && (
-              <tr><td colSpan={10} className="dva_empty">글이 없다</td></tr>
+              <tr><td colSpan={10} className="dva_empty">글이 없습니다.</td></tr>
             )}
             {rows?.data.map((r, i) => (
               <tr key={r.id}>
@@ -153,9 +153,9 @@ export default function PostListPage() {
                 <td className="is-act">
                   {asking === r.id ? (
                     <span className="dva_confirm">
-                      지운다?
-                      <button type="button" className="dva_btn is-small is-danger" disabled={busy} onClick={() => remove(r.id)}>예</button>
-                      <button type="button" className="dva_btn is-small" onClick={() => setAsking(null)}>아니오</button>
+                      이 글을 지울까요?
+                      <button type="button" className="dva_btn is-small is-danger" disabled={busy} onClick={() => remove(r.id)}>지우기</button>
+                      <button type="button" className="dva_btn is-small" onClick={() => setAsking(null)}>취소</button>
                     </span>
                   ) : (
                     <button type="button" className="dva_btn is-small" onClick={() => setAsking(r.id)}>삭제</button>
