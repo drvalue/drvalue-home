@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
-import { HEADER_CSS, HEADER_JS } from '@/components/headerAssets'
+import { HEADER_CSS } from '@/components/headerAssets'
+import SiteScripts from '@/components/SiteScripts'
 // 새 디자인(머리·발·메인)이 쓰는 꾸밈 도구. 전역 초기화는 빼 두었다 —
 // 그 이유는 styles/tw.css 주석에 적었다.
 import '@/styles/tw.css'
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
   manifest: '/icon/site.webmanifest',
 }
 
-const GTM_ID = 'GTM-NLL3QGRF'
+const GTM_ID = 'GTM-NLL3QGRF' // noscript iframe 용. 스크립트 쪽은 components/SiteScripts.tsx
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -99,41 +100,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"
           strategy="beforeInteractive"
         />
-        <Script id="gtm" strategy="afterInteractive">{`
-(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');
-        `}</Script>
-        {/* 마크업의 onclick 이 부르는 전역 함수들. jQuery 뒤에 와야 한다. */}
-        <Script id="header-behaviour" strategy="afterInteractive">{HEADER_JS}</Script>
-        <Script id="reveal-and-slider" strategy="afterInteractive">{`
-$(document).ready(function() {
-    function reveal() {
-        var winBottom = $(window).scrollTop() + $(window).height();
-        $('.reveal, .hero_reveal').each(function() {
-            if (winBottom > $(this).offset().top + 50) $(this).addClass('active');
-        });
-    }
-    $(window).scroll(reveal);
-    reveal();
-
-    if($('.main_slider').length > 0) {
-        new Swiper(".main_slider", {
-            effect: "fade",
-            loop: true,
-            autoplay: { delay: 5000 },
-            speed: 1500
-        });
-    }
-});
-        `}</Script>
-        <Script
-          src="https://workspace.growchat.co.kr/widget.js"
-          data-tenant="drvalue"
-          strategy="afterInteractive"
-        />
+        {/* GTM · 헤더 동작 · 등장 효과 · 채팅 위젯. /admin 에서는 안 실린다. */}
+        <SiteScripts />
       </body>
     </html>
   )
