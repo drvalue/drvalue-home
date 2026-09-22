@@ -23,7 +23,7 @@ import re
 import sys
 import urllib.request
 
-NEXT = "http://localhost:3400"
+NEXT = os.environ.get("NEXT_ORIGIN", "http://localhost:3400")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHELL = 853  # 헤더 메뉴 591 + 문의 모달 108 + 푸터 154. 2026-09-22 메뉴의 한건 설명 「한국건축」→「건설」로 2자 줄었다(09-18 실측 855).
 

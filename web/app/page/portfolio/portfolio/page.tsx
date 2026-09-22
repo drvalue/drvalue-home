@@ -6,6 +6,10 @@ import { PORTFOLIO_LIST } from './list'
 import { cmsBoard, yymm } from '@/lib/cms'
 import type { Row } from './PortfolioTable'
 
+/** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
+export const dynamic = 'force-dynamic'
+
+
 /**
  * /page/portfolio/portfolio.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + AOS)
  * 에서 M.AX 계열과 같은 틀(SolutionShell)로 옮겼다. 표와 요약은 그대로

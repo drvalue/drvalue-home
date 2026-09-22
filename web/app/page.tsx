@@ -9,6 +9,10 @@ import { HOME_ADD_CSS } from './home/homeStyles'
 import { latestNews } from './home/news'
 import { pageMeta } from '@/lib/seo'
 
+/** 소식 카드가 CMS 저장 즉시 보이게 요청마다 그린다(home/news.ts). */
+export const dynamic = 'force-dynamic'
+
+
 /**
  * /index.php 를 옮긴 것. 화면은 뿌리(`/`)에 둔다 — `app/index.php/` 로
  * 만들면 파일이 리다이렉트를 이겨서 홈이 조용히 두 개가 된다.

@@ -4,6 +4,10 @@ import SolutionShell from '../../business/max/SolutionShell'
 import { pageMeta } from '@/lib/seo'
 import { cmsBoard, type CmsPost } from '@/lib/cms'
 
+/** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
+export const dynamic = 'force-dynamic'
+
+
 /**
  * /page/company/history.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
  * 에서 M.AX 계열과 같은 틀로 옮겼다 — 메뉴를 옮겨 다닐 때 두 꾸밈이 섞여 난잡했다.

@@ -34,9 +34,8 @@ async function one(board: NewsItem['board'], limit: number): Promise<NewsItem[]>
   try {
     const res = await fetch(
       `${ORIGIN}/api/content/posts?board=${board}&page=1`,
-      // 소식은 자주 안 바뀐다. 매 요청마다 CMS 를 때리면 메인이 CMS 응답
-      // 속도에 묶인다. 5분이면 공지를 올리고 한 잔 마시는 사이에 뜬다.
-      { next: { revalidate: 300 } },
+      // 요청마다 DB 에서 읽는다. api→DB 직결이라 비용이 없다. 저장 즉시 반영이 곧 동기화다.
+      { cache: 'no-store' },
     )
     if (!res.ok) return []
     const body = (await res.json()) as { data?: NewsItem[] }

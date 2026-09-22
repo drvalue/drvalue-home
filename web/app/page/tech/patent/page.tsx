@@ -4,6 +4,10 @@ import CertGrid from '../CertGrid'
 import { pageMeta } from '@/lib/seo'
 import { cmsBoard, dots, type CmsPost } from '@/lib/cms'
 
+/** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
+export const dynamic = 'force-dynamic'
+
+
 /** 증서 그림의 원본 치수. 칸(.cert_img)이 이미 자리를 잡아 주지만, 치수를
  *  안 적으면 그림이 늦게 올 때 브라우저가 높이를 0 으로 잡아 한 번 흔들린다.
  *  장마다 다르다(실측): 1번 581×788, 2·3번(출원사실증명원) 793×1120, 4~6번 793×1087.
