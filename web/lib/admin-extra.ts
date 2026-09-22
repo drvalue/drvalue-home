@@ -41,6 +41,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   inquiries: '문의',
   files: '파일',
   admin_users: '권한',
+  menu: '메뉴',
 }
 
 export const ROLE_LABEL: Record<AdminUserRow['role'], string> = {

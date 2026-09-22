@@ -1,0 +1,231 @@
+/* 메뉴. 전부 .dva 아래. 목록(왼쪽)과 머리글 미리 보기(오른쪽). 좁으면 한 줄로 쌓는다. */
+.dva .dvmn_lead {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dva-muted);
+  max-width: 72ch;
+}
+.dva .dvmn_errs {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.dva .dvmn_layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  grid-template-areas: 'list preview' 'after preview';
+  align-items: start;
+  gap: 12px 16px;
+  margin-top: 12px;
+}
+.dva .dvmn_layout.is-single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'list' 'after';
+}
+.dva .dvmn_layout > .dva_empty {
+  grid-column: 1 / -1;
+}
+.dva .dvmn_list {
+  grid-area: list;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.dva .dvmn_after {
+  grid-area: after;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.dva .dvmn_node {
+  padding: 10px 12px;
+  display: grid;
+  gap: 10px;
+}
+.dva .dvmn_node.is-off,
+.dva .dvmn_child.is-off {
+  background: #fafbfc;
+}
+.dva .dvmn_row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.dva .dvmn_title {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 6px 4px;
+  min-height: 44px;
+  font: inherit;
+  color: var(--dva-ink);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.dva .dvmn_title.is-static {
+  cursor: default;
+}
+.dva .dvmn_title:not(.is-static):hover {
+  background: #f5f6f8;
+}
+.dva .dvmn_title b {
+  font-weight: 700;
+}
+.dva .dvmn_title small {
+  color: var(--dva-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.dva .dvmn_no {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eef0f3;
+  color: var(--dva-muted);
+  font-size: 11.5px;
+  display: inline-grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.dva .dvmn_tools {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.dva .dvmn_tools .dva_btn.is-small {
+  min-width: 36px;
+  min-height: 36px;
+}
+.dva .dvmn_body {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--dva-line);
+  padding-top: 12px;
+}
+.dva .dvmn_fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.dva .dvmn_fields .dvmn_wide {
+  grid-column: 1 / -1;
+}
+.dva .dvmn_adv summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--dva-muted);
+  padding: 6px 0;
+}
+.dva .dvmn_sub {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.dva .dvmn_children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.dva .dvmn_child {
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: grid;
+  gap: 8px;
+}
+.dva .dvmn_checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.dva .dvmn_limit,
+.dva .dvmn_hint {
+  color: var(--dva-muted);
+  font-size: 12.5px;
+  margin: 0;
+}
+.dva .dvmn_preview {
+  grid-area: preview;
+  position: sticky;
+  top: 76px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.dva .dvmn_preview h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.dva .dvmn_pv_bar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.dva .dvmn_pv_bar > li {
+  background: #172033;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.dva .dvmn_pv_bar ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dva .dvmn_pv_bar ul li {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .dva .dvmn_layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'list' 'after' 'preview';
+  }
+  .dva .dvmn_preview {
+    position: static;
+  }
+}
+@media (max-width: 640px) {
+  .dva .dvmn_fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dva .dvmn_row {
+    flex-wrap: wrap;
+  }
+  .dva .dvmn_tools {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .dva .dvmn_tools .dva_btn.is-small {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

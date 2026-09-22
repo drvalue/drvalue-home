@@ -10,6 +10,7 @@ import { plain } from '../max/text'
 import type { Lead } from '../max/SolutionShell'
 import { pageMeta } from '@/lib/seo'
 import { MENU_ITEMS } from '@/lib/menu'
+import { menuLabelOf } from '@/lib/menu-cms'
 
 /**
  * /page/business/ai_sol.php 를 옮긴 것. 2026-09-22 사용자가 지정한 레퍼런스(channel.io/kr/works)
@@ -25,6 +26,8 @@ export const metadata = pageMeta({
   path: PATH,
 })
 
+// 구역 차례·링크는 코드 메뉴가 정한다(href('오토폼') 처럼 코드 이름으로 찾는다) — 관리 화면에서
+// 이름을 바꾸거나 숨겨도 구역과 탭이 엇갈리지 않게. 탭 글자만 관리 화면 이름을 따른다(Page 안).
 const SUB = (MENU_ITEMS.find((m) => m.title === 'AI솔루션')?.sub ?? []).filter((s) => !s.hidden && s.l !== PATH)
 const TABS = SUB.map((s) => ({ t: s.t, id: s.l.split('/').pop()! }))
 const at = (name: string) => TABS.findIndex((t) => t.t === name)
@@ -38,7 +41,9 @@ const ROAD = road.points.map((p) => {
   return { t, d: d ?? '' }
 })
 
-export default function Page() {
+export default async function Page() {
+  const labelOf = await menuLabelOf()
+  const tabs = SUB.map((s, i) => ({ ...TABS[i], t: labelOf(s.l, s.t) }))
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -71,7 +76,7 @@ export default function Page() {
         </div>
 
         <div id="made" />
-        <Tabbed tabs={TABS}>
+        <Tabbed tabs={tabs}>
         <Group headLead={AUTOFORM_LEAD.title} desc={leadDesc(AUTOFORM_LEAD)} href={href('오토폼')}
           show={<ShowTabs items={[
             { t: '쓰던 한글 양식을 그대로 올립니다', d: plain(AUTOFORM[0].points[0]), tone: 'sand', tag: '양식 등록', url: 'autoform / 양식 등록', shot: { src: '/screens/solution-form-automation-upload.jpg', alt: '양식 등록 화면 — 올린 한글 양식 목록과 분석·연결 상태', w: 1600, h: 1121 } },

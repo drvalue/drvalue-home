@@ -19,6 +19,7 @@ docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms < db/schema.sq
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0001-admin-foundation.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0002-admin-users-iam-sync.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0003-posts-files-fk.sql
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0006-menu.sql
 
 # 3. 백엔드
 cd api

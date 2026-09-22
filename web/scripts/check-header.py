@@ -16,6 +16,9 @@
 
   NEXT_ORIGIN 으로 주소를 바꿀 수 있다.
 """
+from __future__ import annotations
+
+import json
 import os
 import pathlib
 import re
@@ -24,34 +27,61 @@ import urllib.request
 
 NEXT = os.environ.get("NEXT_ORIGIN", "http://localhost:3400").rstrip("/")
 
-# 탭 글자와 하위 목록은 **lib/menu.ts 에서 읽는다.** 여기 손으로 베껴 두면
+# 탭 글자와 하위 목록은 **머리글이 실제로 읽는 메뉴**에서 가져온다 — 관리 화면 「메뉴」 값
+# (`NEXT_ORIGIN/api/content/menu`, 웹의 rewrite 가 api 로 넘긴다). api 가 안 닿으면 머리글도
+# lib/menu.ts 예비를 쓰므로 여기서도 lib/menu.ts 를 읽는다. 여기 손으로 베껴 두면
 # 메뉴를 바꿀 때 두 군데를 고쳐야 하고, 한쪽을 잊으면 검사가 옛 모습을
 # 통과시킨다. 아래 ACTIVE(페이지→탭)만 손으로 둔다 — 그건 베낀 것이 아니라
 # "이 주소를 열면 이 탭이 켜져야 한다" 는 **따로 세운 기대값**이라서다.
 MENU_TS = pathlib.Path(__file__).resolve().parents[1] / "lib" / "menu.ts"
 
 
-def read_menu() -> tuple[list[str], list[tuple[str, str]]]:
+def read_menu_ts() -> tuple[list[tuple[str, str]], list[tuple[str, str, bool]]]:
+    """lib/menu.ts → (탭 이름, 탭 주소) · (하위 이름, 하위 주소, 드롭다운 숨김)."""
     src = MENU_TS.read_text(encoding="utf-8")
-    tabs = re.findall(r"title: '([^']+)', link:", src)
+    tabs = re.findall(r"title: '([^']+)', link: '([^']+)'", src)
     # `hidden: true` 인 항목은 드롭다운에 안 그리는 것이 정상이다 — 이름만
-    # 남겨 둔 것이라 여기서 찾으면 안 된다. 항목 한 줄을 통째로 잡아 거른다.
+    # 남겨 둔 것이라 드롭다운에서 찾으면 안 된다. 항목 한 줄을 통째로 잡아 가린다.
     subs = [
-        (m.group(1), m.group(2))
+        (m.group(1), m.group(2), "hidden" in m.group(3))
         for m in re.finditer(r"\{ t: '([^']+)', l: '([^']+)'([^}]*)\}", src)
-        if "hidden" not in m.group(3)
     ]
     return tabs, subs
 
 
-TABS, SUBS = read_menu()
+def read_menu_cms() -> tuple[list[tuple[str, str]], list[tuple[str, str, bool]]] | None:
+    """관리 화면 메뉴(보이는 칸만). 못 읽으면 None — 그때 머리글도 예비를 쓴다."""
+    try:
+        with urllib.request.urlopen(f"{NEXT}/api/content/menu", timeout=10) as r:
+            top = json.loads(r.read().decode("utf-8"))["data"]["top"]
+    except Exception:
+        return None
+    if not top:
+        return None
+    tabs = [(n["label"], n["href"]) for n in top]
+    subs = [(c["label"], c["href"], bool(c["hidden_in_dropdown"])) for n in top for c in n["children"]]
+    return tabs, subs
 
-# 주소 → 이름. `hidden` 까지 포함한다 — 현재 위치 줄은 숨긴 장도 자기 이름으로
+
+_CODE_TABS, _CODE_SUBS = read_menu_ts()
+_CMS = read_menu_cms()
+MENU_SOURCE = "관리 화면 메뉴" if _CMS else "lib/menu.ts(예비)"
+_TABS_FULL, _SUBS_FULL = _CMS or (_CODE_TABS, _CODE_SUBS)
+TABS = [t for t, _ in _TABS_FULL]
+SUBS = [(t, l) for t, l, hidden in _SUBS_FULL if not hidden]
+
+# 주소 → 이름. 숨김까지 포함한다 — 현재 위치 줄은 숨긴 장도 자기 이름으로
 # 찍어야 하므로, 기대값은 전체 목록에서 가져온다.
-SUBS_ALL = [
-    (m.group(2), m.group(1))
-    for m in re.finditer(r"\{ t: '([^']+)', l: '([^']+)'", MENU_TS.read_text(encoding="utf-8"))
-]
+SUBS_ALL = [(l, t) for t, l, _ in _SUBS_FULL]
+
+# ACTIVE 의 탭 이름은 씨앗(lib/menu.ts) 이름이다. 관리 화면에서 탭 이름을 바꿔도 「어느 탭이 켜져야
+# 하나」는 그대로라서, 씨앗 이름 → 탭 주소 → 지금 메뉴에서 그 주소를 가진 탭 이름으로 바꿔 비교한다.
+_CODE_LINK = dict(_CODE_TABS)
+_NOW_NAME = {l: t for t, l in _TABS_FULL}
+
+
+def tab_now(seed_name: str) -> str:
+    return _NOW_NAME.get(_CODE_LINK.get(seed_name, ""), seed_name)
 
 # 이 주소를 열면 이 탭 하나만 켜져 있어야 한다.
 ACTIVE = [
@@ -112,6 +142,7 @@ def main() -> None:
         print(f"\nPASS={ok} FAIL={fail}")
         sys.exit(1)
     say(True, "헤더를 찾음", f"{len(hdr)}자")
+    print(f"  (메뉴 기준: {MENU_SOURCE})")
 
     # 1. 탭 여섯 개, 차례까지
     got = re.findall(r'class="main_a"><span>([^<]+)</span>', hdr)
@@ -136,7 +167,8 @@ def main() -> None:
         say(f"<span>{word}</span>" not in hdr, f"옛 이름 「{word}」 없음")
 
     # 4. 페이지마다 현재 탭이 정확히 하나
-    for path, want in ACTIVE:
+    for path, seed in ACTIVE:
+        want = tab_now(seed)
         h = header_of(get(path))
         on = re.findall(
             r'class="gnb_li is-active"[\s\S]*?class="main_a"><span>([^<]+)</span>', h
@@ -148,7 +180,8 @@ def main() -> None:
 
     # 5. 현재 위치 줄. 탭 막대와 같은 자료를 읽으므로 여기도 같이 본다 —
     #    compare.py 가 이 펼침 목록도 떼기 때문에 안 보면 구멍이 된다.
-    for path, want in ACTIVE:
+    for path, seed in ACTIVE:
+        want = tab_now(seed)
         h = get(path)
         m = re.search(r'<nav class="dv_breadcrumb"[\s\S]*?</nav>', h)
         if not m:

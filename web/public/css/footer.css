@@ -8,7 +8,9 @@
 .footer_top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .footer_logo { font-size: 20px; font-weight: 800; color: #adb5bd; }
 .footer_links { display: flex; gap: 24px; }
-.footer_links li a { font-size: 14px; color: #4e5968; transition: color 0.2s; }
+.footer_links { list-style: none; margin: 0; padding: 0; }
+/* 누를 자리를 위아래로 넓힌다(손가락 44px) — 줄 높이는 음수 여백으로 그대로 둔다. */
+.footer_links li a { font-size: 14px; color: #4e5968; transition: color 0.2s; display: inline-block; padding: 12px 0; margin: -12px 0; }
 .footer_links li a:hover { color: #d71920; }
 
 /* SNS */

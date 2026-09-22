@@ -30,13 +30,16 @@ data/uploads                             업로드 파일 (bind mount, 저장소
   │  /admin/...                    Next(web) 의 관리 화면. 로그인 버튼 하나 → 사내 IAM
   │  /api/...                      next.config.mjs 의 rewrite → Nest(api)
   │  /api/admin/files              예외: web 의 route handler 가 버퍼 없이 흘려보낸다(rewrite 는 10MB 에서 자른다)
+  │  /api/admin/menu/refresh       예외: web 의 route handler 가 메뉴 캐시(태그 menu)를 비운다
+  │                                (권한은 같은 쿠키로 api 의 /api/admin/menu 를 불러 본다)
   └─ 우하단 채팅 위젯               GrowChat 외부 스크립트(도메인 잠금). /admin 에는 안 실린다
 
 Nest(api)
   │  /api/content/*                → DB (published 만). 파일은 data/uploads 에서 관문 뒤로
+  │  /api/content/menu             → DB(site_menu_items, 보이는 칸만). 모든 장의 머리글이 60초 캐시로 읽는다
   │  /api/inquiry                  → 메일 발송 + DB(inquiries)
   │  /api/admin/auth/*             → 사내 IAM (code 교환 → 토큰 최상위 role 판정) → admin_users 동기화 → 세션 쿠키
-  └─ /api/admin/{posts,files,inquiries,revisions,users}  → DB. 세션 쿠키(dv_admin) 뒤. 다른 문은 없다
+  └─ /api/admin/{posts,files,inquiries,revisions,users,menu}  → DB. 세션 쿠키(dv_admin) 뒤. 다른 문은 없다
 ```
 
 브라우저는 Nest 가 어디 있는지 모른다. `/api` 만 알고, 실제 주소는 Next 의

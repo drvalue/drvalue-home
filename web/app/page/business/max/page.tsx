@@ -5,6 +5,7 @@ import { Showcase } from './Patterns'
 import { AI_HEAD, INDUSTRIES } from './maxContent'
 import { PAGE_CSS } from './maxStyles'
 import { MENU_ITEMS } from '@/lib/menu'
+import { menuLabelOf } from '@/lib/menu-cms'
 import { pageMeta } from '@/lib/seo'
 
 /**
@@ -21,6 +22,8 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/business/max'
 
+// 구역 차례·링크는 코드 메뉴가 정한다 — 관리 화면에서 순서를 바꾸거나 숨겨도 구역이 엇갈리지 않게.
+// 탭 글자만 관리 화면 이름을 따른다(menuLabelOf, 주소로 찾는다).
 const SUB = (MENU_ITEMS.find((m) => m.title === 'M.AX')?.sub ?? []).filter((s) => !s.hidden && s.l !== PATH)
 const pcb = INDUSTRIES.find((i) => i.id === 'pcb')!
 const cos = INDUSTRIES.find((i) => i.id === 'cos')!
@@ -32,7 +35,8 @@ export const metadata = pageMeta({
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const labelOf = await menuLabelOf()
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -61,11 +65,11 @@ export default function Page() {
             업종별 기능과 그 위에서 도는 제조 AI 를 나눠 두었습니다
           </Statement>
           <Showcase items={[
-            { tab: SUB[0].t, id: 'pcb-mes', kicker: 'PCB MES', headLead: pcb.headLead, headStrong: pcb.headStrong, desc: pcb.desc, href: SUB[0].l,
+            { tab: labelOf(SUB[0].l, SUB[0].t), id: 'pcb-mes', kicker: 'PCB MES', headLead: pcb.headLead, headStrong: pcb.headStrong, desc: pcb.desc, href: SUB[0].l,
               shot: { src: '/screens/pcb-stock.jpg', alt: '재고 현황 화면 — 모델별 재고수량·최고/최저 재고·금액·최종 출고일', w: 1600, h: 1000 }, url: 'max.drvalue.co.kr / 재고 현황' },
-            { tab: SUB[1].t, id: 'cosmetics-mes', kicker: '화장품 MES', headLead: cos.headLead, headStrong: cos.headStrong, desc: cos.desc, href: SUB[1].l,
+            { tab: labelOf(SUB[1].l, SUB[1].t), id: 'cosmetics-mes', kicker: '화장품 MES', headLead: cos.headLead, headStrong: cos.headStrong, desc: cos.desc, href: SUB[1].l,
               shot: { src: '/screens/form-generate.jpg', alt: 'GMP 양식 출력 화면 — 품질관리기록서를 시스템 값으로 채워 생성', w: 1600, h: 1025 }, url: 'max.drvalue.co.kr / GMP 양식' },
-            { tab: SUB[2].t, id: 'mes-ai', kicker: 'MES AI', headLead: AI_HEAD.headLead, headStrong: AI_HEAD.headStrong, desc: AI_HEAD.desc, href: SUB[2].l,
+            { tab: labelOf(SUB[2].l, SUB[2].t), id: 'mes-ai', kicker: 'MES AI', headLead: AI_HEAD.headLead, headStrong: AI_HEAD.headStrong, desc: AI_HEAD.desc, href: SUB[2].l,
               shot: { src: '/screens/knowledge-ai.jpg', alt: '제조지식 AI 비서 화면 — LOT 이력·유사 클레임 사례·MES 실시간 조회', w: 1600, h: 900 }, url: 'max.drvalue.co.kr / AI 비서' },
           ]} />
         </section>
