@@ -71,8 +71,8 @@ else
   check "바뀐 이름으로 찾힌다" "yes" \
     "$(adm "/files?q=$RUN-renamed" | pick "print('yes' if any(x.get('id')=='$IM_FID' for x in (d.get('data') or [])) else 'no')")"
 
-  # 글(초안)의 대표 이미지로 물리고 지워 본다.
-  IM_PID=$(printf '{"board":"notice","status":"draft","slug":"%s-media","published_date":"%s","thumbnail":"%s","translations":[{"languages_code":"ko-KR","title":"미디어 검사"}]}' \
+  # 글(초안) 본문에 넣고 지워 본다. 공지의 대표 이미지는 본문 첫 그림이라 둘 다 물린다 — 쓰는 글은 1곳.
+  IM_PID=$(printf '{"board":"notice","status":"draft","slug":"%s-media","published_date":"%s","translations":[{"languages_code":"ko-KR","title":"미디어 검사","body":"<p><img src=\\"/api/content/assets/%s\\"></p>"}]}' \
       "$RUN" "$(date +%Y-%m-%d)" "$IM_FID" | admj POST "/posts" | pick 'print((d.get("data") or {}).get("id",""))')
   if [ -z "$IM_PID" ]; then
     na "쓰이는 파일 삭제" "검사 글을 못 만들었다"
@@ -85,6 +85,8 @@ else
       "$(curl -s -o /dev/null -w '%{http_code}' -X DELETE -H "$AUTH" "$API/api/admin/files/$IM_FID?force=1" --max-time 30)"
     check "글에서 그림이 빠졌다" "none" \
       "$(adm "/posts/$IM_PID" | pick 'print((d.get("data") or {}).get("thumbnail") or "none")')"
+    check "본문의 그림 태그도 빠졌다" "none" \
+      "$(adm "/posts/$IM_PID" | pick "ts=(d.get('data') or {}).get('translations') or []; print('left' if any('$IM_FID' in (t.get('body') or '') for t in ts) else 'none')")"
     check "지운 파일은 미리보기도 404" "404" \
       "$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/api/admin/files/$IM_FID" --max-time 30)"
     curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$IM_PID" --max-time 30

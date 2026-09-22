@@ -29,6 +29,7 @@ data/uploads                             업로드 파일 (bind mount, 저장소
   │  /page/...                     Next(web) 가 화면을 그린다
   │  /admin/...                    Next(web) 의 관리 화면. 로그인 버튼 하나 → 사내 IAM
   │  /api/...                      next.config.mjs 의 rewrite → Nest(api)
+  │  /api/admin/files              예외: web 의 route handler 가 버퍼 없이 흘려보낸다(rewrite 는 10MB 에서 자른다)
   └─ 우하단 채팅 위젯               GrowChat 외부 스크립트(도메인 잠금). /admin 에는 안 실린다
 
 Nest(api)

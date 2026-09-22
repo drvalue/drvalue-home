@@ -17,6 +17,14 @@ import type { SessionPayload } from '../../../common/session/session-token';
 
 const PAGE = 30;
 
+/**
+ * 글 게시판(공지·보도·뉴스)의 대표 이미지는 본문의 첫 그림이다. 따로 올리는 칸이 없다.
+ * 편집기가 넣는 주소는 `/api/content/assets/<uuid>`. 본문에 그림이 없으면 대표 이미지도 없다.
+ */
+const THUMB_FROM_BODY = ['notice', 'press', 'news'];
+const BODY_IMAGE_RE =
+  /\/api\/content\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+
 const iso = (d: Date | string | null | undefined): string | null =>
   d ? new Date(d).toISOString() : null;
 
@@ -279,7 +287,9 @@ export class AdminPostDefaultService {
       publishedDate: dto.published_date,
       isPinned: dto.is_pinned ?? undefined,
       isFeatured: dto.is_featured ?? undefined,
-      thumbnail: nul(dto.thumbnail),
+      thumbnail: THUMB_FROM_BODY.includes(dto.board)
+        ? this.firstBodyImage(dto)
+        : nul(dto.thumbnail),
       pressMedia: nul(dto.press_media),
       periodStart: nul(dto.period_start),
       periodEnd: nul(dto.period_end),
@@ -295,6 +305,23 @@ export class AdminPostDefaultService {
       publishAt: when(dto.publish_at),
       unpublishAt: when(dto.unpublish_at),
     };
+  }
+
+  /** 한국어 본문의 첫 그림, 없으면 다른 언어 본문의 첫 그림. */
+  private firstBodyImage(
+    dto: ControllerAdminPostDefaultSaveDto,
+  ): string | null {
+    const isKo = (t: { languages_code: string }) =>
+      t.languages_code === 'ko-KR';
+    const ordered = [
+      ...dto.translations.filter(isKo),
+      ...dto.translations.filter((t) => !isKo(t)),
+    ];
+    for (const t of ordered) {
+      const m = BODY_IMAGE_RE.exec(t.body ?? '');
+      if (m) return m[1].toLowerCase();
+    }
+    return null;
   }
 
   private translation(

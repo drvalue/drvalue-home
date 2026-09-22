@@ -28,6 +28,14 @@ export class CommonError {
     return this._resultCode;
   }
 
+  /** 5xx 로그용. Error 가 아니라서 이게 없으면 `[object Object]` 로 찍힌다. */
+  toString(): string {
+    return (
+      `${this._resultCode}: ${this._message}` +
+      (this._detail ? ` - ${this._detail}` : '')
+    );
+  }
+
   static createByErrorCode(
     errorCode: ICommonErrorCode,
     customMessage?: string,

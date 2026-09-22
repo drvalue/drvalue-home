@@ -122,6 +122,11 @@ repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-p
   은 우리 주소 문자열로 바꾸고 치수는 `thumbnail_size` 에.
 - 목록 순서는 서비스가 게시판별로 정한다. 증서·수행실적은 `sort`, 연혁은
   연도 내림차순 안에서 `sort`, 공지·보도는 고정 글 → 날짜.
+- 공지·보도·뉴스의 대표 이미지(`thumbnail`)는 저장할 때 **본문의 첫 그림**으로 정한다
+  (`/api/content/assets/<uuid>`, 한국어 본문 먼저). 보낸 `thumbnail` 은 보지 않는다. 본문에 그림이
+  없으면 비운다. 증서(특허·저작권)만 `thumbnail` 을 직접 받는다.
+- 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 센다. `force` 삭제는
+  본문의 `<img>` 까지 걷어 낸다 — 남기면 글에 깨진 그림이 보인다.
 - 업로드는 `AppConfig.uploadsDir` 폴더에 `<uuid>.<ext>` + `directus_files` 행(compose 는
   `/data/uploads`, 로컬은 저장소 `data/uploads`). 치수는 헤더에서 직접 읽는다. cwd 기준으로
   잡지 않는다(api/ 에서 띄우면 빈 폴더를 본다).
@@ -133,7 +138,7 @@ repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-p
 ```bash
 npm run typecheck && npm run build
 node --test src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 14 (9 + 5)
-bash scripts/verify.sh          # 133 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 139 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

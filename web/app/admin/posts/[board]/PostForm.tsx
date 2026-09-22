@@ -33,8 +33,13 @@ const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null)
 const WITH_BODY = ['notice', 'press', 'news', 'recruit', 'faq']
 /** 첨부를 받는 게시판. */
 const WITH_FILES = ['notice', 'press', 'news', 'recruit']
-/** 대표 이미지(증서 그림)를 받는 게시판. */
-const WITH_THUMB = ['notice', 'press', 'news', 'patent', 'copyright']
+/** 증서 그림을 받는 게시판. 이 그림이 곧 글이라 본문 칸 자리에 둔다. */
+const WITH_CERT = ['patent', 'copyright']
+/**
+ * 목록 썸네일이 본문의 첫 그림인 게시판. 정하는 것은 api 다(저장할 때) — 여기서는 미리 보여 줄 뿐이다.
+ */
+const THUMB_FROM_BODY = ['notice', 'press', 'news']
+const BODY_IMAGE_RE = /\/api\/content\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 
 /**
  * 만들기와 고치기가 같은 폼. 본문은 편집기(Quill)로 쓰고 HTML 로도 볼 수 있다.
@@ -84,6 +89,11 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   if (!post) return error ? <div className="dva_error">{error}</div> : <div className="dva_empty">불러오는 중…</div>
 
   const t = post.translations.find((x) => x.languages_code === lang) ?? blankTranslation(lang)
+  // 한국어 본문의 첫 그림, 없으면 영어 본문의 첫 그림 — api 가 저장할 때 고르는 순서와 같다.
+  const coverId =
+    [...post.translations.filter((x) => x.languages_code === 'ko-KR'), ...post.translations.filter((x) => x.languages_code !== 'ko-KR')]
+      .map((x) => BODY_IMAGE_RE.exec(x.body ?? '')?.[1])
+      .find(Boolean) ?? null
   const set = (patch: Partial<PostFull>) => setPost({ ...post, ...patch })
   const setT = (patch: Partial<Translation>) =>
     setPost({ ...post, translations: post.translations.map((x) => (x.languages_code === lang ? { ...x, ...patch } : x)) })
@@ -224,14 +234,54 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <textarea id="f-summary" value={val(t.summary)} onChange={(e) => setT({ summary: e.target.value })} />
             </div>
           )}
+          {WITH_CERT.includes(k) && (
+            <div className="dva_field">
+              <span className="dva_label">증서 그림</span>
+              {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy} onChange={(e) => onThumb(e.target.files?.[0])} />
+              {post.thumbnail && (
+                <button type="button" className="dva_btn is-small" onClick={() => { set({ thumbnail: null }); setThumbPreview(null) }}>그림 제거</button>
+              )}
+              <small>사이트 목록에 이 그림이 나옵니다.</small>
+            </div>
+          )}
           {WITH_BODY.includes(k) && (
             <div className="dva_field">
               <label htmlFor="f-body">{k === 'faq' ? '답' : '본문'}</label>
-              <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} />
+              <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} onError={setError} />
+              <small>그림은 도구 막대의 그림 버튼을 누르거나, 본문에 붙여넣거나 끌어다 놓으면 들어갑니다.</small>
               <details className="dva_editor_raw">
                 <summary>HTML 로 보기</summary>
                 <textarea id="f-body" className="is-body" value={val(t.body)} onChange={(e) => setT({ body: e.target.value })} />
               </details>
+            </div>
+          )}
+          {THUMB_FROM_BODY.includes(k) && (
+            <div className="dva_field dva_thumb_hint">
+              <span className="dva_label">목록 썸네일</span>
+              {coverId ? (
+                <div className="dva_thumb_row">
+                  <img className="dva_thumb" src={`/api/admin/files/${coverId}`} width={96} height={72} alt="" />
+                  <small>본문의 첫 그림이 사이트 목록의 썸네일로 쓰입니다.</small>
+                </div>
+              ) : (
+                <small>본문에 그림을 넣으면 첫 그림이 사이트 목록의 썸네일이 됩니다.</small>
+              )}
+            </div>
+          )}
+          {WITH_FILES.includes(k) && (
+            <div className="dva_field">
+              <span className="dva_label">첨부 파일</span>
+              <ul className="dva_files">
+                {post.files.map((f) => (
+                  <li key={f.id}>
+                    <a href={f.url} target="_blank" rel="noreferrer">{f.name}</a>
+                    <button type="button" className="dva_btn is-small" onClick={() => set({ files: post.files.filter((x) => x.id !== f.id) })}>제거</button>
+                  </li>
+                ))}
+              </ul>
+              <input type="file" multiple disabled={busy} onChange={(e) => onFiles(e.target.files)} />
+              <small>그림·PDF·텍스트 파일을 20MB 까지 올릴 수 있습니다. 글 아래에 내려받기로 붙습니다.</small>
             </div>
           )}
         </div>
@@ -349,35 +399,10 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           )}
           <div className="dva_field">
             <label htmlFor="f-slug">주소 (slug)</label>
-            <small>비우면 자동. 소문자·숫자·하이픈.</small>
+            <small>비워 두면 자동으로 정합니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다.</small>
             <input id="f-slug" type="text" value={post.slug} onChange={(e) => set({ slug: e.target.value })} />
           </div>
 
-          {WITH_THUMB.includes(k) && (
-            <div className="dva_field">
-              <span className="dva_label">{k === 'patent' || k === 'copyright' ? '증서 그림' : '대표 이미지'}</span>
-              {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy} onChange={(e) => onThumb(e.target.files?.[0])} />
-              {post.thumbnail && (
-                <button type="button" className="dva_btn is-small" onClick={() => { set({ thumbnail: null }); setThumbPreview(null) }}>그림 제거</button>
-              )}
-            </div>
-          )}
-          {WITH_FILES.includes(k) && (
-            <div className="dva_field">
-              <span className="dva_label">첨부 파일</span>
-              <ul className="dva_files">
-                {post.files.map((f) => (
-                  <li key={f.id}>
-                    <a href={f.url} target="_blank" rel="noreferrer">{f.name}</a>
-                    <button type="button" className="dva_btn is-small" onClick={() => set({ files: post.files.filter((x) => x.id !== f.id) })}>제거</button>
-                  </li>
-                ))}
-              </ul>
-              <input type="file" multiple disabled={busy} onChange={(e) => onFiles(e.target.files)} />
-              <small>png · jpg · webp · gif · pdf · txt, 20MB 까지.</small>
-            </div>
-          )}
         </div>
       </div>
     </>

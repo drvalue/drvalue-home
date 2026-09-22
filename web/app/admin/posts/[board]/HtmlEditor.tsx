@@ -6,28 +6,72 @@ import { uploadFile } from '@/lib/admin'
 import 'quill/dist/quill.snow.css'
 import './HtmlEditor.css'
 
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+const PUBLIC = '/api/content/assets/'
+const PREVIEW = '/api/admin/files/'
+/**
+ * 저장되는 본문은 공개 주소를 품고, 편집기 안에서는 관리 미리보기 주소로 보여 준다.
+ * 공개 주소는 게시된 글의 그림만 내 준다 — 초안에 넣은 그림이 편집기에서 깨진다.
+ */
+const toEditor = (html: string) => html.split(PUBLIC).join(PREVIEW)
+const toStored = (html: string) => html.split(PREVIEW).join(PUBLIC)
+
 /**
  * 본문 편집기(Quill). 값은 HTML 문자열 하나 — 저장은 폼이 한다.
  *
- * 그림은 Quill 기본(base64 내장)을 쓰지 않는다. 파일을 올려 공개 주소
- * (/api/content/assets/<id>)를 넣는다 — 본문에 그림이 박히면 글 한 건이 MB 가 된다.
+ * 그림은 도구 막대의 그림 버튼 · 붙여넣기 · 끌어다 놓기 셋 다 파일을 올려 주소를 넣는다.
+ * Quill 기본(base64 내장)은 쓰지 않는다 — 본문에 그림이 박히면 글 한 건이 MB 가 된다.
+ * 다른 곳에서 복사해 온 base64 그림도 붙여넣을 때 뺀다.
  * 밖에서 값이 바뀔 때(글 불러오기)만 편집기 내용을 맞춘다. 치는 중에는 손대지
  * 않는다 — 커서가 맨 앞으로 튄다.
  */
-export default function HtmlEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+export default function HtmlEditor({
+  value,
+  onChange,
+  onError,
+}: {
+  value: string
+  onChange: (html: string) => void
+  /** 그림 올리기 실패. 폼이 오류 줄에 띄운다. */
+  onError: (message: string) => void
+}) {
   const box = useRef<HTMLDivElement>(null)
   const quill = useRef<Quill | null>(null)
   const latest = useRef(onChange)
   latest.current = onChange
+  const latestError = useRef(onError)
+  latestError.current = onError
 
   useEffect(() => {
     let alive = true
     ;(async () => {
       const { default: Q } = await import('quill')
       if (!alive || !box.current || quill.current) return
+      const Delta = Q.import('delta') as typeof import('quill').Delta
+
+      async function insertImages(q: Quill, index: number, files: File[]) {
+        let at = index
+        for (const file of files) {
+          try {
+            const f = await uploadFile(file, file.name.replace(/\.[^.]+$/, ''))
+            q.insertEmbed(at, 'image', PREVIEW + f.id, 'user')
+            at += 1
+            q.setSelection(at, 0)
+          } catch (e) {
+            latestError.current((e as Error).message)
+            return
+          }
+        }
+      }
+
       const q = new Q(box.current, {
         theme: 'snow',
         modules: {
+          // 붙여넣기·끌어다 놓기로 들어온 그림 파일. 기본 처리기는 base64 로 박는다.
+          uploader: {
+            mimetypes: IMAGE_TYPES,
+            handler: (range: { index: number }, files: File[]) => void insertImages(q, range.index, files),
+          },
           toolbar: {
             container: [
               [{ header: [2, 3, false] }],
@@ -41,19 +85,11 @@ export default function HtmlEditor({ value, onChange }: { value: string; onChang
               image: () => {
                 const input = document.createElement('input')
                 input.type = 'file'
-                input.accept = 'image/png,image/jpeg,image/webp,image/gif'
-                input.onchange = async () => {
-                  const file = input.files?.[0]
-                  if (!file) return
-                  try {
-                    const f = await uploadFile(file, file.name.replace(/\.[^.]+$/, ''))
-                    const range = q.getSelection(true)
-                    q.insertEmbed(range.index, 'image', f.url, 'user')
-                    q.setSelection(range.index + 1, 0)
-                  } catch (e) {
-                    // 폼의 오류 줄이 아니라 편집기 안이라, 여기서는 콘솔에만.
-                    console.error('그림 올리기 실패', e)
-                  }
+                input.accept = IMAGE_TYPES.join(',')
+                input.multiple = true
+                input.onchange = () => {
+                  const files = Array.from(input.files ?? [])
+                  if (files.length) void insertImages(q, q.getSelection(true).index, files)
                 }
                 input.click()
               },
@@ -61,8 +97,12 @@ export default function HtmlEditor({ value, onChange }: { value: string; onChang
           },
         },
       })
-      q.clipboard.dangerouslyPasteHTML(value ?? '', 'silent')
-      q.on('text-change', () => latest.current(q.root.innerHTML))
+      // 다른 문서에서 복사해 온 base64 그림은 버린다(글 한 건이 MB 가 된다). 파일로 다시 넣게 한다.
+      q.clipboard.addMatcher('IMG', (node, delta) =>
+        (node as HTMLImageElement).getAttribute('src')?.startsWith('data:') ? new Delta() : delta,
+      )
+      q.clipboard.dangerouslyPasteHTML(toEditor(value ?? ''), 'silent')
+      q.on('text-change', () => latest.current(toStored(q.root.innerHTML)))
       quill.current = q
     })()
     return () => {
@@ -75,8 +115,8 @@ export default function HtmlEditor({ value, onChange }: { value: string; onChang
   useEffect(() => {
     const q = quill.current
     if (!q) return
-    if (q.root.innerHTML !== (value ?? '') && !q.hasFocus()) {
-      q.clipboard.dangerouslyPasteHTML(value ?? '', 'silent')
+    if (toStored(q.root.innerHTML) !== (value ?? '') && !q.hasFocus()) {
+      q.clipboard.dangerouslyPasteHTML(toEditor(value ?? ''), 'silent')
     }
   }, [value])
 

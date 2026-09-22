@@ -397,6 +397,22 @@
   border-radius: 8px;
   background: #fff;
 }
+/* 목록 썸네일 미리 보기 — 본문의 첫 그림. 고르는 칸이 아니라 보여 주기만 한다. */
+.dva_thumb_row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.dva_thumb {
+  flex: none;
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid var(--dva-line);
+  border-radius: 6px;
+  background: #fff;
+}
 .dva_files {
   list-style: none;
   margin: 0;

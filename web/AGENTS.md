@@ -55,7 +55,15 @@
 - 로그인은 버튼 하나 「사내 IAM 으로 로그인」. 자동 리다이렉트 없음 — 로그아웃 뒤
   즉시 재로그인되는 것을 막는다.
 - 브라우저 다이얼로그(`confirm`·`alert`)를 쓰지 않는다. 삭제는 인라인 확인 버튼.
-- 본문은 Quill 편집기다(`app/admin/posts/[board]/HtmlEditor.tsx`). 그림은 본문 안에 올려 넣는다.
+- 본문은 Quill 편집기다(`app/admin/posts/[board]/HtmlEditor.tsx`). **그림은 본문 안에 넣는다** —
+  그림 버튼 · 붙여넣기 · 끌어다 놓기 셋 다 파일을 올려 주소를 넣는다(base64 로 박지 않는다).
+  저장되는 HTML 은 공개 주소(`/api/content/assets/<id>`), 편집기 안에서는 관리 미리보기
+  (`/api/admin/files/<id>`)로 보여 준다 — 공개 주소는 게시된 글의 그림만 내 줘서 초안에서 깨진다.
+- 글 폼의 오른쪽은 설정(상태·날짜·예약·고정·주소·게시판별 칸)만이다. 증서 그림·첨부·목록 썸네일
+  미리 보기는 본문 쪽에 있다. 공지·보도·뉴스의 목록 썸네일은 본문 첫 그림이다(api 가 저장할 때 정한다).
+- **`/api/admin/files`(목록·올리기)만 rewrite 가 아니라 `app/api/admin/files/route.ts` 가 넘긴다.**
+  rewrite 는 본문을 메모리에 복사하며 10MB 에서 잘라 큰 파일 요청이 끝나지 않는다. 한도를 올리면
+  익명 주소까지 같이 오르므로 이 주소만 버퍼 없이 흘려보낸다.
 - **화면 문구는 합니다체다.** 에러는 api 가 준 `message` 를 그대로 띄운다 — `adminFetch` 가
   그 말로 에러를 던지니 화면은 `e.message` 만 쓴다. 로그인 실패만 예외다: api 가
   `/admin/login?error=<코드>` 로 돌려보내고 `login/page.tsx` 의 `LOGIN_ERRORS` 가 코드로 문구를
