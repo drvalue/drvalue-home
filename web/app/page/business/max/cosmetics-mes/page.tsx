@@ -23,8 +23,7 @@ export default function Page() {
         path={PATH}
         kicker="화장품 MES"
         ind={IND}
-        // 국가별 규제 검증. 이 장의 탭(원료·GMP 양식·클레임)엔 없는 화면이라 겹치지 않는다. 안 겹치는 화면이 하나뿐이라 한 장.
-        heroShot={{ src: '/screens/cos-regulation.jpg', alt: '국가별 규제 기준으로 성분을 검증하는 화면 — 성분·기준·허용 한도 표', w: 1600, h: 836, tag: '국가별 규제 검증', url: 'max.drvalue.co.kr / 규제 검증' }}
+        // 머리말 화면 없음 — 넷 있는 캡처가 전부 아래 기능 판에 쓰인다(머리말 ≠ 본문 화면 규칙). workspace 캡처 뒤 채운다.
         groups={[
           {
             kicker: '연구 → 영업',

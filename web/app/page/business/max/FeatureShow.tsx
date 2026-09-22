@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { mark, plain } from './text'
 import type { Feature } from './maxContent'
+import { Shots } from './ShotViewer'
 
 /**
  * 기능 묶음 하나 = 게이지 레일(FlowBand 와 같은 규칙: 6초에 차면 다음, 마우스 올리면 멈춤,
@@ -80,10 +81,9 @@ export default function FeatureShow({ items, extra, url, hideShot = [] }: {
           <figure className="mx_fs_fig">
             <div className="mx_browser">
               <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span>{url ?? 'max.drvalue.co.kr'} / {short(f)}</span></div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={shot.src} alt={shot.alt} width={shot.w} height={shot.h} loading="lazy" />
+              {/* 화면이 여럿이면 둘째 장부터 여는 단추가 붙는다(ShotViewer) — 내용은 다 들어가야 한다. */}
+              <Shots shots={f.shots!} label={plain(f.title)} />
             </div>
-            {f.shots!.length > 1 && <figcaption>{plain(f.title)} · 화면 {f.shots!.length}장 중 첫 장</figcaption>}
           </figure>
         )}
       </article>

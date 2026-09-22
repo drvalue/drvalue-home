@@ -201,7 +201,11 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs_chips li { padding: 6px 12px; border-radius: 999px; background: rgba(21,34,56,.08); font-size: 13px; font-weight: 600; color: #4e5968; }
 #dvmax.mx_v4 .mx_fs_fig { position: relative; margin: 0; align-self: stretch; min-height: 440px; }
 #dvmax.mx_v4 .mx_fs_fig .mx_browser { position: absolute; left: 0; top: 24px; width: 118%; max-width: none; border-radius: 12px 0 0 0; box-shadow: 0 30px 80px rgba(21,34,56,.30); }
-#dvmax.mx_v4 .mx_fs_fig figcaption { position: absolute; left: 0; bottom: 12px; font-size: 12px; color: #4e5968; background: rgba(255,255,255,.8); padding: 4px 10px; border-radius: 999px; }
+/* 화면 여럿일 때 ShotViewer 의 「N장 크게 보기」 — 프레임 밑은 판에 잘리므로 프레임 위 오른쪽에 띄운다. */
+#dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: absolute; right: 24px; top: -22px; z-index: 5; margin: 0; padding: 8px 14px; border-radius: 999px; background: #fff; box-shadow: 0 6px 18px rgba(21,34,56,.12); }
+#dvmax.mx_v4 .mx_fs_fig .dvshot_grid { display: block; }
+#dvmax.mx_v4 .mx_fs_fig .dvshot img { border: 0; border-radius: 0; }
+#dvmax.mx_v4 .mx_fs_fig .dvshot_frame { border-radius: 0; box-shadow: none; }
 #dvmax.mx_v4 .mx_fs .mx_cols { margin-top: 24px; }
 @media (hover: hover) { #dvmax.mx_v4 .mx_fs_rail:hover .hk_show_bar b { animation-play-state: paused; } }
 @media (max-width: 900px) {
@@ -212,7 +216,7 @@ export const PATTERN_CSS4 = `
   #dvmax.mx_v4 .mx_fs_txt { padding-bottom: 8px; }
   #dvmax.mx_v4 .mx_fs_fig { min-height: 0; margin: 0 -20px 0 0; }
   #dvmax.mx_v4 .mx_fs_fig .mx_browser { position: relative; top: 0; width: 108%; max-height: 260px; overflow: hidden; }
-  #dvmax.mx_v4 .mx_fs_fig figcaption { display: none; }
+  #dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: static; margin: 8px 0 0; }
 }
 @media (prefers-reduced-motion: reduce) { #dvmax.mx_v4 .mx_fs_panel { animation: none; } }
 `
