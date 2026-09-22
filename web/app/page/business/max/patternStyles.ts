@@ -173,3 +173,46 @@ export const PATTERN_CSS3 = `
 #dvmax.mx_v4 .mx_hero4 .mx_kicker { color: #fff; }
 #dvmax.mx_v4 .mx_hero4 .mx_kicker, #dvmax.mx_v4 .mx_kicker.hk_center, #dvmax.mx_v4 .mx_kicker[style*="center"] { margin-left: auto; margin-right: auto; }
 `
+export const PATTERN_CSS4 = `
+/* ── FeatureShow: 게이지 레일 + 기능 전문 판(글 왼쪽 · 화면 오른쪽) ── */
+#dvmax.mx_v4 .mx_fs { margin: 40px 0 0; }
+#dvmax.mx_v4 .mx_fs_rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 18px; margin: 0 0 28px; padding: 0; list-style: none; }
+#dvmax.mx_v4 .mx_fs_rail button { display: block; width: 100%; text-align: left; padding: 0; border: 0; background: transparent; color: #8b95a1; cursor: pointer; transition: color .25s; }
+#dvmax.mx_v4 .mx_fs_rail button > b { display: block; margin-top: 14px; font-size: 17px; font-weight: 700; line-height: 1.3; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_rail button > b small { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: #b0b8c1; font-variant-numeric: tabular-nums; }
+#dvmax.mx_v4 .mx_fs_rail button.on { color: #191f28; } #dvmax.mx_v4 .mx_fs_rail button:hover { color: #4e5968; }
+#dvmax.mx_v4 .mx_fs_rail button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
+#dvmax.mx_v4 .mx_fs_panel { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; padding: 48px 0 0 56px; border-radius: 28px; overflow: hidden; min-height: 520px;
+  background: linear-gradient(135deg, #e9f1fc 0%, #d3e2f6 60%, #bcd2ef 100%); animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
+#dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; padding: 48px 56px; min-height: 0; }
+#dvmax.mx_v4 .mx_fs_panel.one .mx_fs_txt { padding-bottom: 0; }
+#dvmax.mx_v4 .mx_fs_txt { padding-bottom: 48px; }
+#dvmax.mx_v4 .mx_fs_k { display: inline-block; margin: 0 0 16px; padding: 6px 14px; border-radius: 999px; background: #152238; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+#dvmax.mx_v4 .mx_fs_txt h3 { margin: 0; font-size: clamp(24px, 2.4vw, 32px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_txt h3 .mx_hl { color: #191f28; }
+#dvmax.mx_v4 .mx_fs_pts { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
+#dvmax.mx_v4 .mx_fs_pts li { position: relative; padding: 12px 16px 12px 40px; border-radius: 12px; background: rgba(255,255,255,.72); font-size: 16px; line-height: 1.6; color: #333d4b; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_pts li::before { content: ''; position: absolute; left: 16px; top: 19px; width: 12px; height: 12px; border-radius: 50%; background: #3e78c8; box-shadow: 0 0 0 4px rgba(62,120,200,.18); }
+#dvmax.mx_v4 .mx_fs_pts li .mx_hl { color: #191f28; }
+#dvmax.mx_v4 .mx_fs_callout { margin: 20px 0 0; padding: 18px 22px; border-radius: 14px; background: #152238; color: #fff; }
+#dvmax.mx_v4 .mx_fs_callout p { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.72); }
+#dvmax.mx_v4 .mx_fs_callout .mx_fs_res { margin-top: 6px; font-size: 20px; font-weight: 700; line-height: 1.35; color: #fff; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_chips { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+#dvmax.mx_v4 .mx_fs_chips li { padding: 6px 12px; border-radius: 999px; background: rgba(21,34,56,.08); font-size: 13px; font-weight: 600; color: #4e5968; }
+#dvmax.mx_v4 .mx_fs_fig { position: relative; margin: 0; align-self: stretch; min-height: 440px; }
+#dvmax.mx_v4 .mx_fs_fig .mx_browser { position: absolute; left: 0; top: 24px; width: 118%; max-width: none; border-radius: 12px 0 0 0; box-shadow: 0 30px 80px rgba(21,34,56,.30); }
+#dvmax.mx_v4 .mx_fs_fig figcaption { position: absolute; left: 0; bottom: 12px; font-size: 12px; color: #4e5968; background: rgba(255,255,255,.8); padding: 4px 10px; border-radius: 999px; }
+#dvmax.mx_v4 .mx_fs .mx_cols { margin-top: 24px; }
+@media (hover: hover) { #dvmax.mx_v4 .mx_fs_rail:hover .hk_show_bar b { animation-play-state: paused; } }
+@media (max-width: 900px) {
+  #dvmax.mx_v4 .mx_fs_rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  #dvmax.mx_v4 .mx_fs_rail button > b { font-size: 15px; }
+  #dvmax.mx_v4 .mx_fs_panel, #dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; gap: 20px; padding: 26px 20px 0; border-radius: 20px; min-height: 0; }
+  #dvmax.mx_v4 .mx_fs_panel.one { padding-bottom: 8px; }
+  #dvmax.mx_v4 .mx_fs_txt { padding-bottom: 8px; }
+  #dvmax.mx_v4 .mx_fs_fig { min-height: 0; margin: 0 -20px 0 0; }
+  #dvmax.mx_v4 .mx_fs_fig .mx_browser { position: relative; top: 0; width: 108%; max-height: 260px; overflow: hidden; }
+  #dvmax.mx_v4 .mx_fs_fig figcaption { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { #dvmax.mx_v4 .mx_fs_panel { animation: none; } }
+`
