@@ -2,8 +2,8 @@
 
 제조 현장용 시스템을 파는 회사의 공개 사이트다. 화면의 목적은 하나 —
 **문의를 받는 것**이다. 한 저장소에 **운영 중인 PHP 사이트**와 그것을
-대체할 **새 사이트(React 화면 + Nest 백엔드 + Directus 관리도구)** 가 나란히
-들어 있다.
+대체할 **새 사이트(React 화면 + Nest 백엔드 + 자체 관리 화면 `/admin`)** 가
+나란히 들어 있다.
 
 작업은 `heysep/<주제>` 가지에서 한다. **`main` 을 고치지 않는다** — 운영
 배포가 이 저장소에서 나간다.
@@ -26,8 +26,8 @@
 │       ├── decisions/index.md     → 다르게 정할 수도 있었던 것들
 │       └── findings.md            → 아직 못 푼 문제 — 저장소에 없다(아래)
 ├── web/AGENTS.md                  → 공개 화면 (Next). 주소 체계와 화면 규칙
-├── api/AGENTS.md                  → 백엔드 (Nest). 세션·속도 제한·게이트웨이
-└── cms/AGENTS.md                  → 관리 도구 (Directus). 스키마·권한·IAM 다리
+├── api/AGENTS.md                  → 백엔드 (Nest). 공개 API · 관리 API · IAM 로그인 · 속도 제한
+└── db/schema.sql                  → 처음 까는 곳의 테이블 (postgres)
 ```
 
 ## 절대 어기지 않는 것
@@ -52,11 +52,11 @@
 
 | 무엇을 고치나 | 먼저 읽는다 |
 |---|---|
-| 세션·로그인·권한 | `docs/security.md` 의 「관리자 로그인 흐름과 실패 지점」 |
+| 세션·로그인·권한 | `api/AGENTS.md` 의 「관리 화면 인가」 · `docs/tracking/decisions/0014` · `docs/security.md` |
 | 환경변수를 새로 만든다 | `docs/security.md` 의 「빠뜨리면 닫히는 쪽으로 기운다」 |
 | 화면 배치·CSS | `docs/engineering-notes.md` 의 flex·grid·`:has()` 항목들 |
 | 상단 메뉴·주소 | `web/lib/menu.ts` 하나만 고친다. 여러 화면이 이걸 읽는다 |
-| 게시판·문의 저장 | `docs/engineering-notes.md` 의 「Directus 는 모르는 필드를 조용히 버린다」 |
+| 게시판·문의 저장 | `api/src/common/entity` 의 엔티티. 테이블 이름은 옛 관리 도구 시절 것 그대로 — `db/schema.sql` |
 | 검사 스크립트 | `docs/standards.md` 의 「검사 통과 기준」. 숫자가 줄면 되돌린다 |
 | 원본 대조 규칙 | `docs/tracking/decisions/index.md` 의 「헤더를 새로 그리고 전용 검사로 덮는다」·「원본 대조 게이트 은퇴」 |
 

@@ -4,35 +4,40 @@
 (이력 없이 한 번에 — 옛 이력에 개인정보가 든 그림이 있어 회사 저장소에는 올리지 않는다).
 
 ```
-web/   Next   홈페이지. 옛 .php 주소는 308 로 새 주소에 넘긴다.
-api/   Nest   사내 IAM · 메일 · 콘텐츠 API
-cms/   Directus 스키마 · 권한 · 예약 게시 · 다국어 · IAM 다리 · 서비스 계정
+web/   Next   홈페이지 + 관리 화면(/admin). 옛 .php 주소는 308 로 새 주소에 넘긴다.
+api/   Nest   콘텐츠 API · 관리 API · 사내 IAM 로그인 · 메일. TypeORM 으로 DB 직결
+db/    schema.sql — 처음 까는 곳의 테이블 (postgres). 이름은 옛 관리 도구 시절 것 그대로
 ```
 
 ## 도커로 띄우기
 
 ```
 cp .env.example .env                # 값 채우기 — 루트 하나다
-docker compose up -d --build        # web 3400 · api 3500 · directus 3350 · db 3330
-docker compose up -d --build web api   # CMS 는 그대로 두고 앞·뒤만
+docker compose up -d --build        # web 3400 · api 3500 · db 3330
+docker compose up -d --build web api   # DB 는 그대로 두고 앞·뒤만
 ```
 
-`web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(CMS 는 `cms/docker-compose.yml` 을 include).
-api 는 `IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다(게이트웨이 검증이 기본 켜짐).
-컨테이너 안에서는 web → `http://api:3500`, api → `http://directus:8055` 로 부른다(compose 가 .env 값을 덮는다).
+`web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(db · api · web).
+api 는 `ADMIN_SESSION_SECRET` 이나 `IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다.
+컨테이너 안에서는 web → `http://api:3500`, api → `db:5432` 로 부른다(compose 가 .env 값을 덮는다).
+업로드 파일은 `data/uploads`(gitignore) 를 `/data/uploads` 에 물린다. 처음 까는 곳은 `db/schema.sql` 로 테이블을 만든다.
 
-## IAM 이 두 군데 있는 이유
+## 관리 화면 — Directus 를 버렸다
 
-이름이 같아 헷갈리지만 서로 다른 일을 한다. 하나가 다른 하나를 대신하지 못한다.
+2026-09-22 결정 0014. Directus Core 의 제약(SSO 차단·컬렉션 25개·조건부 권한
+없음·seat 3명)에 우회를 쌓다가 직접 만들었다. web 의 `/admin` 이 화면, api 의
+`/api/admin/*` 가 CRUD 다. DB 와 테이블은 그대로다.
 
-| | `cms/extensions/directus-extension-iam-bridge` | `api` 의 `@drvalue-oss/iam-nestjs` |
-|---|---|---|
-| 무엇을 인증하나 | **사람** — 관리자가 Directus 화면에 로그인 | **요청** — API 호출이 사내 게이트웨이를 거쳤는지 |
-| 게이트웨이와의 관계 | 게이트웨이를 **부른다** (`/auth/v1/login/root/iam` 4단계) | 게이트웨이 **뒤에 선다** (`enforceGatewayOnly`, 서명 검증) |
-| 결과물 | Directus 세션 쿠키 | 요청 통과 / 거절 |
+로그인은 **사내 IAM 만** — 버튼 하나. 인가의 원본은 **M.AX(nxcms) 마스터 DB 의
+root 표**(`rn_default_root_user` · `rn_tenant`)다. PHP 가 게이트웨이 `root/iam` 으로
+묻던 것이 결국 이 표라서 읽기 전용으로 직접 본다. 우리 DB 에 사용자 사본은 없다.
+세션 30분, 60초마다 다시 본다 — nxcms 에서 빼면 60초 안에 막힌다. M.AX DB 가
+설정된 채 안 닿으면 **로그인을 거부**한다. 비어 있으면 IAM 그룹으로 판정한다.
+자세한 것은 `api/AGENTS.md` 의 「관리 화면 인가」.
 
-Directus Core 는 SSO 가 라이선스로 막혀 있어서(`sso_enabled` is a restricted
-resource) 확장으로 우회한다. Nest 쪽은 그런 제약이 없고 애초에 다른 계층이다.
+`api` 에 남은 `@drvalue-oss/iam-nestjs` 는 사람이 아니라 **요청**을 검사한다
+(게이트웨이 서명). 지금 지키는 경로는 0개이고, 「새 컨트롤러는 기본이 게이트웨이 뒤」
+정책 때문에 남겨 뒀다.
 
 ## 자산과 배포
 
@@ -276,20 +281,20 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 위쪽은 고정 헤더가 있어서 겹친다(처음에 겹쳤다). `role="status"` 를 달아
 스크린리더도 읽게 했다. 기본 대화상자는 저절로 읽혔지만 이건 아니다.
 
-## 게시판을 CMS 가 대체한다
+## 게시판은 우리 DB 에서 온다
 
-공지·보도자료 화면이 읽는 곳을 사내 게이트웨이에서 CMS 로 옮겼다.
+공지·보도자료 화면이 읽는 곳을 사내 게이트웨이에서 우리 DB 로 옮겼다.
 
 | | 전 | 후 |
 |---|---|---|
-| 목록·상세 | `notice_api.php` → 게이트웨이 | `/api/content/posts` → Directus |
-| 글 주소 | 업스트림 번호(`?id=123`) | CMS 주소(`?id=<slug>`) |
-| 쓰기·수정·삭제 | 사이트의 글쓰기 폼 | **관리 화면(Directus)** |
+| 목록·상세 | `notice_api.php` → 게이트웨이 | `/api/content/posts` → DB |
+| 글 주소 | 업스트림 번호(`?id=123`) | `?id=<slug>` |
+| 쓰기·수정·삭제 | 사이트의 글쓰기 폼 | **관리 화면 `/admin`** |
 | 관리자 판별 | 사이트 IAM 로그인 | 없음 (공개 화면은 읽기만) |
 
 ### 이름이 이렇게 대응된다
 
-| 화면이 쓰던 이름 | CMS |
+| 화면이 쓰던 이름 | DB 칸 |
 |---|---|
 | `isPinned` | `is_pinned` |
 | `createdAt` | `published_date` (표시 날짜) |
@@ -298,9 +303,8 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 | `thumbnailImage` | `thumbnail` |
 | `attachmentFiles` | `attachments` |
 
-응답은 **번역을 펴서** 준다. Directus 는 `translations: [{...}]` 로 주는데,
-화면마다 `[0]` 을 꺼내고 없을 때를 처리하면 같은 실수가 화면 수만큼 생긴다.
-번역 행의 `id` 는 버린다 — 그대로 펴면 글 번호를 덮어쓴다.
+응답은 **번역을 펴서** 준다. 언어별 행(`posts_translations`)을 화면마다 고르게
+두면 같은 실수가 화면 수만큼 생긴다.
 
 요청 언어 번역이 없으면 **기본 언어로 떨어뜨린다.** 안 그러면 제목도 본문도
 빈 글이 정상 응답으로 나가고 화면에는 빈 줄만 남는다.
@@ -312,51 +316,34 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 
 비워 두면 목록이 뒤집힌다. 정렬이 `-published_date` 인데 Postgres 는 내림
 차순에서 NULL 을 맨 앞에 놓는다 — **날짜 없는 글이 최신 글을 제친다**(실측,
-브라우저에서 확인). 그래서 not null 로 잠갔다. 기존 행은 `schema.py` 의
-`backfill_date()` 가 먼저 채운다.
+브라우저에서 확인). 그래서 not null 이다.
 
 ### 첨부
 
-`posts` 에 첨부가 없었다. 중간 테이블(`posts_files`)과 관계 두 개를 만들어
-붙였다 — 파일 여러 개는 uuid 컬럼 하나로 안 되고, 필드만 만들면 관리 화면에
-빈 칸만 나온다. **권한을 세 군데에 줘야 한다**: 마케팅 역할(`roles.py`),
-백엔드 서비스 계정(`service_account.py`), 그리고 컬렉션 자체. 서비스 계정을
-빠뜨리면 첨부가 **오류 없이 빈 배열**로 온다 — 글은 보이는데 첨부만 사라진다
-(실제로 당했다).
+`posts_files` 가 글과 파일(`directus_files`)을 잇는다. 파일은 `data/uploads` 에
+`<uuid>.<ext>` 로 있고 `/api/content/assets/<uuid>` 로 나간다 — 업로드 폴더를
+브라우저에 직접 열지 않는다.
 
-관계에 `one_deselect_action: delete` 를 건다. 기본값으로 두면 첨부를 떼기만
-했을 때 `posts_id` 가 NULL 인 고아 행이 쌓인다.
-
-파일은 `/api/content/assets/<uuid>` 로 나간다. 브라우저를 Directus 로 직접
-보내지 않는다 — 운영에서 Directus 가 바깥에 열려 있으리라는 보장이 없고,
-열어 두면 파일 목록 전체가 노출된다.
-
-**uuid 모양만 보고 흘려보내면 안 된다.** 서비스 토큰은 `directus_files`
-전체를 읽을 수 있어서, 주소만 알면 초안 글의 첨부도 게시판과 무관한 파일도
-다 나간다. 그래서 "게시된 글이 실제로 가리키는 파일"만 통과시킨다
-(`fileIsPublic()`). 새 화면이 다른 컬렉션의 이미지를 쓰기 시작하면 **거기에
+**uuid 모양만 보고 흘려보내면 안 된다.** 업로드 폴더에는 초안 글의 첨부도
+있어서, 주소만 알면 다 나간다. 그래서 "게시된 글이 실제로 가리키는 파일"만 통과시킨다
+(`fileIsPublic()`). 새 화면이 글 밖의 이미지를 쓰기 시작하면 **거기에
 추가해야 한다** — 안 하면 404 가 된다. 조용히 새는 것보다 눈에 띄게 깨지는
 쪽이 낫다.
 
-가져오기에 실패하면 밖으로는 404 로 답하고 **진짜 코드는 로그에 남긴다.**
-권한 사고가 "없는 파일"로 보이면 원인을 못 찾는다. 서버가 죽은 것(5xx)만
-502 로 구분한다.
+행은 있는데 디스크에 없으면 밖으로는 404 로 답하고 **원인은 로그에 남긴다.**
 
 ### 글쓰기 폼을 막았다
 
-`notify_form.php` 는 옛 게시판 백엔드로 저장한다. 게시판이 CMS 로 옮겨간
+`notify_form.php` 는 옛 게시판 백엔드로 저장한다. 게시판이 우리 DB 로 옮겨간
 뒤에도 그대로 두면 **글을 써도 사이트에 안 나오고 어디로 갔는지도 안 보인다.**
 조용한 유실이라 저장 경로를 끊고 관리 화면으로 안내한다. 주소는 살려 둔다
 (북마크·이력). 관리 화면 주소는 루트 `.env` 의 `CMS_ADMIN_URL` 이다.
 
 ### 이 작업이 못 막는 것
 
-- **옛 글 주소가 안 살아난다.** 예전 `?id=<업스트림 번호>` 링크는 CMS 번호와
+- **옛 글 주소가 안 살아난다.** 예전 `?id=<업스트림 번호>` 링크는 우리 slug 와
   맞지 않는다. 내용 자체가 옮겨 오는 것이라 매핑표 없이는 복원할 수 없다.
-- **`public_api.py` 의 공개 플로우와 Public 정책은 은퇴시키지 않았다.**
-  Nest 는 서비스 토큰으로 직접 읽으므로 플로우를 쓰지 않는다. 지우는 것은
-  되돌리기 어려운 작업이고 스모크 109건이 그 위에 서 있다 — 별도 단계다.
-- 옛 게시판에 쌓인 실제 글을 CMS 로 옮기는 **데이터 이관은 포함되지 않았다.**
+- 옛 게시판에 쌓인 실제 글을 옮기는 **데이터 이관은 포함되지 않았다.**
   구조만 바꿨다.
 - 잘못된 `startDate`/`endDate` 는 **오류 없이 무시한다.** 원본 PHP 가
   `preg_match` 로 거르고 넘어가던 것을 그대로 뒀다 — 동작을 바꾸면 이관
@@ -546,7 +533,7 @@ JS 가 죽어도 화면은 멀쩡하고, 돌면 제자리로 올라온다. 옮�
 
 ## 로그인을 뺐다
 
-관리자 로그인은 CMS 관리 화면으로 간다. 옛 게시판 API(`notice_api.php`)와
+관리자 로그인은 `/admin` 으로 간다. 옛 게시판 API(`notice_api.php`)와
 IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 `compare.py` 의 `PHP_ONLY_CLASS` 가 원본 쪽에서 그 단추를 떼어낸다.
 
@@ -586,7 +573,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 | 절대 깨지면 안 되는 것 | **게시판 글, 문의 접수.** 나머지는 깨져도 고치면 된다 |
 | 전환 방식 | **날짜를 정해 한 번에** 바꾼다. PHP 와 Next 를 나란히 돌리지 않는다 |
 | 배포 위치 | **다른 서버에 따로** 올린다 |
-| 서비스 토큰의 노출 범위 | 토큰을 쥔 쪽이 Directus 파일 목록 전체를 볼 수 있다는 것을 **알고 그대로 간다** |
+| 관리 도구 | Directus 를 버리고 직접 만든다. 인가는 M.AX root 표 (0014) |
 
 한 번에 바꾸기로 했으므로 PHP 쪽 `header.php` 에는 새 메뉴 항목(제조AI)을
 넣지 않는다. 그래서 옮긴 페이지의 헤더는 원본과 그 한 줄이 영구히 다르다 —
@@ -602,8 +589,8 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `cms/scripts/smoke.sh` | Directus 권한 · 예약 게시 · 다국어 · 공개 엔드포인트 · IAM 다리 | 109항, 실측 89 (플로우 20건 미설치) |
-| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 회사 자료 게시판 + 기본값이 닫힌 쪽인가 | 53/53 |
+| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 기본값이 닫힌 쪽인가 (DB 직결) | 55/55 |
+| `api: node --test …/authorize.test.mjs` | 관리 화면 인가 판정 | 11/11 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
 두 번 돌리면 그 구간이 `판정불가` 로 빠진다** — 통과도 실패도 아니다.
@@ -614,7 +601,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 | `web/scripts/check-home.py` | 홈에서 원본이 안 없어졌나 + 새 구역이 그려지나 + 시연용 글이 안 남았나 | 21/21 |
 | `web/scripts/check-header.py` | 위쪽 탭 막대 + 현재 위치 줄 — 대조가 둘을 떼므로(REDESIGNED) 그 자리를 대신 본다 | 103/103 |
 | `web/scripts/check-src.py` | PAGE_CSS 안에 백틱이 섞였나 | 7개 확인, 0건 |
-| `cms/scripts/import_board.py` | 운영 게시판 글을 CMS 로 옮긴다 | 로컬 Directus 에 5건 (새 서버 쪽은 0건 — 전환 당일 다시 돌릴 것) |
+| `web/scripts/check-pages.py` | 채운 장의 본문·그림 바닥 (`NEXT_ORIGIN` 으로 포트) | 98/98 |
 | `npx next build` · `npx tsc --noEmit` | 운영 빌드가 되는가 | 통과 |
 
 `check-src.py` 는 `compare-all.sh` 가 먼저 돌린다. `PAGE_CSS` 는 템플릿
@@ -637,18 +624,15 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 `api/scripts/verify.sh` 는 "응답이 200 이다" 로 끝내지 않는다. 문의 저장은
 컨트롤러가 없는 필드에 쓰는 바람에 조용히 깨져 있었고, `Promise.allSettled`
-가 그 실패를 삼켜서 화면에는 `ok` 가 떴다. 그래서 **CMS 에 행이 실제로
+가 그 실패를 삼켜서 화면에는 `ok` 가 떴다. 그래서 **DB 에 행이 실제로
 생겼는지, 값이 원문 그대로인지**까지 본다.
-
-Directus 는 **모르는 필드를 조용히 버린다.** 기본값이 있는 필드면 오류도
-안 난다 — 그래서 "저장됐다" 가 아니라 "값이 맞다" 로 검사해야 한다.
 
 ## 로컬
 
 ```
-cms  docker compose up -d      → http://localhost:3350
+docker compose up -d db                → localhost:3330 (처음이면 db/schema.sql)
 api  npm run build && node dist/main.js → http://localhost:3500
-web  npm run build && npm start        → http://localhost:3400
+web  npm run build && npm start        → http://localhost:3400  (/admin 포함)
 ```
 
 `.env` 는 저장소에 넣지 않는다. 루트 `.env.example` 을 복사해서 채운다.

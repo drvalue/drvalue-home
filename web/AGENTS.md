@@ -7,9 +7,9 @@
 
 ## 맡지 않는 것
 
-- **데이터베이스를 직접 부르지 않는다.** Directus 를 모른다. `/api` 만 부른다.
+- **데이터베이스를 직접 부르지 않는다.** `/api` 만 부른다. 관리 화면(`/admin`)도 `/api/admin/*` 만 부른다.
 - 메일 발송·세션·속도 제한은 `api` 것이다.
-- 게시판 글을 만들거나 고치지 않는다. 읽기만 한다.
+- 게시판 글의 저장 규칙(검증·순서·파일)은 `api` 것이다. `/admin` 은 폼을 그리고 `/api/admin` 을 부를 뿐이다.
 - 저장소 루트의 PHP 파일을 고치지 않는다.
 
 ## 늘 지켜야 하는 것
@@ -45,6 +45,18 @@
   Next 화면은 안 바뀐다. `style.css`·`header.css` 는 이미 내용이 다르다 —
   PHP 화면도 같이 바뀌어야 하면 양쪽을 다 고친다.
 
+## 관리 화면 `/admin`
+
+- `app/admin/**` 와 `lib/admin.ts`(fetch 헬퍼. 401 이면 `/admin/login` 으로) 뿐이다.
+  공개 화면 CSS 와 섞지 않는다 — `app/admin/admin.css` 하나, 전부 `.dva` 아래.
+- 메뉴는 **되는 것만**: 게시판 6(공지·보도·특허·저작권·수행실적·연혁) + 문의.
+- 로그인은 버튼 하나 「사내 IAM 으로 로그인」. 자동 리다이렉트 없음 — 로그아웃 뒤
+  즉시 재로그인되는 것을 막는다.
+- 브라우저 다이얼로그(`confirm`·`alert`)를 쓰지 않는다. 삭제는 인라인 확인 버튼.
+- 본문은 HTML textarea 다(편집기 없음). 라벨에 그렇게 적혀 있다.
+- 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · growchat 위젯)는 `components/SiteScripts.tsx`
+  가 싣고 `/admin` 아래에서는 아무것도 싣지 않는다. `robots.ts` 가 `/admin` 을 막는다.
+
 ## 이 덩어리의 방식
 
 - 화면은 서버 컴포넌트가 기본이다. 브라우저에서만 되는 일(관찰·모달·
@@ -52,7 +64,10 @@
 - 제품 설명·화면 캡처 설명은 `app/page/business/max/maxContent.ts` 와
   `app/page/service/solutionContent.ts` 에서 온다. 화면 파일에 글을 적지
   않는다 — 자료를 고쳤을 때 화면이 옛말을 하게 된다.
-- 수행 과제는 `app/page/portfolio/portfolio/list.ts` 하나를 읽는다.
+- 특허·저작권·수행실적·연혁 4장과 홈 소식은 `lib/cms.ts`·`app/home/news.ts` 로
+  요청마다 `/api/content/posts` 를 읽는다(`no-store`, `force-dynamic`). 관리 화면에서
+  저장하면 다음 요청에 보인다. api 가 안 닿을 때만 코드의 예비 목록
+  (`companyContent.ts` · `portfolio/list.ts` · 각 장의 배열)을 쓴다.
 - 원본과 일부러 다르게 만든 자리는 **등록하고, 대신 볼 검사를 같이 만든다.**
   등록만 하고 검사를 안 만들면 그건 검사를 끈 것이다.
 
@@ -66,7 +81,7 @@ python3 scripts/check-home.py     # 21/21   (:3400 이 떠 있어야 한다)
 python3 scripts/check-header.py   # 103/103
 python3 scripts/check-a11y.py     # 266/266
 python3 scripts/check-assets.py   # 빠진 파일 0
-python3 scripts/check-pages.py    # 98/54
+NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 98/98
 npx tsc --noEmit && npx next build
 ```
 
