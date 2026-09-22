@@ -1,0 +1,40 @@
+# 로컬 개발에만 얹는다 — DB 컨테이너와 개발용 포트. 운영 서버에서는 쓰지 않는다.
+#   루트 .env:  COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml
+# 그러면 `docker compose ...` 가 두 파일을 같이 읽는다. 검사(verify.sh)는 localhost:3500 · 3330 을 쓴다.
+services:
+  db:
+    image: postgres:10-alpine
+    container_name: drvalue_directus_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: drvalue
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?루트 .env 에 DB_PASSWORD 를 넣어라}
+      POSTGRES_DB: drvalue_cms
+      TZ: Asia/Seoul
+    ports:
+      - '3330:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U drvalue -d drvalue_cms']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: drvalue_cms
+      DB_USER: drvalue
+      DB_SSL: ''
+    ports:
+      - '3500:3500'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    # 옛 이름 그대로 — 로컬에 있는 데이터를 잃지 않게.
+    name: drvalue_directus_pgdata

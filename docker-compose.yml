@@ -1,49 +1,23 @@
-# 디알밸류 홈페이지 한 벌 — 홈페이지(web) · API + 관리 화면(api) · DB(postgres).
+# 운영 한 벌 — 컨테이너 둘: web(Next, 공개 화면 + /admin) · api(Nest).
+# DB 는 컨테이너 밖이다(운영: iwinv 관리형 PostgreSQL). 주소·이름·계정은 루트 .env.
 #
-#   docker compose up -d --build          # 셋 다
-#   docker compose up -d --build web api  # DB 는 그대로 두고 앞·뒤만
-#   docker compose logs -f web api
+#   운영 서버:   docker compose up -d --build
+#   로컬 개발:   .env 에 COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml (db 컨테이너 + 포트)
 #
-# 포트는 로컬 개발과 같다: web 3400 · api 3500 · db 3330.
-# DB 컨테이너·볼륨 이름은 Directus 시절 것을 그대로 쓴다(drvalue_directus_pg ·
-# drvalue_directus_pgdata) — 이름을 바꾸면 빈 볼륨으로 갈아 끼워져 데이터가 사라진다.
-# 테이블(posts · posts_translations · posts_files · directus_files · inquiries)도 그때 것이다.
-# 처음 까는 곳은 db/schema.sql 로 만든다.
-#
-# 비밀값은 저장소에 없다. 루트 .env 하나를 .env.example 대로 만든다.
-# 컨테이너끼리는 서비스 이름으로 부른다: web → api 는 http://api:3500,
-# api → db 는 db:5432 (아래 environment 가 .env 값을 덮는다).
+# 밖에서 닿는 것은 web 하나, 그것도 127.0.0.1 로만 연다 — 서버 앞단(nginx)이 HTTPS 로 받아 넘긴다.
+# api 는 포트를 내지 않는다. web → api 는 compose 망 안에서 http://api:3500.
 name: drvalue
 
 services:
-  db:
-    image: postgres:10-alpine
-    container_name: drvalue_directus_pg
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: drvalue
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?루트 .env 에 DB_PASSWORD 를 넣어라}
-      POSTGRES_DB: drvalue_cms
-      TZ: Asia/Seoul
-    ports:
-      - '3330:5432'
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U drvalue -d drvalue_cms']
-      interval: 5s
-      timeout: 3s
-      retries: 20
-
   web:
     build:
       context: ./web
-      # 미리보기 배포에서만 NOINDEX=1 로 검색을 막는다. 운영에는 넣지 않는다.
       args:
+        # 미리보기 배포에서만 NOINDEX=1 로 검색을 막는다. 운영에는 넣지 않는다.
         NOINDEX: ${NOINDEX:-}
         # /api 프록시 주소는 빌드 때 굳는다(web/Dockerfile). 실행 환경값과 같게 둔다.
         API_ORIGIN: http://api:3500
-        # 방문 통계(루트 .env 의 값). 비우면 GTM 이 안 실린다 — 운영은 GTM-NLL3QGRF.
+        # 방문 통계 GTM id(빌드 때 굳는다). 비면 GTM·동의 창이 안 실린다.
         NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
     image: drvalue/web
     container_name: drvalue_web
@@ -54,11 +28,12 @@ services:
     environment:
       API_ORIGIN: http://api:3500
     ports:
-      # 3400 을 다른 체크아웃이 쓰고 있으면 WEB_PORT=3410 처럼 바꿔 띄운다.
-      # 그때는 .env 의 ADMIN_IAM_CALLBACK_URL 도 같은 포트로 둔다.
-      - '${WEB_PORT:-3400}:3400'
+      # 앞단 프록시만 닿게 127.0.0.1. 3400 을 다른 것이 쓰면 WEB_PORT=3410 처럼 바꾼다
+      # (그때는 ADMIN_IAM_CALLBACK_URL 도 같은 주소로).
+      - '127.0.0.1:${WEB_PORT:-3400}:3400'
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3400/']
       interval: 15s
@@ -66,7 +41,11 @@ services:
       retries: 10
 
   api:
-    build: ./api
+    build:
+      context: ./api
+      # 스키마·마이그레이션(db/)을 이미지에 싣는다. api 는 뜰 때 먼저 스키마를 맞춘다.
+      additional_contexts:
+        db: ./db
     image: drvalue/api
     container_name: drvalue_api
     restart: unless-stopped
@@ -75,14 +54,10 @@ services:
         required: false
     environment:
       PORT: 3500
-      DB_HOST: db
-      DB_PORT: 5432
-      # 업로드 파일. 저장소의 data/uploads 를 그대로 물린다 — 호스트에서 돌리는 로컬 Nest 와 같은 폴더.
       UPLOADS_DIR: /data/uploads
-      # nginx 같은 프록시 뒤에 두면 1 — main.ts 의 주석 참조.
+      # 앞에 서는 것이 web(Next) 하나라 홉 1. 앞단 nginx 가 X-Forwarded-For 를 접속 IP 로 덮어써야
+      # 이 값이 맞다(docs/operations.md 「앞단 프록시」). 덧붙이기($proxy_add_x_forwarded_for)면 위조된다.
       TRUST_PROXY: 1
-    ports:
-      - '3500:3500'
     volumes:
       - ./data/uploads:/data/uploads
     # 무인증 · DB 를 읽는 가벼운 끝점. 이게 200 이면 api 와 DB 연결이 둘 다 산 것이다.
@@ -90,11 +65,5 @@ services:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3500/api/content/menu']
       interval: 15s
       timeout: 5s
-      retries: 10
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  pgdata:
-    name: drvalue_directus_pgdata
+      retries: 20
+      start_period: 30s

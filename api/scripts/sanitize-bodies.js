@@ -39,9 +39,10 @@ async function main() {
   const c = new Client({
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT || 3330),
-    database: 'drvalue_cms',
-    user: 'drvalue',
+    database: process.env.DB_NAME || 'drvalue_cms',
+    user: process.env.DB_USER || 'drvalue',
     password: process.env.DB_PASSWORD,
+    ssl: process.env.DB_SSL === 'require' ? { rejectUnauthorized: false } : false,
   });
   await c.connect();
   try {

@@ -48,16 +48,31 @@ export const AppConfig = {
     return AppConfig.iamCallbackUrl.startsWith('https://');
   },
 
+  /**
+   * DB 연결. 운영은 iwinv 관리형 PostgreSQL(컨테이너 밖) — 주소·이름·계정을 .env 로 받는다.
+   * 로컬 개발은 docker-compose.dev.yml 의 db 컨테이너(localhost:3330). 기본값은 로컬 개발용이다.
+   */
   db: {
-    /** compose 는 db:5432. 로컬은 localhost:3330(compose 가 연 포트). */
     get host(): string {
       return process.env.DB_HOST ?? 'localhost';
     },
     get port(): number {
       return Number(process.env.DB_PORT ?? 3330);
     },
+    get name(): string {
+      return process.env.DB_NAME || 'drvalue_cms';
+    },
+    get user(): string {
+      return process.env.DB_USER || 'drvalue';
+    },
     get password(): string {
       return process.env.DB_PASSWORD ?? '';
+    },
+    /** DB_SSL=require 면 TLS 로 붙는다(관리형 DB 가 받을 때). 인증서 검증은 하지 않는다 — 사설 CA 일 수 있다. */
+    get ssl(): false | { rejectUnauthorized: false } {
+      return process.env.DB_SSL === 'require'
+        ? { rejectUnauthorized: false }
+        : false;
     },
   },
 

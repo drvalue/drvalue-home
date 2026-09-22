@@ -22,7 +22,7 @@ if [ -z "${ADMIN_SESSION_SECRET:-}" ]; then echo "루트 .env 에 ADMIN_SESSION_
 # DB 한 줄 질의(pg 는 api 의 의존성이다).
 dbq() { (cd "$HERE" && DBQ="$1" node -e "
 const {Client}=require('pg');
-const c=new Client({host:process.env.DB_HOST||'localhost',port:+(process.env.DB_PORT||3330),database:'drvalue_cms',user:'drvalue',password:process.env.DB_PASSWORD});
+const c=new Client({host:process.env.DB_HOST||'localhost',port:+(process.env.DB_PORT||3330),database:process.env.DB_NAME||'drvalue_cms',user:process.env.DB_USER||'drvalue',password:process.env.DB_PASSWORD});
 c.connect().then(()=>c.query(process.env.DBQ)).then(r=>{console.log((r.rows||[]).map(x=>Object.values(x).join('|')).join('\n'));return c.end()}).catch(e=>{console.error(e.message);process.exit(1)})"); }
 
 # 검사용 관리자 세션. 입장은 IAM 관리자만이고, 그 판정은 로그인 때 admin_users 에 적힌다 —
