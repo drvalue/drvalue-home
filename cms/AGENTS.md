@@ -45,7 +45,7 @@
 ## 무엇을 검사하나
 
 ```bash
-bash scripts/smoke.sh              # 112/112 (IAM 다리 3항 포함)
+bash scripts/smoke.sh              # 109항. 이 인스턴스 89 통과 — 20건은 public_api.py 플로우 검사(미설치, Nest 가 대신함)
 ```
 
 `smoke.sh` 는 연속 두 번 돌려도 데이터가 안 쌓여야 한다. 뒷정리 검사가

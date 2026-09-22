@@ -602,7 +602,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `cms/scripts/smoke.sh` | Directus 권한 · 예약 게시 · 다국어 · 공개 엔드포인트 · IAM 다리 | 112/112 |
+| `cms/scripts/smoke.sh` | Directus 권한 · 예약 게시 · 다국어 · 공개 엔드포인트 · IAM 다리 | 109항, 실측 89 (플로우 20건 미설치) |
 | `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 기본값이 닫힌 쪽인가 | 45/45 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
