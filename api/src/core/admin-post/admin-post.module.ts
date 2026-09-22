@@ -1,27 +1,22 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostFileEntity } from '../../common/entity/post-file.entity';
-import { PostTranslationEntity } from '../../common/entity/post-translation.entity';
-import { PostEntity } from '../../common/entity/post.entity';
-import { AdminAuthModule } from '../admin-auth/admin-auth.module';
 import { RevisionModule } from '../../common/revision/revision.module';
+import { AdminAuthModule } from '../admin-auth/admin-auth.module';
 import { AdminPostDefaultController } from './controller/admin-post-default.controller';
 import { PostDefaultRepository } from './repository/post-default.repository';
+import { PostFileDefaultRepository } from './repository/post-file-default.repository';
+import { PostTranslationDefaultRepository } from './repository/post-translation-default.repository';
 import { AdminPostDefaultService } from './service/admin-post-default.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      PostEntity,
-      PostTranslationEntity,
-      PostFileEntity,
-    ]),
-    AdminAuthModule,
-    RevisionModule,
-  ],
+  imports: [AdminAuthModule, RevisionModule],
   controllers: [AdminPostDefaultController],
-  providers: [PostDefaultRepository, AdminPostDefaultService],
+  providers: [
+    PostDefaultRepository,
+    PostTranslationDefaultRepository,
+    PostFileDefaultRepository,
+    AdminPostDefaultService,
+  ],
   // 예약 게시(admin-schedule)가 이력의 before/after 를 같은 모양으로 남기려고 서비스를 쓴다.
-  exports: [PostDefaultRepository, AdminPostDefaultService],
+  exports: [AdminPostDefaultService],
 })
 export class AdminPostModule {}

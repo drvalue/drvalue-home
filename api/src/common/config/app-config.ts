@@ -26,6 +26,10 @@ export const AppConfig = {
   get port(): number {
     return Number(process.env.PORT ?? 3500);
   },
+  /** API 문서(/api/docs). 운영(NODE_ENV=production, api 이미지)에서는 끈다 — 내부 주소 목록이 된다. */
+  get swaggerEnabled(): boolean {
+    return process.env.NODE_ENV !== 'production';
+  },
   /** 비어 있으면 undefined — 프록시를 믿지 않는다. */
   get trustProxy(): boolean | number | string | undefined {
     const raw = process.env.TRUST_PROXY;

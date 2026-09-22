@@ -48,6 +48,18 @@ else
     "$(curl -s -H "Cookie: dv_admin=$IM_HRS" "$API/api/admin/auth/me" --max-time 30 | pick 'print(",".join((d.get("data") or {}).get("boards") or []))')"
   check "전체 권한 /me 는 게시판 9개" "9" \
     "$(adm "/auth/me" | pick 'print(len((d.get("data") or {}).get("boards") or []))')"
+  # 순서 바꾸기도 게시판 범위를 본다 — 인사가 공지 순서를 바꾸면 안 된다(전에는 안 봤다).
+  IM_RID=$(RS="$RUN-reorder" python3 -c 'import json,os; print(json.dumps({"board":"notice","slug":os.environ["RS"],"status":"draft","published_date":"2026-01-01","translations":[{"languages_code":"ko-KR","title":"순서 검사"}]}))' \
+    | admj POST /posts | pick 'print((d.get("data") or {}).get("id",""))')
+  IM_RSORT=$(dbq "select sort from posts where id=${IM_RID:-0}")
+  check "인사는 공지 순서를 못 바꾼다(403)" "ADMIN_AUTH_FORBIDDEN" \
+    "$(printf '{"ids":[0,%s]}' "${IM_RID:-0}" | curl -s -X POST -H "Cookie: dv_admin=$IM_HRS" -H 'Content-Type: application/json' --data-binary @- "$API/api/admin/posts/reorder" --max-time 30 | pick 'print(d.get("resultCode",""))')"
+  # 두 번째 자리에 둔다 — 새어 나가면 sort 가 2 가 된다(첫 자리면 원래 값 1 과 같아 못 가린다).
+  check "막힌 순서 바꾸기는 sort 를 안 건드린다" "$IM_RSORT" "$(dbq "select sort from posts where id=${IM_RID:-0}")"
+  # 대조: 같은 요청을 전체 권한으로 보내면 2 가 된다 — 위 검사가 새는 것을 가려낼 수 있다는 증거.
+  printf '{"ids":[0,%s]}' "${IM_RID:-0}" | admj POST /posts/reorder >/dev/null
+  check "전체 권한은 순서를 바꾼다(대조)" "2" "$(dbq "select sort from posts where id=${IM_RID:-0}")"
+  [ -n "$IM_RID" ] && curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$IM_RID" --max-time 30
 
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/inquiries/$IM_IID" --max-time 30
   check "검사 문의가 남지 않음" "0" "$(dbq "select count(*) from inquiries where id=$IM_IID")"

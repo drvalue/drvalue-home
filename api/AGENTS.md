@@ -22,9 +22,12 @@ src/
 │   ├── config/app-config.ts     # 환경변수를 읽는 유일한 곳
 │   ├── error/                   # ICommonErrorCode · CommonError(createByErrorCode) · COMMON_* 코드
 │   │                            #   · 전역 CommonExceptionFilter · ValidationPipe 실패 변환
+│   │                            #   · @ServiceException(서비스 예외 → 에러 코드)
 │   ├── response/                # IApiCommonResponse (응답 본문 모양)
+│   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
+│   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
 │   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions)
-│   ├── database/                # TypeOrmModule.forRoot — synchronize 절대 끔
+│   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
 │   ├── revision/                # 변경 이력 기록기 (admin_revisions)
 │   ├── image/                   # PNG·JPEG·WebP·GIF 치수 읽기
@@ -33,17 +36,33 @@ src/
     ├── <기능>.module.ts
     ├── controller/<기능>-default.controller.ts
     ├── service/<기능>-default.service.ts
-    ├── repository/<기능>-default.repository.ts
-    ├── dto/controller-<기능>-default.dto.ts
+    ├── repository/<엔티티>-default.repository.ts   # 엔티티 하나당 하나
+    ├── dto/controller-<기능>-default.dto.ts          # 요청(검증 + Swagger)
+    ├── dto/controller-<기능>-default-response.dto.ts # 응답(Swagger + 엔티티 → 응답 변환 `from`)
     ├── error/<기능>.error.ts
     └── filter/                  # 그 기능에만 거는 예외 필터 (admin-auth 의 로그인 되돌리기)
 ```
 
 기능: `content` · `inquiry`(공개) · `admin-auth` · `admin-post` · `admin-file` ·
 `admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user`(관리).
-repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-post` · `admin-file` · `admin-inquiry`).
+**기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
+2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
-- **컨트롤러는 서비스만 주입한다.** 질의 조립·응답 정리는 서비스에.
+| 층 | 규칙 | bmes 실측(apps) |
+|---|---|---|
+| 컨트롤러 | 서비스만 주입 · 로직 없음 · `@ApiTags` 1 + 핸들러마다 `@ApiOperation({ operationId, summary })` · `@TransactionContext() ctx` 를 서비스 첫 인자로 · `this.logger.log` 한 줄(개인정보·토큰 없이) | 304개 중 `@ApiTags` 303 · `@ApiOperation` 303 · 문맥 데코레이터 285 · `process.env` 1 · `res.cookie` 0 |
+| 서비스 | `ctx: ITransactionContext` 가 첫 인자 · 공개 메서드마다 `@ServiceException({ errorCode })` + JSDoc · 쓰기는 `@Transactional()` · 질의를 조립하지 않는다(저장소의 이름 붙은 메서드나 `repository(ctx).find…`) | 429개 중 `@ServiceException` 204 · `@Transactional` 117 · `ctx` 272 · `.repository(ctx` 195 · `createQueryBuilder` 25 |
+| 저장소 | `extends BaseRepository<E>` + `override repository(ctx) { return super.repository(ctx, E) }` · 여러 조건 질의는 이름 붙은 메서드(`findAdminPage` · `findMaxSort`) | 304개 중 상속 304 · `override repository(` 303 |
+| DTO | 요청은 `common/dto` 의 `IsString({ propertyName, description, example, optional, max })` 류로 검증과 Swagger 를 한 번에 · 응답은 `*-response.dto.ts` 클래스 + `static from(entity)` | 172개 중 `IsString({` 154 |
+
+- `@ServiceException` 을 위에, `@Transactional()` 을 아래에 붙인다. 안에서 던지면 롤백된 뒤 에러 코드가 된다.
+  예상 못 한 실패용 코드는 `<기능>Error.<동작>_UNKNOWN`(5xx, 합니다체 문구)을 둔다.
+- 트랜잭션은 bmes 의 typeorm-transactional(CLS) 대신 `dataSource.transaction()` 이다. 한 DB 라 테넌트가
+  없고, 트랜잭션 manager 를 문맥(`ctx.manager`)에 실어 넘긴다 — 저장소의 `repository(ctx)` 가 그 manager 를 쓴다.
+  변경 이력도 `revisionService.record(entry, ctx)` 로 같은 트랜잭션에 쓴다.
+- 요청 밖(cron)에서는 `createTransactionContext(dataSource)` 로 문맥을 만든다(`admin-schedule`).
+- Swagger: `/api/docs`(JSON `/api/docs-json`). `NODE_ENV=production`(api 이미지)에서는 안 뜬다.
+- **컨트롤러는 서비스만 주입한다.** 규칙은 서비스에, 질의는 저장소에, 응답 모양은 응답 DTO 의 `from` 에.
 - **에러는 `error/*.error.ts` 의 코드 객체를 `CommonError.createByErrorCode()` 로 던진다.**
   Nest 내장 예외를 직접 던지지 않는다. 코드 한 건은 `{ code, message, detail, status }`:
   - `message` 는 **화면에 그대로 뜨는 말**이다. 합니다체, 마침표로 끝낸다(「글을 찾을 수 없습니다.」).
@@ -64,9 +83,14 @@ repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-p
   `/auth/token/exchange`)를 직접 부른다.
 - 포맷은 `.prettierrc`(singleQuote, 세미콜론). bmes 와 같다.
 - 주석은 계약과 함정만. 주석·문서는 한다체, 사용자에게 보이는 문구는 합니다체다.
-- bmes 에 있지만 여기 없는 것: Swagger(`@ApiTags`), `x/default` + version 라우트.
-- bmes 와 다르게 하는 것: 에러도 **실제 HTTP 상태**로 낸다(bmes 는 200 에 본문만 바꾼다).
-  관리 화면의 401 → 로그인 이동, 공개 문의 폼의 429 분기, 속도 제한 약속이 상태 코드에 기댄다.
+- bmes 에 있지만 여기 없는 것: `x/default` + version 라우트(주소는 그대로 — 웹과 문서가 이 주소를 쓴다).
+- bmes 와 다르게 하는 것(웹이 이 모양을 읽는다 — 바꾸면 화면이 깨진다):
+  - 에러도 **실제 HTTP 상태**로 낸다(bmes 는 200 에 본문만 바꾼다). 관리 화면의 401 → 로그인 이동,
+    공개 문의 폼의 429 분기, 속도 제한 약속이 상태 코드에 기댄다.
+  - 성공 응답을 `successResponse({ data, status, resultCode, message })` 로 감싸지 않는다.
+    `{ data }` · 목록 `{ data, total, page, pageSize }` · 지우기 `{ ok: true }` 그대로.
+  - 칸 이름은 snake_case(DB 칸 그대로).
+  - `@ServiceException` 이 원래 에러의 message 를 응답에 싣지 않는다(bmes 는 싣는다 — SQL 문구가 화면에 샌다).
 
 ## 관리 화면 인가
 
@@ -137,10 +161,13 @@ repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-p
 
 ```bash
 npm run typecheck && npm run build
-node --test src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 14 (9 + 5)
-bash scripts/verify.sh          # 146 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
+bash scripts/verify.sh          # 161 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
+
+다른 api 를 재려면 `API_URL=http://localhost:3510`, 여럿이 동시에 돌리면 `VERIFY_EMAIL` 을 서로 다르게 준다.
+api 를 docker 밖에서 띄울 때는 `PORT=… UPLOADS_DIR=<저장소>/data/uploads node dist/main.js`(cwd 는 api/).
 
 verify.sh 는 픽스처를 관리 API 로 만들고 지운다. 검사 계정 `verify@drvalue.local` 을
 `admin_users` 에 넣어 IAM 동기화를 흉내 내고, 같은 서명 키로 세션을 만든다. 끝나면 지운다.

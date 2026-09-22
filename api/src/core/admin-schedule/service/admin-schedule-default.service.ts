@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PostEntity } from '../../../common/entity/post.entity';
 import { RevisionService } from '../../../common/revision/revision.service';
+import { createTransactionContext } from '../../../common/typeorm/transaction-context';
 import { AdminPostDefaultService } from '../../admin-post/service/admin-post-default.service';
 
 const ACTOR = 'schedule@system';
@@ -29,6 +30,7 @@ export class AdminScheduleDefaultService {
     private readonly posts: Repository<PostEntity>,
     private readonly adminPostDefaultService: AdminPostDefaultService,
     private readonly revisionService: RevisionService,
+    private readonly dataSource: DataSource,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -61,8 +63,9 @@ export class AdminScheduleDefaultService {
       .getRawMany<{ id: number }>();
     const done: number[] = [];
     for (const { id } of due) {
+      const ctx = createTransactionContext(this.dataSource);
       const before = await this.adminPostDefaultService
-        .get(id)
+        .get(ctx, id)
         .catch(() => null);
       const res = await this.posts
         .createQueryBuilder()
@@ -72,7 +75,7 @@ export class AdminScheduleDefaultService {
         .execute();
       if (!res.affected) continue; // 다른 프로세스가 먼저 바꿨다
       const after = await this.adminPostDefaultService
-        .get(id)
+        .get(ctx, id)
         .catch(() => null);
       await this.revisionService.record({
         actor: ACTOR,
