@@ -27,6 +27,28 @@ export type CmsPost = {
   case_category_label: string | null
   period_start: string | null
   period_end: string | null
+  press_media?: string | null
+  employment_type?: string | null
+  is_open_ended?: boolean
+  deadline?: string | null
+  faq_category?: string | null
+  /** FAQ 목록과 낱개 조회에만 온다. HTML. */
+  body?: string | null
+}
+
+export type CmsPostFull = CmsPost & { body: string | null; attachments: { id: string; name: string; url: string }[] }
+
+/** 글 하나. 없으면(404) 'missing' — 화면이 notFound() 를 부른다. 못 읽으면 null. */
+export async function cmsPost(slug: string): Promise<CmsPostFull | 'missing' | null> {
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/posts/${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    if (res.status === 404) return 'missing'
+    if (!res.ok) return null
+    const body = (await res.json()) as { data?: CmsPostFull }
+    return body.data ?? null
+  } catch {
+    return null
+  }
 }
 
 const ORIGIN = process.env.API_ORIGIN || 'http://localhost:3500'

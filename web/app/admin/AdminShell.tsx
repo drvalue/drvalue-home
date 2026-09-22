@@ -48,9 +48,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         })}
         {me.role !== 'hr' && (
           <>
-            <div className="dva_group">문의</div>
+            <div className="dva_group">운영</div>
             <Link href="/admin/inquiries" className={`dva_nav${pathname.startsWith('/admin/inquiries') ? ' is-on' : ''}`}>
-              문의 목록
+              문의
+            </Link>
+            <Link href="/admin/media" className={`dva_nav${pathname.startsWith('/admin/media') ? ' is-on' : ''}`}>
+              미디어
+            </Link>
+          </>
+        )}
+        {me.role === 'admin' && (
+          <>
+            <div className="dva_group">관리</div>
+            <Link href="/admin/history" className={`dva_nav${pathname.startsWith('/admin/history') ? ' is-on' : ''}`}>
+              변경 이력
+            </Link>
+            <Link href="/admin/users" className={`dva_nav${pathname.startsWith('/admin/users') ? ' is-on' : ''}`}>
+              권한
             </Link>
           </>
         )}

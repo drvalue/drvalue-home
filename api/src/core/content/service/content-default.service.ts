@@ -20,6 +20,14 @@ const DEFAULT_LANGUAGE = 'ko-KR';
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_RE = /^[0-9a-fA-F-]{36}$/;
 
+/**
+ * 지금 공개된 글. 상태만 보지 않는다 — 예약 공개(publish_at) 전과 자동 내림
+ * (unpublish_at) 뒤는 status 가 아직 published 여도 안 나간다. admin-schedule 이
+ * 1분마다 상태를 맞추지만, 그 1분 사이에도 새지 않게 여기서 시각을 직접 본다.
+ */
+const LIVE =
+  "p.status = 'published' AND (p.publish_at IS NULL OR p.publish_at <= now()) AND (p.unpublish_at IS NULL OR p.unpublish_at > now())";
+
 export interface Attachment {
   id: string;
   name: string;
@@ -93,7 +101,10 @@ export class ContentDefaultService {
       .take(limit)
       .getManyAndCount();
     return {
-      data: rows.map((r) => this.present(r as PostRow, language)),
+      // FAQ 는 답(본문)까지 목록에 싣는다 — 한 장에 접기 목록으로 다 보인다.
+      data: rows.map((r) =>
+        this.present(r as PostRow, language, options.board === 'faq'),
+      ),
       total,
       pageSize: limit,
       language,
@@ -113,8 +124,9 @@ export class ContentDefaultService {
   }
 
   /**
-   * 파일 원본. 게시된 글이 실제로 가리키는 파일만 통과시킨다 — 업로드 폴더에는 초안
-   * 첨부도 있으므로 uuid 모양만 보고 흘리면 안 된다.
+   * 파일 원본. 게시된 글이 실제로 가리키는 파일만 통과시킨다 — 대표 그림 · 공유 그림 ·
+   * 첨부 · 본문 HTML 안의 그림. 업로드 폴더에는 초안 첨부도 있으므로 uuid 모양만 보고
+   * 흘리면 안 된다.
    * 다른 곳의 이미지를 공개하기 시작하면 fileIsPublic 에 추가해야 한다.
    */
   async publicFile(id: string): Promise<PublicFile> {
@@ -150,19 +162,26 @@ export class ContentDefaultService {
         { langs: this.languages(language) },
       )
       .leftJoinAndMapOne('p.thumb', FileEntity, 'f', 'f.id = p.thumbnail')
-      .where('p.status = :status', { status: 'published' });
+      .where(LIVE);
   }
 
   private async fileIsPublic(id: string): Promise<boolean> {
     const n = await this.posts
       .createQueryBuilder('p')
       .leftJoin('p.files', 'pf')
-      .where('p.status = :status', { status: 'published' })
+      // 목록과 같은 조건 — 예약 전·내린 뒤의 첨부가 파일 주소로 새지 않게.
+      .where(LIVE)
       .andWhere(
         new Brackets((w) => {
           w.where('p.thumbnail = :id', { id })
             .orWhere('p.og_image = :id', { id })
-            .orWhere('pf.directus_files_id = :id', { id });
+            .orWhere('pf.directus_files_id = :id', { id })
+            // 편집기로 본문에 넣은 그림. 본문 HTML 이 이 주소를 품고 있으면 공개다.
+            // id 는 위에서 UUID_RE 로 걸렀지만 문자열은 바인딩으로만 넣는다.
+            .orWhere(
+              'p.id IN (SELECT tb.posts FROM posts_translations tb WHERE tb.body LIKE :inBody)',
+              { inBody: `%/api/content/assets/${id}%` },
+            );
         }),
       )
       .getCount();
@@ -176,8 +195,8 @@ export class ContentDefaultService {
   }
 
   /**
-   * 게시판은 날짜순. 증서·수행실적은 관리 화면에서 끈 순서(sort), 연혁은 연도
-   * 내림차순 안에서 sort 다 — 그 장들은 「최신 글」이 아니라 「목록」이다.
+   * 게시판(공지·보도·뉴스)은 날짜순. 증서·수행실적·FAQ 는 관리 화면에서 끈 순서(sort),
+   * 연혁은 연도 내림차순 안에서 sort, 채용은 마감 임박 순 — 목록 장은 「최신 글」이 아니다.
    */
   private applyOrder(qb: SelectQueryBuilder<PostEntity>, board?: string): void {
     if (board === 'history') {
@@ -187,11 +206,18 @@ export class ContentDefaultService {
     } else if (
       board === 'patent' ||
       board === 'copyright' ||
-      board === 'case'
+      board === 'case' ||
+      board === 'faq'
     ) {
       qb.orderBy('p.sort', 'ASC', 'NULLS LAST')
         .addOrderBy('p.publishedDate', 'DESC')
         .addOrderBy('p.id', 'ASC');
+    } else if (board === 'recruit') {
+      // 채용은 마감 임박 순. 상시 채용·마감일 없는 것은 뒤로.
+      qb.orderBy('p.isOpenEnded', 'ASC')
+        .addOrderBy('p.deadline', 'ASC', 'NULLS LAST')
+        .addOrderBy('p.publishedDate', 'DESC')
+        .addOrderBy('p.id', 'DESC');
     } else {
       qb.orderBy('p.isPinned', 'DESC')
         .addOrderBy('p.publishedDate', 'DESC')
@@ -229,9 +255,14 @@ export class ContentDefaultService {
       history_year: r.historyYear,
       period_start: r.periodStart,
       period_end: r.periodEnd,
+      press_media: r.pressMedia,
+      employment_type: r.employmentType,
+      is_open_ended: r.isOpenEnded,
+      deadline: r.deadline,
       title: t?.title ?? null,
       summary: t?.summary ?? null,
       case_category_label: t?.caseCategoryLabel ?? null,
+      faq_category: t?.faqCategory ?? null,
       seo_title: t?.seoTitle ?? null,
       seo_description: t?.seoDescription ?? null,
     };

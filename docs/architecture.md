@@ -57,43 +57,38 @@ Nest(api)
 `/api/content/posts` 를 읽는다(`cache: 'no-store'`). 관리 화면에서 저장하면
 다음 요청에 바로 보인다 — 그것이 곧 동기화다.
 
-## 관리 화면 로그인 — IAM 이 두 군데 있는 이유
+## 관리 화면 로그인과 권한
 
-이름이 같지만 서로 다른 일을 한다.
+| 단계 | 누가 답하나 |
+|---|---|
+| 누구냐 | 사내 IAM. api 의 `core/admin-auth` 가 IAM 으로 보내고 code 를 토큰으로 바꿔 claim(`sub` · `email` · `role`)을 읽는다. IAM 패키지 없이 공개 엔드포인트를 직접 부른다 |
+| 들어와도 되냐 · 무엇을 만지냐 | 우리 DB 의 `admin_users`(email · role · enabled). 표에 없는 IAM 사용자는 `403` |
+| 첫 관리자 | 표가 비어 있을 때만 — IAM `PLATFORM_ADMIN`, 또는(`ADMIN_MAX_DB_URL` 설정 시) nxcms drvalue 테넌트 root |
 
-| | `api` 의 `core/admin-auth` | `api` 의 `@drvalue-oss/iam-nestjs` |
-|---|---|---|
-| 무엇을 인증하나 | **사람** — 관리자가 `/admin` 에 로그인 | **요청** — 호출이 사내 게이트웨이를 거쳤는지 |
-| IAM 과의 관계 | IAM 으로 보내고 code 를 토큰으로 바꾼다 | 게이트웨이 **뒤에 선다** (서명 검증). 지금 지키는 경로는 0개 |
-| 결과물 | 세션 쿠키 `dv_admin`(HMAC, 30분) | 요청 통과 / 거절 |
+세션은 HMAC 쿠키 `dv_admin`, 30분. 60초마다 `admin_users` 와(설정 시) nxcms root 표를
+다시 본다. nxcms 가 설정됐는데 안 닿으면 로그인을 **거부**한다(열리는 쪽으로 안 떨어진다).
+역할은 admin 전부 · marketing 채용 빼고 · hr 채용만. 변경 이력은 `admin_revisions`.
+결정 `0014`(덧붙임).
 
-인가는 **M.AX(nxcms) 마스터 DB** 가 원본이다 — `rn_default_root_user`
-(`iamUserId` = IAM sub, `status = ACTIVE`) 와 `rn_tenant`(`code = drvalue`,
-`rootUserId`) 를 읽기 전용으로 직접 본다. 우리 DB 에 사용자 사본은 없다.
-로그인 때와 60초마다 다시 보므로 nxcms 에서 빼면 60초 안에 막힌다.
-설정은 됐는데 DB 가 안 닿으면 **로그인을 거부**한다(열리는 쪽으로 안 떨어진다).
-`ADMIN_MAX_DB_*` 가 비어 있으면 IAM 그룹(`ADMIN_IAM_GROUP` uuid 의 OWNER/ADMIN)
-으로 판정하고, `PLATFORM_ADMIN` 은 어느 경우든 통과한다. 권한 단계는 하나다 —
-통과하면 전부 편집한다. 결정 `0014`.
+게이트웨이 서명 검증(`@drvalue-oss/iam-nestjs`)은 없앴다 — 이 api 는 브라우저가 직접
+부르는 자리라 게이트웨이 뒤가 아니고, 지키던 경로가 0개였다.
 
 ## 바깥에 기대는 것
 
 | 대상 | 무엇에 쓰나 | 없으면 |
 |---|---|---|
 | 사내 IAM (`iam.drvalue.co.kr`) | 관리자 사람 로그인 | 관리 화면에 못 들어간다. 공개 화면은 멀쩡하다 |
-| M.AX(nxcms) 마스터 DB | 관리자 인가(root 표) | 설정돼 있으면 로그인 거부. 비어 있으면 IAM 그룹으로 |
-| IAM 내부 API (선택) | 세션 중 사용자 비활성 감지 | 그 검사만 빠진다. 30분 만료 재검은 남는다 |
+| M.AX(nxcms) 마스터 DB (선택) | 첫 관리자 판정 · 60초 root 재검 | 설정돼 있는데 안 닿으면 로그인 거부. 비어 있으면 `PLATFORM_ADMIN` 만 첫 관리자가 된다 |
 | PostgreSQL | 글·문의·파일 행 | api 가 안 뜬다 |
 | GrowChat 위젯 | 우하단 상담 | 위젯이 **조용히** 안 뜬다(도메인 잠금) |
 | 메일 발송 | 문의 전달 | 문의가 저장은 되고 메일만 안 간다 |
-| Doppler | 게이트웨이 공유 비밀 보관 | 로컬에서 게이트웨이 검사를 못 돌린다 |
 
 ## 모듈 경계
 
 | 모듈 | 소유 | 의존 방향 |
 |---|---|---|
 | `web` | 공개 화면, 관리 화면, 주소 체계, 검사 스크립트 | → `api` (HTTP `/api` 만) |
-| `api` | 공개 API, 관리 API, IAM 로그인·인가, 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM, → M.AX DB(읽기) |
+| `api` | 공개 API, 관리 API, IAM 로그인, `admin_users` 인가·역할, 변경 이력, 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM, → M.AX DB(읽기, 선택) |
 | `db` | 테이블. 이름은 옛 관리 도구(Directus) 시절 것 그대로 — `directus_files` 포함 | 아무것도 안 부른다 |
 | 루트 PHP | 현재 운영 화면 | 저장소 안에서 아무것도 안 부른다 |
 

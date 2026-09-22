@@ -17,6 +17,9 @@ import type { SessionPayload } from '../../../common/session/session-token';
 
 const PAGE = 30;
 
+const iso = (d: Date | string | null | undefined): string | null =>
+  d ? new Date(d).toISOString() : null;
+
 /** 관리 화면이 보는 목록 한 줄. */
 export interface AdminPostRow {
   id: number;
@@ -30,6 +33,15 @@ export interface AdminPostRow {
   thumbnail: string | null;
   history_year: string | null;
   cert_no: string | null;
+  press_media: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  employment_type: string | null;
+  is_open_ended: boolean;
+  deadline: string | null;
+  faq_category: string | null;
+  publish_at: string | null;
+  unpublish_at: string | null;
 }
 
 @Injectable()
@@ -75,8 +87,12 @@ export class AdminPostDefaultService {
         }),
       );
     }
-    // 게시판(공지·보도)은 날짜순이 먼저다. 증서·연혁은 sort 가 먼저.
-    if (options.board === 'notice' || options.board === 'press') {
+    // 게시판(공지·보도·뉴스)은 날짜순이 먼저다. 증서·연혁·FAQ 는 sort 가 먼저.
+    if (
+      options.board === 'notice' ||
+      options.board === 'press' ||
+      options.board === 'news'
+    ) {
       qb.orderBy('p.isPinned', 'DESC')
         .addOrderBy('p.publishedDate', 'DESC')
         .addOrderBy('p.id', 'DESC');
@@ -85,6 +101,13 @@ export class AdminPostDefaultService {
       qb.orderBy('p.historyYear', 'DESC')
         .addOrderBy('p.sort', 'ASC', 'NULLS LAST')
         .addOrderBy('p.id', 'ASC');
+    }
+    // 채용은 마감 임박 순. 상시 채용은 뒤로, 마감일 없는 것도 뒤로.
+    if (options.board === 'recruit') {
+      qb.orderBy('p.isOpenEnded', 'ASC')
+        .addOrderBy('p.deadline', 'ASC', 'NULLS LAST')
+        .addOrderBy('p.publishedDate', 'DESC')
+        .addOrderBy('p.id', 'DESC');
     }
     const [rows, total] = await qb
       .skip((page - 1) * PAGE)
@@ -101,6 +124,20 @@ export class AdminPostDefaultService {
       .select('DISTINCT t.caseCategoryLabel', 'label')
       .where(
         "p.board = 'case' AND t.caseCategoryLabel IS NOT NULL AND t.caseCategoryLabel <> ''",
+      )
+      .orderBy('label', 'ASC')
+      .getRawMany<{ label: string }>();
+    return rows.map((r) => r.label);
+  }
+
+  /** FAQ 「분류」에 지금까지 쓴 값. 수행실적 구분과 같은 방식 — 같은 말을 다르게 적지 않게. */
+  async faqCategories(): Promise<string[]> {
+    const rows = await this.postDefaultRepository.translations
+      .createQueryBuilder('t')
+      .innerJoin('t.post', 'p')
+      .select('DISTINCT t.faqCategory', 'label')
+      .where(
+        "p.board = 'faq' AND t.faqCategory IS NOT NULL AND t.faqCategory <> ''",
       )
       .orderBy('label', 'ASC')
       .getRawMany<{ label: string }>();
@@ -234,6 +271,9 @@ export class AdminPostDefaultService {
   private columns(dto: ControllerAdminPostDefaultSaveDto): Partial<PostEntity> {
     const nul = (v: string | null | undefined) =>
       v === undefined ? undefined : v || null;
+    // 예약 시각: 보내지 않으면 그대로, 빈 값·null 이면 지운다.
+    const when = (v: string | null | undefined) =>
+      v === undefined ? undefined : v ? new Date(v) : null;
     return {
       publishedDate: dto.published_date,
       isPinned: dto.is_pinned ?? undefined,
@@ -248,6 +288,11 @@ export class AdminPostDefaultService {
       certMadeDate: nul(dto.cert_made_date),
       certKind: nul(dto.cert_kind),
       historyYear: nul(dto.history_year),
+      employmentType: nul(dto.employment_type),
+      isOpenEnded: dto.is_open_ended ?? undefined,
+      deadline: nul(dto.deadline),
+      publishAt: when(dto.publish_at),
+      unpublishAt: when(dto.unpublish_at),
     };
   }
 
@@ -260,6 +305,7 @@ export class AdminPostDefaultService {
       summary: t.summary ?? null,
       body: t.body ?? null,
       caseCategoryLabel: t.case_category_label ?? null,
+      faqCategory: t.faq_category ?? null,
       seoTitle: t.seo_title ?? null,
       seoDescription: t.seo_description ?? null,
     };
@@ -281,6 +327,15 @@ export class AdminPostDefaultService {
       thumbnail: r.thumbnail ? `/api/admin/files/${r.thumbnail}` : null,
       history_year: r.historyYear,
       cert_no: r.certNo,
+      press_media: r.pressMedia,
+      period_start: r.periodStart,
+      period_end: r.periodEnd,
+      employment_type: r.employmentType,
+      is_open_ended: r.isOpenEnded,
+      deadline: r.deadline,
+      faq_category: ko?.faqCategory ?? null,
+      publish_at: iso(r.publishAt),
+      unpublish_at: iso(r.unpublishAt),
     };
   }
 
@@ -305,12 +360,18 @@ export class AdminPostDefaultService {
       cert_made_date: r.certMadeDate,
       cert_kind: r.certKind,
       history_year: r.historyYear,
+      employment_type: r.employmentType,
+      is_open_ended: r.isOpenEnded,
+      deadline: r.deadline,
+      publish_at: iso(r.publishAt),
+      unpublish_at: iso(r.unpublishAt),
       translations: (r.translations ?? []).map((t) => ({
         languages_code: t.languagesCode,
         title: t.title,
         summary: t.summary,
         body: t.body,
         case_category_label: t.caseCategoryLabel,
+        faq_category: t.faqCategory,
         seo_title: t.seoTitle,
         seo_description: t.seoDescription,
       })),

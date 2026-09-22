@@ -15,20 +15,18 @@ import {
   SessionPayload,
 } from '../../../common/session/session-token';
 import { AdminAuthError } from '../error/admin-auth.error';
-import { MaxRootService } from '../service/max-root.service';
 import { AdminUserService } from '../service/admin-user.service';
 
 export const ADMIN_COOKIE = 'dv_admin';
-/** admin_users · nxcms 를 다시 보는 간격. 그 사이에 빼면 이만큼 늦게 막힌다. */
+/** admin_users 를 다시 보는 간격. 그 사이에 바꾸면 이만큼 늦게 따라온다. */
 const RECHECK_MS = 60_000;
 
 /**
  * 관리 API 의 문. 들어오는 길은 IAM 로그인이 만든 세션(dv_admin) 하나뿐이다.
  *
  * 1) 세션 쿠키가 서명·만료 모두 유효해야 한다(30분 — 만료되면 IAM 을 다시 다녀온다).
- * 2) 60초마다 admin_users 를 다시 본다. 빠지거나 꺼지면 막히고, 역할 변경도 따라온다.
- * 3) nxcms 가 설정돼 있으면 60초마다 root 표도 다시 본다.
- * 4) @AdminRoles() 가 붙은 곳은 그 역할만(admin 은 항상).
+ * 2) 60초마다 admin_users(IAM 판정의 거울)를 다시 본다. 꺼지면 막히고 범위 변경도 따라온다.
+ * 3) @AdminRoles() 가 붙은 곳은 그 역할만(admin 은 항상).
  */
 @Injectable()
 export class AdminSessionGuard implements CanActivate {
@@ -36,7 +34,6 @@ export class AdminSessionGuard implements CanActivate {
   private readonly checked = new Map<string, number>();
 
   constructor(
-    private readonly maxRootService: MaxRootService,
     private readonly adminUserService: AdminUserService,
     private readonly reflector: Reflector,
   ) {}
@@ -52,7 +49,6 @@ export class AdminSessionGuard implements CanActivate {
     );
     if (session) {
       await this.assertStillRegistered(session);
-      await this.assertStillRoot(session);
       this.assertRole(ctx, session.role);
       req.admin = session;
       return true;
@@ -72,11 +68,10 @@ export class AdminSessionGuard implements CanActivate {
     throw new CommonError(AdminAuthError.FORBIDDEN);
   }
 
-  /** admin_users 에서 빠지거나 꺼지면 세션이 남아 있어도 60초 안에 막힌다. 역할 변경도 여기서 따라온다. */
+  /** admin_users 행이 없거나 꺼지면(IAM 관리자 해제) 세션이 남아 있어도 60초 안에 막힌다. 범위 변경도 여기서 따라온다. */
   private async assertStillRegistered(session: SessionPayload): Promise<void> {
     const key = `users:${session.email}`;
     if (Date.now() - (this.checked.get(key) ?? 0) < RECHECK_MS) return;
-    if ((await this.adminUserService.count()) === 0) return; // 첫 설치 전
     const row = await this.adminUserService.find(session.email);
     if (!row || !row.enabled) {
       this.log.warn('admin_users 에서 빠진 사용자: 세션 거부');
@@ -84,24 +79,6 @@ export class AdminSessionGuard implements CanActivate {
     }
     session.role = row.role;
     this.checked.set(key, Date.now());
-  }
-
-  /** M.AX root 표에서 빠지면 세션이 남아 있어도 60초 안에 막힌다. */
-  private async assertStillRoot(session: SessionPayload): Promise<void> {
-    if (!this.maxRootService.configured) return;
-    const key = `max:${session.email}`;
-    if (Date.now() - (this.checked.get(key) ?? 0) < RECHECK_MS) return;
-    const root = await this.maxRootService.isTenantRoot(
-      session.sub ?? '',
-      session.email,
-    );
-    if (root === false) {
-      this.log.warn('M.AX root 표에서 빠진 사용자: 세션 거부');
-      throw new CommonError(AdminAuthError.NOT_ALLOWED);
-    }
-    // 'unavailable' 은 로그인 때와 달리 세션을 끊지 않는다 — 이미 통과한 사람을 DB 장애로
-    // 쫓아내지는 않되, 캐시를 안 늘려 다음 요청에 다시 본다.
-    if (root === true) this.checked.set(key, Date.now());
   }
 }
 

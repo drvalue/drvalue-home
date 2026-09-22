@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { adminFetch, adminJson, boardOf, Page, PostRow, yymm } from '@/lib/admin'
+import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, Page, PostRow, shortWhen, yymm } from '@/lib/admin'
 
 /**
  * 게시판 목록. 증서·수행실적·연혁은 화살표로 순서를 바꾼다 — 사이트가 그 순서로 그린다.
@@ -110,13 +110,17 @@ export default function PostListPage() {
               {board.key === 'patent' || board.key === 'copyright' ? <th>번호</th> : null}
               {board.key === 'history' ? <th>연도</th> : null}
               {board.key === 'case' ? <th>기간</th> : null}
+              {board.key === 'press' || board.key === 'news' ? <th>매체</th> : null}
+              {board.key === 'recruit' ? <th>고용 형태</th> : null}
+              {board.key === 'recruit' ? <th>마감</th> : null}
+              {board.key === 'faq' ? <th>분류</th> : null}
               <th>표시 날짜</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {rows && rows.data.length === 0 && (
-              <tr><td colSpan={8} className="dva_empty">글이 없다</td></tr>
+              <tr><td colSpan={10} className="dva_empty">글이 없다</td></tr>
             )}
             {rows?.data.map((r, i) => (
               <tr key={r.id}>
@@ -133,10 +137,18 @@ export default function PostListPage() {
                   <Link href={`/admin/posts/${board.key}/${r.id}`}>{r.title || '(제목 없음)'}</Link>
                   {r.is_pinned && <span className="dva_pill is-pinned">고정</span>}
                 </td>
-                <td><span className={`dva_pill is-${r.status}`}>{r.status === 'published' ? '공개' : '초안'}</span></td>
+                <td>
+                  <span className={`dva_pill is-${r.status}`}>{r.status === 'published' ? '공개' : '초안'}</span>
+                  {r.publish_at && new Date(r.publish_at) > new Date() && <span className="dva_pill is-draft">예약 {shortWhen(r.publish_at)}</span>}
+                  {r.unpublish_at && new Date(r.unpublish_at) > new Date() && <span className="dva_pill is-draft">내림 {shortWhen(r.unpublish_at)}</span>}
+                </td>
                 {board.key === 'patent' || board.key === 'copyright' ? <td className="is-num">{r.cert_no ?? ''}</td> : null}
                 {board.key === 'history' ? <td className="is-num">{r.history_year ?? ''}</td> : null}
                 {board.key === 'case' ? <td className="is-num">{yymm(r.period_start)}~{yymm(r.period_end)}</td> : null}
+                {board.key === 'press' || board.key === 'news' ? <td>{r.press_media ?? ''}</td> : null}
+                {board.key === 'recruit' ? <td>{EMPLOYMENT_LABEL[r.employment_type ?? ''] ?? ''}</td> : null}
+                {board.key === 'recruit' ? <td className="is-num">{r.is_open_ended ? '상시' : (r.deadline ?? '')}</td> : null}
+                {board.key === 'faq' ? <td>{r.faq_category ?? ''}</td> : null}
                 <td className="is-num">{r.published_date}</td>
                 <td className="is-act">
                   {asking === r.id ? (

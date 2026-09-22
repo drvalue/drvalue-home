@@ -6,8 +6,7 @@ import {
   SessionPayload,
 } from '../../../common/session/session-token';
 import { AdminAuthError } from '../error/admin-auth.error';
-import { decide, describeGroups, IamClaims } from './authorize';
-import { MaxRootService } from './max-root.service';
+import { describeGroups, IamClaims, isIamAdmin } from './authorize';
 import { AdminUserService } from './admin-user.service';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -28,20 +27,11 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 export class AdminAuthDefaultService {
   private readonly log = new Logger(AdminAuthDefaultService.name);
 
-  constructor(
-    private readonly maxRootService: MaxRootService,
-    private readonly adminUserService: AdminUserService,
-  ) {}
+  constructor(private readonly adminUserService: AdminUserService) {}
 
   readonly secret = process.env.ADMIN_SESSION_SECRET ?? '';
   private readonly iamBase = 'https://iam.drvalue.co.kr';
   private readonly callbackUrl = process.env.ADMIN_IAM_CALLBACK_URL ?? '';
-  private readonly rule = {
-    // IAM 그룹은 입장 판정에 안 쓴다(개인 "Default" 그룹이 누구에게나 있다).
-    // 첫 관리자는 PLATFORM_ADMIN 또는 nxcms root 만. 그 뒤로는 admin_users.
-    group: '',
-    roles: [],
-  };
 
   get configured(): boolean {
     return Boolean(this.iamBase && this.callbackUrl && this.secret);
@@ -106,36 +96,17 @@ export class AdminAuthDefaultService {
         ? (claims as { name: string }).name
         : undefined;
 
-    // 입장은 admin_users 가 정한다. IAM 은 「누구냐」만 답했다.
-    let role: string;
-    const registered = await this.adminUserService.find(email);
-    if (registered) {
-      if (!registered.enabled) {
-        this.log.warn(`denied by=admin_users(disabled)`);
-        throw new CommonError(AdminAuthError.NOT_ALLOWED);
-      }
-      role = registered.role;
-      this.log.log(`admin login by=admin_users role=${role}`);
-    } else if ((await this.adminUserService.count()) > 0) {
-      // 표에 사람이 있는데 이 사람은 없다 — IAM 을 통과했어도 관리자가 아니다.
-      this.log.warn(`denied by=admin_users(not registered)`);
-      throw new CommonError(AdminAuthError.NOT_ALLOWED);
-    } else {
-      // 첫 설치: 옛 규칙으로 통과한 사람을 첫 admin 으로 등록한다.
-      const verdict = decide(
-        claims,
-        this.rule,
-        await this.maxRootService.isTenantRoot(sub, email),
+    // 입장은 IAM 이 정한다 — PLATFORM_ADMIN 만. 그 판정을 admin_users 에 받아 적는다(동기화).
+    if (!isIamAdmin(claims)) {
+      await this.adminUserService.markNotAdmin(email);
+      this.log.warn(
+        `denied: IAM 관리자가 아니다 role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
       );
-      if (!verdict.ok) {
-        this.log.warn(
-          `denied by=${verdict.by} role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
-        );
-        throw new CommonError(AdminAuthError.NOT_ALLOWED);
-      }
-      role = (await this.adminUserService.bootstrap(email, name)).role;
-      this.log.log(`admin login by=${verdict.by} → 첫 관리자 등록`);
+      throw new CommonError(AdminAuthError.NOT_ALLOWED);
     }
+    const row = await this.adminUserService.syncAdmin(email, name, sub);
+    const role = row.role;
+    this.log.log(`admin login iamRole=${claims.role} scope=${role}`);
     const payload: SessionPayload = {
       email,
       sub: sub || undefined,

@@ -95,6 +95,9 @@ export const MENU_ITEMS: MenuItem[] = [
     sub: [
       { t: '공지사항', l: '/page/support/notice', d: '서비스 오픈과 점검 안내' },
       { t: '보도자료', l: '/page/support/press', d: '언론에 소개된 소식' },
+      { t: '뉴스', l: '/page/support/news', d: '디알밸류 소식' },
+      { t: '채용', l: '/page/support/recruit', d: '함께 일할 사람' },
+      { t: 'FAQ', l: '/page/support/faq', d: '자주 묻는 질문' },
     ],
   },
 ]

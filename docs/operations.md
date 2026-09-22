@@ -7,14 +7,16 @@
 `set -a; . .env; set +a` 로 올린다. 이름과 뜻은 `.env.example` 이 정본이다.
 
 ```bash
-cp .env.example .env          # ADMIN_SESSION_SECRET 을 openssl rand -hex 32 로, DB_PASSWORD 를 채운다
+cp .env.example .env          # DB_PASSWORD · ADMIN_SESSION_SECRET(openssl rand -hex 32) 를 채운다
 set -a; . .env; set +a
 
 # 1. DB. 제일 먼저다 — api 가 뜰 때 DB 를 찾는다.
 docker compose up -d db       # → localhost:3330
 
-# 2. 처음 까는 곳이면 테이블을 만든다. 이미 데이터가 있는 볼륨이면 건너뛴다.
-docker exec -i drvalue_directus_pg psql -U "$DB_USER" -d "$DB_NAME" < db/schema.sql
+# 2. 처음 까는 곳이면 테이블을 만든다. 이미 데이터가 있는 볼륨이면 schema.sql 은 건너뛴다.
+#    마이그레이션은 여러 번 돌려도 같다 — 기존 볼륨에도 돌린다.
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms < db/schema.sql
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0001-admin-foundation.sql
 
 # 3. 백엔드
 cd api
@@ -29,9 +31,8 @@ npm ci && npm run build && npm start             # → http://localhost:3400
 `data/uploads`(gitignore) 를 컨테이너 `/data/uploads` 에 물린다 — 호스트에서
 돌리는 로컬 Nest 와 같은 폴더다.
 
-`api` 는 `ADMIN_SESSION_SECRET` 이 비면 **안 뜬다.** 게이트웨이 검증이 켜진 채
-`IAM_GATEWAY_SECRET` 이 비어도 안 뜬다. 로컬에서 게이트웨이 없이 띄울 때만
-`.env` 에 `IAM_ENFORCE_GATEWAY=false` 를 적는다. **운영에는 절대 넣지 않는다.**
+`api` 는 `ADMIN_SESSION_SECRET` 이 비면 **안 뜬다.** compose 는 `DB_PASSWORD` 가 비면
+**안 띄운다.**
 
 ## 관리 화면에 들어가기
 
@@ -39,9 +40,15 @@ npm ci && npm run build && npm start             # → http://localhost:3400
 `ADMIN_IAM_CALLBACK_URL` 은 **화면을 여는 그 주소(origin)** 여야 세션 쿠키가
 거기 떨어진다. IAM 화이트리스트에 같은 값이 있어야 한다.
 
-거부되면 `api` 로그의 `denied by=… role=… groups=[…]` 한 줄을 본다.
-`by=max-root` 는 nxcms root 표에 없는 것, `by=max-unavailable` 은 M.AX DB 가
-안 닿는 것, `by=iam-group` 은 `ADMIN_IAM_GROUP` 에 안 맞는 것이다.
+입장은 **`admin_users` 표**가 정한다. IAM 은 「누구냐」만 답한다. 표가 비어 있을 때만
+(첫 설치) 첫 로그인자를 admin 으로 자동 등록한다 — IAM `PLATFORM_ADMIN` 이거나,
+`ADMIN_MAX_DB_URL` 을 채웠다면 nxcms drvalue 테넌트 root 여야 한다. 그 뒤로는 관리
+화면 「권한」에서 사람을 넣고 역할(admin · marketing · hr)을 준다. 표에 없는 IAM
+사용자는 `403`.
+
+거부되면 `api` 로그의 `denied by=…` 한 줄을 본다. `by=admin_users(not registered)` 는
+표에 없는 것, `admin_users(disabled)` 는 꺼 둔 것, `max-root` 는 nxcms root 표에 없는 것,
+`max-unavailable` 은 M.AX DB 가 안 닿는 것이다.
 
 ## 원본 PHP 를 로컬에 띄우기 (대조 검사용)
 
@@ -56,13 +63,13 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 
 ```bash
 cd api  && npm run typecheck && npm run build
-        && node --test src/core/admin-auth/service/authorize.test.mjs   # 11
-        && bash scripts/verify.sh                # 55/55  (api:3500 + DB, ADMIN_API_TOKEN 필요)
+        && node --test src/core/admin-auth/service/authorize.test.mjs   # 15
+        && bash scripts/verify.sh                # 55/55  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && npx tsc --noEmit && npx next build
-        && python3 scripts/check-home.py         # 21/21  (:3400 필요)
-        && python3 scripts/check-header.py       # 103/103
-        && python3 scripts/check-a11y.py         # 266/266
+        && python3 scripts/check-home.py         # 23/23  (:3400 필요 — 다른 포트는 NEXT_ORIGIN)
+        && python3 scripts/check-header.py       # 104/104
+        && python3 scripts/check-a11y.py         # 323/323 (문의 모달 다섯 칸)
         && python3 scripts/check-assets.py       # 빠진 것 0
         && NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py   # 98/98
 ```
@@ -72,40 +79,41 @@ cd web  && python3 scripts/check-src.py          # 제일 먼저
 
 ## 환경변수
 
-루트 `.env` 하나에 전부 있다. 아래는 누가 읽는지로 나눈 것이다. 뜻과 기본값은
-`.env.example` 을 본다.
-
-### api
+루트 `.env` 하나. 정본은 `.env.example` — **여덟 개**다. 나머지는 코드 상수이거나
+`docker-compose.yml` 이 컨테이너끼리 잇는 배선이다.
 
 | 이름 | 뜻 | 비우면 |
 |---|---|---|
-| `PORT` | 듣는 포트 | 3500 |
-| `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | PostgreSQL | **안 뜬다** |
-| `UPLOADS_DIR` | 업로드 파일 폴더 | `./data/uploads` |
-| `DEFAULT_LANGUAGE` | 공개 화면 기본 언어 | `ko-KR` |
-| `IAM_GATEWAY_SECRET` | 게이트웨이 서명 공유 비밀 | 검증이 켜져 있으면 **안 뜬다** |
-| `IAM_ENFORCE_GATEWAY` | 서명 검증 | **켠 것으로 본다** |
-| `TRUST_PROXY` | 앞단 프록시 대수 또는 신뢰 대역 | 프록시 뒤라면 IP 별 한도가 하나로 합쳐진다 |
-| `MAIL_RL_PER_MINUTE` · `MAIL_RL_PER_HOUR` | 문의 속도 제한 | 5 · 30 |
-| `NCP_*` | 메일 발송 키 | 메일만 안 간다 |
-| `ADMIN_SESSION_SECRET` | 관리자 세션 서명 키 | **안 뜬다** |
-| `ADMIN_IAM_BASE` · `ADMIN_IAM_CALLBACK_URL` | 사내 IAM 과 콜백 주소 | 관리 화면 로그인이 503 |
-| `ADMIN_MAX_DB_*` · `ADMIN_MAX_TENANT_CODE` | M.AX(nxcms) 마스터 DB — root 표 | IAM 그룹 판정만 남는다 |
-| `ADMIN_IAM_GROUP` · `ADMIN_IAM_GROUP_ROLES` | M.AX DB 가 없을 때의 인가 | PLATFORM_ADMIN 만 통과 |
-| `IAM_INTERNAL_API_BASE_URL` · `INTERNAL_API_KEY` | 세션 중 사용자 비활성 감지 | 그 검사만 빠진다 |
-| `ADMIN_COOKIE_SECURE` | 세션 쿠키 secure | **켠 것으로 본다**. 로컬 http 만 `false` |
-| `ADMIN_API_TOKEN` | 검사 스크립트용 관리자 토큰 | verify.sh 가 못 돈다. **운영에는 비운다** |
+| `DB_PASSWORD` | postgres 비밀번호. compose 가 이 값으로 DB 를 만들고 api 가 이 값으로 붙는다 | compose 가 **안 띄운다** |
+| `ADMIN_SESSION_SECRET` | 관리 화면 로그인 쿠키(`dv_admin`) 서명 키. SSE 와 무관하다 — 이 값을 아는 사람은 관리자 쿠키를 만들 수 있다 | api 가 **안 뜬다** |
+| `ADMIN_IAM_CALLBACK_URL` | IAM 이 로그인 뒤 돌려보낼 주소. IAM 화이트리스트와 같아야 한다. `https` 면 쿠키에 Secure | 관리 화면 로그인이 `503` |
+| `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
+| `ADMIN_MAX_DB_URL` (선택) | nxcms 마스터 DB `mysql://읽기전용:…@호스트:3306/nx_cms_database` | 첫 관리자는 `PLATFORM_ADMIN` 만. root 재검 없음 |
 
-`TRUST_PROXY` 는 홉 수(`1`)나 대역이다. 숫자로 넘겨야 한다 — 문자열
-`"1"` 은 IP `0.0.0.1` 하나를 믿는 목록으로 읽힌다.
+compose 가 넣는 배선: `DB_HOST=db` · `DB_PORT=5432` · `UPLOADS_DIR=/data/uploads` ·
+`TRUST_PROXY=1` · `PORT=3500` · web 의 `API_ORIGIN=http://api:3500`. 로컬 기본값은
+`localhost:3330` · 저장소 `data/uploads` · `http://localhost:3500`. `NOINDEX` 는 미리보기
+빌드 인자로 compose 에만 있다.
 
-### web
+`TRUST_PROXY` 는 홉 수(`1`)다. Nest 가 숫자로 바꿔 넘긴다 — 문자열 `"1"` 은 IP
+`0.0.0.1` 하나를 믿는 목록으로 읽힌다.
 
-| 이름 | 뜻 | 비우면 |
-|---|---|---|
-| `API_ORIGIN` | Nest 주소 | `http://localhost:3500` |
-| `CMS_ADMIN_URL` | 안내 장이 가리키는 관리 화면 주소 | 안내 문구만 나오고 링크가 안 붙는다 |
-| `SITE_ORIGIN` | 대표주소·공유카드가 가리킬 곳 | `https://drvalue.co.kr` |
+### 2026-09-22 에 없앤 키
+
+| 없어진 키 | 왜 |
+|---|---|
+| `IAM_GATEWAY_SECRET` · `IAM_ENFORCE_GATEWAY` | 게이트웨이 서명. 이 api 는 게이트웨이 뒤가 아니다 — 지키는 경로 0 |
+| `ADMIN_IAM_GROUP` · `ADMIN_IAM_GROUP_ROLES` | 입장은 `admin_users` 가 정한다. IAM 개인 「Default」 그룹은 누구에게나 있어 위험하다 |
+| `ADMIN_COOKIE_SECURE` | 콜백 주소가 https 인지로 정한다 |
+| `CMS_ADMIN_URL` | 관리 화면은 항상 같은 사이트의 `/admin` |
+| `ADMIN_API_TOKEN` | IAM 을 안 거치는 문은 없다. verify.sh 는 같은 서명 키로 세션을 만들어 들어간다 |
+| `IAM_INTERNAL_API_BASE_URL` · `INTERNAL_API_KEY` | Doppler 를 안 쓴다. IAM `enabled` 재검은 없다 |
+| `ADMIN_IAM_BASE` | 상수 `https://iam.drvalue.co.kr` |
+| `ADMIN_MAX_DB_HOST` · `_PORT` · `_NAME` · `_USER` · `_PASSWORD` · `ADMIN_MAX_TENANT_CODE` | `ADMIN_MAX_DB_URL` 한 줄로. 테넌트 코드는 상수 `drvalue` |
+| `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `UPLOADS_DIR` · `API_ORIGIN` · `TRUST_PROXY` | compose 가 컨테이너끼리 잇는 배선. 로컬 기본값은 `localhost:3330` · 저장소 `data/uploads` · `localhost:3500` |
+| `SITE_ORIGIN` · `DEFAULT_LANGUAGE` · `NCP_MAIL_API_URL` · `MAIL_RL_PER_MINUTE` · `MAIL_RL_PER_HOUR` | 코드 상수 — `drvalue.co.kr` · `ko-KR` · NCP 주소 · 분 5 / 시 30 |
+| `NOINDEX` | 미리보기 빌드 인자. compose 에만 |
+| `DB_LOGGING` | 쓰지 않는다 |
 
 ## 운영 배포
 

@@ -23,7 +23,10 @@
 - `.env` 는 루트에 하나다. 저장소에 넣지 않는다. `.env.example` 을 복사해서 채운다.
 - 토큰·비밀번호·해시를 출력·로그·문서에 그대로 쓰지 않는다.
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다.
-- `ADMIN_API_TOKEN` 은 검사용이다. 운영 `.env` 에는 비운다.
+- **IAM 을 안 거치는 관리자 문을 만들지 않는다.** 토큰·헤더 우회 경로 금지. 검사는
+  `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다.
+- 환경변수는 `.env.example` 의 여덟 개뿐이다. 새로 만들기 전에 코드 상수나 compose
+  배선으로 되는지 먼저 본다.
 
 ## 검사 통과 기준
 
@@ -32,12 +35,12 @@
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
-| `api: node --test src/core/admin-auth/service/authorize.test.mjs` | 관리 화면 인가 판정 | 11/11 |
-| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의) + 관리 API 왕복 + 닫힌 기본값. DB 직결 | 55/55 |
-| `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 |
+| `api: node --test src/core/admin-auth/service/authorize.test.mjs` | 첫 관리자 판정 · 역할별 게시판 | 15/15 |
+| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일) + 관리 API 왕복 + 닫힌 기본값. DB 직결, 서명 세션으로 | 55/55 |
+| `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |
 | `web/scripts/check-pages.py` | 새로 채운 24장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 98/98 (`NEXT_ORIGIN` 으로 다른 포트) |
-| `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 104/104 |
-| `web/scripts/check-a11y.py` | 문의 모달 입력 넷이 이름을 갖고 있나 | 266/266 |
+| `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 104/104 (`NEXT_ORIGIN`) |
+| `web/scripts/check-a11y.py` | 문의 모달 입력 다섯(이메일 포함)이 이름을 갖고 있나 | 323/323 (`NEXT_ORIGIN`) |
 | `web/scripts/check-assets.py` | 화면이 가리키는 파일이 실제로 있나 | 빠진 것 0 |
 | `web/scripts/check-src.py` | 페이지 CSS 문자열에 역따옴표가 섞였나 | 0건 |
 | `npx tsc --noEmit` · `npx next build` | 운영 빌드가 되는가 | 종료코드 0 |

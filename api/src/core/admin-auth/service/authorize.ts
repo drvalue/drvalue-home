@@ -1,50 +1,32 @@
 /**
- * IAM 토큰의 claim 으로 관리 화면 입장을 판정한다. 순수 함수 — 테스트가 붙어 있다.
+ * 관리 화면 입장 판정. 순수 함수 — 테스트가 붙어 있다.
  *
- * 통과: role 이 PLATFORM_ADMIN 이거나, groups 에 `group`(uuid) 이 있고 그 역할이
- * `roles` 안에 있다. 그룹은 uuid 로만 맞춘다 — 이름("Default")은 어디에나 있다.
- * `group` 이 비어 있으면 PLATFORM_ADMIN 만 통과한다.
+ * 관리자는 사내 IAM 이 정한다. 토큰 **최상위** role 이 admin(또는 PLATFORM_ADMIN)인 사람만 들어온다.
+ * 그룹 안의 role(OWNER·ADMIN)은 보지 않는다 — 누구나 자기 워크스페이스에서는 OWNER 다.
+ * 그 밖의 IAM 계정은 우리 쪽 표에 무엇이 있든 못 들어온다.
  */
 export interface IamClaims {
+  sub?: string;
   email?: string;
+  name?: string;
   role?: string;
   groups?: Array<{ id?: string; name?: string; role?: string }>;
 }
 
-export interface AuthorizeRule {
-  group: string;
-  roles: string[];
+export const IAM_ADMIN_ROLES = ['ADMIN', 'PLATFORM_ADMIN'];
+
+export function isIamAdmin(claims: IamClaims): boolean {
+  return IAM_ADMIN_ROLES.includes(String(claims.role ?? '').toUpperCase());
 }
 
-export function authorize(claims: IamClaims, rule: AuthorizeRule): boolean {
-  if (String(claims.role ?? '').toUpperCase() === 'PLATFORM_ADMIN') return true;
-  const group = rule.group.trim().toLowerCase();
-  if (!group) return false;
-  const roles = rule.roles.map((r) => r.trim().toUpperCase()).filter(Boolean);
-  const hit = (claims.groups ?? []).find(
-    (g) => String(g?.id ?? '').toLowerCase() === group,
-  );
-  return Boolean(hit) && roles.includes(String(hit?.role ?? '').toUpperCase());
-}
-
-/**
- * 최종 판정. M.AX(nxcms) root 표를 봤으면 그 결과가 원본이다 — 그룹 판정은 안 본다.
- * 못 봤으면(null: 미설정·DB 안 닿음) IAM 그룹 판정으로. PLATFORM_ADMIN 은 어느 경우든 통과.
- */
-export function decide(
-  claims: IamClaims,
-  rule: AuthorizeRule,
-  maxRoot: boolean | null | 'unavailable',
-): {
-  ok: boolean;
-  by: 'platform-admin' | 'max-root' | 'max-unavailable' | 'iam-group';
-} {
-  if (String(claims.role ?? '').toUpperCase() === 'PLATFORM_ADMIN')
-    return { ok: true, by: 'platform-admin' };
-  // 설정은 있는데 DB 가 안 닿는다 → 거부. 그룹 판정으로 떨어뜨리면 장애가 곧 권한 완화다.
-  if (maxRoot === 'unavailable') return { ok: false, by: 'max-unavailable' };
-  if (maxRoot !== null) return { ok: maxRoot, by: 'max-root' };
-  return { ok: authorize(claims, rule), by: 'iam-group' };
+/** CMS 안에서 고칠 수 있는 범위. 행이 없거나 꺼졌으면 null(= 못 들어온다). */
+export function scopeOf(
+  row: { role: string; enabled: boolean } | null,
+): 'admin' | 'marketing' | 'hr' | null {
+  if (!row || !row.enabled) return null;
+  return row.role === 'marketing' || row.role === 'hr' || row.role === 'admin'
+    ? row.role
+    : null;
 }
 
 /** 거부 로그용. 값이 아니라 모양만 — 그룹 id·역할은 식별자라 남겨도 된다. */

@@ -48,3 +48,30 @@ Directus Core 의 제약에 우회를 쌓고 있었다. SSO 라이선스 차단 
 - 테이블 이름을 바꾸는 것은 별도 마이그레이션이다.
 
 0012 · 0013 은 이 결정으로 대체됐다.
+
+## 덧붙임 (같은 날 저녁) — 입장은 admin_users, 환경변수 8개
+
+위 「사용자 사본을 두지 않는다」와 「권한 단계가 하나」를 뒤집었다. 권한 관리(admin ·
+marketing · hr)가 요구사항이 되면서 역할을 둘 곳이 필요했고, IAM 에는 일반 사용자도
+있어 「IAM 통과 = 관리자」가 성립하지 않는다.
+
+- **입장·역할은 `admin_users`**(email · role · enabled). IAM 은 「누구냐」만 답한다.
+  표가 비어 있을 때만 첫 로그인자를 admin 으로 등록한다 — IAM `PLATFORM_ADMIN`, 또는
+  nxcms drvalue 테넌트 root(`ADMIN_MAX_DB_URL` 설정 시). IAM 그룹 판정은 뺐다 — 개인
+  「Default」 그룹이 누구에게나 있다.
+- 60초마다 `admin_users`(빠짐·꺼짐·역할 변경)와 nxcms root 를 다시 본다. IAM 내부 API
+  (`enabled`) 재검은 뺐다 — Doppler 를 안 쓴다.
+- 역할 없는 세션은 거부한다. 역할: admin 전부 · marketing 채용 빼고 · hr 채용만.
+- 변경 이력 `admin_revisions` — 「수정 이력이 없다」 제약은 해소.
+- **IAM 을 안 거치는 문은 없다.** `ADMIN_API_TOKEN` 을 지웠다. 검사는 같은 서명 키로
+  세션을 만든다.
+- `@drvalue-oss/iam-nestjs` · `iam-core` 의존성 제거. 게이트웨이 뒤가 아니라 지킬 경로가
+  없었다(`IAM_GATEWAY_SECRET` · `IAM_ENFORCE_GATEWAY` 도 같이).
+- 환경변수 36 → 8. 필수 7(`DB_PASSWORD` · `ADMIN_SESSION_SECRET` ·
+  `ADMIN_IAM_CALLBACK_URL` · `NCP_*` 넷) + 선택 1(`ADMIN_MAX_DB_URL`). 나머지는 코드
+  상수이거나 compose 배선이다. 없앤 키와 이유는 `docs/operations.md`.
+- 본문 편집기(Quill)를 붙였다 — 「본문 편집기가 없다」 제약은 해소.
+
+새로 생긴 제약: `admin_users` 가 비어 있는 동안은 조건(IAM `PLATFORM_ADMIN` · nxcms
+root)을 넘는 **첫 로그인자**가 admin 이 된다. 표를 비우면(전원 삭제) 다시 그 상태가
+된다. 일반 IAM 사용자는 표가 비어 있어도 못 들어온다.

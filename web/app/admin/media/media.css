@@ -1,0 +1,249 @@
+/* 미디어 화면. 전부 .dva 아래 — 공개 화면 css 와 안 섞인다. 가로 스크롤 없음(390px). */
+.dva .dvm_hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.dva .dvm_split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 18px;
+  align-items: start;
+}
+.dva .dvm_split > * {
+  min-width: 0;
+}
+.dva .dvm_split:not(:has(.dvm_detail)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dva .dvm_drop {
+  position: relative;
+  border-radius: 10px;
+  min-height: 200px;
+}
+.dva .dvm_drop.is-drag {
+  outline: 2px dashed var(--dva-accent);
+  outline-offset: 4px;
+}
+.dva .dvm_drop_hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(102, 68, 255, 0.08);
+  color: var(--dva-accent);
+  font-weight: 700;
+  border-radius: 10px;
+  z-index: 1;
+  pointer-events: none;
+}
+.dva .dvm_grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.dva .dvm_card {
+  appearance: none;
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  background: var(--dva-panel);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+}
+.dva .dvm_card:hover {
+  border-color: #c9cfd8;
+}
+.dva .dvm_card.is-on {
+  border-color: var(--dva-accent);
+  box-shadow: 0 0 0 2px rgba(102, 68, 255, 0.18);
+}
+.dva .dvm_card:focus-visible {
+  outline: 2px solid var(--dva-accent);
+  outline-offset: 2px;
+}
+.dva .dvm_thumb {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #eef0f4;
+}
+.dva .dvm_thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dva .dvm_badge {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--dva-muted);
+  border: 1px solid var(--dva-line);
+}
+.dva .dvm_badge.is-pdf {
+  color: #b3261e;
+}
+.dva .dvm_badge.is-video {
+  color: #3d5a80;
+}
+.dva .dvm_name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dva .dvm_meta {
+  font-size: 12px;
+  color: var(--dva-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+.dva .dvm_meta em {
+  font-style: normal;
+  color: var(--dva-ok);
+  font-weight: 600;
+}
+.dva .dvm_jobs {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: var(--dva-panel);
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.dva .dvm_jobs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.dva .dvm_jobs li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dva .dvm_jobs li b {
+  flex: none;
+  font-weight: 600;
+}
+.dva .dvm_jobs li.is-ok b {
+  color: var(--dva-ok);
+}
+.dva .dvm_jobs li.is-err b {
+  color: var(--dva-crit);
+  white-space: normal;
+  text-align: right;
+}
+.dva .dvm_jobs_close {
+  justify-content: flex-end;
+}
+.dva .dvm_detail {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  background: var(--dva-panel);
+  min-width: 0;
+  overflow: hidden;
+}
+.dva .dvm_detail_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.dva .dvm_detail_head h2 {
+  font-size: 15px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dva .dvm_preview {
+  display: grid;
+  place-items: center;
+  background: #eef0f4;
+  border-radius: 8px;
+  min-height: 120px;
+  overflow: hidden;
+}
+.dva .dvm_preview img,
+.dva .dvm_preview video {
+  max-width: 100%;
+  height: auto;
+  max-height: 320px;
+  display: block;
+}
+.dva .dvm_facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.dva .dvm_facts dt {
+  color: var(--dva-muted);
+  white-space: nowrap;
+}
+.dva .dvm_facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dva .dvm_row {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.dva .dvm_row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.dva .dvm_row .dva_btn {
+  flex: none;
+}
+.dva .dvm_danger {
+  border-top: 1px solid var(--dva-line);
+  padding-top: 12px;
+}
+.dva .dvm_confirm p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--dva-crit);
+}
+@media (max-width: 960px) {
+  .dva .dvm_split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dva .dvm_detail {
+    position: static;
+  }
+}
+@media (max-width: 480px) {
+  .dva .dvm_grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

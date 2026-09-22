@@ -25,15 +25,12 @@ const {Client}=require('pg');
 const c=new Client({host:process.env.DB_HOST||'localhost',port:+(process.env.DB_PORT||3330),database:'drvalue_cms',user:'drvalue',password:process.env.DB_PASSWORD});
 c.connect().then(()=>c.query(process.env.DBQ)).then(r=>{console.log((r.rows||[]).map(x=>Object.values(x).join('|')).join('\n'));return c.end()}).catch(e=>{console.error(e.message);process.exit(1)})"); }
 
-# 검사용 관리자 세션. admin_users 가 비어 있으면(첫 설치) 세션만으로 들어가고,
-# 사람이 있으면 검사용 계정을 잠시 넣었다가 끝날 때 지운다 — 빈 표에는 넣지 않는다
-# (넣으면 그 순간 첫 관리자 자동 등록이 막힌다).
+# 검사용 관리자 세션. 입장은 IAM 관리자만이고, 그 판정은 로그인 때 admin_users 에 적힌다 —
+# 검사는 그 동기화를 흉내 내 검사 계정을 넣고, 같은 서명 키로 세션을 만들어 들어간다. 끝나면 지운다.
 VERIFY_EMAIL="verify@drvalue.local"
 SESSION=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$VERIFY_EMAIL',role:'admin',name:'verify.sh',exp:Date.now()+3600000}))")
-if [ "$(dbq 'select count(*) from admin_users')" != "0" ]; then
-  dbq "insert into admin_users(email,role,name) values ('$VERIFY_EMAIL','admin','verify.sh') on conflict (email) do update set enabled=true, role='admin'" >/dev/null
-  trap 'dbq "delete from admin_users where email='"'"'$VERIFY_EMAIL'"'"'" >/dev/null' EXIT
-fi
+dbq "insert into admin_users(email,role,name,enabled) values ('$VERIFY_EMAIL','admin','verify.sh',true) on conflict (email) do update set enabled=true, role='admin'" >/dev/null
+trap 'dbq "delete from admin_users where email='"'"'$VERIFY_EMAIL'"'"'" >/dev/null' EXIT
 AUTH="Cookie: dv_admin=$SESSION"
 
 PASS=0; FAIL=0; NA=0
@@ -224,7 +221,7 @@ print(a.get("url",""))')
     check "게시글이 가리키면 여전히 나간다" "200" \
       "$(curl -s -o /dev/null -w '%{http_code}' "$API$AURL" --max-time 30)"
   fi
-  curl -s -o /dev/null -X DELETE "$API/api/admin/files/$FID" -H "$AUTH" --max-time 30
+  curl -s -o /dev/null -X DELETE "$API/api/admin/files/$FID?force=1" -H "$AUTH" --max-time 30
   check "파일이 지워지면 404 다" "404" \
     "$(curl -s -o /dev/null -w '%{http_code}' "$API$AURL" --max-time 30)"
 fi

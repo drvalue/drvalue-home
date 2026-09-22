@@ -1,0 +1,154 @@
+/* 변경 이력. 전부 .dva 아래 — 공개 화면 css 와 섞지 않는다. */
+.dva .dvh_lead {
+  margin: -6px 0 14px;
+  color: var(--dva-muted);
+  font-size: 13.5px;
+}
+.dva .dvh_actor {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.dva .dvh_actor input {
+  width: min(260px, 100%);
+}
+.dva .dvh_table td.dvh_actor_cell {
+  color: var(--dva-muted);
+  font-size: 12.5px;
+  max-width: 220px;
+  overflow-wrap: anywhere;
+}
+.dva .dvh_pick {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--dva-ink);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.dva .dvh_pick:hover {
+  color: var(--dva-accent);
+}
+.dva .dvh_pick:focus-visible {
+  outline: 2px solid var(--dva-accent);
+  outline-offset: 2px;
+}
+.dva .dvh_row.is-open td {
+  background: #f7f8fb;
+}
+.dva .dvh_act.is-create {
+  background: var(--dva-ok-bg);
+  color: var(--dva-ok);
+}
+.dva .dvh_act.is-update {
+  background: #eef3f8;
+  color: #3d5a80;
+}
+.dva .dvh_act.is-delete {
+  background: #fde8e6;
+  color: #b3261e;
+}
+.dva .dvh_act.is-restore {
+  background: var(--dva-warn-bg);
+  color: var(--dva-warn);
+}
+.dva .dvh_detail > td {
+  background: #f7f8fb;
+  padding-top: 0;
+}
+.dva .dvh_box {
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  background: var(--dva-panel);
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.dva .dvh_box_head,
+.dva .dvh_box_foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--dva-muted);
+}
+.dva .dvh_diff {
+  display: grid;
+  gap: 1px;
+  background: var(--dva-line);
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dva .dvh_diff_head,
+.dva .dvh_diff_row {
+  display: grid;
+  grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) minmax(0, 1fr);
+  background: var(--dva-panel);
+}
+.dva .dvh_diff_head span {
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dva-muted);
+}
+.dva .dvh_diff_row > span {
+  padding: 8px 10px;
+  font-size: 13px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.dva .dvh_k {
+  font-weight: 600;
+  color: var(--dva-muted);
+}
+.dva .dvh_v em {
+  color: #a3acb8;
+  font-style: normal;
+}
+.dva .dvh_diff_row.is-changed .dvh_v.is-before {
+  background: #fdf1f0;
+  text-decoration: line-through;
+  text-decoration-color: rgba(179, 38, 30, 0.35);
+}
+.dva .dvh_diff_row.is-changed .dvh_v.is-after {
+  background: #ecf7f0;
+}
+.dva .dvh_diff_row.is-changed .dvh_k {
+  color: var(--dva-ink);
+}
+.dva .dvh_muted {
+  color: var(--dva-muted);
+}
+.dva .dvh_inline_err {
+  margin: 0;
+}
+@media (max-width: 720px) {
+  .dva .dvh_diff_head {
+    display: none;
+  }
+  .dva .dvh_diff_row {
+    grid-template-columns: 1fr;
+  }
+  .dva .dvh_diff_row .dvh_v.is-before::before {
+    content: '전  ';
+    color: var(--dva-muted);
+    font-weight: 600;
+  }
+  .dva .dvh_diff_row .dvh_v.is-after::before {
+    content: '후  ';
+    color: var(--dva-muted);
+    font-weight: 600;
+  }
+}

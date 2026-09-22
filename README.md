@@ -18,7 +18,7 @@ docker compose up -d --build web api   # DB 는 그대로 두고 앞·뒤만
 ```
 
 `web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(db · api · web).
-api 는 `ADMIN_SESSION_SECRET` 이나 `IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다.
+api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 여덟 개뿐이다.
 컨테이너 안에서는 web → `http://api:3500`, api → `db:5432` 로 부른다(compose 가 .env 값을 덮는다).
 업로드 파일은 `data/uploads`(gitignore) 를 `/data/uploads` 에 물린다. 처음 까는 곳은 `db/schema.sql` 로 테이블을 만든다.
 
@@ -28,16 +28,15 @@ api 는 `ADMIN_SESSION_SECRET` 이나 `IAM_GATEWAY_SECRET` 이 없으면 일부�
 없음·seat 3명)에 우회를 쌓다가 직접 만들었다. web 의 `/admin` 이 화면, api 의
 `/api/admin/*` 가 CRUD 다. DB 와 테이블은 그대로다.
 
-로그인은 **사내 IAM 만** — 버튼 하나. 인가의 원본은 **M.AX(nxcms) 마스터 DB 의
-root 표**(`rn_default_root_user` · `rn_tenant`)다. PHP 가 게이트웨이 `root/iam` 으로
-묻던 것이 결국 이 표라서 읽기 전용으로 직접 본다. 우리 DB 에 사용자 사본은 없다.
-세션 30분, 60초마다 다시 본다 — nxcms 에서 빼면 60초 안에 막힌다. M.AX DB 가
-설정된 채 안 닿으면 **로그인을 거부**한다. 비어 있으면 IAM 그룹으로 판정한다.
-자세한 것은 `api/AGENTS.md` 의 「관리 화면 인가」.
+로그인은 **사내 IAM 만** — 버튼 하나. IAM 은 「누구냐」만 답하고, 들어와도 되는지와
+역할(admin · marketing · hr)은 우리 DB 의 **`admin_users`** 가 정한다. 표에 없는 IAM
+사용자는 `403`. 표가 비어 있을 때만 첫 로그인자(IAM `PLATFORM_ADMIN`, 또는 nxcms
+drvalue 테넌트 root)를 admin 으로 등록한다. 세션 30분, 60초마다 표를 다시 본다.
+글을 고치면 `admin_revisions` 에 이력이 남는다. 자세한 것은 `api/AGENTS.md` 의
+「관리 화면 인가」.
 
-`api` 에 남은 `@drvalue-oss/iam-nestjs` 는 사람이 아니라 **요청**을 검사한다
-(게이트웨이 서명). 지금 지키는 경로는 0개이고, 「새 컨트롤러는 기본이 게이트웨이 뒤」
-정책 때문에 남겨 뒀다.
+사내 IAM 패키지(`@drvalue-oss/iam-nestjs`)는 뺐다. 게이트웨이 서명을 검사하는
+패키지인데 이 api 는 게이트웨이 뒤가 아니라서 지키는 경로가 0개였다.
 
 ## 자산과 배포
 
@@ -246,18 +245,13 @@ IP 별로 동작한다 — 안 그러면 전부 프록시 IP 하나로 합쳐진
 
 | 값 | 없으면 |
 |---|---|
-| `IAM_ENFORCE_GATEWAY` | 검증을 **켠 것으로** 본다 (`!== 'false'`) |
-| `IAM_GATEWAY_SECRET` | 검증이 켜져 있으면 **안 뜬다** |
+| `ADMIN_SESSION_SECRET` | api 가 **안 뜬다** |
+| `DB_PASSWORD` | compose 가 **안 띄운다** |
+| nxcms(`ADMIN_MAX_DB_URL`) 설정됐는데 안 닿음 | 관리 화면 로그인 **거부** |
+| 세션에 역할이 없음 | 역할이 걸린 곳 **거부** — admin 으로 올리지 않는다 |
 
-`@Public()` 은 인증만 면제할 뿐 게이트웨이 가드는 통과하지 못한다. 그래서
-공개 홈페이지가 직접 부르는 컨트롤러 둘(content·inquiry)에만
-`@SkipGatewaySignature()` 를 붙였다. **표시하지 않은 새 경로는 자동으로
-게이트웨이 뒤에 선다** — 표시를 떼면 403 이 되는 것을 확인했다.
-
-바꿔 말하면 **지금 있는 컨트롤러는 전부 표시가 붙어 있어서, 게이트웨이
-검증이 실제로 지키는 경로는 0개다.** `IAM_GATEWAY_SECRET` 이 부팅에
-필요한 것은 모듈이 만들어지기 위해서지, 어딘가에서 그 값으로 서명을
-맞춰 보기 때문이 아니다. 관리자 전용 경로가 생기는 날부터 의미가 생긴다.
+IAM 을 안 거치는 관리자 문(토큰·헤더)은 두지 않는다. 검사 스크립트도 같은 서명 키로
+세션을 만들어 들어간다.
 
 `TRUST_PROXY` 는 홉 수(`1`)나 신뢰할 대역이다. **문자열 그대로 넘기면 안 된다** —
 Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록으로 읽어서
@@ -337,7 +331,7 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 `notify_form.php` 는 옛 게시판 백엔드로 저장한다. 게시판이 우리 DB 로 옮겨간
 뒤에도 그대로 두면 **글을 써도 사이트에 안 나오고 어디로 갔는지도 안 보인다.**
 조용한 유실이라 저장 경로를 끊고 관리 화면으로 안내한다. 주소는 살려 둔다
-(북마크·이력). 관리 화면 주소는 루트 `.env` 의 `CMS_ADMIN_URL` 이다.
+(북마크·이력). 관리 화면은 같은 사이트의 `/admin` 이다.
 
 ### 이 작업이 못 막는 것
 
@@ -590,16 +584,16 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 | | 무엇을 본다 | 현재 |
 |---|---|---|
 | `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 기본값이 닫힌 쪽인가 (DB 직결) | 55/55 |
-| `api: node --test …/authorize.test.mjs` | 관리 화면 인가 판정 | 11/11 |
+| `api: node --test …/authorize.test.mjs` | 첫 관리자 판정 · 역할별 게시판 | 15/15 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
 두 번 돌리면 그 구간이 `판정불가` 로 빠진다** — 통과도 실패도 아니다.
 예전에는 429 본문을 읽고 "내부 상태가 샌다" 로 엉뚱하게 실패했다.
 | `web/scripts/compare-all.sh` | 옮긴 페이지가 PHP 원본과 같은가 | **통과 기준에서 뺐다** (3/14 — 헤더·모달·홈을 일부러 바꿨다. `docs/tracking/decisions/` 참고) |
-| `web/scripts/check-a11y.py` | 문의 모달의 라벨·입력칸 묶임 (19장) | 266/266 |
+| `web/scripts/check-a11y.py` | 문의 모달의 라벨·입력칸 묶임 (다섯 칸, 이메일 포함) | 323/323 |
 | `web/scripts/check-assets.py` | 화면이 부르는 파일이 실재하나 | 51개, 빠진 것 0 |
-| `web/scripts/check-home.py` | 홈에서 원본이 안 없어졌나 + 새 구역이 그려지나 + 시연용 글이 안 남았나 | 21/21 |
-| `web/scripts/check-header.py` | 위쪽 탭 막대 + 현재 위치 줄 — 대조가 둘을 떼므로(REDESIGNED) 그 자리를 대신 본다 | 103/103 |
+| `web/scripts/check-home.py` | 홈에서 원본이 안 없어졌나 + 새 구역이 그려지나 + 시연용 글이 안 남았나 | 23/23 |
+| `web/scripts/check-header.py` | 위쪽 탭 막대 + 현재 위치 줄 — 대조가 둘을 떼므로(REDESIGNED) 그 자리를 대신 본다 | 104/104 |
 | `web/scripts/check-src.py` | PAGE_CSS 안에 백틱이 섞였나 | 7개 확인, 0건 |
 | `web/scripts/check-pages.py` | 채운 장의 본문·그림 바닥 (`NEXT_ORIGIN` 으로 포트) | 98/98 |
 | `npx next build` · `npx tsc --noEmit` | 운영 빌드가 되는가 | 통과 |
@@ -635,6 +629,5 @@ api  npm run build && node dist/main.js → http://localhost:3500
 web  npm run build && npm start        → http://localhost:3400  (/admin 포함)
 ```
 
-`.env` 는 저장소에 넣지 않는다. 루트 `.env.example` 을 복사해서 채운다.
-`IAM_ENFORCE_GATEWAY` 의 기본값은 `true` 다 — 게이트웨이 없이 로컬에서
-띄울 때만 각자 `.env` 에서 `false` 로 덮는다.
+`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(여덟 개)을 복사해서 채운다.
+처음이면 `db/schema.sql` 다음에 `db/migrations/0001-admin-foundation.sql` 도 돌린다.

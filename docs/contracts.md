@@ -12,8 +12,9 @@
 - 잘못된 입력은 `400`, 없는 것은 `404`, 한도 초과는 `429`.
   오류 본문은 `{ statusCode, code, message }` 다. `code` 는
   `api/src/**/error/*.error.ts` 에 있다.
-- 공개 목록은 전부 익명으로 부른다. `/api/admin/*` 는 세션 쿠키(`dv_admin`)
-  또는 `Authorization: Bearer $ADMIN_API_TOKEN`(검사용) 이 있어야 한다. 없으면 `401`.
+- 공개 목록은 전부 익명으로 부른다. `/api/admin/*` 는 IAM 로그인이 만든 세션 쿠키
+  (`dv_admin`) 만 받는다 — `Authorization` 헤더는 보지 않는다. 없으면 `401`,
+  입장 권한이 없으면 `403 ADMIN_AUTH_NOT_ALLOWED`, 역할이 안 맞으면 `403 ADMIN_AUTH_FORBIDDEN`.
 
 ## `GET /api/content/posts`
 
@@ -69,6 +70,7 @@
 |---|---|---|
 | `user_name` | 200자 | ○ |
 | `user_tel` | 50자 | ○ |
+| `user_email` | 이메일 형식, 255자 | ○ |
 | `user_type` | 목록 중 하나 | ○ |
 | `user_msg` | 5000자 | ○ |
 
@@ -87,16 +89,22 @@ class-validator 모양(`{ message: [...] }`)이다.
 |---|---|
 | `GET /api/admin/auth/login` | 사내 IAM 으로 보낸다(302). state 쿠키를 심는다 |
 | `GET /api/admin/auth/callback?code=&state=` | IAM 에서 돌아오는 자리. 통과하면 `dv_admin` 쿠키를 심고 `/admin` 으로 302. 거부는 `403` (`ADMIN_AUTH_NOT_ALLOWED` · `BAD_STATE` · `EXCHANGE_FAILED`) |
-| `GET /api/admin/auth/me` | `{ data: { email, name } }`. 세션 없으면 `401` |
+| `GET /api/admin/auth/me` | `{ data: { email, name, role } }`. 세션 없으면 `401` |
 | `POST /api/admin/auth/logout` | 쿠키를 지운다. `{ ok: true }` |
 
-세션은 30분. 60초마다 M.AX root 표를 다시 본다 — 그 사이에 빠진 사람은 다음 요청부터 `403`.
+입장은 `admin_users` 표(등록 + enabled). 표가 비어 있을 때만 첫 로그인자(IAM `PLATFORM_ADMIN`
+또는 nxcms root)를 admin 으로 등록한다. 세션은 30분. 60초마다 `admin_users` 와(설정 시)
+nxcms root 표를 다시 본다 — 그 사이에 빠진 사람은 다음 요청부터 `403`.
+
+역할: `admin` 전부 · `marketing` 채용 빼고 · `hr` 채용만. 게시판이 역할과 안 맞으면
+목록·낱개·저장·삭제 모두 `403 ADMIN_AUTH_FORBIDDEN`.
 
 ### 글 `/api/admin/posts`
 
 | 경로 | 뜻 |
 |---|---|
 | `GET ?board=&q=&status=&page=` | 목록 `{ data, total, page, pageSize }`. 초안 포함. 한 쪽 30 |
+| `GET /category-labels` | 수행실적 「구분」에 지금까지 쓴 값 `{ data: string[] }` — 폼의 datalist |
 | `GET /:id` | 낱개. `translations`(언어별) · `files` 포함 |
 | `POST` | 만들기. 본문은 아래 |
 | `PUT /:id` | 고치기. 같은 본문. 보내지 않은 언어의 번역은 그대로 둔다. `file_ids` 를 보내면 첨부를 그 목록으로 바꾼다 |
@@ -110,7 +118,7 @@ class-validator 모양(`{ message: [...] }`)이다.
 `cert_no` · `cert_date` · `cert_made_date` · `cert_kind` · `history_year` ·
 `translations: [{ languages_code, title, summary, body(HTML), case_category_label,
 seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]`.
-같은 `slug` 가 있으면 `409`.
+같은 `slug` 가 있으면 `409`. 만들기·고치기·지우기는 `admin_revisions` 에 before/after 를 남긴다.
 
 ### 파일 `/api/admin/files`
 
@@ -124,7 +132,7 @@ seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]`
 
 | 경로 | 뜻 |
 |---|---|
-| `GET ?status=&q=&page=` | 목록. `q` 는 이름 부분 일치 |
+| `GET ?status=&q=&page=` | 목록. `q` 는 이름 부분 일치. 행에 `email` 이 있다 — 관리 화면이 mailto 로 답장한다 |
 | `PATCH /:id` `{ status }` | `new` · `in_progress` · `answered` · `closed` · `spam` |
 | `DELETE /:id` | 지우기 |
 

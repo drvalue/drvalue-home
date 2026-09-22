@@ -33,3 +33,6 @@ cms/public-endpoints.json
 docs/security.md
 docs/tracking/findings.md
 design/
+
+# 업로드 파일(컨테이너 밖 bind mount). 증서·첨부가 들어 있다 — 저장소에 넣지 않는다.
+data/

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { adminFetch, adminJson, boardOf, PostFull, today, Translation, uploadFile } from '@/lib/admin'
+import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, PostFull, today, Translation, uploadFile } from '@/lib/admin'
 import HtmlEditor from './HtmlEditor'
 
 type Lang = 'ko-KR' | 'en-US'
@@ -13,12 +13,28 @@ const LANGS: { code: Lang; label: string }[] = [
 ]
 
 function blankTranslation(code: Lang): Translation {
-  return { languages_code: code, title: '', summary: '', body: '', case_category_label: '', seo_title: '', seo_description: '' }
+  return { languages_code: code, title: '', summary: '', body: '', case_category_label: '', faq_category: '', seo_title: '', seo_description: '' }
 }
 
 /** '2025-10-01' ↔ month input 값 '2025-10'. 수행실적 기간은 월까지만 있다. */
 const toMonth = (d: string | null) => (d ? d.slice(0, 7) : '')
 const fromMonth = (m: string) => (m ? `${m}-01` : null)
+
+/** ISO ↔ datetime-local 값('2026-09-30T10:00'). 화면은 이 컴퓨터 시간대로 보여 준다. */
+function toLocal(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+}
+const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null)
+
+/** 본문 편집기를 쓰는 게시판. 증서·수행실적·연혁은 칸만 있다. */
+const WITH_BODY = ['notice', 'press', 'news', 'recruit', 'faq']
+/** 첨부를 받는 게시판. */
+const WITH_FILES = ['notice', 'press', 'news', 'recruit']
+/** 대표 이미지(증서 그림)를 받는 게시판. */
+const WITH_THUMB = ['notice', 'press', 'news', 'patent', 'copyright']
 
 /**
  * 만들기와 고치기가 같은 폼. 본문은 편집기(Quill)로 쓰고 HTML 로도 볼 수 있다.
@@ -31,7 +47,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   const [lang, setLang] = useState<Lang>('ko-KR')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  // 수행실적 「구분」에 지금까지 쓴 값. 입력하면서 고르게 해 같은 말을 다르게 적지 않는다.
+  // 수행실적 「구분」 · FAQ 「분류」에 지금까지 쓴 값. 입력하면서 고르게 해 같은 말을 다르게 적지 않는다.
   const [labels, setLabels] = useState<string[]>([])
   const [thumbPreview, setThumbPreview] = useState<string | null>(null)
 
@@ -43,6 +59,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
         is_pinned: false, is_featured: false, thumbnail: null, thumbnail_url: null, press_media: null,
         period_start: null, period_end: null, cert_state: board.key === 'patent' ? 'applied' : null,
         cert_no: null, cert_date: null, cert_made_date: null, cert_kind: null, history_year: null,
+        employment_type: board.key === 'recruit' ? 'fulltime' : null, is_open_ended: false, deadline: null,
+        publish_at: null, unpublish_at: null,
         translations: [blankTranslation('ko-KR'), blankTranslation('en-US')], files: [],
       })
       return
@@ -57,8 +75,9 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       .catch((e) => setError((e as Error).message))
   }, [board, id])
   useEffect(() => {
-    if (board?.key !== 'case') return
-    adminFetch<{ data: string[] }>('/api/admin/posts/category-labels').then((r) => setLabels(r.data)).catch(() => {})
+    const src = board?.key === 'case' ? 'category-labels' : board?.key === 'faq' ? 'faq-categories' : null
+    if (!src) return
+    adminFetch<{ data: string[] }>(`/api/admin/posts/${src}`).then((r) => setLabels(r.data)).catch(() => {})
   }, [board])
 
   if (!board) return <div className="dva_error">없는 게시판이다: {boardKey}</div>
@@ -122,15 +141,21 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       cert_made_date: post.cert_made_date,
       cert_kind: post.cert_kind,
       history_year: post.history_year,
+      employment_type: post.employment_type,
+      is_open_ended: post.is_open_ended,
+      deadline: post.is_open_ended ? null : post.deadline,
+      publish_at: post.publish_at,
+      unpublish_at: post.unpublish_at,
       translations: post.translations
         // 영어 칸을 하나도 안 채웠으면 보내지 않는다 — 빈 번역 행을 남기지 않는다.
-        .filter((x) => x.languages_code === 'ko-KR' || [x.title, x.summary, x.body, x.case_category_label].some((v) => v && v.trim()))
+        .filter((x) => x.languages_code === 'ko-KR' || [x.title, x.summary, x.body, x.case_category_label, x.faq_category].some((v) => v && v.trim()))
         .map((x) => ({
           languages_code: x.languages_code,
           title: x.title ?? '',
           summary: x.summary ?? '',
           body: x.body ?? '',
           case_category_label: x.case_category_label ?? '',
+          faq_category: x.faq_category ?? '',
           seo_title: x.seo_title ?? '',
           seo_description: x.seo_description ?? '',
         })),
@@ -170,7 +195,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             ))}
           </div>
           <div className="dva_field">
-            <label htmlFor="f-title">제목{lang === 'ko-KR' ? ' (필수)' : ''}</label>
+            <label htmlFor="f-title">{k === 'faq' ? '질문' : '제목'}{lang === 'ko-KR' ? ' (필수)' : ''}</label>
             <input id="f-title" type="text" value={val(t.title)} onChange={(e) => setT({ title: e.target.value })} />
           </div>
           {k === 'case' && (
@@ -183,13 +208,25 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               <small>쓰던 값이 목록에 뜬다. 없으면 그대로 적으면 새 구분이 된다.</small>
             </div>
           )}
-          <div className="dva_field">
-            <label htmlFor="f-summary">{k === 'history' ? '부연 (한 줄)' : '요약'}</label>
-            <textarea id="f-summary" value={val(t.summary)} onChange={(e) => setT({ summary: e.target.value })} />
-          </div>
-          {(k === 'notice' || k === 'press') && (
+          {k === 'faq' && (
             <div className="dva_field">
-              <label htmlFor="f-body">본문</label>
+              <label htmlFor="f-faqcat">분류</label>
+              <input id="f-faqcat" type="text" list="f-faqcat-list" placeholder="예: 도입·견적" value={val(t.faq_category)} onChange={(e) => setT({ faq_category: e.target.value })} />
+              <datalist id="f-faqcat-list">
+                {labels.map((l) => <option key={l} value={l} />)}
+              </datalist>
+              <small>쓰던 분류가 목록에 뜬다. 없으면 그대로 적으면 새 분류가 된다.</small>
+            </div>
+          )}
+          {k !== 'faq' && (
+            <div className="dva_field">
+              <label htmlFor="f-summary">{k === 'history' ? '부연 (한 줄)' : '요약'}</label>
+              <textarea id="f-summary" value={val(t.summary)} onChange={(e) => setT({ summary: e.target.value })} />
+            </div>
+          )}
+          {WITH_BODY.includes(k) && (
+            <div className="dva_field">
+              <label htmlFor="f-body">{k === 'faq' ? '답' : '본문'}</label>
               <HtmlEditor value={val(t.body)} onChange={(html) => setT({ body: html })} />
               <details className="dva_editor_raw">
                 <summary>HTML 로 보기</summary>
@@ -212,12 +249,40 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             <label htmlFor="f-date">표시 날짜</label>
             <input id="f-date" type="date" value={post.published_date} onChange={(e) => set({ published_date: e.target.value })} />
           </div>
-          {(k === 'notice' || k === 'press') && (
+          <div className="dva_field">
+            <label htmlFor="f-pub">예약 공개</label>
+            <input id="f-pub" type="datetime-local" value={toLocal(post.publish_at)} onChange={(e) => set({ publish_at: fromLocal(e.target.value) })} />
+            <small>비우면 바로. 정하면 상태와 상관없이 그 시각에 사이트에 나온다.</small>
+          </div>
+          <div className="dva_field">
+            <label htmlFor="f-unpub">자동 내림</label>
+            <input id="f-unpub" type="datetime-local" value={toLocal(post.unpublish_at)} onChange={(e) => set({ unpublish_at: fromLocal(e.target.value) })} />
+            <small>비우면 계속 보인다. 정하면 그 시각에 초안으로 돌아간다.</small>
+          </div>
+          {(k === 'notice' || k === 'press' || k === 'news') && (
             <label className="dva_check">
               <input type="checkbox" checked={post.is_pinned} onChange={(e) => set({ is_pinned: e.target.checked })} /> 상단 고정
             </label>
           )}
-          {k === 'press' && (
+          {k === 'recruit' && (
+            <>
+              <div className="dva_field">
+                <label htmlFor="f-emp">고용 형태</label>
+                <select id="f-emp" value={post.employment_type ?? 'fulltime'} onChange={(e) => set({ employment_type: e.target.value })}>
+                  {Object.entries(EMPLOYMENT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+              <label className="dva_check">
+                <input type="checkbox" checked={post.is_open_ended} onChange={(e) => set({ is_open_ended: e.target.checked })} /> 상시 채용
+              </label>
+              <div className="dva_field">
+                <label htmlFor="f-deadline">마감일</label>
+                <input id="f-deadline" type="date" disabled={post.is_open_ended} value={post.is_open_ended ? '' : val(post.deadline)} onChange={(e) => set({ deadline: e.target.value || null })} />
+                {post.is_open_ended && <small>상시 채용이라 마감일이 없다.</small>}
+              </div>
+            </>
+          )}
+          {(k === 'press' || k === 'news') && (
             <div className="dva_field">
               <label htmlFor="f-media">매체명</label>
               <input id="f-media" type="text" value={val(post.press_media)} onChange={(e) => set({ press_media: e.target.value })} />
@@ -288,7 +353,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
             <input id="f-slug" type="text" value={post.slug} onChange={(e) => set({ slug: e.target.value })} />
           </div>
 
-          {k !== 'history' && k !== 'case' && (
+          {WITH_THUMB.includes(k) && (
             <div className="dva_field">
               <span className="dva_label">{k === 'patent' || k === 'copyright' ? '증서 그림' : '대표 이미지'}</span>
               {thumbPreview && <img className="dva_preview" src={thumbPreview} width={260} height={340} alt="" />}
@@ -298,7 +363,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               )}
             </div>
           )}
-          {(k === 'notice' || k === 'press') && (
+          {WITH_FILES.includes(k) && (
             <div className="dva_field">
               <span className="dva_label">첨부 파일</span>
               <ul className="dva_files">

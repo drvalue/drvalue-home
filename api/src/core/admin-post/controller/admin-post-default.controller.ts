@@ -49,6 +49,11 @@ export class AdminPostDefaultController {
     return { data: await this.adminPostDefaultService.categoryLabels() };
   }
 
+  @Get('faq-categories')
+  async faqCategories() {
+    return { data: await this.adminPostDefaultService.faqCategories() };
+  }
+
   @Get(':id')
   async get(
     @Param('id', ParseIntPipe) id: number,

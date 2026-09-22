@@ -1,5 +1,28 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FileEntity } from '../../common/entity/file.entity';
+import { InquiryEntity } from '../../common/entity/inquiry.entity';
+import { PostFileEntity } from '../../common/entity/post-file.entity';
+import { PostTranslationEntity } from '../../common/entity/post-translation.entity';
+import { PostEntity } from '../../common/entity/post.entity';
+import { RevisionModule } from '../../common/revision/revision.module';
+import { AdminAuthModule } from '../admin-auth/admin-auth.module';
+import { AdminRevisionDefaultController } from './controller/admin-revision-default.controller';
+import { AdminRevisionDefaultService } from './service/admin-revision-default.service';
 
-/** 채우는 중(graph-state E). 비어 있어도 빌드된다. */
-@Module({})
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      PostEntity,
+      PostTranslationEntity,
+      PostFileEntity,
+      FileEntity,
+      InquiryEntity,
+    ]),
+    AdminAuthModule,
+    RevisionModule,
+  ],
+  controllers: [AdminRevisionDefaultController],
+  providers: [AdminRevisionDefaultService],
+})
 export class AdminRevisionModule {}

@@ -75,6 +75,10 @@ FLOORS: dict[str, tuple[int, int]] = {
     "/page/tech/copyright": (713, 7),
     "/page/support/notice": (233, 2),
     "/page/support/press": (231, 2),
+    # 2026-09-22 게시판 3종. 글이 없는 빈 상태(안내 문구)에서 잰 껍데기 바닥 — 공지·보도와 같은 방식(실측의 약 70%).
+    "/page/support/news": (214, 2),
+    "/page/support/recruit": (250, 2),
+    "/page/support/faq": (238, 2),
     "/page/support/notify_form": (231, 2),
 }
 

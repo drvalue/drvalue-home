@@ -1,0 +1,77 @@
+/* 권한. 전부 .dva 아래. */
+.dva .dvu_intro {
+  background: var(--dva-panel);
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.dva .dvu_intro p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 70ch;
+}
+.dva .dvu_roles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 13px;
+  color: var(--dva-muted);
+}
+.dva .dvu_roles li {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.dva .dvu_role.is-admin {
+  background: #efeaff;
+  color: #4b2fd6;
+}
+.dva .dvu_role.is-marketing {
+  background: #eef3f8;
+  color: #3d5a80;
+}
+.dva .dvu_role.is-hr {
+  background: var(--dva-warn-bg);
+  color: var(--dva-warn);
+}
+.dva .dvu_table td.dvu_email {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.dva .dvu_table tr.is-off td {
+  color: var(--dva-muted);
+}
+.dva .dvu_sel {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.dva .dvu_sel select {
+  width: auto;
+  min-width: 110px;
+}
+.dva .dvu_saved {
+  font-size: 12px;
+  color: var(--dva-ok);
+  font-weight: 600;
+}
+.dva .dvu_off {
+  background: #f0f1f4;
+  color: #6b7684;
+}
+.dva .dvu_sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

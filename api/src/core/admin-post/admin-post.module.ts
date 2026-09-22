@@ -21,6 +21,7 @@ import { AdminPostDefaultService } from './service/admin-post-default.service';
   ],
   controllers: [AdminPostDefaultController],
   providers: [PostDefaultRepository, AdminPostDefaultService],
-  exports: [PostDefaultRepository],
+  // 예약 게시(admin-schedule)가 이력의 before/after 를 같은 모양으로 남기려고 서비스를 쓴다.
+  exports: [PostDefaultRepository, AdminPostDefaultService],
 })
 export class AdminPostModule {}

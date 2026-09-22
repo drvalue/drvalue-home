@@ -7,13 +7,14 @@ import {
 } from '../../../common/entity/admin-user.entity';
 
 /**
- * admin_users 표. 로그인 판정과 세션 재검(60초)이 같이 쓴다.
+ * admin_users — IAM 관리자 판정의 거울. 로그인 때마다 IAM 이 준 판정을 받아 적는다.
  *
- * 판정 규칙 — 표에 한 명이라도 있으면:
- *   등록 + enabled → 그 역할로 입장. 아니면 거부. IAM 그룹·nxcms 는 안 본다.
- * 표가 비어 있으면(첫 설치):
- *   호출자가 옛 규칙(PLATFORM_ADMIN · nxcms root · IAM 그룹)으로 통과한 사람을
- *   admin 으로 넣는다 — 그 다음부터는 표가 원본이다.
+ *   IAM 관리자(PLATFORM_ADMIN) 로그인 → 행을 만들거나 갱신(enabled=true, 이름, IAM id, 시각).
+ *                                         처음이면 범위 role='admin'. 이미 있으면 범위는 그대로.
+ *   IAM 관리자가 아닌 로그인           → 행이 있으면 enabled=false. 입장은 거부(호출자가).
+ *
+ * 입장은 IAM 이 정하고, 여기의 role 은 CMS 안에서 고칠 수 있는 범위만 정한다.
+ * 가드는 60초마다 이 행을 다시 본다 — 범위를 바꾸면 곧 따라오고, 꺼진 행은 막힌다.
  */
 @Injectable()
 export class AdminUserService {
@@ -24,31 +25,36 @@ export class AdminUserService {
     private readonly users: Repository<AdminUserEntity>,
   ) {}
 
-  async count(): Promise<number> {
-    return this.users.count();
-  }
-
   async find(email: string): Promise<AdminUserEntity | null> {
     return this.users.findOne({ where: { email: email.toLowerCase() } });
   }
 
-  /** 첫 관리자. 표가 비어 있을 때만 넣는다 — 경쟁하면 두 번째는 그냥 있는 행을 돌려준다. */
-  async bootstrap(email: string, name?: string): Promise<AdminUserEntity> {
-    const have = await this.find(email);
-    if (have) return have;
-    if ((await this.count()) > 0) {
-      // 그 사이 누가 등록됐다. 첫 관리자가 아니므로 옛 규칙 통과로는 못 들어온다.
-      throw new Error('admin_users is no longer empty');
-    }
-    const row = this.users.create({
-      email: email.toLowerCase(),
-      role: 'admin',
-      name: name ?? null,
-      enabled: true,
-    });
+  /** IAM 관리자로 들어왔다. 행을 만들거나 갱신한다. 범위(role)는 처음에만 admin. */
+  async syncAdmin(
+    email: string,
+    name: string | undefined,
+    sub: string,
+  ): Promise<AdminUserEntity> {
+    const e = email.toLowerCase();
+    const row =
+      (await this.find(e)) ??
+      this.users.create({ email: e, role: 'admin', enabled: true, name: null });
+    row.enabled = true;
+    if (name) row.name = name;
+    row.iamSub = sub || row.iamSub || null;
+    row.lastLoginOn = new Date();
+    row.updatedOn = new Date();
+    return this.users.save(row);
+  }
+
+  /** IAM 이 관리자가 아니라고 했다. 행이 있으면 끈다(다음 가드 재검에서 세션도 막힌다). */
+  async markNotAdmin(email: string): Promise<void> {
+    const row = await this.find(email);
+    if (!row || !row.enabled) return;
+    row.enabled = false;
+    row.updatedOn = new Date();
     await this.users.save(row);
-    this.log.warn(`첫 관리자 등록: ${email} (admin_users 가 비어 있었다)`);
-    return row;
+    this.log.warn(`IAM 관리자 해제 반영: ${email}`);
   }
 
   async list(): Promise<AdminUserEntity[]> {

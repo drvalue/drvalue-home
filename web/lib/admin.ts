@@ -55,6 +55,13 @@ export type PostRow = {
   cert_no: string | null
   period_start?: string | null
   period_end?: string | null
+  press_media?: string | null
+  employment_type?: string | null
+  is_open_ended?: boolean
+  deadline?: string | null
+  faq_category?: string | null
+  publish_at?: string | null
+  unpublish_at?: string | null
 }
 
 export type Translation = {
@@ -63,6 +70,7 @@ export type Translation = {
   summary: string | null
   body: string | null
   case_category_label: string | null
+  faq_category: string | null
   seo_title: string | null
   seo_description: string | null
 }
@@ -87,6 +95,12 @@ export type PostFull = {
   cert_made_date: string | null
   cert_kind: string | null
   history_year: string | null
+  employment_type: string | null
+  is_open_ended: boolean
+  deadline: string | null
+  /** 예약 공개 · 자동 내림 (ISO). null 이면 없음. */
+  publish_at: string | null
+  unpublish_at: string | null
   translations: Translation[]
   files: { id: string; name: string; url: string }[]
 }
@@ -161,4 +175,19 @@ export function yymm(iso: string | null | undefined): string {
 
 export function today(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+/** 채용 고용 형태. api EMPLOYMENT_TYPES 와 같다. */
+export const EMPLOYMENT_LABEL: Record<string, string> = {
+  fulltime: '정규직',
+  contract: '계약직',
+  intern: '인턴',
+}
+
+/** ISO → '9/30 10:00'. 목록의 예약 배지용. */
+export function shortWhen(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
