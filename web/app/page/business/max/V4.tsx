@@ -19,9 +19,12 @@ export type Tone = '' | 'sand' | 'steel'
 export const TONES: Tone[] = ['', 'sand', 'steel']
 
 export function Plate({
-  shot, tone = '', tag, url, phone, children, eager,
+  shot, tone = '', tag, url, phone, narrow, children, eager,
 }: {
-  shot?: Shot; tone?: Tone; tag?: string; url?: string; phone?: boolean; children?: ReactNode; eager?: boolean
+  shot?: Shot; tone?: Tone; tag?: string; url?: string; phone?: boolean
+  /** 작은 화면(채팅 창처럼 폭 1000 미만)은 판 폭에 맞춰 늘리면 글자가 과하게 커진다 — 가운데 좁게 둔다. */
+  narrow?: boolean
+  children?: ReactNode; eager?: boolean
 }) {
   const inner = phone && shot ? (
     <div className="mx_phone">
@@ -38,7 +41,7 @@ export function Plate({
     </div>
   )
   return (
-    <figure className={`mx_plate${tone ? ` ${tone}` : ''}`}>
+    <figure className={`mx_plate${tone ? ` ${tone}` : ''}${narrow ? ' narrow' : ''}`}>
       <div className="mx_plate_in">
         <i className="mx_blob mx_b1" aria-hidden="true" /><i className="mx_blob mx_b2" aria-hidden="true" /><i className="mx_blob mx_b3" aria-hidden="true" />
         {tag && <span className="mx_plate_tag">{tag}</span>}

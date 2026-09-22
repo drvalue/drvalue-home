@@ -174,6 +174,10 @@ export const PATTERN_CSS3 = `
 #dvmax.mx_v4 .mx_hero4 .mx_kicker, #dvmax.mx_v4 .mx_kicker.hk_center, #dvmax.mx_v4 .mx_kicker[style*="center"] { margin-left: auto; margin-right: auto; }
 `
 export const PATTERN_CSS4 = `
+/* 좁은 판 — 채팅 창 같은 작은 화면은 폭 640 으로 가운데. 2026-09-22 사용자: 「너무 과하게 확대됨」 */
+#dvmax.mx_v4 .mx_plate.narrow .mx_browser { max-width: 640px; margin: 0 auto; border-radius: 12px; }
+#dvmax.mx_v4 .mx_plate.narrow .mx_plate_in { padding-bottom: 48px; }
+
 /* ── FeatureShow: 게이지 레일 + 기능 전문 판(글 왼쪽 · 화면 오른쪽) ── */
 #dvmax.mx_v4 .mx_fs { margin: 40px 0 0; }
 #dvmax.mx_v4 .mx_fs_rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 18px; margin: 0 0 28px; padding: 0; list-style: none; }

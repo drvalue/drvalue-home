@@ -12,7 +12,7 @@ import { Plate, type Shot, type Tone } from './V4'
  * 사용자 지적(2026-09-22): 판 밑 3열이 링크만 되고 「애니메이션이 멈춰 있다」 — 채널톡의 그 줄은
  * 항상 게이지 탭이지 링크 목록이 아니다.
  */
-export type ShowItem = { t: string; d: string; shot: Shot; tag?: string; url?: string; phone?: boolean; tone?: Tone }
+export type ShowItem = { t: string; d: string; shot: Shot; tag?: string; url?: string; phone?: boolean; narrow?: boolean; tone?: Tone }
 const STEP_MS = 6000
 
 export default function ShowTabs({ items }: { items: ShowItem[] }) {
@@ -35,7 +35,7 @@ export default function ShowTabs({ items }: { items: ShowItem[] }) {
   return (
     <div className="hk_show mx_showtabs" ref={box}>
       <div key={c.shot.src} className="mx_showtabs_plate">
-        <Plate shot={c.shot} tone={c.tone} tag={c.tag} url={c.url} phone={c.phone} />
+        <Plate shot={c.shot} tone={c.tone} tag={c.tag} url={c.url} phone={c.phone} narrow={c.narrow} />
       </div>
       <div className="hk_show_tabs" role="tablist" aria-label="화면">
         {items.map((x, i) => (

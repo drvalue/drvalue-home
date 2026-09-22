@@ -92,7 +92,7 @@ export default function Page() {
           ]} />} />
         <Group headLead={CHAT_LEAD.title} desc={leadDesc(CHAT_LEAD)} href={href('채팅')}
           show={<ShowTabs items={[
-            { t: '고객은 상담 버블에서 바로 대화', d: plain(CHAT[0].points[2]), tone: 'sand', tag: '고객 쪽', url: 'growchat / 홈페이지 상담 창', shot: { src: '/screens/growchat-customer.jpg', alt: '고객 상담 창의 대화 — MES 도입 문의 두 건, 상담 시작, 상담사의 LOT 추적 답', w: 924, h: 676 } },
+            { t: '고객은 상담 버블에서 바로 대화', d: plain(CHAT[0].points[2]), tone: 'sand', tag: '고객 쪽', url: 'growchat / 홈페이지 상담 창', narrow: true, shot: { src: '/screens/growchat-customer.jpg', alt: '고객 상담 창의 대화 — MES 도입 문의 두 건, 상담 시작, 상담사의 LOT 추적 답', w: 924, h: 676 } },
             { t: '상담원은 한 화면에서 대화·이력·상태', d: plain(CHAT[1].points[1]), tone: 'sand', tag: '상담원 쪽', url: 'growchat / 관리자센터', shot: { src: '/screens/growchat-agent.jpg', alt: '상담원 관리자센터 — 대화방 목록과 대화, 고객 정보', w: 1600, h: 1000 } },
           ]} />} />
         <Group headLead={HANGEON_LEAD.title} desc={leadDesc(HANGEON_LEAD)} href={href('한건')}
