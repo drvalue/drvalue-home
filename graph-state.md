@@ -91,7 +91,7 @@ A3 합친 뒤 할 것: 관리 목록 검색·상태 필터·쪽 넘김을 브라
 | P1. 지워진 첨부로 저장하면 500 | ✅ | ADMIN_POST_FILE_GONE·THUMB_GONE 409, 폼이 코드로 칸을 짚음 | verify.d/dashboard.sh 포함 176/0/1 · 409 에 오류 로그 0 | 트랜잭션 검사는 이 실행 전용 트리거(그 파일 id 에만)로 |
 | P2. 404 장의 작은 것 | 🔄 | 404 에서 `$ is not defined` 2건(jQuery 없이 헤더 스크립트) · 제목이 「공지사항」 · 공개 히어로 제목이 낱말 중간에서 끊김(keep-all 없음, 사이트 전체) | 콘솔 오류 0 · 404 제목 · 390 히어로 | E10 에 넣는다 |
 | S1. 본문 HTML 소독 | ⬜ | api 저장 때 허용 태그만(편집기가 만드는 것) · 공개 렌더도 같은 규칙 | <script>·on* 속성이 저장 뒤 사라짐 | 지금은 관리자 글을 그대로 낸다(채용·게시판). 관리자 세션이 털리면 공개 사이트 XSS. security.md 가 이 기계에 없다 |
-| S2. multer DoS 권고 4건(high) | ⬜ | npm overrides 로 multer 2.4.0 (@nestjs/platform-express 11 유지) | npm audit --omit=dev high 0 · 업로드 검사 통과 | Nest 12 는 큰 올림이라 뒤로 |
+| S2. multer DoS 권고 4건(high) | ✅ | package.json overrides multer 2.4.0 (@nestjs/platform-express 11.2.5 유지) | npm audit --omit=dev 0 · docker api 에서 verify 214/0/1(업로드·형식 400·영상 필터 포함) | Nest 12(multer 2.4.0 기본)로 올리면 override 를 뺀다 |
 | X3. 옛 Directus 표 정리 | ⛔ | pages·page_blocks·pages_translations·menu_items·menu_items_translations(로컬 DB, 코드가 안 씀) | | 지우는 것은 되돌릴 수 없다 — 사용자 결정. 운영 DB 에도 있는지 먼저 본다 |
 | X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
 | X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |
