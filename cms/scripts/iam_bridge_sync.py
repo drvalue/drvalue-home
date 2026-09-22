@@ -55,13 +55,22 @@ def parse_accounts(raw: str) -> list[str]:
     return out
 
 
+def target_accounts() -> list[str]:
+    """매핑된 계정 + 기본 계정(IAM_BRIDGE_DEFAULT_ACCOUNT). 중복 제거, 순서 유지."""
+    out = parse_accounts(os.environ.get("IAM_BRIDGE_ACCOUNTS", ""))
+    default = (os.environ.get("IAM_BRIDGE_DEFAULT_ACCOUNT") or "").strip()
+    if default:
+        out.append(default)
+    return list(dict.fromkeys(e.lower() for e in out))
+
+
 def main() -> None:
     secret = os.environ.get("DIRECTUS_SECRET") or os.environ.get("SECRET") or ""
-    accounts = parse_accounts(os.environ.get("IAM_BRIDGE_ACCOUNTS", ""))
+    accounts = target_accounts()
     if not secret:
         raise SystemExit("DIRECTUS_SECRET 이 필요하다 (.env 의 값과 같아야 한다)")
     if not accounts:
-        raise SystemExit("IAM_BRIDGE_ACCOUNTS 가 비어 있다")
+        raise SystemExit("IAM_BRIDGE_DEFAULT_ACCOUNT 도 IAM_BRIDGE_ACCOUNTS 도 비어 있다")
 
     d = Directus()
     d.login()

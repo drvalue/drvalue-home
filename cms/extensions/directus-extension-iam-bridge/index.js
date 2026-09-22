@@ -4,19 +4,28 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
  * 사내 IAM 로그인 다리.
  *
  *   GET /iam-bridge/login     → state 를 서명해 쿠키에 두고 IAM 으로 보낸다
- *   GET /iam-bridge/callback  → code 를 IAM 토큰으로 바꾸고, 이메일이 허용 목록에
- *                                있으면 그 Directus 계정으로 세션을 발급한다
+ *   GET /iam-bridge/callback  → code 를 IAM 토큰으로 바꾸고, 인가를 통과하면
+ *                                Directus 계정으로 세션을 발급한다
  *   GET /iam-bridge/status    → 켜짐 여부와 설정 유무만 (값은 안 내보낸다)
  *
- * 인가는 IAM_BRIDGE_ACCOUNTS 목록이다. IAM_BRIDGE_ROUTE_BASE 를 채우면
- * 게이트웨이의 root/iam · tenant/by-root 로 테넌트 root 권한까지 확인한다.
+ * 인가 — 셋 중 하나라도 통과하면 된다. 아무것도 설정하지 않으면 전부 거부한다.
+ *   1) IAM_BRIDGE_GROUP: IAM 토큰의 groups 에 그 그룹이 있고 역할이
+ *      IAM_BRIDGE_GROUP_ROLES(기본 OWNER,ADMIN) 안에 있다. PLATFORM_ADMIN 은 통과.
+ *      = 「drvalue 테넌트의 root 사용자」. 게이트웨이를 안 거친다.
+ *   2) IAM_BRIDGE_ROUTE_BASE: 게이트웨이 root/iam · tenant/by-root 가 성공한다.
+ *      지금 닿는 게이트웨이는 x-user-* 를 요구해 403 이라 비워 둔다.
+ *   3) IAM_BRIDGE_ACCOUNTS 에 이메일이 있다.
  *
- * Directus 계정 비밀번호는 HMAC-SHA256(SECRET, "iam-bridge:<이메일>") 이다
- * (scripts/iam_bridge_sync.py 가 같은 값으로 맞춰 둔다). 그래서 로그인은
- * Directus 의 AuthenticationService 를 그대로 쓴다 — 세션·활동 기록·정지 처리가
- * 로컬 로그인과 같다.
+ * 계정 — 통과한 사람은 IAM_BRIDGE_ACCOUNTS 의 매핑, 없으면
+ * IAM_BRIDGE_DEFAULT_ACCOUNT 로 들어간다. Directus 는 seat 가 3이라 여러 사람이
+ * 한 계정을 쓴다. 활동 기록은 그 계정으로 찍힌다.
  *
- * 토큰·코드는 로그에 남기지 않는다. 실패는 IAM 응답의 키 이름까지만 남긴다.
+ * 비밀번호는 HMAC-SHA256(SECRET, "iam-bridge:<이메일>") 이다
+ * (scripts/iam_bridge_sync.py 가 같은 값으로 맞춰 둔다). 로그인은 Directus 의
+ * AuthenticationService 를 그대로 쓴다 — 세션·활동 기록·정지 처리가 로컬과 같다.
+ *
+ * 토큰·코드는 로그에 남기지 않는다. 거부할 때 그룹 id·역할은 남긴다 —
+ * 처음 붙일 때 어떤 값을 IAM_BRIDGE_GROUP 에 넣을지 그걸로 안다.
  */
 
 const STATE_COOKIE = 'iam_bridge_state';
@@ -32,6 +41,10 @@ export default {
       callbackUrl: String(env.IAM_BRIDGE_CALLBACK_URL ?? ''),
       tenantCode: String(env.IAM_BRIDGE_TENANT_CODE ?? ''),
       accounts: parseAccounts(String(env.IAM_BRIDGE_ACCOUNTS ?? '')),
+      defaultAccount: String(env.IAM_BRIDGE_DEFAULT_ACCOUNT ?? '').trim().toLowerCase(),
+      group: String(env.IAM_BRIDGE_GROUP ?? '').trim().toLowerCase(),
+      groupRoles: String(env.IAM_BRIDGE_GROUP_ROLES ?? 'OWNER,ADMIN')
+        .split(',').map((r) => r.trim().toUpperCase()).filter(Boolean),
       secret: String(env.SECRET ?? ''),
     });
 
@@ -47,8 +60,8 @@ export default {
       const c = cfg();
       res.json({
         enabled: c.enabled,
-        configured: Boolean(c.iamBase && c.callbackUrl && c.accounts.size),
-        tenant_check: Boolean(c.routeBase),
+        configured: Boolean(c.iamBase && c.callbackUrl && (c.defaultAccount || c.accounts.size)),
+        authz: { group: Boolean(c.group), gateway: Boolean(c.routeBase), allowlist: c.accounts.size > 0 },
       });
     });
 
@@ -98,45 +111,45 @@ export default {
         return fail('exchange failed');
       }
 
-      // 3) 이메일 — 토큰 안에 있으면 그것, 없으면 /auth/me
-      let email = claim(iamToken, 'email');
+      // 3) 사람 — 토큰 claim 을 읽고, IAM 의 me 로 서버 쪽에서 한 번 더 확인한다.
+      //    (claim 만으로 인가하지 않는다 — iam-core 문서: 서명 검증은 게이트웨이 몫)
+      const claims = decodeClaims(iamToken) ?? {};
+      let me = null;
+      for (const path of ['/api/v1/me', '/auth/me']) {
+        const [st, j] = await call(`${c.iamBase}${path}`, 'GET', null, iamToken);
+        if (st === 200 && j && typeof j === 'object') { me = j.data && typeof j.data === 'object' ? j.data : j; break; }
+        if (st === 401 || st === 403) { logger.warn(`iam-bridge: me ${st} at ${path}`); return fail('iam rejected token'); }
+      }
+      if (!me) logger.warn(`iam-bridge: me endpoint unavailable, using token claims (keys=${keys(claims)})`);
+      const user = me ?? claims;
+      const email = String(user.email ?? claims.email ?? '').trim().toLowerCase();
       if (!email) {
-        const [st2, j2] = await call(`${c.iamBase}/auth/me`, 'GET', null, iamToken);
-        email = j2?.email ?? j2?.data?.email ?? null;
-        if (!email) {
-          logger.warn(`iam-bridge: me ${st2} keys=${keys(j2)}`);
-          return fail('no email');
-        }
+        logger.warn(`iam-bridge: no email (me keys=${keys(me)} claim keys=${keys(claims)})`);
+        return fail('no email');
       }
-      email = String(email).trim().toLowerCase();
+      const groups = Array.isArray(user.groups) ? user.groups : Array.isArray(claims.groups) ? claims.groups : [];
+      const role = String(user.role ?? claims.role ?? '').toUpperCase();
 
-      // 4) (선택) 게이트웨이로 테넌트 root 권한 확인
-      if (c.routeBase) {
-        const [st3, j3] = await call(`${c.routeBase}/auth/v1/login/root/iam`, 'POST', {}, iamToken);
-        const appToken = j3?.data?.accessToken ?? null;
-        if (!appToken || st3 < 200 || st3 >= 300) {
-          logger.warn(`iam-bridge: root/iam ${st3} keys=${keys(j3)}`);
-          return fail('tenant check failed');
-        }
-        const headers = c.tenantCode ? { 'X-Tenant-Code': c.tenantCode } : {};
-        const [st4, j4] = await call(
-          `${c.routeBase}/auth/v1/login/tenant/by-root`,
-          'POST',
-          {},
-          appToken,
-          headers,
-        );
-        if (!j4?.data?.accessToken || st4 < 200 || st4 >= 300) {
-          logger.warn(`iam-bridge: by-root ${st4} keys=${keys(j4)}`);
-          return fail('tenant denied');
-        }
+      // 4) 인가
+      let allowed = false;
+      if (c.group) {
+        const hit = groups.find((g) => [g?.id, g?.name, g?.slug, g?.code].some((v) => String(v ?? '').toLowerCase() === c.group));
+        allowed = role === 'PLATFORM_ADMIN' || (Boolean(hit) && c.groupRoles.includes(String(hit.role ?? '').toUpperCase()));
       }
-
-      // 5) 허용 목록 → Directus 계정
-      const directusEmail = c.accounts.get(email);
-      if (!directusEmail) {
-        logger.warn(`iam-bridge: unmapped iam user`);
+      if (!allowed && c.routeBase) allowed = await gatewayCheck(c, iamToken, logger);
+      if (!allowed && c.accounts.has(email)) allowed = true;
+      if (!allowed) {
+        // 값이 아니라 모양만 — 처음 붙일 때 IAM_BRIDGE_GROUP 에 무엇을 넣을지 여기서 본다.
+        const shape = groups.map((g) => `${g?.id ?? '?'}${g?.name ? '(' + g.name + ')' : ''}:${g?.role ?? '?'}`).join(' ');
+        logger.warn(`iam-bridge: denied role=${role || '-'} groups=[${shape}] authz=${c.group ? 'group' : ''}${c.routeBase ? '+gateway' : ''}${c.accounts.size ? '+allowlist' : ''}`);
         return fail('not allowed');
+      }
+
+      // 5) Directus 계정
+      const directusEmail = c.accounts.get(email) ?? c.defaultAccount;
+      if (!directusEmail) {
+        logger.warn(`iam-bridge: no directus account — set IAM_BRIDGE_DEFAULT_ACCOUNT`);
+        return fail('no account');
       }
 
       // 6) 파생 비밀번호로 Directus 로그인 (session 모드)
@@ -215,13 +228,29 @@ function parseCookie(header) {
   return out;
 }
 
-function claim(jwt, name) {
+function decodeClaims(jwt) {
   try {
-    const payload = JSON.parse(Buffer.from(String(jwt).split('.')[1], 'base64url').toString());
-    return payload?.[name] ?? null;
+    return JSON.parse(Buffer.from(String(jwt).split('.')[1], 'base64url').toString());
   } catch {
     return null;
   }
+}
+
+/** 게이트웨이로 테넌트 root 권한 확인. PHP notice_login_callback.php 의 2)·3) 그대로. */
+async function gatewayCheck(c, iamToken, logger) {
+  const [st3, j3] = await call(`${c.routeBase}/auth/v1/login/root/iam`, 'POST', {}, iamToken);
+  const appToken = j3?.data?.accessToken ?? null;
+  if (!appToken || st3 < 200 || st3 >= 300) {
+    logger.warn(`iam-bridge: root/iam ${st3} keys=${keys(j3)}`);
+    return false;
+  }
+  const headers = c.tenantCode ? { 'X-Tenant-Code': c.tenantCode } : {};
+  const [st4, j4] = await call(`${c.routeBase}/auth/v1/login/tenant/by-root`, 'POST', {}, appToken, headers);
+  if (!j4?.data?.accessToken || st4 < 200 || st4 >= 300) {
+    logger.warn(`iam-bridge: by-root ${st4} keys=${keys(j4)}`);
+    return false;
+  }
+  return true;
 }
 
 async function call(url, method, body = null, token = null, extra = {}) {

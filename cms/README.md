@@ -92,16 +92,25 @@ GET  /iam-bridge/callback   → 아래를 확인하고 세션 쿠키를 심는�
 GET  /iam-bridge/status     → 켜짐 여부와 설정 유무만 (값은 안 내보낸다)
 
 1) {IAM}/auth/token/exchange {code, redirectUri}  → IAM 토큰
-2) 이메일 — 토큰 claim 에 있으면 그것, 없으면 {IAM}/auth/me
-3) (선택, IAM_BRIDGE_ROUTE_BASE 를 채웠을 때만) 게이트웨이 root/iam · tenant/by-root
-4) 이메일이 IAM_BRIDGE_ACCOUNTS 에 있어야 한다 — 이 목록이 인가다
-5) 매핑된 Directus 계정으로 파생 비밀번호 로그인(session 모드) → 세션 쿠키
+2) 사람 확인 — 토큰 claim(email · role · groups[{id, role}]) 을 읽고
+   {IAM}/api/v1/me 로 서버 쪽에서 다시 받는다 (없으면 claim 으로)
+3) 인가 — 셋 중 하나. 아무것도 안 채우면 전부 거부.
+   IAM_BRIDGE_GROUP: 그 그룹에 OWNER/ADMIN 으로 속함 = drvalue 테넌트 root  ← 기본
+   IAM_BRIDGE_ROUTE_BASE: 게이트웨이 root/iam · tenant/by-root (PHP 가 쓰던 길)
+   IAM_BRIDGE_ACCOUNTS: 이메일 허용 목록
+4) Directus 계정 — ACCOUNTS 매핑, 없으면 IAM_BRIDGE_DEFAULT_ACCOUNT
+5) 파생 비밀번호로 로그인(session 모드) → 세션 쿠키
 ```
 
-3)은 기본이 꺼짐이다. 지금 닿는 게이트웨이는 `root/iam` 에 게이트웨이가
-넣어 주는 `x-user-*` 헤더를 요구해서 어느 쪽에서 불러도 403 이다. 그 단계를
-필수로 두면 로그인이 끝까지 안 간다. 대신 허용 목록(최대 3명)이 인가를 맡는다
-(`docs/tracking/decisions/0013`).
+「drvalue 테넌트의 root 사용자」는 IAM 의 그룹 소속으로 판정한다. IAM 토큰이
+`groups: [{id, role}]` 를 들고 오므로(`@drvalue-oss/iam-core` 의 `JwtPayload`)
+게이트웨이를 거치지 않아도 된다. 게이트웨이 길은 남겨 두되 기본은 비운다 —
+지금 닿는 게이트웨이는 `root/iam` 에 `x-user-*` 헤더를 요구해 어디서 불러도
+403 이고, PHP 도 같은 자리에서 막혔다(`[임시 진단]` 코드가 그 흔적).
+`docs/tracking/decisions/0013`.
+
+그룹 id 를 모르면 `IAM_BRIDGE_GROUP` 을 비운 채 한 번 로그인한다. 거부 로그에
+`groups=[<id>(<이름>):<역할> …]` 가 찍힌다. 그 값을 넣고 다시 띄운다.
 
 설정은 루트 `.env` 의 `IAM_BRIDGE_*` 다. 비워 두면 꺼진 채로 돌고 로컬
 로그인만 동작한다. 세션 쿠키는 `SESSION_COOKIE_SAME_SITE=lax` 여야 한다 —
@@ -122,10 +131,13 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 
 ### 실제 IAM 으로 확인하기
 
-1. `.env` 에 `IAM_BRIDGE_ENABLED=true`, `IAM_BRIDGE_ACCOUNTS=<내 IAM 이메일>:marketing@drvalue.co.kr`
+1. `.env`: `IAM_BRIDGE_ENABLED=true`, `IAM_BRIDGE_DEFAULT_ACCOUNT=marketing@drvalue.co.kr`,
+   `IAM_BRIDGE_GROUP` 은 알면 넣고 모르면 비운다
 2. `docker compose up -d directus` (루트에서)
 3. `set -a; . .env; set +a; cd cms && python3 scripts/iam_bridge_sync.py`
-4. 브라우저에서 `http://localhost:3350/iam-bridge/login` → IAM 로그인 → `/admin` 으로 돌아온다
+4. 브라우저에서 `http://localhost:3350/iam-bridge/login` → IAM 로그인 → `/admin`
+5. 거부되면 `docker logs drvalue_directus | grep iam-bridge` 의 `denied … groups=[…]` 에서
+   그룹 id 를 읽어 `IAM_BRIDGE_GROUP` 에 넣고 2 부터 다시
 
 실패하면 `docker logs drvalue_directus | grep iam-bridge` 를 본다. 값은 안
 찍히고 단계와 응답 키 이름만 남는다.
@@ -133,8 +145,9 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 | 로그 | 뜻 |
 |---|---|
 | `exchange 4xx` | IAM 이 code 나 redirectUri 를 거부했다. 콜백 주소가 IAM 화이트리스트에 없을 때가 대부분 — IAM 쪽 등록이 필요하다 |
-| `me ... keys=` | `/auth/me` 응답에 `email` 이 없다. 키 이름을 보고 확장의 3) 을 맞춘다 |
-| `unmapped iam user` | IAM 은 통과했는데 `IAM_BRIDGE_ACCOUNTS` 에 없다 |
+| `me endpoint unavailable` | IAM 의 `/api/v1/me` 가 200 을 안 줬다. claim 으로 진행한다 — 키 이름을 보고 경로를 맞춘다 |
+| `denied role=… groups=[…]` | IAM 은 통과했는데 인가 조건에 안 맞는다. 여기 찍힌 그룹 id·역할로 `IAM_BRIDGE_GROUP` 을 정한다 |
+| `no directus account` | `IAM_BRIDGE_DEFAULT_ACCOUNT` 가 비었다 |
 | `directus login failed` | `iam_bridge_sync.py` 를 안 돌렸거나 `SECRET` 이 바뀌었다 |
 
 자동 검사는 `smoke.sh` 의 세 항목(상태·state 위조·쿠키 누출)뿐이다. 실제
@@ -144,8 +157,10 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 
 - `SECRET` 을 아는 사람은 누구로든 로그인할 수 있다. 다만 `SECRET` 은 이미 모든
   세션 토큰을 서명하므로 권한이 늘어나지는 않는다.
-- 허용 목록에 있는 사람이 사내에서 권한을 잃어도 목록을 고치기 전까지는
-  들어온다. 게이트웨이 확인(3)을 켜야 그것이 잡히는데, 지금은 못 켠다.
+- 그룹 판정은 IAM 토큰의 `groups` 를 믿는다. IAM 이 `/api/v1/me` 를 안 주면
+  claim 만 보게 되는데, claim 은 IAM 이 서명한 토큰에서 온 것이고 토큰은 우리가
+  방금 code 로 바꿔 받은 것이라 위조 경로는 없다. 다만 IAM 에서 권한을 뺀 직후
+  발급된 옛 토큰은 없다 — 콜백마다 새로 교환한다.
 - IAM 계정이 여럿이어도 Directus 계정은 셋이다. 여러 사람이 같은 계정에
   매핑되면 활동 기록이 그 계정 하나로 찍힌다.
 

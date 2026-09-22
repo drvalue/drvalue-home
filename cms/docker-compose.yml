@@ -72,6 +72,9 @@ services:
       IAM_BRIDGE_CALLBACK_URL: ${IAM_BRIDGE_CALLBACK_URL:-}
       IAM_BRIDGE_TENANT_CODE: ${IAM_BRIDGE_TENANT_CODE:-}
       IAM_BRIDGE_ACCOUNTS: ${IAM_BRIDGE_ACCOUNTS:-}
+      IAM_BRIDGE_DEFAULT_ACCOUNT: ${IAM_BRIDGE_DEFAULT_ACCOUNT:-}
+      IAM_BRIDGE_GROUP: ${IAM_BRIDGE_GROUP:-}
+      IAM_BRIDGE_GROUP_ROLES: ${IAM_BRIDGE_GROUP_ROLES:-OWNER,ADMIN}
     healthcheck:
       # /server/health 는 인증을 요구해 403 이 난다. 로그인 없이 200 을 주는 것은 ping 이다.
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8055/server/ping']
