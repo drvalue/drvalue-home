@@ -1,5 +1,5 @@
-import { HttpStatus } from '@nestjs/common'
-import { ICommonErrorCode } from '../../../common/error/common-error'
+import { HttpStatus } from '@nestjs/common';
+import { ICommonErrorCode } from '../../../common/error/common-error';
 
 export const ContentError = {
   POST_NOT_FOUND: {
@@ -25,4 +25,4 @@ export const ContentError = {
     message: '파일을 가져오지 못했다',
     status: HttpStatus.BAD_GATEWAY,
   } as ICommonErrorCode,
-}
+};

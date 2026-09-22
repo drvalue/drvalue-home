@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common'
-import { NcpMailService } from './ncp-mail.service'
+import { Module } from '@nestjs/common';
+import { NcpMailService } from './ncp-mail.service';
 
 @Module({
   providers: [NcpMailService],

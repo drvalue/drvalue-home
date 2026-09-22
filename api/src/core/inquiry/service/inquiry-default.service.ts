@@ -1,13 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { DirectusService } from '../../../common/directus/directus.service'
-import { CommonError } from '../../../common/error/common-error'
-import { NcpMailService } from '../../../common/ncp-mail/ncp-mail.service'
-import { ControllerInquiryDefaultCreateDto } from '../dto/controller-inquiry-default.dto'
-import { InquiryError } from '../error/inquiry.error'
+import { Injectable, Logger } from '@nestjs/common';
+import { DirectusService } from '../../../common/directus/directus.service';
+import { CommonError } from '../../../common/error/common-error';
+import { NcpMailService } from '../../../common/ncp-mail/ncp-mail.service';
+import { ControllerInquiryDefaultCreateDto } from '../dto/controller-inquiry-default.dto';
+import { InquiryError } from '../error/inquiry.error';
 
 @Injectable()
 export class InquiryDefaultService {
-  private readonly log = new Logger(InquiryDefaultService.name)
+  private readonly log = new Logger(InquiryDefaultService.name);
 
   constructor(
     private readonly ncpMailService: NcpMailService,
@@ -21,7 +21,9 @@ export class InquiryDefaultService {
    */
   async create(dto: ControllerInquiryDefaultCreateDto): Promise<void> {
     const [mailed, stored] = await Promise.allSettled([
-      this.ncpMailService.configured ? this.ncpMailService.send(dto) : Promise.resolve(),
+      this.ncpMailService.configured
+        ? this.ncpMailService.send(dto)
+        : Promise.resolve(),
       this.directus.configured
         ? this.directus.post('/items/inquiries', {
             name: dto.user_name,
@@ -30,11 +32,13 @@ export class InquiryDefaultService {
             message: dto.user_msg,
           })
         : Promise.resolve(),
-    ])
-    if (mailed.status === 'rejected') this.log.error('메일 발송 실패', mailed.reason)
-    if (stored.status === 'rejected') this.log.error('CMS 저장 실패', stored.reason)
+    ]);
+    if (mailed.status === 'rejected')
+      this.log.error('메일 발송 실패', mailed.reason);
+    if (stored.status === 'rejected')
+      this.log.error('CMS 저장 실패', stored.reason);
     if (mailed.status === 'rejected' && stored.status === 'rejected') {
-      throw new CommonError(InquiryError.SUBMIT_FAILED)
+      throw new CommonError(InquiryError.SUBMIT_FAILED);
     }
   }
 }

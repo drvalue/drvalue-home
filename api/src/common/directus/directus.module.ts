@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common'
-import { DirectusService } from './directus.service'
+import { Module } from '@nestjs/common';
+import { DirectusService } from './directus.service';
 
 @Module({
   providers: [DirectusService],

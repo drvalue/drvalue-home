@@ -1,5 +1,5 @@
-import { HttpStatus } from '@nestjs/common'
-import { ICommonErrorCode } from '../error/common-error'
+import { HttpStatus } from '@nestjs/common';
+import { ICommonErrorCode } from '../error/common-error';
 
 export const DirectusError = {
   NOT_CONFIGURED: {
@@ -13,4 +13,4 @@ export const DirectusError = {
     message: 'CMS 가 응답하지 않는다',
     status: HttpStatus.BAD_GATEWAY,
   } as ICommonErrorCode,
-}
+};
