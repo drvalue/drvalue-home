@@ -54,6 +54,8 @@ export const COLLECTION_LABEL: Record<string, string> = {
   admin_users: '권한',
   menu: '메뉴',
   pages: '페이지',
+  home_banners: '메인 배너',
+  home_popups: '메인 팝업',
 }
 
 export const ROLE_LABEL: Record<AdminUserRow['role'], string> = {

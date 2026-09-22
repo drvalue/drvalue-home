@@ -122,3 +122,49 @@ export const HOME_ADD_CSS = `
   .dv_hero_btns > *:hover { transform: none; }
 }
 `
+
+/**
+ * 메인 팝업(HomePopups). 팝업이 있을 때만 싣는다 — 없는 날의 메인 HTML 은 팝업 전과 같다.
+ * 층: 머리글(10001~10002) 위, 문의 창(999999~) 아래.
+ * 이 문자열도 템플릿 문자열이다 — 안에 역따옴표를 넣지 않는다.
+ */
+export const HOME_POPUP_CSS = `
+.dvpop_back {
+  position: fixed; inset: 0; z-index: 100000; background: rgba(8,11,16,.55);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.dvpop {
+  max-width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto;
+  background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  display: flex; flex-direction: column; text-align: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dvpop { animation: dvpopIn .22s ease both; }
+}
+@keyframes dvpopIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.dvpop .dvpop_img { display: block; }
+.dvpop .dvpop_img img { display: block; width: 100%; height: auto; }
+.dvpop .dvpop_text { padding: 22px 22px 4px; }
+.dvpop .dvpop_text h2 {
+  margin: 0 0 8px; font-size: 20px; line-height: 1.4; font-weight: 800; color: #191f28;
+  letter-spacing: -.4px; word-break: keep-all;
+}
+.dvpop .dvpop_body { font-size: 15px; line-height: 1.65; color: #4e5968; word-break: keep-all; overflow-wrap: anywhere; }
+.dvpop .dvpop_body p { margin: 0 0 8px; }
+.dvpop .dvpop_body a { color: #d71920; text-decoration: underline; }
+.dvpop .dvpop_btns { display: flex; flex-direction: column; gap: 8px; padding: 16px 22px 14px; }
+.dvpop .dvpop_go {
+  display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px;
+  background: #d71920; color: #fff; font-weight: 800; font-size: 16px; border-radius: 10px; text-decoration: none;
+}
+.dvpop .dvpop_go:hover { background: #ef2630; }
+.dvpop .dvpop_close { display: flex; align-items: center; gap: 8px; }
+.dvpop .dvpop_close button {
+  appearance: none; background: none; border: 0; font: inherit; font-size: 14px; color: #6b7684;
+  padding: 10px 4px; min-height: 44px; cursor: pointer;
+}
+.dvpop .dvpop_close button:last-child { margin-left: auto; color: #191f28; font-weight: 700; }
+.dvpop .dvpop_go:focus-visible, .dvpop .dvpop_close button:focus-visible, .dvpop .dvpop_img:focus-visible {
+  outline: 3px solid #3d5a80; outline-offset: 2px;
+}
+`

@@ -82,7 +82,8 @@
 
 `:id` 는 36자 UUID 다. 모양이 아니면 `400`. 없는 파일과 **공개가 아닌 파일은
 둘 다 `404`** 다 — 어느 쪽인지 알려 주지 않는다. 공개 = 게시된 글의 대표
-이미지·공유 이미지·첨부·본문 그림이 가리키는 파일과 페이지 글(`page_contents`)의 그림.
+이미지·공유 이미지·첨부·본문 그림이 가리키는 파일과 페이지 글(`page_contents`)의 그림, 그리고
+**지금 살아 있는**(보이기 · 기간 안) 메인 배너·팝업의 그림. 예약해 둔 배너 그림은 시작 전까지 404 다.
 
 ## `GET /api/content/pages/:key`
 
@@ -90,6 +91,19 @@
 `?lang=` 이 없거나 그 언어 글이 없으면 `ko-KR` 글을 준다. 응답 `{ data: <그 장의 칸 모양 JSON>, language }`.
 고친 사람은 싣지 않는다. 모르는 `key` 는 `404 PAGE_NOT_FOUND`, 행이 없으면 `404 PAGE_CONTENT_NOT_FOUND` —
 화면은 둘 다 코드의 기본 글(`content.ts`)로 그린다. 그림 칸은 `{ id, alt, width, height }`.
+
+## `GET /api/content/home`
+
+메인(/)의 기간 배너와 팝업. 무인증. `?lang=` 이 없거나 그 언어 글이 없으면 `ko-KR`.
+응답 `{ data: { banner, popups }, language }` — 누가 고쳤는지는 싣지 않는다.
+
+- `banner` — 살아 있는(보이기 · 그림 있음 · `starts_at ≤ 지금 < ends_at`) 배너 중 차례가 앞선 **하나**, 없으면 `null`.
+  `{ id, image: { url, width, height, alt }, title, description, link: { label, href } | null }`. 비운 칸(`null`)은
+  메인 글(`/api/content/pages/home` 의 `hero`)이 대신한다.
+- `popups` — 살아 있는 팝업, 뜨는 차례. `{ id, image | null, title, body(허용 태그만 남긴 HTML), link | null, width, dismiss_days }`.
+  「N일 동안 보지 않기」는 브라우저가 `id` 로 기억한다 — 관리 화면이 고쳐도 `id` 는 안 바뀐다.
+
+메인 글(문구 · 구역 차례 · 카드)은 `GET /api/content/pages/home` 이다(페이지 글 엔진, key `home`).
 
 ## `POST /api/inquiry`
 
@@ -166,9 +180,21 @@ seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]`
 
 | 경로 | 뜻 |
 |---|---|
-| `GET` | 편집할 수 있는 장 `[{ key, label, path, updated_on, updated_by }]` |
+| `GET` | 편집할 수 있는 장 `[{ key, label, path, admin_path, updated_on, updated_by }]` — `admin_path` 는 관리 화면에서 그 장을 여는 주소(메인은 `/admin/home`) |
 | `GET /:key` | `{ schema, languages: { 'ko-KR': { content, updated_on, updated_by }, 'en-US': … } }` — 없는 언어는 빈 글 |
 | `PUT /:key` `{ languages_code, content }` | 그 장의 스키마로 검사(모르는 칸·길이·형식 → `400 PAGE_INVALID`, 문구에 칸 이름) · richtext 는 허용 태그만 · 그림은 미디어에 있는 파일만(`400 PAGE_FILE_GONE`) · 변경 이력 `pages` / `<key>/<언어>` |
+
+### 메인 배너·팝업 `/api/admin/home` (전체 권한·마케팅)
+
+저장은 목록 전체를 한 번에(순서 = 배열 순서). 항목에 `id` 가 있으면 그 항목을 고치고, 없으면 새로 만들고,
+목록에서 빠진 것은 지운다. 변경 이력은 목록 한 줄(`home_banners` · `home_popups` / `list`, before·after 전체).
+
+| 경로 | 뜻 |
+|---|---|
+| `GET /banners` | 배너 전부(꺼진 것·기간 밖 포함) `[{ id, sort, visible, state, image: { id, url(관리 미리보기), width, height } \| null, link_href, starts_at, ends_at, translations: [{ languages_code, title, description, alt, link_label }], updated_on, updated_by }]`. `state` = `live` · `scheduled` · `ended` · `off` |
+| `PUT /banners` `{ items: [{ id?, visible, image, link_href?, starts_at?, ends_at?, translations }] }` | 그림 필수(`400 HOME_NEED_BANNER_IMAGE`) · 끝 > 시작(`400 HOME_BAD_PERIOD`) · 링크는 `/` 또는 `https://`(`400 COMMON_INVALID_INPUT`) · 그림은 미디어에 있는 파일만(`409 HOME_IMAGE_GONE`) · 20개까지 |
+| `GET /popups` | 팝업 전부. 배너 모양 + `width` · `dismiss_days`, 글은 `title` · `body` · `alt` · `link_label` |
+| `PUT /popups` `{ items: [{ id?, visible, image?, link_href?, starts_at?, ends_at?, width(280~720), dismiss_days(0~30), translations }] }` | 그림이나 한국어 제목·내용 중 하나(`400 HOME_NEED_POPUP_CONTENT`) · 내용은 허용 태그만 남기고 2000자(`400 HOME_BODY_TOO_LONG`) · 기간·링크·그림 규칙은 배너와 같다 · 10개까지 |
 
 ### 문의 `/api/admin/inquiries`
 

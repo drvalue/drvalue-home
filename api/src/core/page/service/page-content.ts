@@ -5,7 +5,8 @@ import { sanitizeRichtext } from './richtext';
  * 페이지 글을 스키마로 검사하고 정리한다. 순수 함수 — 테스트가 붙어 있다(page-content.test.mjs).
  *
  * - 스키마에 없는 칸이 있으면 거부한다(오타로 만든 칸이 조용히 쌓이지 않게).
- * - 빠진 칸은 빈 값으로 채운다(text '' · image null · list [] · group {…}).
+ * - 빠진 칸은 빈 값으로 채운다(text '' · image null · boolean false · select '' · list [] · group {…}).
+ * - list 에 uniqueBy 가 있으면 그 칸 값이 항목끼리 겹치면 거부한다.
  * - richtext 는 허용 태그만 남긴다. link 의 href 는 / · https:// · mailto: · tel: 만.
  * - 문구는 화면에 뜬다(합니다체). 칸 이름(label)과 항목 번호로 어디가 틀렸는지 알린다.
  */
@@ -44,6 +45,10 @@ function emptyValue(f: PageField): unknown {
       return null;
     case 'link':
       return { label: '', href: '' };
+    case 'boolean':
+      return false;
+    case 'select':
+      return '';
     case 'list':
       return [];
     case 'group':
@@ -220,6 +225,34 @@ function checkField(
         );
       return { label, href };
     }
+    case 'boolean': {
+      if (value === undefined || value === null) return false;
+      if (typeof value !== 'boolean')
+        throw new PageContentError(
+          `${name} 칸의 값이 올바르지 않습니다.`,
+          path,
+        );
+      return value;
+    }
+    case 'select': {
+      const s = typeof value === 'string' ? value : '';
+      if (value !== undefined && value !== null && typeof value !== 'string')
+        throw new PageContentError(
+          `${name} 칸의 값이 올바르지 않습니다.`,
+          path,
+        );
+      if (!s) {
+        if (f.required)
+          throw new PageContentError(`${name} 칸을 골라 주세요.`, path);
+        return '';
+      }
+      if (!f.options.some((o) => o.value === s))
+        throw new PageContentError(
+          `${name} 칸은 목록에 있는 값만 고를 수 있습니다.`,
+          path,
+        );
+      return s;
+    }
     case 'list': {
       if (value !== undefined && value !== null && !Array.isArray(value))
         throw new PageContentError(
@@ -238,7 +271,7 @@ function checkField(
           `${name} 항목은 ${f.max}개까지 넣을 수 있습니다.`,
           path,
         );
-      return items.map((item, i) =>
+      const checked = items.map((item, i) =>
         checkObject(
           f.item,
           item,
@@ -247,6 +280,20 @@ function checkField(
           fileIds,
         ),
       );
+      if (f.uniqueBy) {
+        const seen = new Set<unknown>();
+        for (const [i, item] of checked.entries()) {
+          const v = item[f.uniqueBy];
+          if (v === '' || v === undefined) continue;
+          if (seen.has(v))
+            throw new PageContentError(
+              `${name} ${i + 1}번째 항목이 앞의 항목과 겹칩니다. 한 번씩만 넣어 주세요.`,
+              `${path}[${i}].${f.uniqueBy}`,
+            );
+          seen.add(v);
+        }
+      }
+      return checked;
     }
     case 'group':
       return checkObject(f.fields, value, path, where, fileIds);

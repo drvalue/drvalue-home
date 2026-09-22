@@ -192,7 +192,20 @@ export class ContentDefaultService {
       `SELECT count(*) AS n FROM page_contents WHERE content::text LIKE '%"' || $1::text || '"%'`,
       [id],
     );
-    return Number(pages[0]?.n ?? 0) > 0;
+    if (Number(pages[0]?.n ?? 0) > 0) return true;
+    // 메인 배너·팝업의 그림. 살아 있는 동안(보이기 · 기간 안)만 공개다 — 예약해 둔 배너 그림이 먼저 새지 않게.
+    const home: Array<{ n: string }> = await this.posts.query(
+      `SELECT (SELECT count(*) FROM home_banners b
+                WHERE b.image = $1::uuid AND b.visible
+                  AND (b.starts_at IS NULL OR b.starts_at <= now())
+                  AND (b.ends_at IS NULL OR b.ends_at > now()))
+            + (SELECT count(*) FROM home_popups p
+                WHERE p.image = $1::uuid AND p.visible
+                  AND (p.starts_at IS NULL OR p.starts_at <= now())
+                  AND (p.ends_at IS NULL OR p.ends_at > now())) AS n`,
+      [id],
+    );
+    return Number(home[0]?.n ?? 0) > 0;
   }
 
   /** 요청 언어 + 기본 언어. 한 언어만 실으면 번역 없는 글이 제목 없이 나간다. */

@@ -12,6 +12,10 @@ import { PostEntity } from '../entity/post.entity';
 import { MenuItemEntity } from '../entity/menu-item.entity';
 import { MenuItemTranslationEntity } from '../entity/menu-item-translation.entity';
 import { PageEntity } from '../entity/page.entity';
+import { HomeBannerEntity } from '../entity/home-banner.entity';
+import { HomeBannerTranslationEntity } from '../entity/home-banner-translation.entity';
+import { HomePopupEntity } from '../entity/home-popup.entity';
+import { HomePopupTranslationEntity } from '../entity/home-popup-translation.entity';
 
 export const ENTITIES = [
   PostEntity,
@@ -24,6 +28,10 @@ export const ENTITIES = [
   MenuItemEntity,
   MenuItemTranslationEntity,
   PageEntity,
+  HomeBannerEntity,
+  HomeBannerTranslationEntity,
+  HomePopupEntity,
+  HomePopupTranslationEntity,
 ];
 
 /**

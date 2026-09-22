@@ -134,6 +134,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     groups.push({
       title: '사이트',
       items: [
+        { href: '/admin/home', label: '메인 화면' },
         { href: '/admin/pages', label: '페이지' },
         { href: '/admin/menu', label: '메뉴' },
       ],

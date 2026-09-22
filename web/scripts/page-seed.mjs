@@ -25,6 +25,7 @@ registerHooks({
 
 /** 편집할 수 있는 장. key 는 api 의 core/page/schema 와 같아야 한다. */
 const PAGES = [
+  { key: 'home', module: '../app/home/content.ts', name: 'HOME_DEFAULT' },
   { key: 'company-location', module: '../app/page/company/location/content.ts', name: 'LOCATION_DEFAULT' },
 ]
 

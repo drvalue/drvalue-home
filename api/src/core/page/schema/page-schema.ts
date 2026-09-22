@@ -6,7 +6,9 @@
  *   richtext          편집기 HTML. 허용 태그만 남기고 저장한다(max 는 정리한 뒤 길이)
  *   image             { id: 파일 uuid | null, alt: 대체 글 } — 그림은 미디어에 올린 파일
  *   link              { label, href } — href 는 / 로 시작하거나 https:// · mailto: · tel:
- *   list              같은 모양 항목의 목록(min·max, item 칸)
+ *   boolean           켜고 끄기(true · false)
+ *   select            정해 둔 값 중 하나(options). required 가 아니면 '' 도 된다
+ *   list              같은 모양 항목의 목록(min·max, item 칸). uniqueBy 를 주면 그 칸 값이 겹치면 안 된다
  *   group             칸 묶음(fields)
  *
  * key 는 저장 JSON 의 이름이고 label 은 화면과 검사 문구에 쓰는 이름이다.
@@ -41,12 +43,23 @@ export interface LinkField extends Base {
   type: 'link';
 }
 
+export interface BooleanField extends Base {
+  type: 'boolean';
+}
+
+export interface SelectField extends Base {
+  type: 'select';
+  options: { value: string; label: string }[];
+}
+
 export interface ListField extends Base {
   type: 'list';
   min?: number;
   max: number;
   /** 항목 하나를 부를 이름(「주소 줄」). 없으면 label. */
   itemLabel?: string;
+  /** 항목 안의 이 칸(select·text) 값이 서로 겹치면 거부한다(메인 구역 차례처럼 한 번씩만 오는 목록). */
+  uniqueBy?: string;
   item: PageField[];
 }
 
@@ -56,7 +69,14 @@ export interface GroupField extends Base {
 }
 
 export type PageField =
-  TextField | RichtextField | ImageField | LinkField | ListField | GroupField;
+  | TextField
+  | RichtextField
+  | ImageField
+  | LinkField
+  | BooleanField
+  | SelectField
+  | ListField
+  | GroupField;
 
 export interface PageSchema {
   key: string;
@@ -64,6 +84,8 @@ export interface PageSchema {
   label: string;
   /** 공개 주소. 관리 화면의 「사이트에서 보기」. */
   path: string;
+  /** 관리 화면에서 이 장을 고치는 주소. 없으면 /admin/pages/<key>(메인은 /admin/home 이 배너·팝업과 같이 연다). */
+  adminPath?: string;
   fields: PageField[];
 }
 

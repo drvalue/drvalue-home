@@ -15,7 +15,8 @@ export class FileDefaultRepository {
 
   /**
    * 파일마다 쓰는 곳의 수(같은 글·같은 장은 한 번) — 대표 이미지(thumbnail) · 공유 이미지(og_image) ·
-   * 첨부(posts_files) · 편집기로 본문에 넣은 그림(`/api/content/assets/<id>`) · 페이지 글(page_contents)의 그림.
+   * 첨부(posts_files) · 편집기로 본문에 넣은 그림(`/api/content/assets/<id>`) · 페이지 글(page_contents)의 그림 ·
+   * 메인 배너·팝업(home_banners · home_popups — 꺼진 것·기간 밖도 센다. 지우면 FK 가 그림 칸을 비운다).
    * 본문은 문자열 검색이다. 글이 수천 건이 되면 여기가 먼저 느려진다.
    */
   async usage(ids: string[]): Promise<Map<string, number>> {
@@ -33,7 +34,9 @@ export class FileDefaultRepository {
                                    AND t.body LIKE '%/api/content/assets/' || f.id::text || '%')
                 )
               + (SELECT count(DISTINCT pg.key) FROM page_contents pg
-                  WHERE pg.content::text LIKE '%"' || f.id::text || '"%') AS used
+                  WHERE pg.content::text LIKE '%"' || f.id::text || '"%')
+              + (SELECT count(*) FROM home_banners hb WHERE hb.image = f.id)
+              + (SELECT count(*) FROM home_popups hp WHERE hp.image = f.id) AS used
            FROM directus_files f
           WHERE f.id = ANY($1::uuid[])`,
         [ids],

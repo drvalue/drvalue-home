@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 type Guard = {
   /** 폼이 「저장 안 한 입력이 있다」를 알린다. 저장·취소 뒤에는 false 로. */
@@ -97,3 +97,46 @@ export function LeaveGuardProvider({ children }: { children: React.ReactNode }) 
 }
 
 export const useLeaveGuard = () => useContext(Ctx)
+
+// 알리기(mark)와 읽기(dirtyNames)를 나눈다 — 알리는 쪽 함수가 매번 바뀌면 폼의 effect 가 매번 다시 돈다.
+const GroupMark = createContext<((name: string, dirty: boolean) => void) | null>(null)
+const GroupDirty = createContext<string[]>([])
+
+/**
+ * 한 화면에 폼이 여럿일 때(탭마다 저장 버튼이 따로 있는 /admin/home). 폼마다 알린 「저장 안 함」을
+ * 모아 하나라도 있으면 위(LeaveGuardProvider)에 알린다. 폼 하나가 false 를 알려도 다른 폼의 입력이
+ * 지켜진다. `useLeaveGroupDirty` 로 어느 폼이 저장 안 됐는지(탭 점) 읽는다.
+ */
+export function LeaveGroup({ children }: { children: React.ReactNode }) {
+  // 위의 setDirty 는 useCallback 이라 그대로다(Provider 의 value 객체는 매번 새것이라 통째로 의존하지 않는다).
+  const parentSet = useContext(Ctx).setDirty
+  const [dirty, setDirtyMap] = useState<Record<string, boolean>>({})
+  const mark = useCallback(
+    (name: string, d: boolean) =>
+      setDirtyMap((m) => {
+        if (Boolean(m[name]) === d) return m
+        const next = { ...m, [name]: d }
+        parentSet(Object.values(next).some(Boolean))
+        return next
+      }),
+    [parentSet],
+  )
+  useEffect(() => () => parentSet(false), [parentSet])
+  const dirtyNames = Object.keys(dirty).filter((k) => dirty[k])
+  return (
+    <GroupMark.Provider value={mark}>
+      <GroupDirty.Provider value={dirtyNames}>{children}</GroupDirty.Provider>
+    </GroupMark.Provider>
+  )
+}
+
+/** LeaveGroup 안의 폼 하나. 안쪽의 useLeaveGuard().setDirty 가 이 이름으로 모인다. */
+export function LeaveScope({ name, children }: { name: string; children: React.ReactNode }) {
+  const leave = useContext(Ctx).leave
+  const mark = useContext(GroupMark)
+  const setDirty = useCallback((d: boolean) => mark?.(name, d), [mark, name])
+  const value = useMemo(() => ({ setDirty, leave }), [setDirty, leave])
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
+
+export const useLeaveGroupDirty = () => useContext(GroupDirty)

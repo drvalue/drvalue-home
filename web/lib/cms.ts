@@ -114,6 +114,46 @@ export async function cmsPageContent<T>(key: string, lang = 'ko-KR'): Promise<T 
   }
 }
 
+export type CmsHomeImage = { url: string; width: number | null; height: number | null; alt: string }
+export type CmsHomeLink = { label: string; href: string }
+export type CmsHomeBanner = { id: number; image: CmsHomeImage; title: string | null; description: string | null; link: CmsHomeLink | null }
+export type CmsHomePopup = {
+  id: number
+  image: CmsHomeImage | null
+  title: string | null
+  body: string | null
+  link: CmsHomeLink | null
+  width: number
+  dismiss_days: number
+}
+
+/**
+ * 메인의 기간 배너(살아 있는 것 하나)와 팝업(뜨는 차례). 관리 화면 「메인 화면」 값.
+ * 못 읽으면 배너 없음 · 팝업 없음 — 메인은 기본 머리 그림으로 그린다.
+ */
+export async function cmsHome(lang = 'ko-KR'): Promise<{ banner: CmsHomeBanner | null; popups: CmsHomePopup[] }> {
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/home?lang=${lang}`, { cache: 'no-store' })
+    if (!res.ok) return { banner: null, popups: [] }
+    const body = (await res.json()) as { data?: { banner?: CmsHomeBanner | null; popups?: CmsHomePopup[] } }
+    return { banner: body.data?.banner ?? null, popups: Array.isArray(body.data?.popups) ? body.data.popups : [] }
+  } catch {
+    return { banner: null, popups: [] }
+  }
+}
+
+/** 게시판의 공개 글 수. 못 읽으면 null(화면이 예비 숫자를 쓴다). 메인 머리 그림의 숫자가 이것이다. */
+export async function cmsBoardTotal(board: string): Promise<number | null> {
+  try {
+    const res = await fetch(`${ORIGIN}/api/content/posts?board=${board}&limit=1`, { cache: 'no-store' })
+    if (!res.ok) return null
+    const body = (await res.json()) as { total?: unknown }
+    return typeof body.total === 'number' ? body.total : null
+  } catch {
+    return null
+  }
+}
+
 /** 페이지 글의 그림 칸 → 공개 주소. 비었으면 null. */
 export function pageImageSrc(img: { id: string | null } | null | undefined): string | null {
   return img?.id ? `/api/content/assets/${img.id}` : null

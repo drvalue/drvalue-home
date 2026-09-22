@@ -13,6 +13,7 @@ import { AdminUserModule } from '../core/admin-user/admin-user.module';
 import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.module';
 import { MenuModule } from '../core/menu/menu.module';
 import { PageModule } from '../core/page/page.module';
+import { HomeModule } from '../core/home/home.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PageModule } from '../core/page/page.module';
     AdminDashboardModule,
     MenuModule,
     PageModule,
+    HomeModule,
   ],
 })
 export class AppModule {}
