@@ -12,7 +12,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Public, SkipGatewaySignature } from '@drvalue-oss/iam-nestjs';
-import { AdminSessionGuard } from '../../admin-auth/guard/admin-session.guard';
+import {
+  AdminSessionGuard,
+  AdminUser,
+} from '../../admin-auth/guard/admin-session.guard';
+import type { SessionPayload } from '../../../common/session/session-token';
 import {
   ControllerAdminPostDefaultReorderDto,
   ControllerAdminPostDefaultSaveDto,
@@ -55,22 +59,29 @@ export class AdminPostDefaultController {
   }
 
   @Post()
-  async create(@Body() dto: ControllerAdminPostDefaultSaveDto) {
-    return { data: await this.adminPostDefaultService.create(dto) };
+  async create(
+    @Body() dto: ControllerAdminPostDefaultSaveDto,
+    @AdminUser() who: SessionPayload,
+  ) {
+    return { data: await this.adminPostDefaultService.create(dto, who) };
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ControllerAdminPostDefaultSaveDto,
+    @AdminUser() who: SessionPayload,
   ) {
-    return { data: await this.adminPostDefaultService.update(id, dto) };
+    return { data: await this.adminPostDefaultService.update(id, dto, who) };
   }
 
   @Delete(':id')
   @HttpCode(200)
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.adminPostDefaultService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @AdminUser() who: SessionPayload,
+  ) {
+    await this.adminPostDefaultService.remove(id, who);
     return { ok: true };
   }
 

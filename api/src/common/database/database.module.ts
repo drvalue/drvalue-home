@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FileEntity } from '../entity/file.entity';
 import { InquiryEntity } from '../entity/inquiry.entity';
+import { AdminUserEntity } from '../entity/admin-user.entity';
+import { RevisionEntity } from '../entity/revision.entity';
 import { PostFileEntity } from '../entity/post-file.entity';
 import { PostTranslationEntity } from '../entity/post-translation.entity';
 import { PostEntity } from '../entity/post.entity';
@@ -12,6 +14,8 @@ export const ENTITIES = [
   PostFileEntity,
   FileEntity,
   InquiryEntity,
+  AdminUserEntity,
+  RevisionEntity,
 ];
 
 /**

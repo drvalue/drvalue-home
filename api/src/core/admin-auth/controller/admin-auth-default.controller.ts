@@ -77,7 +77,13 @@ export class AdminAuthDefaultController {
   @Get('me')
   @UseGuards(AdminSessionGuard)
   me(@AdminUser() admin: SessionPayload) {
-    return { data: { email: admin.email, name: admin.name ?? null } };
+    return {
+      data: {
+        email: admin.email,
+        name: admin.name ?? null,
+        role: admin.role ?? 'admin',
+      },
+    };
   }
 
   @Post('logout')

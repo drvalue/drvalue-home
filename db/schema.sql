@@ -375,3 +375,5 @@ ALTER TABLE ONLY public.posts_translations
 -- 언어. posts_translations.languages_code 가 여기를 가리킨다 — 비어 있으면 첫 저장이 막힌다.
 --
 INSERT INTO public.languages (code, name, direction) VALUES ('ko-KR', '한국어', 'ltr'), ('en-US', 'English', 'ltr') ON CONFLICT DO NOTHING;
+
+-- 관리 화면 2차 바닥은 db/migrations/0001-admin-foundation.sql 이 만든다. 처음 까는 곳은 그것도 돌린다.

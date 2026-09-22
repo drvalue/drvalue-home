@@ -89,3 +89,22 @@ test('decide: M.AX 설정은 있는데 안 닿으면 거부 (열리지 않는다
     { ok: false, by: 'max-unavailable' },
   );
 });
+
+const {
+  canEditBoard,
+} = require('../../../../dist/core/admin-auth/service/board-access.js');
+test('board: admin 은 전부', () => {
+  assert.equal(canEditBoard('admin', 'recruit'), true);
+  assert.equal(canEditBoard('admin', 'notice'), true);
+});
+test('board: hr 은 채용만', () => {
+  assert.equal(canEditBoard('hr', 'recruit'), true);
+  assert.equal(canEditBoard('hr', 'notice'), false);
+});
+test('board: marketing 은 채용 빼고', () => {
+  assert.equal(canEditBoard('marketing', 'notice'), true);
+  assert.equal(canEditBoard('marketing', 'recruit'), false);
+});
+test('board: 역할 없는 옛 세션은 admin 취급', () => {
+  assert.equal(canEditBoard(undefined, 'recruit'), true);
+});

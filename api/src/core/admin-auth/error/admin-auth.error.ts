@@ -32,6 +32,12 @@ export const AdminAuthError = {
     status: HttpStatus.FORBIDDEN,
   } as ICommonErrorCode,
 
+  FORBIDDEN: {
+    code: 'ADMIN_AUTH_FORBIDDEN',
+    message: '이 역할로는 할 수 없는 일이다',
+    status: HttpStatus.FORBIDDEN,
+  } as ICommonErrorCode,
+
   UNAUTHORIZED: {
     code: 'ADMIN_AUTH_UNAUTHORIZED',
     message: '로그인이 필요하다',

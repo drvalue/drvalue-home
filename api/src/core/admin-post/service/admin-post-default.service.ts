@@ -6,6 +6,10 @@ import { CommonError } from '../../../common/error/common-error';
 import { ControllerAdminPostDefaultSaveDto } from '../dto/controller-admin-post-default.dto';
 import { AdminPostError } from '../error/admin-post.error';
 import { PostDefaultRepository } from '../repository/post-default.repository';
+import { RevisionService } from '../../../common/revision/revision.service';
+import { canEditBoard } from '../../admin-auth/service/board-access';
+import { AdminAuthError } from '../../admin-auth/error/admin-auth.error';
+import type { SessionPayload } from '../../../common/session/session-token';
 
 const PAGE = 30;
 
@@ -26,7 +30,16 @@ export interface AdminPostRow {
 
 @Injectable()
 export class AdminPostDefaultService {
-  constructor(private readonly postDefaultRepository: PostDefaultRepository) {}
+  constructor(
+    private readonly postDefaultRepository: PostDefaultRepository,
+    private readonly revisionService: RevisionService,
+  ) {}
+
+  /** 역할이 이 게시판을 만질 수 있나. 목록·낱개 읽기도 막는다 — hr 이 공지를 볼 이유가 없다. */
+  assertBoard(who: SessionPayload, board: string): void {
+    if (!canEditBoard(who.role, board))
+      throw new CommonError(AdminAuthError.FORBIDDEN);
+  }
 
   async list(options: {
     board?: string;
@@ -93,7 +106,8 @@ export class AdminPostDefaultService {
     return this.full(row);
   }
 
-  async create(dto: ControllerAdminPostDefaultSaveDto) {
+  async create(dto: ControllerAdminPostDefaultSaveDto, who: SessionPayload) {
+    this.assertBoard(who, dto.board);
     this.requireKo(dto);
     const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
     if (await this.postDefaultRepository.findBySlug(slug))
@@ -118,13 +132,28 @@ export class AdminPostDefaultService {
       this.postDefaultRepository.files.create({ fileId }),
     );
     const saved = await this.postDefaultRepository.repository.save(row);
-    return this.get(saved.id);
+    const after = await this.get(saved.id);
+    await this.revisionService.record({
+      actor: who.email,
+      action: 'create',
+      collection: 'posts',
+      itemId: saved.id,
+      after,
+    });
+    return after;
   }
 
-  async update(id: number, dto: ControllerAdminPostDefaultSaveDto) {
+  async update(
+    id: number,
+    dto: ControllerAdminPostDefaultSaveDto,
+    who: SessionPayload,
+  ) {
+    this.assertBoard(who, dto.board);
     this.requireKo(dto);
     const row = await this.postDefaultRepository.findOneFull(id);
     if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    this.assertBoard(who, row.board);
+    const before = this.full(row);
     if (dto.slug && dto.slug !== row.slug) {
       if (await this.postDefaultRepository.findBySlug(dto.slug))
         throw new CommonError(AdminPostError.SLUG_TAKEN);
@@ -152,15 +181,31 @@ export class AdminPostDefaultService {
       );
     }
     await this.postDefaultRepository.repository.save(row);
-    return this.get(id);
+    const after = await this.get(id);
+    await this.revisionService.record({
+      actor: who.email,
+      action: 'update',
+      collection: 'posts',
+      itemId: id,
+      before,
+      after,
+    });
+    return after;
   }
 
-  async remove(id: number): Promise<void> {
-    const row = await this.postDefaultRepository.repository.findOne({
-      where: { id },
-    });
+  async remove(id: number, who: SessionPayload): Promise<void> {
+    const row = await this.postDefaultRepository.findOneFull(id);
     if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    this.assertBoard(who, row.board);
+    const before = this.full(row);
     await this.postDefaultRepository.repository.remove(row);
+    await this.revisionService.record({
+      actor: who.email,
+      action: 'delete',
+      collection: 'posts',
+      itemId: id,
+      before,
+    });
   }
 
   /** ids 순서대로 sort = 1..n. 같은 게시판 안에서만 뜻이 있다. */

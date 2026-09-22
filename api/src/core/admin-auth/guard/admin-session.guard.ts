@@ -5,6 +5,8 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ADMIN_ROLES_KEY } from './roles.decorator';
 import type { Request } from 'express';
 import { IamUserService } from '@drvalue-oss/iam-nestjs';
 import { CommonError } from '../../../common/error/common-error';
@@ -15,6 +17,7 @@ import {
 } from '../../../common/session/session-token';
 import { AdminAuthError } from '../error/admin-auth.error';
 import { MaxRootService } from '../service/max-root.service';
+import { AdminUserService } from '../service/admin-user.service';
 
 export const ADMIN_COOKIE = 'dv_admin';
 /** IAM 에 사용자 상태를 다시 묻는 간격. 그 사이에 비활성화되면 이만큼 늦게 막힌다. */
@@ -38,6 +41,8 @@ export class AdminSessionGuard implements CanActivate {
   constructor(
     private readonly iamUserService: IamUserService,
     private readonly maxRootService: MaxRootService,
+    private readonly adminUserService: AdminUserService,
+    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -50,8 +55,10 @@ export class AdminSessionGuard implements CanActivate {
       parseCookies(req.headers.cookie)[ADMIN_COOKIE],
     );
     if (session) {
+      await this.assertStillRegistered(session);
       await this.assertStillRoot(session);
       await this.assertStillEnabled(session.email);
+      this.assertRole(ctx, session.role);
       req.admin = session;
       return true;
     }
@@ -65,6 +72,32 @@ export class AdminSessionGuard implements CanActivate {
       return true;
     }
     throw new CommonError(AdminAuthError.UNAUTHORIZED);
+  }
+
+  /** @AdminRoles() 가 붙은 핸들러는 그 역할만. admin 은 항상. */
+  private assertRole(ctx: ExecutionContext, role: string | undefined): void {
+    const need = this.reflector.getAllAndOverride<string[] | undefined>(
+      ADMIN_ROLES_KEY,
+      [ctx.getHandler(), ctx.getClass()],
+    );
+    if (!need || need.length === 0) return;
+    const r = role ?? 'admin';
+    if (r === 'admin' || need.includes(r)) return;
+    throw new CommonError(AdminAuthError.FORBIDDEN);
+  }
+
+  /** admin_users 에서 빠지거나 꺼지면 세션이 남아 있어도 60초 안에 막힌다. 역할 변경도 여기서 따라온다. */
+  private async assertStillRegistered(session: SessionPayload): Promise<void> {
+    const key = `users:${session.email}`;
+    if (Date.now() - (this.checked.get(key) ?? 0) < RECHECK_MS) return;
+    if ((await this.adminUserService.count()) === 0) return; // 첫 설치 전
+    const row = await this.adminUserService.find(session.email);
+    if (!row || !row.enabled) {
+      this.log.warn('admin_users 에서 빠진 사용자: 세션 거부');
+      throw new CommonError(AdminAuthError.NOT_ALLOWED);
+    }
+    session.role = row.role;
+    this.checked.set(key, Date.now());
   }
 
   /** M.AX root 표에서 빠지면 세션이 남아 있어도 60초 안에 막힌다. */

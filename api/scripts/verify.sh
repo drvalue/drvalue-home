@@ -219,7 +219,7 @@ check "검증 게시글이 남지 않음" "0" \
   "$(adm "/posts?q=$RUN-" | pick 'print(d.get("total"))')"
 
 echo "== 문의 =="
-BODY=$(printf '{"user_name":"%s","user_tel":"010-0000-0000","user_type":"지원사업","user_msg":"검증"}' "$RUN")
+BODY=$(printf '{"user_name":"%s","user_tel":"010-0000-0000","user_email":"verify@example.com","user_type":"지원사업","user_msg":"검증"}' "$RUN")
 # 이 구간은 POST 를 3번 쓴다. 한도가 분당 5회라, 1분 안에 두 번 돌리면
 # 두 번째는 전부 429 다. 그때 429 본문을 읽으면 "내부 상태가 샌다" 같은
 # 엉뚱한 실패가 난다(실제로 당했다). 못 잰 것은 통과도 실패도 아니다.
@@ -242,11 +242,16 @@ check "문의 유형이 원문 그대로" "지원사업" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("type",""))')"
 check "연락처가 phone 으로 들어간다" "010-0000-0000" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("phone",""))')"
+check "이메일이 email 로 들어간다" "verify@example.com" \
+  "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("email",""))')"
+check "이메일 없으면 거부" "400" \
+  "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/inquiry" -H 'Content-Type: application/json' \
+     -d '{"user_name":"x","user_tel":"010","user_type":"기타","user_msg":"m"}' --max-time 30)"
 check "상태는 접수" "new" \
   "$(printf '%s' "$ROW" | pick 'print((d.get("data") or [{}])[0].get("status",""))')"
 check "선택지 밖 유형은 거부" "400" \
   "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$API/api/inquiry" -H 'Content-Type: application/json' \
-     -d '{"user_name":"x","user_tel":"010","user_type":"없는유형","user_msg":"m"}' --max-time 30)"
+     -d '{"user_name":"x","user_tel":"010","user_email":"a@b.co","user_type":"없는유형","user_msg":"m"}' --max-time 30)"
 # 응답이 어느 쪽이 실패했는지 흘리면 익명 제출자가 내부 상태를 읽는다.
 check "응답에 내부 상태가 없다" "none" \
   "$(curl -s -X POST "$API/api/inquiry" -H 'Content-Type: application/json' -d "$BODY" --max-time 60 \

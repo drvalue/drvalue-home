@@ -8,6 +8,8 @@ export interface SessionPayload {
   email: string;
   /** IAM 사용자 id (claim sub). M.AX root 표 재검에 쓴다. */
   sub?: string;
+  /** admin | marketing | hr. 없으면 admin (옛 세션). */
+  role?: string;
   name?: string;
   exp: number;
 }

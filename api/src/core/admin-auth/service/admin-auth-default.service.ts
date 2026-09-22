@@ -8,6 +8,7 @@ import {
 import { AdminAuthError } from '../error/admin-auth.error';
 import { decide, describeGroups, IamClaims } from './authorize';
 import { MaxRootService } from './max-root.service';
+import { AdminUserService } from './admin-user.service';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 // 30분. 만료되면 IAM 을 다시 다녀오며 그룹·역할이 새로 온다 — IAM 쪽 변경이 여기서 따라온다.
@@ -27,7 +28,10 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 export class AdminAuthDefaultService {
   private readonly log = new Logger(AdminAuthDefaultService.name);
 
-  constructor(private readonly maxRootService: MaxRootService) {}
+  constructor(
+    private readonly maxRootService: MaxRootService,
+    private readonly adminUserService: AdminUserService,
+  ) {}
 
   readonly secret = process.env.ADMIN_SESSION_SECRET ?? '';
   private readonly iamBase = (process.env.ADMIN_IAM_BASE ?? '').replace(
@@ -98,25 +102,46 @@ export class AdminAuthDefaultService {
       throw new CommonError(AdminAuthError.NO_EMAIL);
     }
     const sub = String((claims as { sub?: unknown }).sub ?? '');
-    const verdict = decide(
-      claims,
-      this.rule,
-      await this.maxRootService.isTenantRoot(sub, email),
-    );
-    if (!verdict.ok) {
-      this.log.warn(
-        `denied by=${verdict.by} role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
-      );
+    const name =
+      typeof (claims as { name?: unknown }).name === 'string'
+        ? (claims as { name: string }).name
+        : undefined;
+
+    // 입장은 admin_users 가 정한다. IAM 은 「누구냐」만 답했다.
+    let role: string;
+    const registered = await this.adminUserService.find(email);
+    if (registered) {
+      if (!registered.enabled) {
+        this.log.warn(`denied by=admin_users(disabled)`);
+        throw new CommonError(AdminAuthError.NOT_ALLOWED);
+      }
+      role = registered.role;
+      this.log.log(`admin login by=admin_users role=${role}`);
+    } else if ((await this.adminUserService.count()) > 0) {
+      // 표에 사람이 있는데 이 사람은 없다 — IAM 을 통과했어도 관리자가 아니다.
+      this.log.warn(`denied by=admin_users(not registered)`);
       throw new CommonError(AdminAuthError.NOT_ALLOWED);
+    } else {
+      // 첫 설치: 옛 규칙으로 통과한 사람을 첫 admin 으로 등록한다.
+      const verdict = decide(
+        claims,
+        this.rule,
+        await this.maxRootService.isTenantRoot(sub, email),
+      );
+      if (!verdict.ok) {
+        this.log.warn(
+          `denied by=${verdict.by} role=${claims.role ?? '-'} groups=[${describeGroups(claims)}]`,
+        );
+        throw new CommonError(AdminAuthError.NOT_ALLOWED);
+      }
+      role = (await this.adminUserService.bootstrap(email, name)).role;
+      this.log.log(`admin login by=${verdict.by} → 첫 관리자 등록`);
     }
-    this.log.log(`admin login by=${verdict.by}`);
     const payload: SessionPayload = {
       email,
       sub: sub || undefined,
-      name:
-        typeof (claims as { name?: unknown }).name === 'string'
-          ? (claims as { name: string }).name
-          : undefined,
+      role,
+      name,
       exp: Date.now() + SESSION_TTL_MS,
     };
     return issueSession(this.secret, payload);
