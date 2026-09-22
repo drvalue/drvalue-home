@@ -14,7 +14,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      // 증서 그림·글 그림은 /api/content/assets 에서 나온다(게시된 글이 가리키는 것만 — 관문).
+      // 더 긴 규칙이 이긴다: /api/ 는 막되 이 경로는 연다.
+      allow: ['/', '/api/content/assets/'],
       // 글 작성 안내와 내부 API. 사람이 찾아올 자리가 아니다.
       disallow: ['/api/', '/admin', '/page/support/notify_form'],
     },

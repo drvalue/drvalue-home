@@ -12,11 +12,12 @@ BI_FID=$(curl -s -X POST -H "$AUTH" -F "file=@$BI_TMP/$RUN.png;type=image/png" -
   | pick 'print((d.get("data") or {}).get("id",""))')
 rm -rf "$BI_TMP"
 
-bpost() { # slug body [status] → 공지 JSON (기본 초안)
-  SLUG="$1" BODY="$2" ST="${3:-draft}" python3 -c '
+bpost() { # slug body [status] [첨부 파일 id] → 공지 JSON (기본 초안)
+  SLUG="$1" BODY="$2" ST="${3:-draft}" FID="${4:-}" python3 -c '
 import json, os
 print(json.dumps({"board": "notice", "slug": os.environ["SLUG"], "status": os.environ["ST"],
                   "published_date": "2026-01-01",
+                  "file_ids": [os.environ["FID"]] if os.environ["FID"] else [],
                   "translations": [{"languages_code": "ko-KR", "title": "본문 그림 검사", "body": os.environ["BODY"]}]}))'
 }
 
@@ -38,9 +39,16 @@ else
     "$(curl -s "$API/api/content/posts?board=notice&limit=100" --max-time 30 | pick "r=[x for x in (d.get('data') or []) if x.get('slug')=='$BI_SLUG']; print(r[0].get('thumbnail') if r else 'absent')")"
   check "게시된 글의 본문 그림은 공개 주소로 열린다" "200" \
     "$(curl -s -o /dev/null -w '%{http_code}' "$API/api/content/assets/$BI_FID" --max-time 30)"
-  bpost "$BI_SLUG" "<p>그림을 뺐다</p>" | admj PUT "/posts/$BI_PID" >/dev/null
+  bpost "$BI_SLUG" "<p>그림을 뺐다</p>" draft "$BI_FID" | admj PUT "/posts/$BI_PID" >/dev/null
   check "본문에서 그림을 빼면 썸네일도 빠진다" "none" \
     "$(adm "/posts/$BI_PID" | pick 'print((d.get("data") or {}).get("thumbnail") or "none")')"
+  check "첨부로 물렸다" "1" "$(dbq "select count(*) from posts_files where posts_id=$BI_PID")"
+  curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$BI_PID" --max-time 30
+  # 첨부 표에 FK 가 없어 글을 지워도 행이 남았다(migrations/0003).
+  check "글을 지우면 첨부 행도 사라진다" "0" "$(dbq "select count(*) from posts_files where posts_id=$BI_PID")"
+  BI_DEL=$(adm "/revisions/item/posts/$BI_PID" | pick 'r=[x for x in (d.get("data") or []) if x.get("action")=="delete"]; print(r[0].get("id") if r else "")')
+  curl -s -o /dev/null -X POST -H "$AUTH" "$API/api/admin/revisions/$BI_DEL/restore" --max-time 30
+  check "지운 글을 되돌리면 첨부도 돌아온다" "1" "$(dbq "select count(*) from posts_files where posts_id=$BI_PID")"
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/posts/$BI_PID" --max-time 30
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/files/$BI_FID?force=1" --max-time 30
   dbq "delete from admin_revisions where collection='posts' and item_id='$BI_PID'" >/dev/null
