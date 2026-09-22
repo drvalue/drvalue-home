@@ -52,7 +52,9 @@ graph TD
   A1 --> E10[E10 SEO·GEO·GA]
   A2 --> E10
   A3 --> E10
-  A1 --> R1[R1 나머지 모듈 bmes 패턴 + swagger]
+  A4 --> R1[R1 나머지 모듈 bmes 패턴 + swagger · 새 표 되돌리기]
+  E9 --> R1
+  E10 --> R1
   A4 --> E7[E7 회사·사업·서비스 페이지 편집]
   A4 --> E8[E8 메인 배너·팝업·문구·순서]
   E9 --> C2[C2 관리 화면 크리틱 2차 + 관리 전용 레이아웃]
@@ -63,6 +65,11 @@ graph TD
   C1 --> V3{V3 전체 검증 · docker 새로 · 브라우저 4종 · 교차검토}
   C2 --> V3
 ```
+
+출발 조건: 1차 A1·A2·A3 동시. 합치는 순서 A1 → api 컨테이너 다시 → A2·A3 → web 다시 → verify·web 검사 7종·브라우저 390/1280.
+2차(A4·E9·E10·A3b)는 1차 셋을 다 합친 뒤. 3차(E7·E8·R1)는 A4·E9·E10 뒤. 4차(C1·C2) → V3.
+1차가 도는 동안 부모 트리에서 verify 를 돌리지 않는다(A1 의 verify 가 공유 DB 에 잠깐 글을 게시한다).
+합칠 때 고칠 것: post-file.entity.ts 의 파일 쪽 onDelete 가 'SET NULL' 인데 DB 는 CASCADE(0003).
 
 | 노드 | 상태 | 산출물 | 완료 증거 | 비고 |
 |---|---|---|---|---|
@@ -76,7 +83,7 @@ graph TD
 | E8. 메인 화면 | ⬜ | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
 | E9. 메뉴 관리 | ⬜ | menu_items(0006) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
 | E10. SEO·GEO·GA | ⬜ | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
-| R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | |
+| R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 · 새 표(pages 등) 변경 이력 되돌리기 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | 3차 물결. A4·E9·E10 합친 뒤(admin-revision 을 같이 고치므로) |
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
 | C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
 | V3. 전체 검증 | ⬜ | | docker 새로 띄움 · verify · web 검사 전부 · 브라우저 4종 · advisor | |
