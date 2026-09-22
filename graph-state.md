@@ -101,6 +101,12 @@ api 컨테이너는 합칠 때마다 다시 올린다(E10 합친 뒤: 공개 끝
 ## 운영에 올릴 때 (사람이 한다 — main 은 이 가지를 합친 뒤)
 
 1. 운영 `.env` 에 `NEXT_PUBLIC_GTM_ID=GTM-NLL3QGRF` — 없으면 분석이 꺼진다(web 빌드 인자).
-2. 마이그레이션 0003 → 0009 를 차례로(`docs/operations.md`). 전부 두 번 돌려도 같다.
-3. `node api/scripts/sanitize-bodies.js` 로 먼저 보고, `--apply` 로 기존 본문 정리.
-4. web·api 이미지 다시 빌드. 실제 IAM 로그인 한 번(X2).
+2. 마이그레이션 0003 → 0008 을 차례로(`docs/operations.md`). 전부 두 번 돌려도 같다.
+   **0003 은 지우는 마이그레이션이다** — 부모 없는 첨부 행(posts_files)을 지운다. 돌리기 전에 개수를 본다:
+   `select count(*) from posts_files pf where not exists (select 1 from posts p where p.id = pf.posts_id)
+    or not exists (select 1 from directus_files f where f.id = pf.directus_files_id);` (로컬은 52 전부 고아였다)
+3. api·web 이미지를 다시 빌드해 올리고, 머리글 메뉴가 뜨는지 본다.
+4. **그 다음에** 0009(메뉴 설명의 숫자를 토큰으로). 옛 web 에 먼저 돌리면 머리글에 `{case}` 가 날것으로 나온다.
+   돌린 뒤 관리 화면에서 메뉴를 한 번 저장하거나 1분 기다린다(메뉴 캐시).
+5. `node api/scripts/sanitize-bodies.js` 로 먼저 보고, `--apply` 로 기존 본문 정리(두 번째는 0).
+6. 실제 IAM 로그인 한 번(X2).

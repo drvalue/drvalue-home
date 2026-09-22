@@ -18,6 +18,9 @@ docker compose up -d db       # → localhost:3330
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms < db/schema.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0001-admin-foundation.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0002-admin-users-iam-sync.sql
+# 0003 은 부모 없는 첨부 행(posts_files)을 지운다. 운영에서는 먼저 개수를 본다 — 로컬은 52행 전부 고아였다:
+#   select count(*) from posts_files pf where not exists (select 1 from posts p where p.id = pf.posts_id)
+#     or not exists (select 1 from directus_files f where f.id = pf.directus_files_id);
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0003-posts-files-fk.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0004-page-contents.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0005-home.sql
