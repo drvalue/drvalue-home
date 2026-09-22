@@ -16,6 +16,7 @@
  *
  * middlewares.before 여야 한다 — /admin 정적 핸들러가 routes.before 보다 먼저 붙는다.
  */
+// 템플릿 안에 역슬래시를 넣지 않는다 — `\/` 가 `//` 로 풀려 주석이 됐고 스크립트가 통째로 안 돌았다(실측).
 const EMBED = `<script>
 (function () {
   // 관리 앱 안에서 /admin/login 으로 가면 폼 대신 IAM 으로. 서버 훅이 못 보는 자리다.
@@ -24,7 +25,7 @@ const EMBED = `<script>
     var p = location.pathname;
     if (p === last) return;
     last = p;
-    if (/\/admin\/login\/?$/.test(p)) location.replace('/iam-bridge/login');
+    if (p.replace(/[/]+$/, '') === '/admin/login') location.replace('/iam-bridge/login');
   }
   check();
   setInterval(check, 200);
