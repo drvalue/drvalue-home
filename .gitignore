@@ -11,6 +11,7 @@ web/tsconfig.tsbuildinfo
 # Nest API
 api/node_modules/
 api/dist/
+.env
 api/.env
 
 # CMS (Directus)

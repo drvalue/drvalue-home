@@ -1,3 +1,9 @@
+// 루트 .env 하나를 쓴다. next 는 자기 폴더의 .env 만 읽으므로 위 폴더 것을 직접
+// 올린다. 없으면 그냥 간다 — 컨테이너는 compose 가 넘긴다.
+try {
+  process.loadEnvFile(new URL('../.env', import.meta.url).pathname)
+} catch {}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 도커 이미지는 standalone 산출물(server.js + 필요한 node_modules 만)을 담는다.

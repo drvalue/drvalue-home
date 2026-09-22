@@ -8,7 +8,7 @@
 # CMS 정의는 cms/docker-compose.yml 그대로 가져온다(include) — 컨테이너·볼륨 이름이
 # 거기 고정돼 있어 지금 도는 drvalue_directus 와 데이터가 그대로 이어진다.
 #
-# 비밀값은 저장소에 없다. web/.env · api/.env · cms/.env 를 각 .env.example 대로 만든다.
+# 비밀값은 저장소에 없다. 루트 .env 하나를 .env.example 대로 만든다.
 # 컨테이너끼리는 서비스 이름으로 부른다: web → api 는 http://api:3500,
 # api → directus 는 http://directus:8055 (아래 environment 가 .env 값을 덮는다).
 name: drvalue
@@ -16,6 +16,7 @@ name: drvalue
 include:
   - path: cms/docker-compose.yml
     project_directory: cms
+    env_file: .env
 
 services:
   web:
@@ -28,7 +29,7 @@ services:
     container_name: drvalue_web
     restart: unless-stopped
     env_file:
-      - path: web/.env
+      - path: .env
         required: false
     environment:
       API_ORIGIN: http://api:3500
@@ -48,7 +49,7 @@ services:
     container_name: drvalue_api
     restart: unless-stopped
     env_file:
-      - path: api/.env
+      - path: .env
         required: false
     environment:
       PORT: 3500

@@ -60,7 +60,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-bash scripts/verify.sh          # 46/46 (api 와 cms 가 떠 있어야 한다)
+bash scripts/verify.sh          # 45/45 (api 와 cms 가 떠 있어야 한다)
 ```
 
 문의 구간은 1분 안에 두 번 돌리면 속도 제한에 걸려 판정 불가로 빠진다.

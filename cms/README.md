@@ -3,7 +3,7 @@
 ## 실행
 
 ```bash
-cp .env.example .env      # DIRECTUS_SECRET, ADMIN_PASSWORD 채우기
+cp ../.env.example ../.env   # 루트 .env 하나. DIRECTUS_SECRET, ADMIN_PASSWORD 채우기
 docker compose up -d      # Postgres 10 + Directus 12
 python3 scripts/schema.py      # 컬렉션·필드
 python3 scripts/relations.py   # 관계

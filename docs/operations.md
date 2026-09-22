@@ -2,44 +2,46 @@
 
 ## 처음 한 번
 
-```bash
-# 1. 관리 도구(Directus + PostgreSQL) 를 띄운다. 제일 먼저다 —
-#    Nest 가 이걸 못 찾으면 안 뜬다.
-cd cms
-cp .env.example .env          # DIRECTUS_SECRET 을 openssl rand -hex 32 로 채운다
-docker compose up -d          # → http://localhost:3350
+환경변수는 **루트 `.env` 하나**다. 컨테이너는 `docker-compose.yml` 이 넘기고,
+로컬 실행은 각 패키지가 `../.env` 를 읽는다. 스크립트를 돌리기 전에 루트에서
+`set -a; . .env; set +a` 로 올린다.
 
-# 2. 스키마와 계정을 만든다. 순서를 바꾸면 안 된다 —
+```bash
+cp .env.example .env          # DIRECTUS_SECRET 을 openssl rand -hex 32 로, ADMIN_PASSWORD 를 채운다
+set -a; . .env; set +a
+
+# 1. 관리 도구(Directus + PostgreSQL). 제일 먼저다 — Nest 가 이걸 못 찾으면 안 뜬다.
+docker compose up -d directus   # → http://localhost:3350
+
+# 2. 스키마와 계정. 순서를 바꾸면 안 된다 —
 #    schema 가 없으면 뒤의 것들이 쓸 곳이 없고,
 #    언어별 콘텐츠는 권한(roles)보다 먼저 만들어야 한다.
+cd cms
 python3 scripts/schema.py       # 컬렉션·필드
 python3 scripts/relations.py    # 관계
 python3 scripts/i18n_content.py # 언어별 콘텐츠 — roles 보다 먼저
 python3 scripts/roles.py        # 역할·권한
 python3 scripts/flows.py        # 예약 게시 실행기
-# public_api.py 는 Nest 없이 화면이 Directus 를 직접 읽을 때만 돌린다.
-# 우리는 Nest 를 앞에 두므로 건너뛴다.
 
-# 3. Nest 가 쓸 서비스 토큰을 발급한다. 화면에 한 번만 찍힌다.
+# 3. Nest 가 쓸 서비스 토큰. 화면에 한 번만 찍힌다 → .env 의 DIRECTUS_TOKEN.
 python3 scripts/service_account.py
 
 python3 scripts/i18n_admin.py   # 관리 화면 한국어
 python3 scripts/seed.py         # 계정 3명 + 표본(표본 글은 초안이라 공개에 안 나온다)
+python3 scripts/import_site_content.py   # 특허·저작권·수행실적·연혁 (화면의 값을 CMS 로)
 
 # 4. 백엔드
 cd ../api
-cp .env.example .env          # DIRECTUS_TOKEN 에 3번 값을 채운다
 npm ci && npm run build && node dist/main.js     # → http://localhost:3500
 
 # 5. 공개 화면
 cd ../web
-cp .env.example .env.local
 npm ci && npm run build && npm start             # → http://localhost:3400
 ```
 
 `api` 는 게이트웨이 검증이 켜진 채 `IAM_GATEWAY_SECRET` 이 비면 **안 뜬다.**
 
-로컬에서 게이트웨이 없이 띄울 때만 `api/.env` 에
+로컬에서 게이트웨이 없이 띄울 때만 `.env` 에
 `IAM_ENFORCE_GATEWAY=false` 를 적는다. **운영에는 절대 넣지 않는다.**
 
 ## 원본 PHP 를 로컬에 띄우기 (대조 검사용)
@@ -55,7 +57,7 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 
 ```bash
 cd cms  && bash scripts/smoke.sh                 # 109/109
-cd api  && bash scripts/verify.sh                # 46/46
+cd api  && bash scripts/verify.sh                # 45/45
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-home.py         # 21/21  (:3400 필요)
         && python3 scripts/check-header.py       # 103/103
@@ -68,6 +70,8 @@ cd web  && python3 scripts/check-src.py          # 제일 먼저
 로 켠다(그때 20/20). 켜면 창을 태워서 1분 안의 재실행을 막는다.
 
 ## 환경변수
+
+루트 `.env` 하나에 전부 있다. 아래는 누가 읽는지로 나눈 것이다.
 
 ### api
 

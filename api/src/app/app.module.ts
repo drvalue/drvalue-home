@@ -6,7 +6,8 @@ import { InquiryModule } from '../core/inquiry/inquiry.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
+    // 루트 .env 하나를 쓴다. 컨테이너는 compose 가 넘기므로 파일이 없어도 된다.
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['../.env', '.env'] }),
     IamModule.forRoot({
       gatewaySharedSecret: process.env.IAM_GATEWAY_SECRET,
       // 빠뜨리면 켠 것으로 본다. 빠뜨리는 쪽이 열리는 설정은 언젠가 열린다.

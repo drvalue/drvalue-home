@@ -10,14 +10,13 @@ set -u
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 API="${API_URL:-http://localhost:3500}"
 
-set -a; [ -f "$HERE/.env" ] && . "$HERE/.env"; set +a
+# 루트 .env 하나다. Nest 와 CMS 관리자 계정이 다 여기 있다.
+set -a; [ -f "$HERE/../.env" ] && . "$HERE/../.env"; set +a
 CMS="${DIRECTUS_URL:-http://localhost:3350}"
 
 # 표본을 만들고 지우려면 관리자여야 한다. Nest 가 쓰는 서비스 토큰은 읽기만
-# 되므로(그게 설계다) 검증용 쓰기에는 cms/.env 의 관리자 계정을 쓴다.
-CMS_ENV="$HERE/../cms/.env"
-if [ ! -f "$CMS_ENV" ]; then echo "cms/.env 가 없다. CMS 를 먼저 띄워라." >&2; exit 2; fi
-set -a; . "$CMS_ENV"; set +a
+# 되므로(그게 설계다) 검증용 쓰기에는 .env 의 관리자 계정을 쓴다.
+if [ -z "${ADMIN_EMAIL:-}" ] || [ -z "${ADMIN_PASSWORD:-}" ]; then echo "루트 .env 에 ADMIN_EMAIL·ADMIN_PASSWORD 가 없다." >&2; exit 2; fi
 # 셸에서 JSON 리터럴을 만들지 않는다 — zsh 가 중괄호를 확장해서 몸통이 깨진다.
 ADMIN=$(CMS="$CMS" python3 <<'EOF'
 import json, os, urllib.request

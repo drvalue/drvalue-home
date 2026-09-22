@@ -12,7 +12,7 @@ cms/   Directus 스키마 · 권한 · 예약 게시 · 다국어 · IAM 다리 
 ## 도커로 띄우기
 
 ```
-cp web/.env.example web/.env && cp api/.env.example api/.env && cp cms/.env.example cms/.env   # 값 채우기
+cp .env.example .env                # 값 채우기 — 루트 하나다
 docker compose up -d --build        # web 3400 · api 3500 · directus 3350 · db 3330
 docker compose up -d --build web api   # CMS 는 그대로 두고 앞·뒤만
 ```
@@ -347,7 +347,7 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 `notify_form.php` 는 옛 게시판 백엔드로 저장한다. 게시판이 CMS 로 옮겨간
 뒤에도 그대로 두면 **글을 써도 사이트에 안 나오고 어디로 갔는지도 안 보인다.**
 조용한 유실이라 저장 경로를 끊고 관리 화면으로 안내한다. 주소는 살려 둔다
-(북마크·이력). 관리 화면 주소는 `web/.env.local` 의 `CMS_ADMIN_URL` 이다.
+(북마크·이력). 관리 화면 주소는 루트 `.env` 의 `CMS_ADMIN_URL` 이다.
 
 ### 이 작업이 못 막는 것
 
@@ -604,7 +604,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 |---|---|---|
 | `cms/scripts/smoke.sh` | Directus 권한 · 예약 게시 · 다국어 · 공개 엔드포인트 | 109/109 |
 | `cms/scripts/verify-iam-bridge.sh` | IAM 다리 전체 흐름 (가짜 IAM 필요) | 11/11 |
-| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 기본값이 닫힌 쪽인가 | 46/46 (기대값 — 이번에는 CMS 없이 못 돌렸다) |
+| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 기본값이 닫힌 쪽인가 | 45/45 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
 두 번 돌리면 그 구간이 `판정불가` 로 빠진다** — 통과도 실패도 아니다.
@@ -652,6 +652,6 @@ api  npm run build && node dist/main.js → http://localhost:3500
 web  npm run build && npm start        → http://localhost:3400
 ```
 
-`.env` 는 저장소에 넣지 않는다. `api/.env.example` 을 복사해서 채운다.
+`.env` 는 저장소에 넣지 않는다. 루트 `.env.example` 을 복사해서 채운다.
 `IAM_ENFORCE_GATEWAY` 의 기본값은 `true` 다 — 게이트웨이 없이 로컬에서
 띄울 때만 각자 `.env` 에서 `false` 로 덮는다.
