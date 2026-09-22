@@ -7,6 +7,7 @@ import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import { FileEntity } from '../../../common/entity/file.entity';
 import { PostEntity } from '../../../common/entity/post.entity';
 import { CommonError } from '../../../common/error/common-error';
+import { sanitizeBody } from '../../../common/html/sanitize-body';
 import { ContentError } from '../error/content.error';
 
 /** 게시판 한 쪽의 글 수. 화면의 페이지 번호가 이 값을 전제한다. */
@@ -296,7 +297,8 @@ export class ContentDefaultService {
       no_index: r.noIndex,
       updated_on: r.updatedOn ? new Date(r.updatedOn).toISOString() : null,
     };
-    if (withBody) out.body = t?.body ?? null;
+    // 저장할 때 이미 다듬지만, 되돌리기·옛 행·DB 직접 수정이 그 길을 비켜 갈 수 있다 — 내보낼 때 한 번 더.
+    if (withBody) out.body = sanitizeBody(t?.body);
     return out;
   }
 

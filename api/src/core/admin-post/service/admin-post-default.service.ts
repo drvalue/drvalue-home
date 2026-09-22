@@ -3,6 +3,7 @@ import { BOARDS, PostEntity } from '../../../common/entity/post.entity';
 import { PostTranslationEntity } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
+import { sanitizeBody } from '../../../common/html/sanitize-body';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
@@ -365,7 +366,7 @@ export class AdminPostDefaultService {
       ...dto.translations.filter((t) => !isKo(t)),
     ];
     for (const t of ordered) {
-      const m = BODY_IMAGE_RE.exec(t.body ?? '');
+      const m = BODY_IMAGE_RE.exec(sanitizeBody(t.body) ?? '');
       if (m) return m[1].toLowerCase();
     }
     return null;
@@ -378,7 +379,8 @@ export class AdminPostDefaultService {
       languagesCode: t.languages_code,
       title: t.title ?? null,
       summary: t.summary ?? null,
-      body: t.body ?? null,
+      // 관리자 글이라도 공개 화면에 HTML 로 나간다 — 편집기가 만드는 태그만 남겨 저장한다.
+      body: sanitizeBody(t.body),
       caseCategoryLabel: t.case_category_label ?? null,
       faqCategory: t.faq_category ?? null,
       seoTitle: t.seo_title ?? null,

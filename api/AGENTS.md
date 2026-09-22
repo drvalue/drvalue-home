@@ -145,6 +145,15 @@ src/
 
 ## 방식
 
+- **본문 HTML 소독(`common/html/sanitize-body.ts`)** — 게시판 본문 · 페이지 글 richtext · 팝업 내용이 같은 규칙이다.
+  편집기(Quill)가 만드는 태그만 남기고(p·br·h2·h3·강조·목록·인용·a·img·span, class 는 ql-align·ql-indent 만),
+  script·style·iframe·이벤트 속성·`javascript:`·`data:` 는 버린다. 그림은 `/api/content/assets/<uuid>` 와 사이트 그림
+  경로(screens·photo·brand·img·icon·images, patent2·3 제외)만. 새 창 링크는 `rel="noopener noreferrer"`.
+  게시판 본문은 **저장할 때와 공개로 낼 때 둘 다** 거른다(되돌리기·옛 행·DB 직접 수정이 저장 길을 비켜 간다).
+  - 엔티티는 풀어서 본다 — 끄면 `jav&#x61;script:` 가 주소 검사를 지나간다(실측). 편집기 글이 바이트 그대로
+    돌아오도록 NBSP 를 `&nbsp;` 로, `<br />`·`<img … />` 를 `<br>`·`<img …>` 로 되돌린다.
+  - 태그 없는 맨 글자(옛 글)는 손대지 않는다 — 화면이 이스케이프한다.
+  - 규칙을 바꾸면 `node scripts/sanitize-bodies.js`(보기) → `--apply`(고침, 두 번째는 0 행)로 저장된 본문을 맞춘다.
 - **페이지 글(`core/page`)** — 게시판이 아닌 장의 글. 한 장 · 한 언어가 `page_contents` 한 행(jsonb).
   칸 구조(스키마)는 `core/page/schema/<key>.schema.ts` 한 곳에만 있고, 관리 화면은 그 구조를 받아
   폼을 그린다. 저장은 `service/page-content.ts` 가 검사한다: 모르는 칸 거부 · 길이·필수·pattern ·
@@ -212,8 +221,8 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 36 (6 + 9 + 5 + 16)
-bash scripts/verify.sh          # 282 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
+bash scripts/verify.sh          # 288 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 
