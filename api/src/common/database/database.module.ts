@@ -11,6 +11,7 @@ import { PostTranslationEntity } from '../entity/post-translation.entity';
 import { PostEntity } from '../entity/post.entity';
 import { MenuItemEntity } from '../entity/menu-item.entity';
 import { MenuItemTranslationEntity } from '../entity/menu-item-translation.entity';
+import { PageEntity } from '../entity/page.entity';
 
 export const ENTITIES = [
   PostEntity,
@@ -22,6 +23,7 @@ export const ENTITIES = [
   RevisionEntity,
   MenuItemEntity,
   MenuItemTranslationEntity,
+  PageEntity,
 ];
 
 /**

@@ -186,7 +186,13 @@ export class ContentDefaultService {
         }),
       )
       .getCount();
-    return n > 0;
+    if (n > 0) return true;
+    // 페이지 글(page_contents)에 넣은 그림. 저장한 것이 곧 공개다. 값은 {"id":"<uuid>"} 모양이라 따옴표째 찾는다.
+    const pages: Array<{ n: string }> = await this.posts.query(
+      `SELECT count(*) AS n FROM page_contents WHERE content::text LIKE '%"' || $1::text || '"%'`,
+      [id],
+    );
+    return Number(pages[0]?.n ?? 0) > 0;
   }
 
   /** 요청 언어 + 기본 언어. 한 언어만 실으면 번역 없는 글이 제목 없이 나간다. */

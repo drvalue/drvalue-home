@@ -1,0 +1,138 @@
+/* 페이지 글 편집. 전부 .dva 아래 — 공개 화면 CSS 와 섞이지 않게. */
+.dva .dvp_lead {
+  margin: -6px 0 16px;
+  color: var(--dva-muted);
+}
+.dva .dvp_name {
+  font-weight: 700;
+}
+.dva .dvp_card {
+  display: grid;
+  gap: 14px;
+  max-width: 880px;
+}
+.dva .dvp_stamp {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dva-muted);
+}
+.dva .dvp_tab_dot {
+  color: var(--dva-accent);
+  font-size: 10px;
+}
+.dva .dvp_req {
+  color: var(--dva-muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+/* 칸 묶음 · 목록 · 링크 — fieldset 기본 테두리 대신 카드 안의 얇은 면 */
+.dva .dvp_group,
+.dva .dvp_list,
+.dva .dvp_link {
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--dva-line);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+}
+.dva .dvp_group > legend,
+.dva .dvp_list > legend,
+.dva .dvp_link > legend {
+  padding: 0 6px;
+  font-weight: 800;
+  font-size: 14px;
+}
+.dva .dvp_items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.dva .dvp_item {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--dva-bg);
+  display: grid;
+  gap: 10px;
+}
+.dva .dvp_item_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dva .dvp_item_btns {
+  display: flex;
+  gap: 6px;
+}
+
+/* 글자 수 — 칸 아래 오른쪽 */
+.dva .dvp_meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.dva .dvp_count {
+  flex: none;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--dva-muted);
+  font-variant-numeric: tabular-nums;
+}
+.dva .dvp_count.is-full {
+  color: var(--dva-crit);
+  font-weight: 700;
+}
+
+/* 그림 칸 */
+.dva .dvp_image_row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.dva .dvp_image_preview {
+  flex: none;
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid var(--dva-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.dva .dvp_image_side {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+@media (max-width: 640px) {
+  .dva .dvp_image_row {
+    flex-direction: column;
+  }
+  .dva .dvp_image_preview {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+  .dva .dvp_group,
+  .dva .dvp_list,
+  .dva .dvp_link {
+    padding: 12px;
+  }
+  /* 손가락으로 누를 자리는 44px(관리 화면 공통 규칙) */
+  .dva .dvp_item_btns .dva_btn,
+  .dva .dvp_list > .dva_btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -53,6 +53,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   files: '파일',
   admin_users: '권한',
   menu: '메뉴',
+  pages: '페이지',
 }
 
 export const ROLE_LABEL: Record<AdminUserRow['role'], string> = {

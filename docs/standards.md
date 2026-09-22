@@ -35,8 +35,8 @@
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
-| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 20/20 |
-| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 194 통과 · 판정불가 1 |
+| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) | 30/30 |
+| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 214 통과 · 판정불가 1 |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |
 | `web/scripts/check-pages.py` | 새로 채운 장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 110/110 (`NEXT_ORIGIN` 으로 다른 포트) |
 | `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 107/107 (`NEXT_ORIGIN`) |

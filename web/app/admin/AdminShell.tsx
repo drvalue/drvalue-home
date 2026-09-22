@@ -130,10 +130,13 @@ function Shell({ children }: { children: React.ReactNode }) {
         { href: '/admin/media', label: '미디어' },
       ],
     })
-    // 사이트 전체에 걸린 것(메뉴 · 페이지 · 메인 · SEO). 범위는 api 가 막는다(인사 403).
+    // 사이트 전체에 걸린 것(페이지 · 메뉴 · 메인 · SEO). 범위는 api 가 막는다(인사 403).
     groups.push({
       title: '사이트',
-      items: [{ href: '/admin/menu', label: '메뉴' }],
+      items: [
+        { href: '/admin/pages', label: '페이지' },
+        { href: '/admin/menu', label: '메뉴' },
+      ],
     })
   }
   if (me.role === 'admin') {

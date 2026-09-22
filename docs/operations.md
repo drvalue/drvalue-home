@@ -19,6 +19,7 @@ docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms < db/schema.sq
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0001-admin-foundation.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0002-admin-users-iam-sync.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0003-posts-files-fk.sql
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0004-page-contents.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0006-menu.sql
 
 # 3. 백엔드
@@ -74,8 +75,8 @@ PHP_ORIGIN=https://drvalue.co.kr bash web/scripts/compare-all.sh
 
 ```bash
 cd api  && npm run typecheck && npm run build
-        && node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-        && bash scripts/verify.sh                # 194 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+        && node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 30 (6 + 9 + 5 + 10)
+        && bash scripts/verify.sh                # 214 통과 · 판정불가 1  (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 cd web  && python3 scripts/check-src.py          # 제일 먼저
         && python3 scripts/check-copy.py         # 화면으로 가는 문구의 반말 0건 (서버 없이 돈다)
         && npx tsc --noEmit && npx next build

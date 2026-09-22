@@ -14,8 +14,8 @@ export class FileDefaultRepository {
   }
 
   /**
-   * 파일마다 쓰는 글의 수(같은 글은 한 번) — 대표 이미지(thumbnail) · 공유 이미지(og_image) ·
-   * 첨부(posts_files) · 편집기로 본문에 넣은 그림(`/api/content/assets/<id>`).
+   * 파일마다 쓰는 곳의 수(같은 글·같은 장은 한 번) — 대표 이미지(thumbnail) · 공유 이미지(og_image) ·
+   * 첨부(posts_files) · 편집기로 본문에 넣은 그림(`/api/content/assets/<id>`) · 페이지 글(page_contents)의 그림.
    * 본문은 문자열 검색이다. 글이 수천 건이 되면 여기가 먼저 느려진다.
    */
   async usage(ids: string[]): Promise<Map<string, number>> {
@@ -31,7 +31,9 @@ export class FileDefaultRepository {
                      OR EXISTS (SELECT 1 FROM posts_translations t
                                  WHERE t.posts = p.id
                                    AND t.body LIKE '%/api/content/assets/' || f.id::text || '%')
-                ) AS used
+                )
+              + (SELECT count(DISTINCT pg.key) FROM page_contents pg
+                  WHERE pg.content::text LIKE '%"' || f.id::text || '"%') AS used
            FROM directus_files f
           WHERE f.id = ANY($1::uuid[])`,
         [ids],
@@ -55,6 +57,13 @@ export class FileDefaultRepository {
       `UPDATE posts_translations
           SET body = regexp_replace(body, '<img[^>]*/api/content/assets/' || $1::text || '[^>]*>', '', 'g')
         WHERE body LIKE '%/api/content/assets/' || $1::text || '%'`,
+      [id],
+    );
+    // 페이지 글의 그림 칸은 {"id":"<uuid>","alt":…} — id 만 null 로 바꾼다(화면은 그림 칸을 안 그린다).
+    await m.query(
+      `UPDATE page_contents
+          SET content = replace(content::text, '"' || $1::text || '"', 'null')::jsonb
+        WHERE content::text LIKE '%"' || $1::text || '"%'`,
       [id],
     );
   }

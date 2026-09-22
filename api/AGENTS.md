@@ -46,7 +46,8 @@ src/
 기능: `content` · `inquiry`(공개) · `admin-auth` · `admin-post` · `admin-file` ·
 `admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user` ·
 `admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리) ·
-`menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘).
+`menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘) ·
+`page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -142,6 +143,19 @@ src/
 
 ## 방식
 
+- **페이지 글(`core/page`)** — 게시판이 아닌 장의 글. 한 장 · 한 언어가 `page_contents` 한 행(jsonb).
+  칸 구조(스키마)는 `core/page/schema/<key>.schema.ts` 한 곳에만 있고, 관리 화면은 그 구조를 받아
+  폼을 그린다. 저장은 `service/page-content.ts` 가 검사한다: 모르는 칸 거부 · 길이·필수·pattern ·
+  richtext 허용 태그(`richtext.ts`, sanitize-html) · link 는 `/`·`https://`·`mailto:`·`tel:` 만 ·
+  image 는 `{ id, alt }` 이고 미디어에 있는 파일만, 치수는 저장할 때 api 가 적는다.
+  칸 종류: text · textarea · richtext · image · link · list(min·max·item) · group.
+  - 표 이름이 `pages` 가 아닌 이유: Directus 를 시험할 때 만든 `pages`·`page_blocks` 가 남은 DB 가 있다.
+  - 새 장을 편집하게 만들기(E7·E8): ① `schema/<key>.schema.ts` 를 쓰고 `schema/index.ts` 에 더한다
+    ② web 의 그 장 폴더에 `content.ts`(같은 모양의 기본 글 — 씨앗이자 api 가 죽었을 때의 예비) ③
+    `web/scripts/page-seed.mjs` 의 PAGES 에 한 줄 → 돌려 나온 SQL 로 마이그레이션 ④ 장 화면이
+    `cmsPageContent(key) ?? 기본 글` 로 그린다(`export const dynamic = 'force-dynamic'`) ⑤ verify 로
+    「씨앗 글이 스키마를 통과한다」(GET 한 글을 그대로 PUT → 200)를 본다.
+  - 페이지 그림은 공개 관문(`fileIsPublic`)과 미디어 「쓰이는 곳」에 잡히고, 강제 삭제는 그 칸의 id 를 null 로 바꾼다.
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
   프로세스당 한도가 된다 — 그때 공유 저장소로 바꾼다.
 - 칸 이름을 그대로 내보낸다(`is_pinned` · `published_date`). 예외 하나: `thumbnail`
@@ -171,8 +185,8 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-bash scripts/verify.sh          # 194 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 30 (6 + 9 + 5 + 10)
+bash scripts/verify.sh          # 214 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

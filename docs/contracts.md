@@ -82,7 +82,14 @@
 
 `:id` 는 36자 UUID 다. 모양이 아니면 `400`. 없는 파일과 **공개가 아닌 파일은
 둘 다 `404`** 다 — 어느 쪽인지 알려 주지 않는다. 공개 = 게시된 글의 대표
-이미지·공유 이미지·첨부가 가리키는 파일.
+이미지·공유 이미지·첨부·본문 그림이 가리키는 파일과 페이지 글(`page_contents`)의 그림.
+
+## `GET /api/content/pages/:key`
+
+페이지 글(게시판이 아닌 장 — 지금은 `company-location` 찾아오시는 길). 무인증.
+`?lang=` 이 없거나 그 언어 글이 없으면 `ko-KR` 글을 준다. 응답 `{ data: <그 장의 칸 모양 JSON>, language }`.
+고친 사람은 싣지 않는다. 모르는 `key` 는 `404 PAGE_NOT_FOUND`, 행이 없으면 `404 PAGE_CONTENT_NOT_FOUND` —
+화면은 둘 다 코드의 기본 글(`content.ts`)로 그린다. 그림 칸은 `{ id, alt, width, height }`.
 
 ## `POST /api/inquiry`
 
@@ -154,6 +161,14 @@ seo_title, seo_description }]`(`ko-KR` 의 `title` 필수) · `file_ids: [uuid]`
 | `POST` multipart `file`(+`title`) | 올리기. png · jpg · webp · gif · pdf · txt, 20MB. `{ data: { id, url, filename_download, title, type, width, height } }` |
 | `GET /:id` | 관리자 미리보기(초안 첨부도 보인다) |
 | `DELETE /:id` | 행과 디스크 파일을 지운다. 글의 연결은 풀린다 |
+
+### 페이지 `/api/admin/pages` (전체 권한·마케팅)
+
+| 경로 | 뜻 |
+|---|---|
+| `GET` | 편집할 수 있는 장 `[{ key, label, path, updated_on, updated_by }]` |
+| `GET /:key` | `{ schema, languages: { 'ko-KR': { content, updated_on, updated_by }, 'en-US': … } }` — 없는 언어는 빈 글 |
+| `PUT /:key` `{ languages_code, content }` | 그 장의 스키마로 검사(모르는 칸·길이·형식 → `400 PAGE_INVALID`, 문구에 칸 이름) · richtext 는 허용 태그만 · 그림은 미디어에 있는 파일만(`400 PAGE_FILE_GONE`) · 변경 이력 `pages` / `<key>/<언어>` |
 
 ### 문의 `/api/admin/inquiries`
 

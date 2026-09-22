@@ -12,6 +12,7 @@ import { AdminRevisionModule } from '../core/admin-revision/admin-revision.modul
 import { AdminUserModule } from '../core/admin-user/admin-user.module';
 import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.module';
 import { MenuModule } from '../core/menu/menu.module';
+import { PageModule } from '../core/page/page.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MenuModule } from '../core/menu/menu.module';
     AdminUserModule,
     AdminDashboardModule,
     MenuModule,
+    PageModule,
   ],
 })
 export class AppModule {}
