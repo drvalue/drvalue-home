@@ -15,7 +15,7 @@ function newsArticle(conf: BoardConf, post: CmsPostFull): Record<string, unknown
   const org = { '@type': 'Organization', '@id': `${SITE_ORIGIN}/#organization`, name: ORG.name, url: SITE_ORIGIN }
   return {
     '@type': conf.key === 'notice' ? 'Article' : 'NewsArticle',
-    headline: post.title.slice(0, 110),
+    headline: (post.title ?? '').slice(0, 110),
     description: post.summary || plainText(post.body),
     // 게시 날짜는 날짜만 있다 — 한국 자정으로 적는다. 날짜만 두면 UTC 자정으로 읽혀 updated_on(같은 한국 자정을
     // UTC 로 적은 값)보다 늦어 보인다(dateModified < datePublished).

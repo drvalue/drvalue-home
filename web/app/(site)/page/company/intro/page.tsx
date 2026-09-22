@@ -5,7 +5,7 @@ import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import VideoFacade from '@/components/VideoFacade'
 import { orUndefined, toLead, toShot } from '../../pageContentParts'
-import { COMPANY_INTRO_DEFAULT, COMPANY_INTRO_KEY, type CompanyIntroContent } from './content'
+import { COMPANY_INTRO_DEFAULT, COMPANY_INTRO_KEY } from './content'
 
 /**
  * /page/company/intro.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
@@ -25,7 +25,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<CompanyIntroContent>(COMPANY_INTRO_KEY)) ?? COMPANY_INTRO_DEFAULT
+  const c = (await cmsPageContent(COMPANY_INTRO_KEY)) ?? COMPANY_INTRO_DEFAULT
   const { shell, film } = c
   const shot = toShot(c.shot)
   return (

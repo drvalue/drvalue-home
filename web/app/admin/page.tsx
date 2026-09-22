@@ -6,6 +6,7 @@ import { adminFetch, BOARDS } from '@/lib/admin'
 import { ACTION_LABEL, boardLabel, COLLECTION_LABEL, DashboardSummary, when } from '@/lib/admin-extra'
 import { useMe } from './ui/me'
 import './dashboard.css'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 /** 새 글 바로 가기에 올리는 게시판. 자주 쓰는 순 — 다 올리면 고르는 데 오래 걸린다. */
 const QUICK = ['notice', 'press', 'news', 'recruit']
@@ -21,7 +22,7 @@ export default function AdminHome() {
   const boards = BOARDS.filter((b) => me.boards.includes(b.key))
 
   useEffect(() => {
-    adminFetch<{ data: DashboardSummary }>('/api/admin/dashboard')
+    adminFetch<ApiResponse<'GET /api/admin/dashboard'>>('/api/admin/dashboard')
       .then((r) => {
         setSummary(r.data)
         setError('')

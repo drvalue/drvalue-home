@@ -73,7 +73,11 @@ src/
 - 요청 밖(cron)에서는 `TransactionContextFactory.create()` 로 문맥을 만든다(`admin-schedule`). `@Cron` 진입점에는
   `@ServiceException` 을 겹쳐 붙이지 않는다(cron 메타데이터가 사라질 수 있다) — 진입점이 잡고, 일은 `run(ctx)` 가 한다.
 - Swagger: `/api/docs`(JSON `/api/docs-json`). `NODE_ENV=production`(api 이미지)에서는 안 뜬다.
-  웹의 타입을 이 문서에서 만든다(C1) — **응답 문서는 실제로 나가는 JSON 과 같아야 한다.** `{ data }` 를 내는
+  웹의 타입을 이 문서에서 만든다 — `node scripts/openapi.js`(빌드 뒤, 서버·DB 없이 Nest preview 모드로)가
+  `openapi.json`(띄운 서버의 `/api/docs-json` 과 같다)과 `page-schemas.json`(페이지 칸 구조)을 뽑고, web 의
+  `scripts/gen-types.mjs` 가 형으로 바꾼다. 둘 다 커밋한다 — 낡으면 `web/scripts/check-types.py` 가 실패한다.
+  칸의 형(nullable · enum · 선택)을 정확히 적는다 — web 이 그대로 믿는다(예: 언어 칸은 `enum: LANGUAGES`).
+  **응답 문서는 실제로 나가는 JSON 과 같아야 한다.** `{ data }` 를 내는
   핸들러에 `@ApiOkResponse({ type: Dto })` 를 적으면 봉투가 빠진다. `common/response` 의 데코레이터를 쓴다:
   `ApiDataResponse(Dto)`(`{ data }` · `language: true` 면 `{ data, language }` · `@HttpCode` 없는 POST 는 `status: 201`) ·
   `ApiDataListResponse` · `ApiPageResponse` · `ApiDataStringsResponse` · `ApiOkFlagResponse`. 봉투까지 담은 DTO
@@ -248,6 +252,8 @@ npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
 bash scripts/verify.sh          # 331 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
+node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)
+python3 ../web/scripts/check-types.py   # web 의 생성 형이 낡았나 — 낡은 것 0
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

@@ -88,7 +88,7 @@ export default async function Page({ params }: Props) {
         {p === null ? (
           <p className="rc_state">공고를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</p>
         ) : (
-          <article className="rc_art" data-rv aria-label={p.title}>
+          <article className="rc_art" data-rv aria-label={p.title ?? undefined}>
             <span className="rc_top">
               {p.employment_type && <span className="rc_tag">{EMPLOYMENT_LABEL[p.employment_type] ?? p.employment_type}</span>}
               <span className={`rc_tag ${dueOf(p).cls}`}>{dueOf(p).text}</span>

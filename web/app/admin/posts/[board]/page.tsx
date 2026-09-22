@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, isFuture, Page, PostRow, shortDate, shortWhen, yymm } from '@/lib/admin'
+import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, isFuture, PostPage, PostRow, shortDate, shortWhen, yymm } from '@/lib/admin'
 import InlineConfirm from '../../ui/InlineConfirm'
 import { pageOf, useQuery } from '../../ui/query'
 import SearchBox from '../../ui/SearchBox'
 import { useMe } from '../../ui/me'
 import { useToast } from '../../ui/toast'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 /** 목록에 대표 그림 칸이 있는 게시판. 나머지는 빈 칸을 두지 않는다. */
 const WITH_THUMB = ['notice', 'press', 'news', 'patent', 'copyright']
@@ -40,7 +41,7 @@ export default function PostListPage() {
   const page = pageOf(query.get('page'))
   const toast = useToast()
   const { me } = useMe()
-  const [rows, setRows] = useState<Page<PostRow> | null>(null)
+  const [rows, setRows] = useState<PostPage | null>(null)
   const [error, setError] = useState('')
   const [asking, setAsking] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
@@ -53,7 +54,7 @@ export default function PostListPage() {
     if (schedule) qs.set('schedule', schedule)
     else if (status) qs.set('status', status)
     try {
-      setRows(await adminFetch<Page<PostRow>>(`/api/admin/posts?${qs}`))
+      setRows(await adminFetch<PostPage>(`/api/admin/posts?${qs}`))
       setError('')
     } catch (e) {
       setError((e as Error).message)
@@ -77,7 +78,7 @@ export default function PostListPage() {
   /** 방금 지운 글을 되돌린다 — 그 글의 「삭제」 이력을 찾아 되돌리기(변경 이력 화면과 같은 api, 전체 권한만). */
   async function undoRemove(r: PostRow) {
     try {
-      const hist = await adminFetch<{ data: { id: number; action: string }[] }>(`/api/admin/revisions/item/posts/${r.id}`)
+      const hist = await adminFetch<ApiResponse<'GET /api/admin/revisions/item/{collection}/{id}'>>(`/api/admin/revisions/item/posts/${r.id}`)
       const del = hist.data.find((x) => x.action === 'delete')
       if (!del) throw new Error('되돌릴 삭제 기록을 찾지 못했습니다. 변경 이력 화면에서 확인해 주세요.')
       await adminFetch(`/api/admin/revisions/${del.id}/restore`, { method: 'POST' })

@@ -4,6 +4,9 @@
  * 오류 본문의 message 를 그대로 Error 로 올린다. 화면은 그 문장을 그대로 보여 준다.
  */
 
+import type * as Api from './api-types.gen'
+import type { ApiResponse } from './api-types.gen'
+
 export const BOARDS = [
   { key: 'notice', label: '공지사항', ordered: false },
   { key: 'press', label: '보도자료', ordered: false },
@@ -30,93 +33,17 @@ export const INQUIRY_STATUS: Record<string, string> = {
   spam: '스팸',
 }
 
-export type AdminRole = 'admin' | 'marketing' | 'hr'
-/** `boards` 는 이 범위로 만질 수 있는 게시판 키 — 규칙은 api(board-access.ts)에만 있다. */
-export type AdminMe = { email: string; name: string | null; role: AdminRole | null; boards: string[] }
-
-export type PostRow = {
-  id: number
-  board: string
-  slug: string
-  status: string
-  title: string
-  published_date: string
-  sort: number | null
-  is_pinned: boolean
-  thumbnail: string | null
-  history_year: string | null
-  cert_no: string | null
-  period_start?: string | null
-  period_end?: string | null
-  press_media?: string | null
-  employment_type?: string | null
-  is_open_ended?: boolean
-  deadline?: string | null
-  faq_category?: string | null
-  publish_at?: string | null
-  unpublish_at?: string | null
-}
-
-export type Translation = {
-  languages_code: 'ko-KR' | 'en-US'
-  title: string | null
-  summary: string | null
-  body: string | null
-  case_category_label: string | null
-  faq_category: string | null
-  seo_title: string | null
-  seo_description: string | null
-}
-
-export type PostFull = {
-  id: number
-  board: string
-  slug: string
-  status: string
-  published_date: string
-  sort: number | null
-  is_pinned: boolean
-  is_featured: boolean
-  thumbnail: string | null
-  thumbnail_url: string | null
-  /** 공유 카드 그림(파일 id)과 관리 미리보기 주소. 비우면 본문 첫 그림 → 사이트 기본 그림. */
-  og_image: string | null
-  og_image_url: string | null
-  /** 검색에서 제외(noindex · 사이트맵 제외). 사이트에는 그대로 보인다. */
-  no_index: boolean
-  press_media: string | null
-  period_start: string | null
-  period_end: string | null
-  cert_state: 'registered' | 'applied' | null
-  cert_no: string | null
-  cert_date: string | null
-  cert_made_date: string | null
-  cert_kind: string | null
-  history_year: string | null
-  employment_type: string | null
-  is_open_ended: boolean
-  deadline: string | null
-  /** 예약 공개 · 자동 내림 (ISO). null 이면 없음. */
-  publish_at: string | null
-  unpublish_at: string | null
-  translations: Translation[]
-  files: { id: string; name: string; url: string }[]
-}
-
-export type Inquiry = {
-  id: number
-  type: string
-  status: string
-  name: string
-  email: string | null
-  company: string | null
-  phone: string | null
-  message: string
-  consent: boolean
-  source_path: string | null
-}
-
-export type Page<T> = { data: T[]; total: number; page: number; pageSize: number }
+// 응답·요청의 모양은 api 가 정한다 — lib/api-types.gen.ts(scripts/gen-types.mjs 가 만든다)에서 가져다 쓴다.
+export type AdminMe = Api.ControllerAdminAuthDefaultMeResponseDto
+export type AdminRole = NonNullable<AdminMe['role']>
+export type PostRow = Api.ControllerAdminPostDefaultRowResponseDto
+export type Translation = Api.ControllerAdminPostTranslationResponseDto
+export type PostFull = Api.ControllerAdminPostDefaultDetailResponseDto
+export type PostSave = Api.ControllerAdminPostDefaultSaveDto
+export type Inquiry = Api.ControllerAdminInquiryDefaultResponseDto
+/** 목록 봉투 { data, total, page, pageSize } — 주소마다 api 문서의 것. */
+export type PostPage = ApiResponse<'GET /api/admin/posts'>
+export type InquiryPage = ApiResponse<'GET /api/admin/inquiries'>
 
 export class AdminError extends Error {
   status: number
@@ -172,9 +99,7 @@ export async function uploadFile(file: File, title?: string) {
   const form = new FormData()
   form.append('file', file)
   if (title) form.append('title', title)
-  const res = await adminFetch<{
-    data: { id: string; url: string; filename_download: string; title: string | null; width: number | null; height: number | null }
-  }>('/api/admin/files', { method: 'POST', body: form })
+  const res = await adminFetch<ApiResponse<'POST /api/admin/files'>>('/api/admin/files', { method: 'POST', body: form })
   return res.data
 }
 

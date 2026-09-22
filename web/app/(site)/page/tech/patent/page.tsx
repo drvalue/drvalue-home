@@ -156,7 +156,7 @@ function fromCms(rows: CmsPost[]): PatentCert[] {
     .filter((r) => r.thumbnail && r.title)
     .map((r) => ({
       img: r.thumbnail as string,
-      title: r.title,
+      title: r.title ?? '',
       state: r.cert_state === 'registered' ? '등록' : '출원',
       no: r.cert_no ?? '',
       date: dots(r.cert_date),

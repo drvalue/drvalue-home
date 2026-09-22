@@ -11,6 +11,8 @@
  */
 
 import type { Metadata } from 'next'
+import type * as Api from './api-types.gen'
+import type { ApiResponse } from './api-types.gen'
 
 /** 운영 주소. 미리보기에 올려도 대표주소는 운영 쪽을 가리켜야 한다. */
 export const SITE_ORIGIN = 'https://drvalue.co.kr'
@@ -98,13 +100,8 @@ export function pageMeta({
 }
 
 /** 관리 화면 「SEO」가 장 하나에 덮어쓴 값. 비운 칸은 null — 코드의 값을 쓴다. */
-export type PageOverride = {
-  path: string
-  no_index: boolean
-  og_image: string | null
-  title: string | null
-  description: string | null
-}
+/** 관리 화면 「SEO」의 덮어쓰기 한 장(GET /api/content/page-meta 의 data[]) — 모양은 api 문서의 것. */
+export type PageOverride = Api.ControllerSeoPublicPageResponseDto
 
 const API = process.env.API_ORIGIN || 'http://localhost:3500'
 
@@ -120,7 +117,7 @@ export async function pageOverrides(): Promise<PageOverride[]> {
       signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return []
-    const body = (await res.json()) as { data?: PageOverride[] }
+    const body = (await res.json()) as Partial<ApiResponse<'GET /api/content/page-meta'>>
     return Array.isArray(body.data) ? body.data : []
   } catch {
     return []

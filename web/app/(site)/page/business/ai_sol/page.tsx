@@ -9,7 +9,7 @@ import { seoMeta } from '@/lib/seo'
 import { MENU_ITEMS } from '@/lib/menu'
 import { menuLabelOf } from '@/lib/menu-cms'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, toHeroShots, toLead, toShot, toTone, type AiSolContent, type ChatContent, type LeadContent, type ServiceDemoContent, type ShowTabContent } from '../../pageContentParts'
+import { orUndefined, toHeroShots, toLead, toShot, toTone, type LeadContent, type ShowTabContent } from '../../pageContentParts'
 import type { ShowItem } from '../max/ShowTabs'
 import { AI_SOL_DEFAULT, AI_SOL_KEY } from './content'
 import { AUTOFORM_DEFAULT, AUTOFORM_KEY } from '../../service/autoform/content'
@@ -53,12 +53,12 @@ export const dynamic = 'force-dynamic'
 export default async function Page() {
   const [labelOf, own, af, ct, cd, ch, hk] = await Promise.all([
     menuLabelOf(),
-    cmsPageContent<AiSolContent>(AI_SOL_KEY),
-    cmsPageContent<ServiceDemoContent>(AUTOFORM_KEY),
-    cmsPageContent<ServiceDemoContent>(CUTON_KEY),
-    cmsPageContent<ServiceDemoContent>(CADON_KEY),
-    cmsPageContent<ChatContent>(CHAT_KEY),
-    cmsPageContent<ServiceDemoContent>(HANGEON_KEY),
+    cmsPageContent(AI_SOL_KEY),
+    cmsPageContent(AUTOFORM_KEY),
+    cmsPageContent(CUTON_KEY),
+    cmsPageContent(CADON_KEY),
+    cmsPageContent(CHAT_KEY),
+    cmsPageContent(HANGEON_KEY),
   ])
   const c = own ?? AI_SOL_DEFAULT
   const autoform = (af ?? AUTOFORM_DEFAULT).lead

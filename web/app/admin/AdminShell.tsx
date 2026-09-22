@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, AdminMe, BOARDS, Page } from '@/lib/admin'
+import { adminFetch, AdminMe, BOARDS, InquiryPage } from '@/lib/admin'
 import { ROLE_LABEL } from '@/lib/admin-extra'
 import { LeaveGuardProvider, useLeaveGuard } from './ui/leave'
 import { MeContext } from './ui/me'
 import { ToastProvider } from './ui/toast'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 /**
  * 껍데기: 세션 확인 · 메뉴 · 알림 · 이탈 경고. /admin/login 은 껍데기 없이 그대로 보여 준다.
@@ -41,7 +42,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const menuBtn = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    adminFetch<{ data: AdminMe }>('/api/admin/auth/me')
+    adminFetch<ApiResponse<'GET /api/admin/auth/me'>>('/api/admin/auth/me')
       .then((r) => setMe(r.data))
       .catch(() => {})
   }, [pathname])
@@ -51,7 +52,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const role = me?.role ?? null
   const refreshCounts = useCallback(() => {
     if (!role || role === 'hr') return setNewInquiries(null)
-    adminFetch<Page<unknown>>('/api/admin/inquiries?status=new')
+    adminFetch<InquiryPage>('/api/admin/inquiries?status=new')
       .then((r) => setNewInquiries(r.total))
       .catch(() => {})
   }, [role])

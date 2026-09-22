@@ -9,6 +9,7 @@ import { useLeaveGuard } from '../../ui/leave'
 import { useToast } from '../../ui/toast'
 import HtmlEditor from './HtmlEditor'
 import SeoPanel from './SeoPanel'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
 type Lang = 'ko-KR' | 'en-US'
 const LANGS: { code: Lang; label: string }[] = [
@@ -95,7 +96,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       })
       return
     }
-    adminFetch<{ data: PostFull }>(`/api/admin/posts/${id}`)
+    adminFetch<ApiResponse<'GET /api/admin/posts/{id}'>>(`/api/admin/posts/${id}`)
       .then((r) => {
         const p = r.data
         for (const l of LANGS) if (!p.translations.some((t) => t.languages_code === l.code)) p.translations.push(blankTranslation(l.code))
@@ -107,7 +108,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   useEffect(() => {
     const src = board?.key === 'case' ? 'category-labels' : board?.key === 'faq' ? 'faq-categories' : null
     if (!src) return
-    adminFetch<{ data: string[] }>(`/api/admin/posts/${src}`).then((r) => setLabels(r.data)).catch(() => {})
+    adminFetch<ApiResponse<'GET /api/admin/posts/category-labels'>>(`/api/admin/posts/${src}`).then((r) => setLabels(r.data)).catch(() => {})
   }, [board])
 
   const dirty = Boolean(post && initial.current !== null && JSON.stringify(post) !== initial.current)
@@ -234,8 +235,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       // 새 글은 저장된 글의 주소로 바꿔 앉는다(다시 저장하면 새 글이 또 생기지 않게). 목록은 머리의 「목록」 단추.
       const saved =
         id === undefined
-          ? await adminJson<{ data?: PostFull }>('/api/admin/posts', 'POST', body)
-          : await adminJson<{ data?: PostFull }>(`/api/admin/posts/${id}`, 'PUT', body)
+          ? await adminJson<ApiResponse<'POST /api/admin/posts'>>('/api/admin/posts', 'POST', body)
+          : await adminJson<ApiResponse<'PUT /api/admin/posts/{id}'>>(`/api/admin/posts/${id}`, 'PUT', body)
       initial.current = JSON.stringify(post)
       setDirty(false)
       const scheduled = post.publish_at && new Date(post.publish_at) > new Date()
@@ -251,7 +252,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
         router.replace(newId ? `/admin/posts/${board!.key}/${newId}` : `/admin/posts/${board!.key}`)
       } else {
         // api 가 정한 값(주소·대표 그림·고친 날)을 다시 받아 기준을 맞춘다.
-        const fresh = await adminFetch<{ data: PostFull }>(`/api/admin/posts/${id}`)
+        const fresh = await adminFetch<ApiResponse<'GET /api/admin/posts/{id}'>>(`/api/admin/posts/${id}`)
         const p = fresh.data
         for (const l of LANGS) if (!p.translations.some((x) => x.languages_code === l.code)) p.translations.push(blankTranslation(l.code))
         start(p)
@@ -575,7 +576,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           <h2>설정</h2>
           <div className="dva_field">
             <label htmlFor="f-status">상태</label>
-            <select id="f-status" value={post.status} onChange={(e) => set({ status: e.target.value })}>
+            <select id="f-status" value={post.status} onChange={(e) => set({ status: e.target.value as PostFull['status'] })}>
               <option value="draft">초안 (사이트에 안 보임)</option>
               <option value="published">공개</option>
             </select>

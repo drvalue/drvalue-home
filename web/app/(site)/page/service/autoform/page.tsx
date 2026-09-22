@@ -7,7 +7,7 @@ import { Statement } from '../../business/max/V4'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
-import { orUndefined, toHeroShots, toLead, type ServiceDemoContent } from '../../pageContentParts'
+import { orUndefined, toHeroShots, toLead } from '../../pageContentParts'
 import { AUTOFORM_DEFAULT, AUTOFORM_KEY } from './content'
 
 /**
@@ -34,7 +34,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<ServiceDemoContent>(AUTOFORM_KEY)) ?? AUTOFORM_DEFAULT
+  const c = (await cmsPageContent(AUTOFORM_KEY)) ?? AUTOFORM_DEFAULT
   const { shell, demo, compareStatement, extra } = c
   return (
     <>

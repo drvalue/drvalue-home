@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app/app.module';
+import { buildSwaggerConfig } from './common/swagger/swagger-config';
 import { AppConfig } from './common/config/app-config';
 import { CommonExceptionFilter } from './common/error/common-exception.filter';
 import { validationExceptionFactory } from './common/error/validation-exception.factory';
@@ -29,15 +30,10 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new CommonExceptionFilter());
   if (AppConfig.swaggerEnabled) {
-    const config = new DocumentBuilder()
-      .setTitle('디알밸류 홈페이지 API')
-      .setDescription('공개 API(content·inquiry)와 관리 API(/api/admin/*)')
-      .addCookieAuth('dv_admin')
-      .build();
     SwaggerModule.setup(
       'api/docs',
       app,
-      SwaggerModule.createDocument(app, config),
+      SwaggerModule.createDocument(app, buildSwaggerConfig()),
       {
         jsonDocumentUrl: 'api/docs-json',
       },

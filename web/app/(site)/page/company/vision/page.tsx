@@ -4,7 +4,7 @@ import SolutionShell from '../../business/max/SolutionShell'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import { orUndefined, toLead } from '../../pageContentParts'
-import { COMPANY_VISION_DEFAULT, COMPANY_VISION_KEY, type CompanyVisionContent } from './content'
+import { COMPANY_VISION_DEFAULT, COMPANY_VISION_KEY } from './content'
 
 /**
  * /page/company/vision.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
@@ -24,7 +24,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<CompanyVisionContent>(COMPANY_VISION_KEY)) ?? COMPANY_VISION_DEFAULT
+  const c = (await cmsPageContent(COMPANY_VISION_KEY)) ?? COMPANY_VISION_DEFAULT
   const { shell, strategy } = c
   return (
     <>

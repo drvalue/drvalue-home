@@ -1,6 +1,8 @@
 import { cache } from 'react'
 import { MENU_ITEMS } from './menu'
 import type { MenuItem } from './menu'
+import type * as Api from './api-types.gen'
+import type { ApiResponse } from './api-types.gen'
 
 /**
  * 관리 화면에서 고친 메뉴를 읽는다(서버 전용). api 가 안 닿으면 lib/menu.ts 의 예비를 쓴다.
@@ -17,7 +19,8 @@ import type { MenuItem } from './menu'
 const ORIGIN = process.env.API_ORIGIN || 'http://localhost:3500'
 export const MENU_TAG = 'menu'
 
-export type FooterLink = { label: string; href: string }
+/** 바닥글 링크 한 줄 — 모양은 api 문서의 것. */
+export type FooterLink = Api.ControllerMenuDefaultPublicLinkResponseDto
 export type SiteMenu = {
   top: MenuItem[]
   footer: FooterLink[]
@@ -25,8 +28,8 @@ export type SiteMenu = {
   source: 'cms' | 'code'
 }
 
-type ApiChild = { label: string; href: string; description: string | null; hidden_in_dropdown: boolean }
-type ApiNode = { label: string; href: string; match: string[]; children: ApiChild[] }
+// 공개 메뉴의 모양은 api 문서에서 만든 형(lib/api-types.gen.ts).
+type ApiNode = Api.ControllerMenuDefaultPublicNodeResponseDto
 
 function toMenuItem(n: ApiNode): MenuItem {
   return {
@@ -118,7 +121,7 @@ export const getMenu = cache(async (): Promise<SiteMenu> => {
       signal: AbortSignal.timeout(2000),
     })
     if (!res.ok) return withCounts(CODE_MENU)
-    const body = (await res.json()) as { data?: { top?: ApiNode[]; footer?: FooterLink[] } }
+    const body = (await res.json()) as Partial<ApiResponse<'GET /api/content/menu'>>
     const top = body.data?.top ?? []
     if (!top.length) return withCounts(CODE_MENU)
     return withCounts({ top: top.map(toMenuItem), footer: body.data?.footer ?? [], source: 'cms' })

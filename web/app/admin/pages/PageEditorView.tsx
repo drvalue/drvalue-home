@@ -13,6 +13,7 @@ const LANGS = [
   { code: 'ko-KR', label: '한국어' },
   { code: 'en-US', label: 'English' },
 ] as const
+type Lang = (typeof LANGS)[number]['code']
 
 /**
  * 페이지 한 장 편집. 폼은 api 가 준 칸 구조(schema)로 그린다. 언어마다 따로 저장한다.
@@ -25,7 +26,7 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
   const [detail, setDetail] = useState<PageDetail | null>(null)
   const [drafts, setDrafts] = useState<Record<string, PageContent>>({})
   const saved = useRef<Record<string, string>>({})
-  const [lang, setLang] = useState<string>('ko-KR')
+  const [lang, setLang] = useState<Lang>('ko-KR')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const errorBox = useRef<HTMLDivElement>(null)

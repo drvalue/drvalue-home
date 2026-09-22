@@ -7,33 +7,16 @@
  *
  * 이 파일은 web/scripts/page-seed.mjs 가 node 로 바로 읽는다 — `@/` 별칭을 쓰지 않는다.
  */
-import { PROOFS, type Proof } from './proofData'
+import { PROOFS } from './proofData'
+import type { PageContentMap } from '../../lib/page-types.gen'
 
 export const HOME_PAGE_KEY = 'home'
 
-export type HomeSectionKey = 'proof' | 'biz' | 'news' | 'cta'
-type Link = { label: string; href: string }
-type Image = { id: string | null; alt: string; width?: number | null; height?: number | null } | null
-
-export type HomeProofCard = { year: string; kind: Proof['kind']; title: string; detail: string; icon: string }
-export type HomeBizCard = { href: string; kicker: string; title: string; lead: string; points: { text: string }[]; icon: string }
-
-export type HomeContent = {
-  hero: {
-    kicker: string
-    titleLead: string
-    titleStrong: string
-    desc: string
-    primary: Link
-    secondaryLabel: string
-    background: Image
-  }
-  sections: { section: HomeSectionKey; visible: boolean }[]
-  proof: { kicker: string; title: string; more: Link; cards: HomeProofCard[] }
-  biz: { kicker: string; title: string; cards: HomeBizCard[] }
-  news: { kicker: string; title: string; more: Link }
-  cta: { title: string; desc: string; buttonLabel: string }
-}
+/** 모양은 api 의 칸 구조(home.schema.ts)에서 만든 형(lib/page-types.gen.ts). */
+export type HomeContent = PageContentMap['home']
+export type HomeSectionKey = Exclude<HomeContent['sections'][number]['section'], ''>
+export type HomeProofCard = HomeContent['proof']['cards'][number]
+export type HomeBizCard = HomeContent['biz']['cards'][number]
 
 export const HOME_DEFAULT: HomeContent = {
   hero: {

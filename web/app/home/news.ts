@@ -8,14 +8,11 @@
  * **CMS 가 죽어도 메인은 떠야 한다.** 그래서 실패를 던지지 않고 빈 배열을
  * 돌려준다. 화면 쪽에서 소식 구역만 빠진다.
  */
+import type { CmsPost } from '@/lib/cms'
+import type { ApiResponse } from '@/lib/api-types.gen'
 
-export type NewsItem = {
-  board: 'notice' | 'press'
-  slug: string
-  title: string
-  summary: string | null
-  published_date: string | null
-}
+/** 공개 목록의 글에서 홈 소식이 쓰는 칸 — 모양은 api 문서의 것(lib/cms.ts 의 CmsPost). */
+export type NewsItem = Pick<CmsPost, 'slug' | 'title' | 'summary' | 'published_date'> & { board: 'notice' | 'press' }
 
 /** 게시판마다 목록 화면이 다르다. 카드에서 바로 그 글로 간다. */
 export const BOARD_PAGE: Record<NewsItem['board'], string> = {
@@ -38,8 +35,9 @@ async function one(board: NewsItem['board'], limit: number): Promise<NewsItem[]>
       { cache: 'no-store' },
     )
     if (!res.ok) return []
-    const body = (await res.json()) as { data?: NewsItem[] }
-    return (body.data ?? []).slice(0, limit)
+    const body = (await res.json()) as Partial<ApiResponse<'GET /api/content/posts'>>
+    // ?board= 로 한 게시판(notice·press)만 받았으니 그 줄들의 board 는 그 둘 중 하나다.
+    return (body.data ?? []).slice(0, limit) as NewsItem[]
   } catch {
     return []
   }

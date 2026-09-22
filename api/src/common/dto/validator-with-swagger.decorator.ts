@@ -281,6 +281,7 @@ export function IsArray(
       type: itemType ?? (each === 'int' ? Number : String),
       isArray: true,
       required: !opts.optional,
+      nullable: opts.nullable,
       ...(maxSize !== undefined && { maxItems: maxSize }),
     })(target, key);
   };
@@ -302,6 +303,7 @@ export function IsObject(opts: Common): PropertyDecorator {
       example: opts.example,
       type: Object,
       required: !opts.optional,
+      nullable: opts.nullable,
     })(target, key);
   };
 }

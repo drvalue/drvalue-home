@@ -1,8 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { PageMetaEntity } from '../../../common/entity/page-meta.entity';
+import { LANGUAGES } from '../../../common/entity/post-translation.entity';
+
+/** 이 사이트의 언어(ko-KR · en-US). 웹이 이 목록을 형으로 받는다. */
+type Language = (typeof LANGUAGES)[number];
 
 export class ControllerSeoPageTranslationResponseDto {
-  @ApiProperty({ example: 'ko-KR' }) languages_code!: string;
+  @ApiProperty({ enum: LANGUAGES, example: 'ko-KR' })
+  languages_code!: Language;
   @ApiProperty({ nullable: true, type: String }) title!: string | null;
   @ApiProperty({ nullable: true, type: String }) description!: string | null;
 }
@@ -33,7 +38,7 @@ export class ControllerSeoDefaultPageResponseDto {
       updated_by: r.updatedBy,
       translations: (r.translations ?? [])
         .map((t) => ({
-          languages_code: t.languagesCode,
+          languages_code: t.languagesCode as Language,
           title: t.title,
           description: t.description,
         }))

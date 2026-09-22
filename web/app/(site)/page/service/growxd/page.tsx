@@ -4,7 +4,6 @@ import SolutionShell from '../../business/max/SolutionShell'
 import FeaturePage from '../../business/max/FeaturePage'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import type { FeaturePageContent } from '../../pageContentParts'
 import { GROWXD_DEFAULT, GROWXD_KEY } from './content'
 
 /**
@@ -23,7 +22,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<FeaturePageContent>(GROWXD_KEY)) ?? GROWXD_DEFAULT
+  const c = (await cmsPageContent(GROWXD_KEY)) ?? GROWXD_DEFAULT
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />

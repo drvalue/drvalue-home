@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { MenuItemEntity } from '../../../common/entity/menu-item.entity';
+import { LANGUAGES } from '../../../common/entity/post-translation.entity';
+
+/** 이 사이트의 언어(ko-KR · en-US). 웹이 이 목록을 형으로 받는다. */
+type Language = (typeof LANGUAGES)[number];
 
 /**
  * 메뉴 응답. 엔티티(평평한 행) → 나무 모양 변환은 여기서만 한다(`from`).
@@ -13,7 +17,8 @@ const bySort = (a: MenuItemEntity, b: MenuItemEntity) =>
 // ── 관리 화면 ─────────────────────────────────────────────────────────
 
 export class ControllerMenuDefaultLabelResponseDto {
-  @ApiProperty({ example: 'ko-KR' }) languages_code!: string;
+  @ApiProperty({ enum: LANGUAGES, example: 'ko-KR' })
+  languages_code!: Language;
   @ApiProperty({ example: '공지사항' }) label!: string;
   @ApiProperty({ nullable: true, type: String }) description!: string | null;
 }
@@ -56,7 +61,7 @@ export class ControllerMenuDefaultAdminTreeResponseDto {
               : 0,
         )
         .map((t) => ({
-          languages_code: t.languagesCode,
+          languages_code: t.languagesCode as Language,
           label: t.label,
           description: t.description,
         }));

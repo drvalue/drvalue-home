@@ -2,7 +2,7 @@ import { PAGE_CSS } from '../maxStyles'
 import IndustryPage from '../IndustryPage'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, toGroups, toHeroShots, toIndustry, type IndustryContent } from '../../../pageContentParts'
+import { orUndefined, toGroups, toHeroShots, toIndustry } from '../../../pageContentParts'
 import { COSMETICS_MES_DEFAULT, COSMETICS_MES_KEY } from './content'
 
 /** 원본 PHP 에 없는 새 페이지다. M.AX 페이지의 「화장품 업종」 탭을 떼어 냈다.
@@ -19,7 +19,7 @@ export const generateMetadata = seoMeta({
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent<IndustryContent>(COSMETICS_MES_KEY)) ?? COSMETICS_MES_DEFAULT
+  const c = (await cmsPageContent(COSMETICS_MES_KEY)) ?? COSMETICS_MES_DEFAULT
   const { shell } = c
   return (
     <>
@@ -33,7 +33,6 @@ export default async function Page() {
         ind={toIndustry(c, 'cos', '화장품 업종')}
         heroShot={toHeroShots(c.heroShots)}
         groups={toGroups(c)}
-        {...(c.kpi ? { kpi: c.kpi } : {})}
       />
     </>
   )

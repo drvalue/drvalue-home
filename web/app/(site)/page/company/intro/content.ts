@@ -4,14 +4,11 @@
  * api 가 안 닿을 때의 예비 글이다. 씨앗 스크립트가 node 로 읽으므로 `@/` 를 쓰지 않는다.
  */
 import { INTRO_FILM, INTRO_LEAD, INTRO_SHOT } from '../companyContent'
-import { imageOf, leadOf, type LeadContent, type PageImage, type ShellContent } from '../../pageContentParts'
+import { imageOf, leadOf } from '../../pageContentParts'
+import type { PageContentMap } from '../../../../../lib/page-types.gen'
 
-export type CompanyIntroContent = {
-  shell: ShellContent
-  lead: LeadContent
-  shot: PageImage
-  film: { title: string; desc: string; youtubeId: string; videoTitle: string }
-}
+/** 모양은 api 의 칸 구조에서 만든 형(lib/page-types.gen.ts). */
+export type CompanyIntroContent = PageContentMap['company-intro']
 
 export const COMPANY_INTRO_KEY = 'company-intro'
 
