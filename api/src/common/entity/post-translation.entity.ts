@@ -41,6 +41,15 @@ export class PostTranslationEntity {
   })
   caseCategoryLabel: string | null;
 
+  /** FAQ 분류 */
+  @Column({
+    name: 'faq_category',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  faqCategory: string | null;
+
   @Column({ name: 'seo_title', type: 'varchar', length: 255, nullable: true })
   seoTitle: string | null;
 

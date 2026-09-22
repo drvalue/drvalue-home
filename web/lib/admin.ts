@@ -7,6 +7,9 @@
 export const BOARDS = [
   { key: 'notice', label: '공지사항', ordered: false },
   { key: 'press', label: '보도자료', ordered: false },
+  { key: 'news', label: '뉴스', ordered: false },
+  { key: 'recruit', label: '채용공고', ordered: false },
+  { key: 'faq', label: 'FAQ', ordered: true },
   { key: 'patent', label: '특허', ordered: true },
   { key: 'copyright', label: '저작권', ordered: true },
   { key: 'case', label: '수행실적', ordered: true },
@@ -27,7 +30,16 @@ export const INQUIRY_STATUS: Record<string, string> = {
   spam: '스팸',
 }
 
-export type AdminMe = { email: string; name: string | null }
+export type AdminRole = 'admin' | 'marketing' | 'hr'
+export type AdminMe = { email: string; name: string | null; role: AdminRole | null }
+
+/** api 의 board-access 와 같은 규칙. 메뉴를 가리는 용도 — 막는 것은 api 가 한다. */
+export function canEditBoard(role: AdminRole | null, board: string): boolean {
+  if (role === 'admin') return true
+  if (role === 'hr') return board === 'recruit'
+  if (role === 'marketing') return board !== 'recruit'
+  return false
+}
 
 export type PostRow = {
   id: number

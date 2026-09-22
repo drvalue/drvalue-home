@@ -7,7 +7,11 @@ import { ControllerAdminPostDefaultSaveDto } from '../dto/controller-admin-post-
 import { AdminPostError } from '../error/admin-post.error';
 import { PostDefaultRepository } from '../repository/post-default.repository';
 import { RevisionService } from '../../../common/revision/revision.service';
-import { canEditBoard } from '../../admin-auth/service/board-access';
+import {
+  canEditBoard,
+  visibleBoards,
+} from '../../admin-auth/service/board-access';
+import { BOARDS } from '../../../common/entity/post.entity';
 import { AdminAuthError } from '../../admin-auth/error/admin-auth.error';
 import type { SessionPayload } from '../../../common/session/session-token';
 
@@ -41,12 +45,11 @@ export class AdminPostDefaultService {
       throw new CommonError(AdminAuthError.FORBIDDEN);
   }
 
-  async list(options: {
-    board?: string;
-    q?: string;
-    status?: string;
-    page?: number;
-  }) {
+  async list(
+    options: { board?: string; q?: string; status?: string; page?: number },
+    who: SessionPayload,
+  ) {
+    if (options.board) this.assertBoard(who, options.board);
     const page = Math.max(1, options.page ?? 1);
     const qb = this.postDefaultRepository.repository
       .createQueryBuilder('p')
@@ -56,6 +59,10 @@ export class AdminPostDefaultService {
       .addOrderBy('p.id', 'DESC');
     if (options.board)
       qb.andWhere('p.board = :board', { board: options.board });
+    else
+      qb.andWhere('p.board IN (:...boards)', {
+        boards: visibleBoards(who.role, BOARDS),
+      });
     if (options.status)
       qb.andWhere('p.status = :status', { status: options.status });
     if (options.q) {
@@ -100,9 +107,10 @@ export class AdminPostDefaultService {
     return rows.map((r) => r.label);
   }
 
-  async get(id: number) {
+  async get(id: number, who?: SessionPayload) {
     const row = await this.postDefaultRepository.findOneFull(id);
     if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    if (who) this.assertBoard(who, row.board);
     return this.full(row);
   }
 

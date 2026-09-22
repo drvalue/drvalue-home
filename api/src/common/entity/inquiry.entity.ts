@@ -41,4 +41,23 @@ export class InquiryEntity {
 
   @Column({ name: 'source_path', type: 'varchar', length: 255, nullable: true })
   sourcePath: string | null;
+
+  /** 담당자 (admin_users.email) — db/migrations/0001 */
+  @Column({
+    name: 'assignee_email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  assigneeEmail: string | null;
+
+  /** 내부 메모. 문의한 사람에게는 안 보인다. */
+  @Column({ type: 'text', nullable: true })
+  note: string | null;
+
+  @Column({ name: 'created_on', type: 'timestamptz', default: () => 'now()' })
+  createdOn: Date;
+
+  @Column({ name: 'updated_on', type: 'timestamptz', default: () => 'now()' })
+  updatedOn: Date;
 }

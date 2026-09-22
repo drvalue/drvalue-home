@@ -7,6 +7,9 @@ import { DatabaseModule } from '../common/database/database.module';
 import { AdminPostModule } from '../core/admin-post/admin-post.module';
 import { AdminFileModule } from '../core/admin-file/admin-file.module';
 import { AdminInquiryModule } from '../core/admin-inquiry/admin-inquiry.module';
+import { AdminScheduleModule } from '../core/admin-schedule/admin-schedule.module';
+import { AdminRevisionModule } from '../core/admin-revision/admin-revision.module';
+import { AdminUserModule } from '../core/admin-user/admin-user.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { AdminInquiryModule } from '../core/admin-inquiry/admin-inquiry.module';
     AdminPostModule,
     AdminFileModule,
     AdminInquiryModule,
+    AdminScheduleModule,
+    AdminRevisionModule,
+    AdminUserModule,
   ],
 })
 export class AppModule {}

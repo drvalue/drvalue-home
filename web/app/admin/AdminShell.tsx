@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { adminFetch, AdminMe, BOARDS } from '@/lib/admin'
+import { adminFetch, AdminMe, BOARDS, canEditBoard } from '@/lib/admin'
 
 /**
  * 사이드바 + 세션 확인. /admin/login 은 껍데기 없이 그대로 보여 준다.
@@ -37,7 +37,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <aside className="dva_side" aria-label="관리 메뉴">
         <div className="dva_brand">디알밸류 관리</div>
         <div className="dva_group">게시판</div>
-        {BOARDS.map((b) => {
+        {BOARDS.filter((b) => canEditBoard(me.role, b.key)).map((b) => {
           const href = `/admin/posts/${b.key}`
           const on = pathname === href || pathname.startsWith(href + '/')
           return (
@@ -46,12 +46,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </Link>
           )
         })}
-        <div className="dva_group">문의</div>
-        <Link href="/admin/inquiries" className={`dva_nav${pathname.startsWith('/admin/inquiries') ? ' is-on' : ''}`}>
-          문의 목록
-        </Link>
+        {me.role !== 'hr' && (
+          <>
+            <div className="dva_group">문의</div>
+            <Link href="/admin/inquiries" className={`dva_nav${pathname.startsWith('/admin/inquiries') ? ' is-on' : ''}`}>
+              문의 목록
+            </Link>
+          </>
+        )}
         <div className="dva_me">
           <div>{me.name ? `${me.name} · ` : ''}{me.email}</div>
+          <small>{me.role === 'admin' ? '관리자' : me.role === 'marketing' ? '마케팅' : me.role === 'hr' ? '인사' : ''}</small>
           <button type="button" className="dva_btn is-small" onClick={logout}>로그아웃</button>
         </div>
       </aside>

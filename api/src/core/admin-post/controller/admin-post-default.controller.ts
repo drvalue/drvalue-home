@@ -36,13 +36,12 @@ export class AdminPostDefaultController {
     @Query('q') q?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
+    @AdminUser() who?: SessionPayload,
   ) {
-    return this.adminPostDefaultService.list({
-      board,
-      q,
-      status,
-      page: Number(page) || 1,
-    });
+    return this.adminPostDefaultService.list(
+      { board, q, status, page: Number(page) || 1 },
+      who as SessionPayload,
+    );
   }
 
   @Get('category-labels')
@@ -51,8 +50,11 @@ export class AdminPostDefaultController {
   }
 
   @Get(':id')
-  async get(@Param('id', ParseIntPipe) id: number) {
-    return { data: await this.adminPostDefaultService.get(id) };
+  async get(
+    @Param('id', ParseIntPipe) id: number,
+    @AdminUser() who: SessionPayload,
+  ) {
+    return { data: await this.adminPostDefaultService.get(id, who) };
   }
 
   @Post()

@@ -303,6 +303,9 @@ check "검증 초안이 남지 않음" "0" \
 check "검증 문의가 남지 않음" "0" \
   "$(adm "/inquiries?q=$RUN" | pick 'print(d.get("total"))')"
 
+# 관리 기능별 검사. 각 파일은 이 스크립트의 check · na · adm · admj · AUTH · RUN · API 를 쓴다.
+for f in "$HERE"/scripts/verify.d/*.sh; do [ -f "$f" ] && . "$f"; done
+
 echo "== 기본값이 닫힌 쪽인가 =="
 # 환경변수를 빠뜨린 배포에서 무엇이 열리는지 본다. `.env` 가 없는 곳에서
 # 띄워야 한다 — ConfigModule 이 .env 를 읽으면 로컬 설정이 섞인다.

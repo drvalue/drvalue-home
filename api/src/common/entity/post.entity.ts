@@ -6,6 +6,9 @@ import { PostTranslationEntity } from './post-translation.entity';
 export const BOARDS = [
   'notice',
   'press',
+  'news',
+  'recruit',
+  'faq',
   'patent',
   'copyright',
   'case',
@@ -99,6 +102,22 @@ export class PostEntity {
     nullable: true,
   })
   historyYear: string | null;
+
+  // 채용 — db/migrations/0001
+  @Column({
+    name: 'employment_type',
+    type: 'varchar',
+    length: 32,
+    nullable: true,
+  })
+  employmentType: string | null;
+
+  @Column({ name: 'is_open_ended', type: 'boolean', default: false })
+  isOpenEnded: boolean;
+
+  /** 채용·지원사업 마감일 */
+  @Column({ type: 'date', nullable: true })
+  deadline: string | null;
 
   @OneToMany(() => PostTranslationEntity, (t) => t.post, { cascade: true })
   translations: PostTranslationEntity[];
