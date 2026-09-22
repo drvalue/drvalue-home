@@ -44,7 +44,7 @@ SEO/GEO 감사(막는 것 2 · 주요 6 · 작은 것 7). 병렬 이유: 노드�
 
 ```mermaid
 graph TD
-  A1[A1 api bmes 바닥 + 기준 모듈 admin-post + 파일 참조 등록부 + swagger]
+  A1[A1 api bmes 바닥 + 기준 모듈 admin-post + swagger]
   A2[A2 공지·보도·뉴스 서버 렌더 + 글 주소 + h1 + 한국어 404]
   A3[A3 관리 화면 UX 1차: 드로어·대시보드·문의 배지·액션바·토스트·이탈 경고·모바일 목록·검색]
   A1 --> A4[A4 페이지 편집 엔진 + 오시는 길 시범]
@@ -66,15 +66,16 @@ graph TD
 
 | 노드 | 상태 | 산출물 | 완료 증거 | 비고 |
 |---|---|---|---|---|
-| P0. 검사 격리 · 규칙 한 곳 | ✅ | verify.sh VERIFY_EMAIL·check_rl, /me boards | 7586c0b · 109d223 · verify 143/0/1 | web 의 canEditBoard 사본 삭제 |
-| A1. api bmes 바닥 | ⬜ | common 기반 저장소·@ServiceException·swagger·파일 참조 등록부, admin-post 전환, 패턴 문서 | typecheck·build 0 · verify 전부 · admin-post 서비스 N/N @ServiceException · 컨트롤러 @ApiTags · /api/docs 200 | 응답 모양·주소는 그대로 |
+| P0. 검사 격리 · 규칙 한 곳 · 첨부 FK | ✅ | verify.sh VERIFY_EMAIL·check_rl, /me boards, migrations/0003, robots 파일 경로 | 7586c0b · 109d223 · e779ce3 · verify 146/0/1 | web 의 canEditBoard 사본 삭제. 첨부 고아 행 52 정리 |
+| A1. api bmes 바닥 | ⬜ | common 기반 저장소·@ServiceException·@Transactional·swagger, admin-post 전환, 패턴 문서 | typecheck·build 0 · verify 전부 · admin-post 서비스 N/N @ServiceException · 컨트롤러 @ApiTags · /api/docs 200 | 성공 응답 모양·주소는 그대로. 파일 참조 등록부는 뺐다(글 40건, LIKE 로 충분 — 수천 건이면 다시) |
 | A2. 게시판 서버 렌더 | ⬜ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | JS 끈 HTML 에 글 제목 3/3·2/2 · 상세 canonical 이 자기 주소 · web 검사 전부 | 규칙 4(JS 꺼도 글) 수리 |
-| A3. 관리 UX 1차 | ⬜ | 감사 1~5·7~16·18 | 390·1280 브라우저 측정 전후 · check-copy 0 · tsc·build | 6(SEO)은 E10, 17(레이아웃)은 C2 |
-| A4. 페이지 편집 엔진 | ⬜ | pages 표(0003) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
+| A3. 관리 UX 1차 | ⬜ | 감사 1~5·7~8·10~16·18 (9 예약 표시·필터는 A1 뒤 A3b) | 390·1280 브라우저 측정 전후 · check-copy 0 · tsc·build | 6(SEO)은 E10, 17(레이아웃)은 C2 |
+| A3b. 예약 글 표시·필터 | ⬜ | 목록 배지 · 「예약」 필터 · 대시보드 예약 수 | 예약 글이 목록·대시보드에 보임 | A1 의 목록 필터 뒤 |
+| A4. 페이지 편집 엔진 | ⬜ | pages 표(0004) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
 | E7. 회사·사업·서비스 페이지 | ⬜ | 스키마 · 씨앗(지금 TS 내용) | 장마다 저장→반영 · check-pages 110/110 그대로 | |
-| E8. 메인 화면 | ⬜ | 배너·팝업(0004) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
-| E9. 메뉴 관리 | ⬜ | menu_items(0005) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
-| E10. SEO·GEO·GA | ⬜ | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0006) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
+| E8. 메인 화면 | ⬜ | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
+| E9. 메뉴 관리 | ⬜ | menu_items(0006) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
+| E10. SEO·GEO·GA | ⬜ | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
 | R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | |
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
 | C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
