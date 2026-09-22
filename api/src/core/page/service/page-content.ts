@@ -22,6 +22,15 @@ export class PageContentError extends Error {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HREF_RE = /^(\/(?!\/)|https:\/\/|mailto:|tel:)[^\s]*$/i;
+/**
+ * 사이트에 이미 있는 그림(web/public 아래). 기본 글이 옛 화면의 그림을 그대로 가리키는 자리다.
+ * 폴더를 좁혀 두고 `..` 를 막는다. 개인정보가 찍힌 증서 원본(patent2·patent3)은 가리키지 못한다.
+ */
+const SITE_IMG_RE =
+  /^\/(screens|photo|brand|img|icon|images)\/[A-Za-z0-9._\-/]+\.(png|jpe?g|webp|gif|svg)$/i;
+const BLOCKED_IMG_RE = /(^|\/)patent[23]\.png$/i;
+const isSize = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 10000;
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj =>
@@ -192,6 +201,25 @@ function checkField(
           path,
         );
       if (id === null) {
+        // 미디어 파일이 아니면 사이트에 이미 있는 그림(기본 글)일 수 있다.
+        const src = typeof img.src === 'string' ? img.src.trim() : '';
+        if (src) {
+          if (
+            !SITE_IMG_RE.test(src) ||
+            src.includes('..') ||
+            BLOCKED_IMG_RE.test(src)
+          )
+            throw new PageContentError(
+              `${name} 그림 주소가 올바르지 않습니다. 그림을 다시 올려 주세요.`,
+              path,
+            );
+          if (!isSize(img.width) || !isSize(img.height))
+            throw new PageContentError(
+              `${name} 그림의 크기 값이 올바르지 않습니다. 그림을 다시 올려 주세요.`,
+              path,
+            );
+          return { id: null, alt, src, width: img.width, height: img.height };
+        }
         if (f.required)
           throw new PageContentError(`${name} 그림을 넣어 주세요.`, path);
         return null;

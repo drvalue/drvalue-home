@@ -19,7 +19,8 @@ export type PageField =
   | (Base & { type: 'group'; fields: PageField[] })
 
 export type PageSchema = { key: string; label: string; path: string; fields: PageField[] }
-export type PageImageValue = { id: string | null; alt: string; width?: number | null; height?: number | null } | null
+/** 미디어 파일(id) 이거나, 기본 글처럼 사이트에 이미 있는 그림(src — 새로 올리면 id 로 바뀐다). */
+export type PageImageValue = { id: string | null; alt: string; src?: string; width?: number | null; height?: number | null } | null
 export type PageLinkValue = { label: string; href: string }
 export type PageContent = Record<string, unknown>
 

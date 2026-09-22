@@ -4,7 +4,9 @@
  *
  *   text · textarea   글자(max 필수). pattern 을 주면 그 모양만
  *   richtext          편집기 HTML. 허용 태그만 남기고 저장한다(max 는 정리한 뒤 길이)
- *   image             { id: 파일 uuid | null, alt: 대체 글 } — 그림은 미디어에 올린 파일
+ *   image             { id: 파일 uuid | null, alt: 대체 글 } — 그림은 미디어에 올린 파일.
+ *                     기본 글(씨앗)은 사이트에 이미 있는 그림을 { id: null, src: '/screens/…', width, height } 로
+ *                     가리킬 수 있다. 관리 화면에서 새로 올리면 id 로 바뀐다(src 는 버린다).
  *   link              { label, href } — href 는 / 로 시작하거나 https:// · mailto: · tel:
  *   list              같은 모양 항목의 목록(min·max, item 칸)
  *   group             칸 묶음(fields)
@@ -70,6 +72,8 @@ export interface PageSchema {
 export interface ImageValue {
   id: string | null;
   alt: string;
+  /** 사이트에 이미 있는 그림(web/public). id 가 없을 때만. 치수는 보낸 값을 그대로 쓴다. */
+  src?: string;
   /** 저장할 때 api 가 미디어 파일의 치수로 적는다(보낸 값은 버린다). */
   width?: number | null;
   height?: number | null;

@@ -164,10 +164,10 @@ function ImageField({
   return (
     <div className="dva_field dvp_image">
       <Label field={f} />
-      {value?.id ? (
+      {value?.id || value?.src ? (
         <div className="dvp_image_row">
           <img
-            src={`/api/admin/files/${value.id}`}
+            src={value.id ? `/api/admin/files/${value.id}` : value.src}
             alt=""
             width={value.width ?? 160}
             height={value.height ?? 120}
@@ -185,7 +185,7 @@ function ImageField({
         </div>
       ) : null}
       <FileDrop
-        label={value?.id ? '다른 그림으로 바꾸기' : '그림 올리기'}
+        label={value?.id || value?.src ? '다른 그림으로 바꾸기' : '그림 올리기'}
         hint="png · jpg · webp · gif, 20MB 까지"
         accept={IMAGE_TYPES}
         disabled={busy}

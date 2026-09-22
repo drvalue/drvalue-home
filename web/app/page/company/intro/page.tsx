@@ -1,15 +1,21 @@
-import { INTRO_FILM, INTRO_LEAD, INTRO_SHOT, COMPANY_CSS } from '../companyContent'
+import { COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { pageMeta } from '@/lib/seo'
+import { cmsPageContent } from '@/lib/cms'
 import VideoFacade from '@/components/VideoFacade'
+import { orUndefined, toLead, toShot } from '../../pageContentParts'
+import { COMPANY_INTRO_DEFAULT, COMPANY_INTRO_KEY, type CompanyIntroContent } from './content'
 
 /**
  * /page/company/intro.php 를 옮긴 것. 2026-09-18 옛 꾸밈(사진 머리 + t_inner + AOS)
  * 에서 M.AX 계열과 같은 틀로 옮겼다 — 메뉴를 옮겨 다닐 때 두 꾸밈이 섞여 난잡했다.
- * 글은 companyContent.ts 에 그대로 옮겨 두었다. 새로 지은 문장은 없다.
+ * 글은 관리 화면(페이지 → 회사소개 · 안내)에서 고친다 — 요청마다 api 의 페이지 글을 읽고,
+ * 못 읽으면 content.ts 의 기본 글(= companyContent.ts 의 옛 글)로 그린다.
  */
 const PATH = '/page/company/intro'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = pageMeta({
   title: '회사소개',
@@ -18,29 +24,36 @@ export const metadata = pageMeta({
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const c = (await cmsPageContent<CompanyIntroContent>(COMPANY_INTRO_KEY)) ?? COMPANY_INTRO_DEFAULT
+  const { shell, film } = c
+  const shot = toShot(c.shot)
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
       <style dangerouslySetInnerHTML={{ __html: COMPANY_CSS }} />
       <SolutionShell
         path={PATH}
-        kicker="안내"
-        kickerSub="회사소개"
-        headLead="데이터로 제조의 "
-        headStrong="새로운 가치를 연결합니다."
-        desc="현장의 비효율을 혁신하여 엔지니어가 본질에만 집중할 수 있는 세상을 만듭니다."
-        lead={INTRO_LEAD}
+        kicker={shell.kicker}
+        kickerSub={shell.kickerSub}
+        headLead={shell.headLead}
+        headStrong={shell.headStrong}
+        desc={shell.desc}
+        lead={toLead(c.lead)}
+        ctaTitle={orUndefined(shell.ctaTitle)}
+        ctaDesc={orUndefined(shell.ctaDesc)}
       >
-        <figure className="cp_shot" data-rv="shot">
-          <img src={INTRO_SHOT.src} alt={INTRO_SHOT.alt} width={INTRO_SHOT.w} height={INTRO_SHOT.h} loading="lazy" decoding="async" />
-        </figure>
+        {shot && (
+          <figure className="cp_shot" data-rv="shot">
+            <img src={shot.src} alt={shot.alt} width={shot.w} height={shot.h} loading="lazy" decoding="async" />
+          </figure>
+        )}
 
         <div className="cp_film" data-rv>
-          <h3 className="cp_h3">{INTRO_FILM.title}</h3>
-          <p className="cp_h3desc">{INTRO_FILM.desc}</p>
+          <h3 className="cp_h3">{film.title}</h3>
+          <p className="cp_h3desc">{film.desc}</p>
           <div className="video_container">
-            <VideoFacade id={INTRO_FILM.id} title={INTRO_FILM.videoTitle} />
+            <VideoFacade id={film.youtubeId} title={film.videoTitle} />
           </div>
         </div>
       </SolutionShell>

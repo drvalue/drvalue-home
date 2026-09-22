@@ -136,3 +136,39 @@ test('그림 칸에 미디어 치수를 적는다(보낸 치수는 검사에서 
   assert.deepEqual(sized.photo, { id, alt: 'a', width: 640, height: 480 });
   assert.equal(sized.title, '가');
 });
+
+test('사이트에 있는 그림(src) — 기본 글이 옛 화면 그림을 그대로 가리킨다', () => {
+  const site = { id: null, alt: 'a', src: '/screens/pcb-dash.jpg', width: 1600, height: 1000 };
+  const { content, fileIds } = checkContent(fields, { ...ok, photo: site });
+  assert.deepEqual(content.photo, site);
+  assert.deepEqual(fileIds, []);
+  // 폴더 밖 · 위로 가기 · 바깥 주소는 거부
+  fails({ ...ok, photo: { ...site, src: '/etc/passwd.png' } }, /그림 주소가 올바르지 않습니다/);
+  fails({ ...ok, photo: { ...site, src: '/screens/../x.png' } }, /그림 주소가 올바르지 않습니다/);
+  fails({ ...ok, photo: { ...site, src: 'https://evil.example/a.png' } }, /그림 주소가 올바르지 않습니다/);
+  // 개인정보가 찍힌 증서 원본은 가리키지 못한다
+  fails({ ...ok, photo: { ...site, src: '/img/patent2.png' } }, /그림 주소가 올바르지 않습니다/);
+  fails({ ...ok, photo: { ...site, src: '/img/patent3.png' } }, /그림 주소가 올바르지 않습니다/);
+  // 치수가 없으면 거부 — 공개 화면의 <img> 에 width·height 가 있어야 한다
+  fails({ ...ok, photo: { id: null, alt: 'a', src: '/screens/pcb-dash.jpg' } }, /크기 값이 올바르지 않습니다/);
+  // 미디어로 바꾸면 src 는 버린다
+  const id = '11111111-2222-3333-4444-555555555555';
+  const up = checkContent(fields, { ...ok, photo: { ...site, id } });
+  assert.deepEqual(up.content.photo, { id, alt: 'a' });
+});
+
+test('소개 장 15장 스키마 — 칸 이름이 겹치지 않고, 키가 하나씩', () => {
+  const { PAGE_SCHEMAS } = require('../../../../dist/core/page/schema/index.js');
+  const keys = PAGE_SCHEMAS.map((s) => s.key);
+  assert.equal(new Set(keys).size, keys.length);
+  assert.equal(keys.length, 16);
+  const dup = (fs) => {
+    const ks = fs.map((f) => f.key);
+    assert.equal(new Set(ks).size, ks.length, ks.join(','));
+    for (const f of fs) {
+      if (f.type === 'group') dup(f.fields);
+      if (f.type === 'list') dup(f.item);
+    }
+  };
+  for (const s of PAGE_SCHEMAS) dup(s.fields);
+});

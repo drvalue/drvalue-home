@@ -1,5 +1,3 @@
-import { CADON_LEAD } from '../solutionContent'
-import { CD_AFTER, CD_BEFORE } from '../cadonContent'
 import CadonDemo from '../CadonDemo'
 import CadonCases from './CadonCases'
 import { CADON_CSS } from '../cadonStyles'
@@ -7,6 +5,10 @@ import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
 import { pageMeta } from '@/lib/seo'
+import { cmsPageContent } from '@/lib/cms'
+import CompareBlock from '../CompareBlock'
+import { orUndefined, toHeroShots, toLead, type ServiceDemoContent } from '../../pageContentParts'
+import { CADON_DEFAULT, CADON_KEY } from './content'
 
 /**
  * CADON — AutoCAD 안에서 판금을 펴고 되접는 CutON 플러그인.
@@ -23,34 +25,38 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/cadon'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = pageMeta({
   title: 'CADON',
   description: 'AutoCAD 안에서 판금 STEP 을 열어 전개하고, 절단선·절곡선을 레이어로 작도하고, 절곡 시뮬레이션과 3D 되접기로 검토합니다. 도면은 외부 서버로 나가지 않습니다.',
   path: PATH,
 })
 
-export default function Page() {
+export default async function Page() {
+  const c = (await cmsPageContent<ServiceDemoContent>(CADON_KEY)) ?? CADON_DEFAULT
+  const { shell, demo, compareStatement, extra } = c
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS + CADON_CSS }} />
       <SolutionShell
         path={PATH}
         look="v4"
-        kicker="CADON in AutoCAD"
-        kickerSub="AI솔루션"
-        headLead="AutoCAD 안에서 판금을 "
-        headStrong="펴고 되짚습니다"
-        desc="3D STEP 또는 2D DXF 도면을 바탕으로 전개 결과를 확인하고, 절단선·절곡선 작도와 DFM 검토, 절곡 시뮬레이션까지 AutoCAD 작업 환경에서 끝냅니다."
-        lead={CADON_LEAD}
-        heroShot={{ src: '/screens/cadon-02-unfold.jpg', alt: 'CutON 전개 결과 — AutoCAD 도면 위에 절단선·절곡선이 작도되고, PASS 1 · A1100 t 2 · 절곡 6 · DFM 경고 4 패널이 뜬다', w: 1600, h: 993, tag: 'CADON · 전개 결과', url: 'AutoCAD / CADON' }}
-        ctaTitle="도면은 밖으로 나가지 않습니다 — CADON 으로 AutoCAD 안에서 전개하세요"
-        ctaDesc="쓰시는 AutoCAD 버전과 판금 자재를 알려주시면 적용 방안을 검토해 드립니다."
+        kicker={shell.kicker}
+        kickerSub={shell.kickerSub}
+        headLead={shell.headLead}
+        headStrong={shell.headStrong}
+        desc={shell.desc}
+        lead={toLead(c.lead)}
+        heroShot={toHeroShots(c.heroShots)}
+        ctaTitle={orUndefined(shell.ctaTitle)}
+        ctaDesc={orUndefined(shell.ctaDesc)}
       >
         {/* 시연 — 실제 실행 화면 네 장을 순서대로 */}
         <section className="mx_sec4 hk_sec">
-          <p className="mx_kicker hk_center">전개 한 번</p>
-          <Statement desc="STEP 을 열고 「이 파일로 전개」를 누르면 전개도가 도면 위에 그려지고, 절곡 순서를 돌려 본 뒤 다시 3D 로 되접어 확인합니다. 아래는 부품 하나를 실제로 돌린 화면을 순서대로 다시 보여 주는 것입니다.">
-            STEP 을 열어 전개하고, 돌려 보고, 되접기까지 AutoCAD 안에서
+          {demo.kicker && <p className="mx_kicker hk_center">{demo.kicker}</p>}
+          <Statement desc={orUndefined(demo.desc)}>
+            {demo.title}
           </Statement>
           <div className="hk_plate">
             <CadonDemo />
@@ -59,39 +65,18 @@ export default function Page() {
 
         {/* 전/후 */}
         <section className="mx_sec4 hk_sec">
-          <Statement desc="외부 전개 서비스에 올리고 기다리던 일을, AutoCAD 명령 하나로 그 자리에서 끝냅니다.">
-            기다리는 시간이 아니라 검토하는 시간
+          {compareStatement.kicker && <p className="mx_kicker hk_center">{compareStatement.kicker}</p>}
+          <Statement desc={orUndefined(compareStatement.desc)}>
+            {compareStatement.title}
           </Statement>
-          <div className="hk_pair" data-rv>
-            <figure className="hk_card hk_dark">
-              <div className="hk_bubbles">
-                {CD_BEFORE.bubbles.map((b, i) => (
-                  <p key={i} className={`hk_bb ${b.who}`} style={{ ['--i' as string]: i }}>{b.t}</p>
-                ))}
-              </div>
-            </figure>
-            <figure className="hk_card hk_light">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/cuton-autocad-03-bend-simulation.jpg" alt="CutON 절곡 시뮬레이션 화면 — 스텝별 형상과 DFM 위반" width={1600} height={880} loading="lazy" />
-            </figure>
-          </div>
-          <div className="hk_lists" data-rv>
-            <div>
-              <h3><i className="hk_x" aria-hidden="true">✕</i>{CD_BEFORE.title}</h3>
-              <ul>{CD_BEFORE.points.map((p) => <li key={p} className="hk_no">{p}</li>)}</ul>
-            </div>
-            <div>
-              <h3><i className="hk_ok" aria-hidden="true">✓</i>{CD_AFTER.title}</h3>
-              <ul>{CD_AFTER.points.map((p) => <li key={p} className="hk_yes">{p}</li>)}</ul>
-            </div>
-          </div>
+          <CompareBlock c={c.compare} />
         </section>
 
         {/* 판정 — 전개 결과 · DFM 위반 · 되접기 */}
         <section className="mx_sec4 hk_sec">
-          <p className="mx_kicker hk_center">검토</p>
-          <Statement desc="전개가 끝나면 PASS · REVIEW · 실패로 판정하고, 만들 수 없는 플랜지는 어느 스텝에서 얼마나 짧은지 짚어 줍니다. 아래는 같은 부품의 실제 패널입니다.">
-            만들 수 있는 형상인지 그 자리에서 봅니다
+          {extra.kicker && <p className="mx_kicker hk_center">{extra.kicker}</p>}
+          <Statement desc={orUndefined(extra.desc)}>
+            {extra.title}
           </Statement>
           <CadonCases />
         </section>

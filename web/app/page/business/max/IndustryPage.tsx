@@ -31,20 +31,31 @@ export type Group = {
 
 const short = (f: Feature) => f.kicker.replace(/^[^-]+ - /, '')
 
+const KPI_CARDS = KPI.map((k) => ({ t: k.h, d: k.p }))
+
 export default function IndustryPage({
   path,
   kicker,
+  kickerSub = '제조AI(M.AX)',
+  ctaTitle = '우리 공장에 맞는 M.AX 구성이 궁금하신가요?',
+  ctaDesc,
   ind,
   heroShot,
   groups,
+  kpi = KPI_CARDS,
 }: {
   path: string
   /** 머리말 왼쪽 작은 글씨. 업종 이름이 들어간다. */
   kicker: string
+  kickerSub?: string
+  ctaTitle?: string
+  ctaDesc?: string
   ind: IndustryTab
   /** 머리말 밑 판의 화면. 여럿이면 몇 초마다 넘어간다. 아래 탭에 안 나오는 것으로 고른다. */
   heroShot?: HeroShot | HeroShot[]
   groups: Group[]
+  /** 「KPI」 묶음(cols: 'kpi')의 카드. 관리 화면의 페이지 글이 주고, 없으면 maxContent 의 KPI. */
+  kpi?: { t: string; d: string }[]
 }) {
   const by = (nos: number[]) => nos.map((n) => ind.features.find((f) => f.no === n)!).filter(Boolean)
   return (
@@ -52,13 +63,14 @@ export default function IndustryPage({
       path={path}
       look="v4"
       kicker={kicker}
-      kickerSub="제조AI(M.AX)"
+      kickerSub={kickerSub}
       headLead={ind.headLead}
       headStrong={ind.headStrong}
       desc={ind.desc}
       lead={ind.lead}
       heroShot={heroShot}
-      ctaTitle="우리 공장에 맞는 M.AX 구성이 궁금하신가요?"
+      ctaTitle={ctaTitle}
+      ctaDesc={ctaDesc}
     >
       {groups.map((g) => {
         const fs = by(g.nos)
@@ -70,7 +82,7 @@ export default function IndustryPage({
           url: `max.drvalue.co.kr / ${short(f)}`,
         }))
         const cards = g.cols === 'kpi'
-          ? KPI.map((k) => ({ t: k.h, d: k.p }))
+          ? kpi
           : fs.filter((f) => !f.shots?.length).map((f) => ({ t: short(f), d: plain(f.points[0] ?? '') }))
         return (
           <section className="mx_sec4" key={g.kicker}>
