@@ -35,3 +35,49 @@
 | E11. GA4 + 동의 | ⬜ | env GA_MEASUREMENT_ID, SiteScripts | ID 있으면 gtag 실림, 없으면 안 실림 | GTM 은 그대로 |
 | V2. 2차 검증 + 문서 | ⬜ | docs · contracts · AGENTS | 검사 전부 · grep 잔재 0 | |
 | E0. 로그인·관리 화면 UI/UX 크리틱 + 수정 | ⬜ | | 크리틱 지적 처리 목록 | laws-of-ux · tastemaker audit |
+
+# 3차 — 명세 전부 + UI/UX 크리틱 반영 + SEO/GEO + bmes 패턴 (2026-09-22 밤)
+
+근거: 명세 점검(E7~E11 ⬜) · 관리 화면 감사(주요 9 · 작은 것 9, `.playwright-mcp/ux-*.png`) ·
+SEO/GEO 감사(막는 것 2 · 주요 6 · 작은 것 7). 병렬 이유: 노드마다 파일 소유가 갈린다(병렬 분산 후 합치기).
+노드는 git worktree 에서 돌고 부모가 합친다. 검사는 노드마다 자기 포트·자기 VERIFY_EMAIL.
+
+```mermaid
+graph TD
+  A1[A1 api bmes 바닥 + 기준 모듈 admin-post + 파일 참조 등록부 + swagger]
+  A2[A2 공지·보도·뉴스 서버 렌더 + 글 주소 + h1 + 한국어 404]
+  A3[A3 관리 화면 UX 1차: 드로어·대시보드·문의 배지·액션바·토스트·이탈 경고·모바일 목록·검색]
+  A1 --> A4[A4 페이지 편집 엔진 + 오시는 길 시범]
+  A1 --> E9[E9 메뉴 관리]
+  A1 --> E10[E10 SEO·GEO·GA]
+  A2 --> E10
+  A3 --> E10
+  A1 --> R1[R1 나머지 모듈 bmes 패턴 + swagger]
+  A4 --> E7[E7 회사·사업·서비스 페이지 편집]
+  A4 --> E8[E8 메인 배너·팝업·문구·순서]
+  E9 --> C2[C2 관리 화면 크리틱 2차 + 관리 전용 레이아웃]
+  E7 --> C2
+  E8 --> C2
+  E10 --> C2
+  R1 --> C1[C1 swagger 로 web 타입 생성]
+  C1 --> V3{V3 전체 검증 · docker 새로 · 브라우저 4종 · 교차검토}
+  C2 --> V3
+```
+
+| 노드 | 상태 | 산출물 | 완료 증거 | 비고 |
+|---|---|---|---|---|
+| P0. 검사 격리 · 규칙 한 곳 | ✅ | verify.sh VERIFY_EMAIL·check_rl, /me boards | 7586c0b · 109d223 · verify 143/0/1 | web 의 canEditBoard 사본 삭제 |
+| A1. api bmes 바닥 | ⬜ | common 기반 저장소·@ServiceException·swagger·파일 참조 등록부, admin-post 전환, 패턴 문서 | typecheck·build 0 · verify 전부 · admin-post 서비스 N/N @ServiceException · 컨트롤러 @ApiTags · /api/docs 200 | 응답 모양·주소는 그대로 |
+| A2. 게시판 서버 렌더 | ⬜ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | JS 끈 HTML 에 글 제목 3/3·2/2 · 상세 canonical 이 자기 주소 · web 검사 전부 | 규칙 4(JS 꺼도 글) 수리 |
+| A3. 관리 UX 1차 | ⬜ | 감사 1~5·7~16·18 | 390·1280 브라우저 측정 전후 · check-copy 0 · tsc·build | 6(SEO)은 E10, 17(레이아웃)은 C2 |
+| A4. 페이지 편집 엔진 | ⬜ | pages 표(0003) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
+| E7. 회사·사업·서비스 페이지 | ⬜ | 스키마 · 씨앗(지금 TS 내용) | 장마다 저장→반영 · check-pages 110/110 그대로 | |
+| E8. 메인 화면 | ⬜ | 배너·팝업(0004) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
+| E9. 메뉴 관리 | ⬜ | menu_items(0005) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
+| E10. SEO·GEO·GA | ⬜ | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0006) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
+| R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | |
+| C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
+| C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
+| V3. 전체 검증 | ⬜ | | docker 새로 띄움 · verify · web 검사 전부 · 브라우저 4종 · advisor | |
+| X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
+| X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |
