@@ -74,7 +74,7 @@ graph TD
 | 노드 | 상태 | 산출물 | 완료 증거 | 비고 |
 |---|---|---|---|---|
 | P0. 검사 격리 · 규칙 한 곳 · 첨부 FK | ✅ | verify.sh VERIFY_EMAIL·check_rl, /me boards, migrations/0003, robots 파일 경로 | 7586c0b · 109d223 · e779ce3 · verify 146/0/1 | web 의 canEditBoard 사본 삭제. 첨부 고아 행 52 정리 |
-| A1. api bmes 바닥 | ⬜ | common 기반 저장소·@ServiceException·@Transactional·swagger, admin-post 전환, 패턴 문서 | typecheck·build 0 · verify 전부 · admin-post 서비스 N/N @ServiceException · 컨트롤러 @ApiTags · /api/docs 200 | 성공 응답 모양·주소는 그대로. 파일 참조 등록부는 뺐다(글 40건, LIKE 로 충분 — 수천 건이면 다시) |
+| A1. api bmes 바닥 | ✅ | common/typeorm(ctx·@Transactional·BaseRepository)·@ServiceException·검증+swagger DTO 데코레이터·/api/docs(운영 끔), admin-post 전환, 예약 목록 필터 | 합침 b8e0c0c · 부모 docker api 에서 verify 161/0/1 · node --test 20/20 · admin-post 서비스 8/8 @ServiceException+JSDoc · 컨트롤러 8/8 @ApiOperation · 서비스의 QueryBuilder/DataSource 0 · 저장소 3/3 BaseRepository · web 게시판·페이지·홈 검사 통과 | 권한 구멍 수정: 순서 바꾸기가 게시판 범위를 안 봤다(인사가 공지 순서를 바꿈). DB 비밀번호를 import 때 읽던 것(forRootAsync). 목록 질의가 이제 잘못된 값에 400 |
 | A2. 게시판 서버 렌더 | ✅ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | 합침 f1da062 · 부모 docker web 에서 check-boards 35/35 · src 0 · copy 0 · assets 0 · home 23/23 · header 107/107 · a11y 323/323 · pages 110/110 · 옛 ?id= 308 → /notice/legacy-… · 없는 글 404 | 규칙 4 수리. 브라우저 눈 확인은 A3 가 브라우저를 놓은 뒤 |
 | A3. 관리 UX 1차 | ⬜ | 감사 1~5·7~8·10~16·18 (9 예약 표시·필터는 A1 뒤 A3b) | 390·1280 브라우저 측정 전후 · check-copy 0 · tsc·build | 6(SEO)은 E10, 17(레이아웃)은 C2 |
 | A3b. 예약 글 표시·필터 | ⬜ | 목록 배지 · 「예약」 필터 · 대시보드 예약 수 | 예약 글이 목록·대시보드에 보임 | A1 의 목록 필터 뒤 |
