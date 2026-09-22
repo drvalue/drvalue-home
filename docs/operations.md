@@ -143,19 +143,18 @@ compose 를 부르는 셸 값(web 호스트 포트, 기본 3400)이라 `.env.exa
 | `NOINDEX` | 미리보기 빌드 인자. compose 에만 |
 | `DB_LOGGING` | 쓰지 않는다 |
 
-## 운영 배포
+## 새 서버 배포
 
-GitHub Actions 의 **Deploy (SSH)** 를 사람이 수동 실행한다. 저장소 전체를
-웹 루트로 `rsync` 한다(`.git`·`.github` 제외).
+깃허브의 이 저장소를 서버가 받아 docker 로 띄운다. 옛 배포(저장소를 PHP 웹 루트로 rsync 하는
+GitHub Actions 「Deploy (SSH)」)는 버렸다.
 
-필요한 저장소 비밀값: `SSH_PRIVATE_KEY` · `SSH_HOST` · `SSH_USER` ·
-`SSH_DEPLOY_PATH` · (조건부) `SSH_KEY_PASSPHRASE` · (선택) `SSH_KNOWN_HOSTS`.
+```bash
+git clone <저장소> && cd <저장소>     # 다음부터는 git pull
+cp .env.example .env                  # 운영 값으로 채운다(아래 「운영 .env」)
+docker compose up -d --build
+```
 
-배포 워크플로는 이 저장소에 없다. 있는 곳에서 `NOTIFY_*` 비밀값과
-`notice_config.php` 를 만드는 단계를 뺀다.
-
-**`rsync` 에 `--delete` 가 없다.** 저장소에서 지운 파일은 서버에 그대로
-남는다. 서버 파일을 없애려면 서버에서 직접 지운다.
+서버 구성(DB 를 어디에 두나 · 앞단 프록시와 HTTPS)은 정하는 중이다 — graph-state.md 「4차」.
 
 ## 게시판 글 옮기기
 

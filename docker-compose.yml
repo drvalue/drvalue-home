@@ -85,6 +85,12 @@ services:
       - '3500:3500'
     volumes:
       - ./data/uploads:/data/uploads
+    # 무인증 · DB 를 읽는 가벼운 끝점. 이게 200 이면 api 와 DB 연결이 둘 다 산 것이다.
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3500/api/content/menu']
+      interval: 15s
+      timeout: 5s
+      retries: 10
     depends_on:
       db:
         condition: service_healthy

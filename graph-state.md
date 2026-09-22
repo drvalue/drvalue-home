@@ -96,7 +96,7 @@ api 컨테이너는 합칠 때마다 다시 올린다(E10 합친 뒤: 공개 끝
 | X3. 옛 Directus 표 정리 | ⛔ | pages·page_blocks·pages_translations·menu_items·menu_items_translations·popups·popups_translations·home_settings(로컬 DB, 코드가 안 씀) | | 지우는 것은 되돌릴 수 없다 — 사용자 결정. 운영 DB 에도 있는지 먼저 본다 |
 | P3. 메뉴의 손으로 적은 숫자 | ✅ | 메뉴 설명의 토큰을 getMenu() 가 게시판 수로 채움(0009) · api 꺼지면 숫자 조각을 뺀다 | 부모 docker: 「등록 1건 · 출원 5건」「9건의 과제」 · 날 토큰 0 | |
 | X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
-| X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |
+| X2. 실제 IAM 로그인 한 번 | ✅ | | 사용자 확인(2026-09-23 「아이엠 로그인은 잘되고」) | |
 
 ## 운영에 올릴 때 (사람이 한다 — main 은 이 가지를 합친 뒤)
 
@@ -110,3 +110,14 @@ api 컨테이너는 합칠 때마다 다시 올린다(E10 합친 뒤: 공개 끝
    돌린 뒤 관리 화면에서 메뉴를 한 번 저장하거나 1분 기다린다(메뉴 캐시).
 5. `node api/scripts/sanitize-bodies.js` 로 먼저 보고, `--apply` 로 기존 본문 정리(두 번째는 0).
 6. 실제 IAM 로그인 한 번(X2).
+
+# 4차 — 새 서버 배포 (2026-09-23)
+
+사용자: 옛 배포(rsync → PHP 웹 루트)는 버린다. 깃허브에 올리고 서버에서 docker 로 띄운다. 컨테이너는 「2개」.
+
+| 노드 | 상태 | 산출물 | 완료 증거 | 비고 |
+|---|---|---|---|---|
+| D0. 옛 배포 걷어 내기 | ✅ | operations 「새 서버 배포」 · standards 배포 절 · CLAUDE/AGENTS 의 웹 루트 전제 | grep rsync·Deploy (SSH) → 「버렸다」 문장만 | |
+| D1. api 헬스체크 | ✅ | compose api healthcheck(/api/content/menu) | docker compose ps 에 api healthy | |
+| D2. 서버 모양 확인 | ⛔ | | | iwinv 콘솔이 로그인 안 돼 못 봤다(자격 입력은 못 한다). 사용자에게 물음: DB 는 어디(서버 안 컨테이너·서버에 직접 설치·iwinv DB 상품) · 앞단(nginx 등, HTTPS 는 어디서) · 도메인 DNS · 로컬 DB 의 글 40·페이지 17 을 운영으로 옮기나 |
+| D3. 운영 compose·env·프록시 | ⬜ | db/api 포트 닫기 · DB 연결값 env · .env.production.example · 프록시 설정 예시 · 스키마·마이그레이션 자동 적용 | 운영 모양 리허설 + 위조 X-Forwarded-For 6번 → 6번째 429 | D2 뒤 |
