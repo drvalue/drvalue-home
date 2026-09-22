@@ -4,7 +4,9 @@
 .dva * {
   box-sizing: border-box;
 }
-.dva {
+/* 색 변수는 껍데기(.dva)와 로그인 화면 둘 다에 — 로그인은 껍데기 밖에서 그린다. */
+.dva,
+.dva_login {
   --dva-side: #172033;
   --dva-side-ink: #c7d0dd;
   --dva-side-on: #ffffff;
@@ -434,6 +436,10 @@
   font-size: 15px;
   text-align: center;
   display: block;
+  background: #6644ff;
+  border: 1px solid #6644ff;
+  color: #fff;
+  text-decoration: none;
 }
 
 @media (max-width: 860px) {
