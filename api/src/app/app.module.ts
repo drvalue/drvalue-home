@@ -4,6 +4,10 @@ import { IamModule } from '@drvalue-oss/iam-nestjs';
 import { ContentModule } from '../core/content/content.module';
 import { InquiryModule } from '../core/inquiry/inquiry.module';
 import { AdminAuthModule } from '../core/admin-auth/admin-auth.module';
+import { DatabaseModule } from '../common/database/database.module';
+import { AdminPostModule } from '../core/admin-post/admin-post.module';
+import { AdminFileModule } from '../core/admin-file/admin-file.module';
+import { AdminInquiryModule } from '../core/admin-inquiry/admin-inquiry.module';
 
 @Module({
   imports: [
@@ -16,9 +20,13 @@ import { AdminAuthModule } from '../core/admin-auth/admin-auth.module';
       internalApiBaseUrl: process.env.IAM_INTERNAL_API_BASE_URL,
       internalApiKey: process.env.INTERNAL_API_KEY,
     }),
+    DatabaseModule,
     ContentModule,
     InquiryModule,
     AdminAuthModule,
+    AdminPostModule,
+    AdminFileModule,
+    AdminInquiryModule,
   ],
 })
 export class AppModule {}

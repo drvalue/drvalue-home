@@ -1,0 +1,259 @@
+import { Injectable } from '@nestjs/common';
+import { Brackets } from 'typeorm';
+import { PostTranslationEntity } from '../../../common/entity/post-translation.entity';
+import { PostEntity } from '../../../common/entity/post.entity';
+import { CommonError } from '../../../common/error/common-error';
+import { ControllerAdminPostDefaultSaveDto } from '../dto/controller-admin-post-default.dto';
+import { AdminPostError } from '../error/admin-post.error';
+import { PostDefaultRepository } from '../repository/post-default.repository';
+
+const PAGE = 30;
+
+/** 관리 화면이 보는 목록 한 줄. */
+export interface AdminPostRow {
+  id: number;
+  board: string;
+  slug: string;
+  status: string;
+  title: string;
+  published_date: string;
+  sort: number | null;
+  is_pinned: boolean;
+  thumbnail: string | null;
+  history_year: string | null;
+  cert_no: string | null;
+}
+
+@Injectable()
+export class AdminPostDefaultService {
+  constructor(private readonly postDefaultRepository: PostDefaultRepository) {}
+
+  async list(options: {
+    board?: string;
+    q?: string;
+    status?: string;
+    page?: number;
+  }) {
+    const page = Math.max(1, options.page ?? 1);
+    const qb = this.postDefaultRepository.repository
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.translations', 't')
+      .orderBy('p.sort', 'ASC', 'NULLS LAST')
+      .addOrderBy('p.publishedDate', 'DESC')
+      .addOrderBy('p.id', 'DESC');
+    if (options.board)
+      qb.andWhere('p.board = :board', { board: options.board });
+    if (options.status)
+      qb.andWhere('p.status = :status', { status: options.status });
+    if (options.q) {
+      qb.andWhere(
+        new Brackets((w) => {
+          w.where('t.title ILIKE :q', { q: `%${options.q}%` }).orWhere(
+            'p.slug ILIKE :q',
+            { q: `%${options.q}%` },
+          );
+        }),
+      );
+    }
+    // 게시판(공지·보도)은 날짜순이 먼저다. 증서·연혁은 sort 가 먼저.
+    if (options.board === 'notice' || options.board === 'press') {
+      qb.orderBy('p.isPinned', 'DESC')
+        .addOrderBy('p.publishedDate', 'DESC')
+        .addOrderBy('p.id', 'DESC');
+    }
+    if (options.board === 'history') {
+      qb.orderBy('p.historyYear', 'DESC')
+        .addOrderBy('p.sort', 'ASC', 'NULLS LAST')
+        .addOrderBy('p.id', 'ASC');
+    }
+    const [rows, total] = await qb
+      .skip((page - 1) * PAGE)
+      .take(PAGE)
+      .getManyAndCount();
+    return { data: rows.map((r) => this.row(r)), total, page, pageSize: PAGE };
+  }
+
+  async get(id: number) {
+    const row = await this.postDefaultRepository.findOneFull(id);
+    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    return this.full(row);
+  }
+
+  async create(dto: ControllerAdminPostDefaultSaveDto) {
+    this.requireKo(dto);
+    const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
+    if (await this.postDefaultRepository.findBySlug(slug))
+      throw new CommonError(AdminPostError.SLUG_TAKEN);
+    const row = this.postDefaultRepository.repository.create({
+      ...this.columns(dto),
+      slug,
+      board: dto.board,
+      status: dto.status ?? 'draft',
+    });
+    // 새 글은 맨 뒤. 증서·연혁 목록에서 순서가 곧 화면 순서다.
+    const last = await this.postDefaultRepository.repository
+      .createQueryBuilder('p')
+      .select('MAX(p.sort)', 'max')
+      .where('p.board = :board', { board: dto.board })
+      .getRawOne<{ max: number | null }>();
+    row.sort = (last?.max ?? 0) + 1;
+    row.translations = dto.translations.map((t) =>
+      this.postDefaultRepository.translations.create(this.translation(t)),
+    );
+    row.files = (dto.file_ids ?? []).map((fileId) =>
+      this.postDefaultRepository.files.create({ fileId }),
+    );
+    const saved = await this.postDefaultRepository.repository.save(row);
+    return this.get(saved.id);
+  }
+
+  async update(id: number, dto: ControllerAdminPostDefaultSaveDto) {
+    this.requireKo(dto);
+    const row = await this.postDefaultRepository.findOneFull(id);
+    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    if (dto.slug && dto.slug !== row.slug) {
+      if (await this.postDefaultRepository.findBySlug(dto.slug))
+        throw new CommonError(AdminPostError.SLUG_TAKEN);
+      row.slug = dto.slug;
+    }
+    Object.assign(row, this.columns(dto), {
+      board: dto.board,
+      status: dto.status ?? row.status,
+    });
+    // 번역은 언어별로 덮는다. 보내지 않은 언어는 그대로 둔다.
+    for (const t of dto.translations) {
+      const have = row.translations.find(
+        (x) => x.languagesCode === t.languages_code,
+      );
+      if (have) Object.assign(have, this.translation(t));
+      else
+        row.translations.push(
+          this.postDefaultRepository.translations.create(this.translation(t)),
+        );
+    }
+    if (dto.file_ids) {
+      await this.postDefaultRepository.files.delete({ post: { id } });
+      row.files = dto.file_ids.map((fileId) =>
+        this.postDefaultRepository.files.create({ fileId }),
+      );
+    }
+    await this.postDefaultRepository.repository.save(row);
+    return this.get(id);
+  }
+
+  async remove(id: number): Promise<void> {
+    const row = await this.postDefaultRepository.repository.findOne({
+      where: { id },
+    });
+    if (!row) throw new CommonError(AdminPostError.NOT_FOUND);
+    await this.postDefaultRepository.repository.remove(row);
+  }
+
+  /** ids 순서대로 sort = 1..n. 같은 게시판 안에서만 뜻이 있다. */
+  async reorder(ids: number[]): Promise<void> {
+    await this.postDefaultRepository.repository.manager.transaction(
+      async (m) => {
+        for (const [i, id] of ids.entries())
+          await m.update(PostEntity, { id }, { sort: i + 1 });
+      },
+    );
+  }
+
+  private requireKo(dto: ControllerAdminPostDefaultSaveDto): void {
+    const ko = dto.translations.find((t) => t.languages_code === 'ko-KR');
+    if (!ko?.title?.trim()) throw new CommonError(AdminPostError.NEED_KO);
+  }
+
+  private columns(dto: ControllerAdminPostDefaultSaveDto): Partial<PostEntity> {
+    const nul = (v: string | null | undefined) =>
+      v === undefined ? undefined : v || null;
+    return {
+      publishedDate: dto.published_date,
+      isPinned: dto.is_pinned ?? undefined,
+      isFeatured: dto.is_featured ?? undefined,
+      thumbnail: nul(dto.thumbnail),
+      pressMedia: nul(dto.press_media),
+      periodStart: nul(dto.period_start),
+      periodEnd: nul(dto.period_end),
+      certState: nul(dto.cert_state),
+      certNo: nul(dto.cert_no),
+      certDate: nul(dto.cert_date),
+      certMadeDate: nul(dto.cert_made_date),
+      certKind: nul(dto.cert_kind),
+      historyYear: nul(dto.history_year),
+    };
+  }
+
+  private translation(
+    t: ControllerAdminPostDefaultSaveDto['translations'][number],
+  ): Partial<PostTranslationEntity> {
+    return {
+      languagesCode: t.languages_code,
+      title: t.title ?? null,
+      summary: t.summary ?? null,
+      body: t.body ?? null,
+      caseCategoryLabel: t.case_category_label ?? null,
+      seoTitle: t.seo_title ?? null,
+      seoDescription: t.seo_description ?? null,
+    };
+  }
+
+  private row(r: PostEntity): AdminPostRow {
+    const ko =
+      r.translations?.find((t) => t.languagesCode === 'ko-KR') ??
+      r.translations?.[0];
+    return {
+      id: r.id,
+      board: r.board,
+      slug: r.slug,
+      status: r.status,
+      title: ko?.title ?? '',
+      published_date: r.publishedDate,
+      sort: r.sort,
+      is_pinned: r.isPinned,
+      thumbnail: r.thumbnail ? `/api/admin/files/${r.thumbnail}` : null,
+      history_year: r.historyYear,
+      cert_no: r.certNo,
+    };
+  }
+
+  private full(r: PostEntity) {
+    return {
+      id: r.id,
+      board: r.board,
+      slug: r.slug,
+      status: r.status,
+      published_date: r.publishedDate,
+      sort: r.sort,
+      is_pinned: r.isPinned,
+      is_featured: r.isFeatured,
+      thumbnail: r.thumbnail,
+      thumbnail_url: r.thumbnail ? `/api/admin/files/${r.thumbnail}` : null,
+      press_media: r.pressMedia,
+      period_start: r.periodStart,
+      period_end: r.periodEnd,
+      cert_state: r.certState,
+      cert_no: r.certNo,
+      cert_date: r.certDate,
+      cert_made_date: r.certMadeDate,
+      cert_kind: r.certKind,
+      history_year: r.historyYear,
+      translations: (r.translations ?? []).map((t) => ({
+        languages_code: t.languagesCode,
+        title: t.title,
+        summary: t.summary,
+        body: t.body,
+        case_category_label: t.caseCategoryLabel,
+        seo_title: t.seoTitle,
+        seo_description: t.seoDescription,
+      })),
+      files: (r.files ?? [])
+        .filter((f) => f.fileId)
+        .map((f) => ({
+          id: f.fileId as string,
+          name: f.file?.title || f.file?.filenameDownload || '첨부파일',
+          url: `/api/admin/files/${f.fileId}`,
+        })),
+    };
+  }
+}
