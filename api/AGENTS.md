@@ -138,7 +138,7 @@ repository 는 질의가 여러 곳에서 겹치는 기능에만 있다(`admin-p
 ```bash
 npm run typecheck && npm run build
 node --test src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 14 (9 + 5)
-bash scripts/verify.sh          # 139 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 141 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

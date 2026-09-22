@@ -586,7 +586,7 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 139 통과 · 판정불가 1 |
+| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 141 통과 · 판정불가 1 |
 | `api: node --test …/authorize.test.mjs …/last-admin.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 14/14 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에

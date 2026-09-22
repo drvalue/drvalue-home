@@ -12,10 +12,10 @@ BI_FID=$(curl -s -X POST -H "$AUTH" -F "file=@$BI_TMP/$RUN.png;type=image/png" -
   | pick 'print((d.get("data") or {}).get("id",""))')
 rm -rf "$BI_TMP"
 
-bpost() { # slug body → 공지 초안 JSON
-  SLUG="$1" BODY="$2" python3 -c '
+bpost() { # slug body [status] → 공지 JSON (기본 초안)
+  SLUG="$1" BODY="$2" ST="${3:-draft}" python3 -c '
 import json, os
-print(json.dumps({"board": "notice", "slug": os.environ["SLUG"], "status": "draft",
+print(json.dumps({"board": "notice", "slug": os.environ["SLUG"], "status": os.environ["ST"],
                   "published_date": "2026-01-01",
                   "translations": [{"languages_code": "ko-KR", "title": "본문 그림 검사", "body": os.environ["BODY"]}]}))'
 }
@@ -31,6 +31,12 @@ else
   check "초안 그림은 관리 미리보기로 보인다" "200" \
     "$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/api/admin/files/$BI_FID" --max-time 30)"
   check "초안 그림은 공개 주소로 안 나간다" "404" \
+    "$(curl -s -o /dev/null -w '%{http_code}' "$API/api/content/assets/$BI_FID" --max-time 30)"
+  # 게시하면 공개 목록의 썸네일이 공개 주소가 되고, 관문이 그 그림을 내 준다.
+  bpost "$BI_SLUG" "<p>앞</p><p><img src=\"/api/content/assets/$BI_FID\"></p>" published | admj PUT "/posts/$BI_PID" >/dev/null
+  check "게시하면 공개 목록 썸네일이 그 그림" "/api/content/assets/$BI_FID" \
+    "$(curl -s "$API/api/content/posts?board=notice&limit=100" --max-time 30 | pick "r=[x for x in (d.get('data') or []) if x.get('slug')=='$BI_SLUG']; print(r[0].get('thumbnail') if r else 'absent')")"
+  check "게시된 글의 본문 그림은 공개 주소로 열린다" "200" \
     "$(curl -s -o /dev/null -w '%{http_code}' "$API/api/content/assets/$BI_FID" --max-time 30)"
   bpost "$BI_SLUG" "<p>그림을 뺐다</p>" | admj PUT "/posts/$BI_PID" >/dev/null
   check "본문에서 그림을 빼면 썸네일도 빠진다" "none" \
