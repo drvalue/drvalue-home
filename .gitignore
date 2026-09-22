@@ -12,6 +12,9 @@ web/tsconfig.tsbuildinfo
 api/node_modules/
 api/dist/
 .env
+# 운영용 사본 등(.env.production) — 비밀값이 든다. 예시 파일만 저장소에 둔다.
+.env.*
+!.env.example
 api/.env
 
 # CMS (Directus)
