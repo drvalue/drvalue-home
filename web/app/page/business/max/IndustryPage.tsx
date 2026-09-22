@@ -1,6 +1,8 @@
 import SolutionShell, { type HeroShot } from './SolutionShell'
 import FeatureShow from './FeatureShow'
+import { Bento, FlowCard } from './Patterns'
 import { Cols, Statement } from './V4'
+import { plain } from './text'
 import { KPI, type IndustryTab } from './maxContent'
 
 /**
@@ -25,6 +27,14 @@ export type Group = {
   nos: number[]
   /** 'kpi' 면 이 묶음은 화면을 안 싣고, 기능 판 밑에 KPI 셋(납기·이익·품질 영향 분석)을 붙인다. */
   cols?: 'kpi'
+  /**
+   * 묶음마다 다른 모양(2026-09-22 사용자: 「다 똑같이 들어가니 별로」).
+   *  show  — 게이지 레일 + 기능 전문 판(기본)
+   *  flow  — 기능마다 FlowCard: 요점이 순서(발주→입고, 계획→지시)일 때만
+   *  bento — 틴트 구역 + 카드 격자. 화면 있는 기능은 화면 카드, 없는 건 남색 글 카드(wide)
+   *  cols  — 문장 밑 아이콘 카드 셋(요점 셋 = 카드 셋). 기능 하나짜리 묶음에
+   */
+  layout?: 'show' | 'flow' | 'bento' | 'cols'
 }
 
 export default function IndustryPage({
@@ -58,11 +68,25 @@ export default function IndustryPage({
       {groups.map((g) => {
         const fs = by(g.nos)
         const extra = g.cols === 'kpi' ? Object.fromEntries(fs.map((f) => [f.no, kpi])) : undefined
+        if (g.layout === 'bento') {
+          return (
+            <Bento key={g.kicker} kicker={g.kicker} title={g.title} desc={g.desc} items={fs.map((f, i) => ({
+              t: f.title, d: plain(f.points[0] ?? ''), pts: f.points, shot: f.shots?.[0], url: `${url ?? 'max.drvalue.co.kr'} / ${f.kicker.replace(/^[^-]+ - /, '')}`,
+              // 화면 없는 카드는 남색·폭 가득. 반 카드가 홀수로 남으면 마지막도 폭 가득 — 빈 칸을 안 남긴다.
+              dark: !f.shots?.length, wide: !f.shots?.length || (fs.length % 2 === 0 && i === fs.length - 1),
+            }))} />
+          )
+        }
+        const body = g.layout === 'flow'
+          ? fs.map((f, i) => <FlowCard key={f.no} title={f.title} desc={f.callout?.lead} steps={f.points} tone={(['', 'sand', 'steel'] as const)[i % 3]} />)
+          : g.layout === 'cols'
+            ? <Cols items={fs.flatMap((f) => f.points.slice(0, 3).map((pt, i) => ({ t: f.chips[i] ?? f.kicker, d: plain(pt) })))} />
+            : <FeatureShow items={fs} extra={extra} url={url} hideShot={g.cols === 'kpi' ? g.nos : []} />
         return (
           <section className="mx_sec4" key={g.kicker}>
             <p className="mx_kicker hk_center">{g.kicker}</p>
             <Statement desc={g.desc}>{g.title}</Statement>
-            <FeatureShow items={fs} extra={extra} url={url} hideShot={g.cols === 'kpi' ? g.nos : []} />
+            {body}
           </section>
         )
       })}

@@ -50,23 +50,31 @@ export const PATTERN_CSS = `
 #dvmax.mx_v4 .mx_bento_d { margin: 18px auto 0; max-width: 40em; font-size: 19px; line-height: 1.65; color: #4e5968; word-break: keep-all; }
 #dvmax.mx_v4 .mx_fb .mx_bento_d { color: rgba(255,255,255,.75); }
 #dvmax.mx_v4 .mx_bento_grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
-#dvmax.mx_v4 .mx_bento_grid li { position: relative; display: flex; flex-direction: column; min-height: 420px; padding: 40px 40px 0; border-radius: 24px; overflow: hidden; background: #fff; box-shadow: 0 16px 48px rgba(21,34,56,.10); }
-#dvmax.mx_v4 .mx_bento_grid li.wide { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; min-height: 380px; padding-right: 0; background: linear-gradient(135deg, #dbe6f5, #c6d8f0); }
-#dvmax.mx_v4 .mx_bento_grid li.dark { background: radial-gradient(120% 100% at 100% 0%, #24365a, #0f1a2c); color: #fff; }
+#dvmax.mx_v4 .mx_bento_grid > li { position: relative; display: flex; flex-direction: column; min-height: 420px; padding: 40px 40px 0; border-radius: 24px; overflow: hidden; background: #fff; box-shadow: 0 16px 48px rgba(21,34,56,.10); }
+#dvmax.mx_v4 .mx_bento_grid > li.wide { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; min-height: 380px; padding-right: 0; background: linear-gradient(135deg, #dbe6f5, #c6d8f0); }
+#dvmax.mx_v4 .mx_bento_grid > li.dark { background: radial-gradient(120% 100% at 100% 0%, #24365a, #0f1a2c); color: #fff; }
 #dvmax.mx_v4 .mx_bento_txt { position: relative; z-index: 2; padding-bottom: 28px; }
-#dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_txt { align-self: center; padding-bottom: 40px; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_txt { align-self: center; padding-bottom: 40px; }
 #dvmax.mx_v4 .mx_bento_txt h3 { margin: 0; font-size: clamp(24px, 2.2vw, 32px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; word-break: keep-all; }
-#dvmax.mx_v4 .mx_bento_grid li.dark h3, #dvmax.mx_v4 .mx_bento_grid li.dark .mx_hl { color: #fff; }
+#dvmax.mx_v4 .mx_bento_grid > li.dark h3, #dvmax.mx_v4 .mx_bento_grid > li.dark .mx_hl { color: #fff; }
 #dvmax.mx_v4 .mx_bento_txt p { margin: 14px 0 0; font-size: 17px; line-height: 1.7; color: #4e5968; max-width: 30em; word-break: keep-all; }
-#dvmax.mx_v4 .mx_bento_grid li.dark p { color: rgba(255,255,255,.75); }
+#dvmax.mx_v4 .mx_bento_grid > li.dark p { color: rgba(255,255,255,.75); }
+#dvmax.mx_v4 .mx_bento_pts { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+#dvmax.mx_v4 .mx_bento_pts li { position: relative; padding: 10px 14px 10px 34px; border-radius: 10px; background: rgba(21,34,56,.06); font-size: 15px; line-height: 1.55; color: #333d4b; word-break: keep-all; }
+#dvmax.mx_v4 .mx_bento_pts li em { display: inline; font-style: normal; }
+#dvmax.mx_v4 .mx_bento_pts li::before { content: ''; position: absolute; left: 14px; top: 16px; width: 10px; height: 10px; border-radius: 50%; background: #3e78c8; }
+#dvmax.mx_v4 .mx_bento_grid > li.dark .mx_bento_pts li { background: rgba(255,255,255,.10); color: rgba(255,255,255,.9); } #dvmax.mx_v4 .mx_bento_grid > li.dark .mx_bento_pts li::before { background: #fff; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide.dark { display: flex; padding: 40px; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide.dark .mx_bento_pts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide.dark .mx_bento_txt { padding-bottom: 0; max-width: none; }
 #dvmax.mx_v4 .mx_bento_more { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 15px; font-weight: 700; color: inherit; text-decoration: none; }
 #dvmax.mx_v4 .mx_bento_more i { font-style: normal; transition: transform .2s; }
 #dvmax.mx_v4 .mx_bento_more:hover i { transform: translateX(4px); }
 #dvmax.mx_v4 .mx_bento_fig { position: relative; z-index: 1; margin: 0; flex: 1; min-height: 200px; }
 #dvmax.mx_v4 .mx_bento_fig .mx_browser { position: absolute; left: 0; top: 0; width: 110%; max-width: none; border-radius: 12px 0 0 0; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-#dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_fig { min-height: 300px; align-self: end; }
-#dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_fig .mx_browser { top: 40px; width: 112%; }
-#dvmax.mx_v4 .mx_bento_grid li:not(.wide) .mx_bento_fig { margin: 0 -40px 0 0; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig { min-height: 300px; align-self: end; }
+#dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig .mx_browser { top: 40px; width: 112%; }
+#dvmax.mx_v4 .mx_bento_grid > li:not(.wide) .mx_bento_fig { margin: 0 -40px 0 0; }
 
 /* ── FlowCard: 연한 카드, 글 왼쪽 · 단계 카드 ↓ 오른쪽 ── */
 #dvmax.mx_v4 .mx_fcard { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 40px; align-items: center; margin: 24px 0 0; padding: 56px 56px; border-radius: 24px; background: #eef2f8; }
@@ -92,10 +100,11 @@ export const PATTERN_CSS = `
   #dvmax.mx_v4 .mx_show_arr { display: none; }
   #dvmax.mx_v4 .mx_bento { padding: 64px 0 72px; }
   #dvmax.mx_v4 .mx_bento_grid { grid-template-columns: 1fr; gap: 14px; }
-  #dvmax.mx_v4 .mx_bento_grid li, #dvmax.mx_v4 .mx_bento_grid li.wide { grid-template-columns: 1fr; display: flex; min-height: 0; padding: 26px 22px 0; gap: 0; border-radius: 18px; }
-  #dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_txt { padding-bottom: 22px; }
-  #dvmax.mx_v4 .mx_bento_fig, #dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_fig { min-height: 0; margin: 0 -22px 0 0; }
-  #dvmax.mx_v4 .mx_bento_fig .mx_browser, #dvmax.mx_v4 .mx_bento_grid li.wide .mx_bento_fig .mx_browser { position: relative; top: 0; width: 108%; max-height: 220px; }
+  #dvmax.mx_v4 .mx_bento_grid > li, #dvmax.mx_v4 .mx_bento_grid > li.wide { grid-template-columns: 1fr; display: flex; min-height: 0; padding: 26px 22px 0; gap: 0; border-radius: 18px; }
+  #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_txt { padding-bottom: 22px; }
+  #dvmax.mx_v4 .mx_bento_grid > li.wide.dark .mx_bento_pts { grid-template-columns: 1fr; }
+  #dvmax.mx_v4 .mx_bento_fig, #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig { min-height: 0; margin: 0 -22px 0 0; }
+  #dvmax.mx_v4 .mx_bento_fig .mx_browser, #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig .mx_browser { position: relative; top: 0; width: 108%; max-height: 220px; }
   #dvmax.mx_v4 .mx_fcard { grid-template-columns: 1fr; gap: 28px; padding: 28px 22px; border-radius: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {

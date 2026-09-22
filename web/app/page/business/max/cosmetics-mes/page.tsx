@@ -23,7 +23,11 @@ export default function Page() {
         path={PATH}
         kicker="화장품 MES"
         ind={IND}
-        // 머리말 화면 없음 — 넷 있는 캡처가 전부 아래 기능 판에 쓰인다(머리말 ≠ 본문 화면 규칙). workspace 캡처 뒤 채운다.
+        // 2026-09-22 workspace.growxd.com(디마인 테넌트) 실제 화면. 아래 기능 판에 안 쓰는 둘이 번갈아 뜬다. 업체·제품·담당자는 가렸다.
+        heroShot={[
+          { src: '/screens/cos-cash.jpg', alt: '수금 현황 화면 — 수주번호·명세서번호·수금액·최종수금일·출고일·출고금액·수주금액', w: 1600, h: 1000, tag: '영업 · 수금 현황', url: 'max.drvalue.co.kr / 수금' },
+          { src: '/screens/cos-audit.jpg', alt: '감사 현황 화면 — 내부/외부 감사 항목과 감사 결과', w: 1600, h: 1000, tag: '품질 · 감사 현황', url: 'max.drvalue.co.kr / 감사' },
+        ]}
         groups={[
           {
             kicker: '연구 → 영업',
@@ -36,18 +40,21 @@ export default function Page() {
             title: '원료 발주부터 작업지시까지 한 흐름으로',
             desc: '발주·입고·재고·단가와 원료별 성분을 관리하고, 수주 기반 생산계획이 작업지시와 칭량·공정 전환으로 이어집니다.',
             nos: [3, 4],
+            layout: 'flow',
           },
           {
             kicker: '품질 → 규제',
             title: '단계별 검사부터 cGMP·클레임·규제까지',
             desc: '원료부터 완제품까지 일곱 단계 검사, GMP 양식 출력과 감사 추적, 클레임·CAPA, 국가별 규제·성분·MSDS 대조를 한 시스템에서 합니다.',
-            nos: [5, 6, 7, 8],
+            nos: [6, 7, 8, 5],
+            layout: 'bento',
           },
           {
             kicker: '모니터링',
             title: '공정·설비·환경을 실시간으로 기록합니다',
             desc: '공정 이상은 즉시 알리고, 설비의 환경 데이터와 SCADA·유지보수 이력을 같은 화면에서 봅니다.',
             nos: [9],
+            layout: 'cols',
           },
         ]}
       />
