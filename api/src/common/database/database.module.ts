@@ -9,6 +9,8 @@ import { RevisionEntity } from '../entity/revision.entity';
 import { PostFileEntity } from '../entity/post-file.entity';
 import { PostTranslationEntity } from '../entity/post-translation.entity';
 import { PostEntity } from '../entity/post.entity';
+import { MenuItemEntity } from '../entity/menu-item.entity';
+import { MenuItemTranslationEntity } from '../entity/menu-item-translation.entity';
 
 export const ENTITIES = [
   PostEntity,
@@ -18,6 +20,8 @@ export const ENTITIES = [
   InquiryEntity,
   AdminUserEntity,
   RevisionEntity,
+  MenuItemEntity,
+  MenuItemTranslationEntity,
 ];
 
 /**

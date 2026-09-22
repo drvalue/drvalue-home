@@ -11,6 +11,7 @@ import { AdminScheduleModule } from '../core/admin-schedule/admin-schedule.modul
 import { AdminRevisionModule } from '../core/admin-revision/admin-revision.module';
 import { AdminUserModule } from '../core/admin-user/admin-user.module';
 import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.module';
+import { MenuModule } from '../core/menu/menu.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.mo
     AdminRevisionModule,
     AdminUserModule,
     AdminDashboardModule,
+    MenuModule,
   ],
 })
 export class AppModule {}

@@ -26,7 +26,7 @@ src/
 │   ├── response/                # IApiCommonResponse (응답 본문 모양)
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
-│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions)
+│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
 │   ├── revision/                # 변경 이력 기록기 (admin_revisions)
@@ -45,7 +45,8 @@ src/
 
 기능: `content` · `inquiry`(공개) · `admin-auth` · `admin-post` · `admin-file` ·
 `admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user` ·
-`admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리).
+`admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리) ·
+`menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -158,6 +159,11 @@ src/
 - 업로드는 `AppConfig.uploadsDir` 폴더에 `<uuid>.<ext>` + `directus_files` 행(compose 는
   `/data/uploads`, 로컬은 저장소 `data/uploads`). 치수는 헤더에서 직접 읽는다. cwd 기준으로
   잡지 않는다(api/ 에서 띄우면 빈 폴더를 본다).
+- 메뉴(`core/menu`)는 저장할 때 **전체를 한 번에** 바꾼다(지우고 받은 순서로 다시 넣는다 — 순서는 배열
+  순서). 깊이 2 는 DTO 모양으로 막는다(하위 DTO 에 `children` 이 비어 있어야 한다 — 조용히 버리지 않고 400).
+  링크는 모양만 본다(`/` 로 시작 · `//` 아님 · http(s)) — 사이트에 그 장이 있는지는 web 만 알아서 관리 화면이
+  저장 전에 HEAD 로 확인한다. 표 이름이 `site_menu_*` 인 이유는 migrations/0006 머리말(옛 Directus 표와 겹친다).
+  변경 이력은 collection `menu` · item `site` 한 줄(되돌리기는 아직 없다 — R1).
 - 상수: IAM 주소 `https://iam.drvalue.co.kr` · 기본 언어 `ko-KR` · NCP 메일 주소 ·
   문의 한도 분 5 / 시 30. 환경변수로 빼지 않는다.
 
@@ -166,7 +172,7 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-bash scripts/verify.sh          # 176 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 194 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

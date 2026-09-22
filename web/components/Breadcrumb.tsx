@@ -1,12 +1,15 @@
 import Link from 'next/link'
-import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
+import { isActive, isSubActive } from '@/lib/menu'
+import { getMenu } from '@/lib/menu-cms'
 
 /**
  * breadcrumb.php 를 그대로 옮긴 것. 판정 규칙(첫 일치 대분류, 없으면 첫 하위)
  * 까지 같게 둔다. 규칙을 "고치면" 기존 페이지의 표시가 달라진다.
+ * 메뉴는 관리 화면 값(getMenu) — 머리글과 같은 것을 읽는다.
  */
-export default function Breadcrumb({ currentPath }: { currentPath: string }) {
-  const curMenu = MENU_ITEMS.find((m) => m.match && isActive(currentPath, m.match))
+export default async function Breadcrumb({ currentPath }: { currentPath: string }) {
+  const { top } = await getMenu()
+  const curMenu = top.find((m) => m.match && isActive(currentPath, m.match))
   if (!curMenu) return null
 
   // **이름 찾기는 `hidden` 까지 포함해서 본다.** 메뉴에서 내린 장도 자기 이름으로
@@ -29,8 +32,8 @@ export default function Breadcrumb({ currentPath }: { currentPath: string }) {
             <span>{curMenu.title}</span><i className="fa fa-angle-down" />
           </button>
           <ul className="dv_bc_drop">
-            {MENU_ITEMS.map((m) => (
-              <li key={m.title} className={m.title === curMenu.title ? 'on' : ''}>
+            {top.map((m) => (
+              <li key={m.link + m.title} className={m === curMenu ? 'on' : ''}>
                 <Link href={m.link}>{m.title}</Link>
               </li>
             ))}

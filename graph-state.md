@@ -82,7 +82,7 @@ A3 합친 뒤 할 것: 관리 목록 검색·상태 필터·쪽 넘김을 브라
 | A4. 페이지 편집 엔진 | 🔄 | pages 표(0004) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
 | E7. 회사·사업·서비스 페이지 | ⬜ | 스키마 · 씨앗(지금 TS 내용) | 장마다 저장→반영 · check-pages 110/110 그대로 | |
 | E8. 메인 화면 | ⬜ | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
-| E9. 메뉴 관리 | 🔄 | menu_items(0006) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
+| E9. 메뉴 관리 | ✅ | site_menu_items(0006, 옛 Directus menu_items 와 이름을 피함) · 공개 GET /api/content/menu · 관리 GET·PUT /api/admin/menu · /admin/menu · 헤더·경로 줄·왼쪽 차례·하단이 getMenu() · 60초 캐시 + 저장 뒤 비우기 | 합침 · 부모 docker verify 194/0/1 · web 8종 통과 · 공개 메뉴 200 · E9 실측: 「뉴스」 숨김→헤더에서 사라짐→복구, api 꺼도 lib/menu.ts | 할 것: sitemap.ts 를 getMenu() 로(E10 뒤) · 메뉴 이력 되돌리기(R1) · 화면 눈 확인(C2) |
 | E10. SEO·GEO·GA | 🔄 | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
 | R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 · 새 표(pages 등) 변경 이력 되돌리기 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | 3차 물결. A4·E9·E10 합친 뒤(admin-revision 을 같이 고치므로) |
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |

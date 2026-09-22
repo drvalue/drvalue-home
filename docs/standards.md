@@ -36,7 +36,7 @@
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
 | `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 20/20 |
-| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 176 통과 · 판정불가 1 |
+| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 194 통과 · 판정불가 1 |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |
 | `web/scripts/check-pages.py` | 새로 채운 장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 110/110 (`NEXT_ORIGIN` 으로 다른 포트) |
 | `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 107/107 (`NEXT_ORIGIN`) |
@@ -93,7 +93,8 @@
 메뉴·제품 설명·과제 목록처럼 여러 화면이 쓰는 것은 **파일 하나**를 읽는다.
 두 군데에 적어 두면 한쪽만 고쳐져 어긋난다.
 
-- 상단 메뉴·현재 위치 줄·옆 차례표·사이트맵: `web/lib/menu.ts`
+- 상단 메뉴·현재 위치 줄·옆 차례표·바닥글 링크: `web/lib/menu-cms.ts` 의 `getMenu()`(관리 화면
+  「사이트 › 메뉴」 값, 예비는 `web/lib/menu.ts`). 사이트맵은 아직 `web/lib/menu.ts` 를 읽는다.
 - 제품 기능·화면 캡처 설명: `web/app/page/business/max/maxContent.ts`,
   `web/app/page/service/solutionContent.ts`
 - 수행 과제: `web/app/page/portfolio/portfolio/list.ts`

@@ -1,4 +1,5 @@
-import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
+import { isActive, isSubActive } from '@/lib/menu'
+import { getMenu } from '@/lib/menu-cms'
 
 /**
  * 왼쪽에 붙어 따라다니는 옆 차례표.
@@ -7,8 +8,8 @@ import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
  * 없었다. PCB MES 를 보다가 화장품 MES 로 넘어가려면 마우스를 맨 위까지
  * 올려 메뉴를 펼쳐야 한다. 긴 장일수록 그 거리가 멀어진다.
  *
- * 자료는 lib/menu.ts 하나만 읽는다 — 위 탭 막대·현재 위치 줄과 같은 것이다.
- * 여기에 목록을 따로 적어 두면 한쪽만 고쳐져 어긋난다.
+ * 자료는 getMenu(관리 화면 값, 예비는 lib/menu.ts) 하나만 읽는다 — 위 탭 막대·현재 위치 줄과
+ * 같은 것이다. 여기에 목록을 따로 적어 두면 한쪽만 고쳐져 어긋난다.
  *
  * 움직임은 아이파킹을 재면서 가져온 규칙을 따른다:
  *  - 들어올 때 위에서 차례로 올라온다(계단 지연). 저쪽 text-active-animation
@@ -19,8 +20,9 @@ import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
  *
  * 화면이 좁으면 통째로 안 그린다. 그 자리는 현재 위치 줄의 펼침 목록이 맡는다.
  */
-export default function SideNav({ currentPath }: { currentPath: string }) {
-  const menu = MENU_ITEMS.find((m) => isActive(currentPath, m.match))
+export default async function SideNav({ currentPath }: { currentPath: string }) {
+  const { top } = await getMenu()
+  const menu = top.find((m) => isActive(currentPath, m.match))
   const subs = (menu?.sub ?? []).filter((s) => !s.hidden)
   // 형제가 없으면 차례표가 할 말이 없다.
   if (!menu || subs.length < 2) return null

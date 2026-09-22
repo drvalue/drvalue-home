@@ -55,7 +55,7 @@
 | 세션·로그인·권한 | `api/AGENTS.md` 의 「관리 화면 인가」 · `docs/tracking/decisions/0014` · `docs/security.md` |
 | 환경변수를 새로 만든다 | `docs/security.md` 의 「빠뜨리면 닫히는 쪽으로 기운다」 |
 | 화면 배치·CSS | `docs/engineering-notes.md` 의 flex·grid·`:has()` 항목들 |
-| 상단 메뉴·주소 | `web/lib/menu.ts` 하나만 고친다. 여러 화면이 이걸 읽는다 |
+| 상단 메뉴·주소 | 메뉴는 관리 화면 「사이트 › 메뉴」(`site_menu_items`)가 정한다. 화면은 `web/lib/menu-cms.ts` 의 `getMenu()` 하나로 읽고, `web/lib/menu.ts` 는 api 가 안 닿을 때의 예비·씨앗이다 |
 | 게시판·문의 저장 | `api/src/common/entity` 의 엔티티. 테이블 이름은 옛 관리 도구 시절 것 그대로 — `db/schema.sql` |
 | 검사 스크립트 | `docs/standards.md` 의 「검사 통과 기준」. 숫자가 줄면 되돌린다 |
 | 원본 대조 규칙 | `docs/tracking/decisions/index.md` 의 「헤더를 새로 그리고 전용 검사로 덮는다」·「원본 대조 게이트 은퇴」 |

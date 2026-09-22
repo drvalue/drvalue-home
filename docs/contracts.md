@@ -20,6 +20,24 @@
   (`dv_admin`) 만 받는다 — `Authorization` 헤더는 보지 않는다. 없으면 `401`,
   입장 권한이 없으면 `403 ADMIN_AUTH_NOT_ALLOWED`, 역할이 안 맞으면 `403 ADMIN_AUTH_FORBIDDEN`.
 
+## `GET /api/content/menu`
+
+사이트 메뉴(관리 화면 「사이트 › 메뉴」). 익명. 모든 장의 머리글·현재 위치 줄·옆 차례표·바닥글이 읽는다.
+
+| 받는 것 | 뜻 |
+|---|---|
+| `lang` | `ko-KR` · `en-US`. 그 언어 이름이 없는 칸은 한국어 이름으로 나간다. 다른 값은 `400` |
+
+돌려주는 것: `{ data: { top, footer }, language }`. **보이는 칸만** 나간다(끈 칸은 이름도 없다).
+- `top[]`: `label` · `href` · `match`(이 주소 앞부분으로 시작하면 그 탭이 켜진다. 없으면 `[href]`) ·
+  `children[]`(`label` · `href` · `description` · `hidden_in_dropdown` — 참이면 드롭다운에는 안 그리고
+  현재 위치 줄에만 이름을 쓴다).
+- `footer[]`: `label` · `href`. 비어 있으면 바닥글에 링크 줄이 없다.
+
+관리 쪽은 `GET·PUT /api/admin/menu`(세션 · 전체 권한과 마케팅, 인사 `403`). PUT 은 메뉴 전체
+(`{ top: [...], footer: [...] }`)를 한 번에 바꾼다 — 깊이 3 · 한국어 이름 없음 · 링크 모양(`/` 로 시작하되
+`//` 아님, 또는 http(s))이 틀리면 `400`. 웹의 `POST /api/admin/menu/refresh` 는 Next 가 받아 메뉴 캐시를 비운다.
+
 ## `GET /api/content/posts`
 
 게시판 목록.

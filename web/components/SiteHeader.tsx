@@ -1,8 +1,9 @@
 import ContactModal from '@/components/ContactModal'
 import ClientAction from '@/components/ClientAction'
 import HeaderScroll from './HeaderScroll'
-import { MENU_ITEMS, isActive, isSubActive } from '@/lib/menu'
+import { isActive, isSubActive } from '@/lib/menu'
 import type { MenuItem } from '@/lib/menu'
+import { getMenu } from '@/lib/menu-cms'
 
 /** 드롭다운에 실제로 그릴 하위. `hidden` 은 이름만 쓰고 안 그린다 — 왜 그런지는
  *  lib/menu.ts 의 SubMenu 머리말 참고. */
@@ -20,8 +21,11 @@ const shown = (m: MenuItem) => (m.sub ?? []).filter((sm) => !sm.hidden)
  *
  * 링크는 <a> 로 둔다. next/link 는 prefetch 를 붙이는데, 이관 중에는 아직
  * PHP 가 서비스하는 주소가 섞여 있어 존재하지 않는 경로를 미리 긁는다.
+ *
+ * 메뉴는 관리 화면 값(getMenu)이다. api 가 안 닿으면 lib/menu.ts 예비.
  */
-export default function SiteHeader({ currentPath }: { currentPath: string }) {
+export default async function SiteHeader({ currentPath }: { currentPath: string }) {
+  const { top } = await getMenu()
   return (
     <>
     <header id="toss_header">
@@ -66,9 +70,9 @@ export default function SiteHeader({ currentPath }: { currentPath: string }) {
 
         <nav id="toss_gnb" className="desktop_only">
           <ul className="gnb_list">
-            {MENU_ITEMS.map((menu) => (
+            {top.map((menu) => (
               <li
-                key={menu.title}
+                key={menu.link + menu.title}
                 className={`gnb_li ${isActive(currentPath, menu.match) ? 'is-active' : ''}`}
               >
                 {/* 글자를 <span> 으로 감싼다. 밑줄을 칸 폭이 아니라 **글자 폭**에
@@ -133,8 +137,8 @@ export default function SiteHeader({ currentPath }: { currentPath: string }) {
       <div id="mobile_menu_layer" className="mobile_only" aria-hidden="true">
         <div className="m_menu_content">
           <ul className="m_gnb_list">
-            {MENU_ITEMS.map((menu) => (
-              <li key={menu.title} className="m_gnb_li">
+            {top.map((menu) => (
+              <li key={menu.link + menu.title} className="m_gnb_li">
                 {/* 손으로 쓰는 화면에는 호버가 없다. 하위가 하나뿐이면 펼침으로
                     만들지 않고 바로 가는 링크로 둔다 — 한 번 더 누르게 할 이유가 없고,
                     원본 마크업과도 어긋나지 않는다. */}
