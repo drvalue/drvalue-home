@@ -39,3 +39,6 @@ data/
 
 # 브라우저 자동화(Playwright MCP)가 남기는 스크린샷·스냅샷
 .playwright-mcp/
+
+# 에이전트 작업 사본(git worktree). 부모가 합친 뒤 지운다.
+.claude/worktrees/
