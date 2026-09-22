@@ -95,9 +95,9 @@
 
 - 상단 메뉴·현재 위치 줄·옆 차례표·바닥글 링크: `web/lib/menu-cms.ts` 의 `getMenu()`(관리 화면
   「사이트 › 메뉴」 값, 예비는 `web/lib/menu.ts`). 사이트맵은 아직 `web/lib/menu.ts` 를 읽는다.
-- 제품 기능·화면 캡처 설명: `web/app/page/business/max/maxContent.ts`,
-  `web/app/page/service/solutionContent.ts`
-- 수행 과제: `web/app/page/portfolio/portfolio/list.ts`
+- 제품 기능·화면 캡처 설명: `web/app/(site)/page/business/max/maxContent.ts`,
+  `web/app/(site)/page/service/solutionContent.ts`
+- 수행 과제: `web/app/(site)/page/portfolio/portfolio/list.ts`
 
 ## 모듈 경계
 

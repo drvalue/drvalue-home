@@ -541,11 +541,12 @@ export default function Page() {{
     # 홈만 자리가 다르다. `/index.php` 를 폴더로 만들면 홈이 둘이 된다
     # (`/` 와 `/index.php`). 옛 주소는 `/` 로 넘기는 308 만 남기고, 화면은
     # 뿌리에 둔다 — next.config.mjs 의 리다이렉트와 짝이다.
+    # 공개 장은 route group app/(site) 아래다(관리 화면과 루트 레이아웃이 따로 — 주소에는 안 나타난다).
     if path.lstrip("/") == "index.php":
-        dest = ROOT / "web" / "app" / "page.tsx"
+        dest = ROOT / "web" / "app" / "(site)" / "page.tsx"
     else:
         # 폴더 이름에서 `.php` 를 뗀다. 옛 주소는 리다이렉트가 받는다.
-        dest = ROOT / "web" / "app" / clean_path.lstrip("/") / "page.tsx"
+        dest = ROOT / "web" / "app" / "(site)" / clean_path.lstrip("/") / "page.tsx"
     # 결과 전체에 한 번 건다. PAGE_CSS 의 `url(...)`, JSX 의 src·href,
     # 인라인 스크립트가 모두 한 문자열 안에 들어 있다.
     out = use_opt_images(out)

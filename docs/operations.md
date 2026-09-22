@@ -24,6 +24,8 @@ docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_ST
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0006-menu.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0007-seo.sql
 docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0008-intro-pages-seed.sql
+# 0009 는 web 이 메뉴 자리표시를 채우게 된 뒤에 돈다 — 옛 web 에 먼저 돌리면 머리글에 {case} 가 그대로 보인다.
+docker exec -i drvalue_directus_pg psql -U drvalue -d drvalue_cms -v ON_ERROR_STOP=1 < db/migrations/0009-menu-count-tokens.sql
 
 # 3. 백엔드
 cd api

@@ -209,6 +209,11 @@ function Shell({ children }: { children: React.ReactNode }) {
             </div>
           ))}
           <div className="dva_me">
+            {/* 고친 글이 사이트에 어떻게 나왔는지 바로 보러 간다(Directus·WordPress 의 「사이트 보기」). 새 탭 — 쓰던 화면을 안 잃는다. */}
+            <a className="dva_site_link" href="/" target="_blank" rel="noreferrer">
+              사이트 보기
+              <span className="dva_sr"> (새 탭)</span>
+            </a>
             <div>
               {me.name ? `${me.name} · ` : ''}
               {me.email}

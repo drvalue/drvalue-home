@@ -6,7 +6,7 @@ import { when } from '@/lib/admin-extra'
 import { getPage, savePage, type PageContent, type PageDetail } from '@/lib/admin-pages'
 import { useLeaveGuard } from '../ui/leave'
 import { useToast } from '../ui/toast'
-import { Fields } from './[key]/Fields'
+import { CollapseProvider, Fields, sectionsOf } from './[key]/Fields'
 import './pages.css'
 
 const LANGS = [
@@ -31,6 +31,13 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
   const errorBox = useRef<HTMLDivElement>(null)
   const toast = useToast()
   const { setDirty } = useLeaveGuard()
+  // 접는 구역 신호(모두 펼치기·접기 · 구역 바로 가기). 저장이 실패하면 모두 편다 — 틀린 칸이 접혀 있으면 못 찾는다.
+  const [collapse, setCollapse] = useState<{ rev: number; open: boolean; focus: { key: string; rev: number } | null }>({
+    rev: 0,
+    open: false,
+    focus: null,
+  })
+  const expandAll = (open: boolean) => setCollapse((c) => ({ rev: c.rev + 1, open, focus: null }))
 
   useEffect(() => {
     getPage(key)
@@ -81,11 +88,13 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
       setDetail((d) => (d ? { ...d, languages: { ...d.languages, [lang]: r } } : d))
       toast(`${schema.label}(${LANGS.find((l) => l.code === lang)?.label}) 글을 저장했습니다. 사이트에 바로 반영됩니다.`)
     } catch (e) {
+      expandAll(true)
       setError((e as Error).message)
     } finally {
       setBusy(false)
     }
   }
+  const sections = sectionsOf(schema.fields)
 
   return (
     <>
@@ -146,13 +155,40 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
             한국어 글을 복사해서 시작하기
           </button>
         )}
-        <Fields
-          fields={schema.fields}
-          value={drafts[lang] ?? {}}
-          onChange={(v) => setDrafts((d) => ({ ...d, [lang]: v }))}
-          id={`pg-${lang}`}
-          onError={setError}
-        />
+        {sections.length > 1 && (
+          <nav className="dvp_toc" aria-label="구역 바로 가기">
+            <ul>
+              {sections.map((s) => (
+                <li key={s.key}>
+                  <button
+                    type="button"
+                    className="dvp_toc_link"
+                    onClick={() => setCollapse((c) => ({ ...c, focus: { key: s.key, rev: (c.focus?.rev ?? 0) + 1 } }))}
+                  >
+                    {s.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="dvp_toc_all">
+              <button type="button" className="dva_btn is-small" onClick={() => expandAll(true)}>
+                모두 펼치기
+              </button>
+              <button type="button" className="dva_btn is-small" onClick={() => expandAll(false)}>
+                모두 접기
+              </button>
+            </div>
+          </nav>
+        )}
+        <CollapseProvider value={collapse}>
+          <Fields
+            fields={schema.fields}
+            value={drafts[lang] ?? {}}
+            onChange={(v) => setDrafts((d) => ({ ...d, [lang]: v }))}
+            id={`pg-${lang}`}
+            onError={setError}
+          />
+        </CollapseProvider>
       </div>
     </>
   )

@@ -11,6 +11,10 @@ const nextConfig = {
   // 옮기며 실제 파일이 됐으므로 outputFileTracingRoot 를 위로 올릴 이유가 없어졌다.)
   output: 'standalone',
 
+  // 공개 화면(app/(site))과 관리 화면(app/admin)의 루트 레이아웃이 따로다. 어느 쪽에도 안 맞는 주소의
+  // 404 는 app/global-not-found.tsx 가 공개 레이아웃으로 그린다.
+  experimental: { globalNotFound: true },
+
   // 디자이너가 설계한 주소를 지금 있는 페이지로 넘긴다. 주소를 바꾸는
   // 것이라 rewrite 가 아니라 redirect 다 — 주소창이 실제 페이지를 가리켜야
   // 나중에 그 주소가 사라질 때 무엇이 깨지는지 보인다.

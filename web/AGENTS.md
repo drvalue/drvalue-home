@@ -36,7 +36,7 @@
 - **가로 스크롤이 없어야 한다** — 390 · 768 · 1024 · 1280 · 1440.
   표·도식·코드 블록만 예외이고 자기 컨테이너 안에서만 민다.
 - **자바스크립트가 꺼져도 글이 다 보여야 한다.** 등장 효과는 스크립트가
-  숨기고, 스크립트가 안 돌면 아무것도 안 숨는다. 장치는 `app/layout.tsx`
+  숨기고, 스크립트가 안 돌면 아무것도 안 숨는다. 장치는 `app/(site)/layout.tsx`
   에 한 번 걸려 있고 규칙은 `styles/motion.css` 다 — 어느 장이든 표시만
   단다: `data-rv`(구역·자식 차례) · `data-rv="shot"`(그림) · `data-count`
   (숫자). 공개 장은 전부 새 틀(SolutionShell + `data-rv`)이다. AOS(`data-aos`)는 숨김 장 patent_old 에만 남았고 `<noscript>` 가 켠다.
@@ -58,6 +58,21 @@
 
 - `app/admin/**` 와 `lib/admin.ts`(fetch 헬퍼. 401 이면 `/admin/login` 으로) 뿐이다.
   공개 화면 CSS 와 섞지 않는다 — `app/admin/admin.css` 하나, 전부 `.dva` 아래.
+- **관리 화면은 루트 레이아웃이 따로다**(`app/admin/layout.tsx` 가 `<html>`·`<body>` 를 그린다). 공개 화면의
+  css(style·header·footer·swiper·font-awesome)·스크립트(jQuery·Swiper·GTM·채팅)가 안 실린다(실측: 공개 파일 7 → 0).
+  글꼴(Pretendard)만 같이 쓴다. 공개 style.css 가 주던 기본 초기화(`* {margin:0;padding:0}` · 글꼴 · 링크 · 목록)는
+  `admin.css` 맨 위에 같은 값으로 옮겼다. 공개 화면과 루트가 달라서 둘 사이를 오가면 전체를 다시 읽는다.
+  `/admin` 아래의 없는 주소는 `app/admin/[...missing]` → `app/admin/not-found.tsx`(관리 껍데기 안 404).
+- **페이지 편집기는 접힌다**(`pages/[key]/Fields.tsx`). 맨 위 묶음·목록은 구역(첫째만 열림), 목록 항목은 한 줄 요약
+  (제목 같은 칸 → 채워진 첫 글 칸), 위에 구역 바로 가기와 「모두 펼치기·접기」. 저장이 실패하면 모두 편다 — 틀린 칸이
+  접혀 있으면 못 찾는다. 긴 장(PCB MES 칸 162개)이 25,000px 벽이었다(지금 처음 화면 1,600px 안팎).
+  접힌 몸은 `hidden` 인데, 그 칸에 `display` 를 주면 브라우저 기본 `[hidden]` 을 이긴다 — `[hidden]{display:none}` 을 같이 둔다.
+- **글 폼 「저장」은 그 자리에 남는다**(Strapi·Payload·WordPress 와 같다). 새 글은 저장된 글 주소로 바꿔 앉고, 고친 글은
+  api 가 정한 값(주소·대표 그림)을 다시 받아 기준을 맞춘다. 목록은 머리의 「목록」.
+- 글 목록에서 지우면 전체 권한은 알림의 「되돌리기」로 바로 되살린다(그 글의 삭제 이력을 변경 이력 api 로 되돌림). 다른
+  범위에는 되돌리기 안내를 하지 않는다 — 변경 이력 화면이 전체 권한 것이다. 알림(`ui/toast.tsx`)은 단추 하나를 받는다.
+- 편집기(Quill) 도구 막대에 한국어 이름·풍선 도움말을 단다(`HtmlEditor.tsx` 의 `TOOL_NAMES`). 머리 고르기의
+  「Normal」 같은 영어는 CSS `content` 로 바꾼다(`HtmlEditor.css`).
 - 메뉴는 **되는 것만**. 게시판은 `/api/admin/auth/me` 의 `boards`(규칙은 api 에만)로 거른다:
   게시판 9(공지·뉴스·보도자료·채용·FAQ·특허·저작권·수행실적·연혁 — hr 은 채용만, marketing 은
   채용 빼고) + 운영(문의·미디어 — hr 에는 없다) + 사이트(메인 화면·페이지·메뉴 — hr 에는 없다) + 관리(변경 이력·권한 — 전체 권한만).
@@ -125,13 +140,22 @@
 
 - 화면은 서버 컴포넌트가 기본이다. 브라우저에서만 되는 일(관찰·모달·
   스크롤)만 `'use client'` 로 뺀다.
-- 제품 설명·화면 캡처 설명은 `app/page/business/max/maxContent.ts` 와
-  `app/page/service/solutionContent.ts` 에서 온다. 화면 파일에 글을 적지
+- **공개 화면은 route group `app/(site)/` 아래다**(루트 레이아웃 `app/(site)/layout.tsx` · 홈 `app/(site)/page.tsx` ·
+  장 `app/(site)/page/**` · 404 `app/(site)/not-found.tsx`). 괄호 폴더는 주소에 안 나온다 — 주소는 그대로다.
+  관리 화면(`app/admin`)과 루트 레이아웃을 가르려고 옮겼다. 어느 쪽에도 안 맞는 주소의 404 는 `app/global-not-found.tsx`
+  (next.config `experimental.globalNotFound`)가 공개 레이아웃과 한국어 404 몸통을 그대로 조립한다 — 레이아웃을 건너뛰는
+  자리라 메타(아이콘·설명·테마 색)도 공개 레이아웃 것을 가져온다. 옮긴 날 공개 장 10곳의 서버 HTML 은 CSS 한 줄 말고 같았다.
+- **메뉴 설명의 숫자는 자리표시다**(`{patent.registered}` · `{patent.applied}` · `{patent}` · `{copyright}` · `{case}`).
+  `getMenu()` 가 공개 게시판의 글 수로 채운다(60초 캐시). 수를 못 읽으면 그 자리표시가 든 토막(「 · 」로 나뉜 한 조각)을
+  빼서 틀린 숫자를 안 보인다. `lib/menu.ts` 씨앗도 자리표시다 — 관리 화면 메뉴의 옛 글은 `db/migrations/0009` 가 바꾼다
+  (옛 글과 똑같을 때만). `/llms.txt` 도 `getMenu()` 를 읽는다.
+- 제품 설명·화면 캡처 설명은 `app/(site)/page/business/max/maxContent.ts` 와
+  `app/(site)/page/service/solutionContent.ts` 에서 온다. 화면 파일에 글을 적지
   않는다 — 자료를 고쳤을 때 화면이 옛말을 하게 된다.
 - **회사·사업·서비스 소개 16장(오시는 길 포함)은 관리 화면 「페이지」의 글로 그린다.** 장마다
   `content.ts` 가 기본 글(= 위 자료 파일의 옛 글을 페이지 글 모양으로)이고, 화면은
   `cmsPageContent(key) ?? 기본 글` 이다 — api 가 죽어도 같은 장이 나온다. 형·변환은
-  `app/page/pageContentParts.ts` 하나(api 의 `core/page/schema/parts.ts` 와 같은 모양).
+  `app/(site)/page/pageContentParts.ts` 하나(api 의 `core/page/schema/parts.ts` 와 같은 모양).
   M.AX 소개·AI 솔루션 개발 장의 카드·구역 제목은 하위 장의 페이지 글(머리말·요약)을 읽는다.
   움직이는 시연(…Demo)·실제 응답 기록·흐름도(FlowBand)는 코드다. 이제 자료 파일을 고쳐도
   사이트는 안 바뀐다(DB 의 글이 이긴다) — 글은 관리 화면에서 고친다. 자료 파일은 씨앗·예비다.
@@ -139,10 +163,10 @@
   요청마다 `/api/content/posts` 를 읽는다(`no-store`, `force-dynamic`). 관리 화면에서
   저장하면 다음 요청에 보인다. api 가 안 닿을 때만 코드의 예비 목록
   (`companyContent.ts` · `portfolio/list.ts` · 각 장의 배열)을 쓴다.
-- **공지·보도·뉴스는 `app/page/support/board/` 한 틀이다.** 목록·검색(GET 폼)·쪽 넘김(링크)·글
+- **공지·보도·뉴스는 `app/(site)/page/support/board/` 한 틀이다.** 목록·검색(GET 폼)·쪽 넘김(링크)·글
   한 건을 서버가 그린다 — 예전 jQuery 목록은 스크립트가 꺼지면 비었다. 글 주소는
   `/page/support/<게시판>/<slug>`. 옛 상세 `목록?id=` 는 308(옛 PHP id 는 `legacy-` + 앞 8자로
-  옮겼다), 다른 게시판 글 주소는 제 게시판으로 308, 없는 글은 404(`app/not-found.tsx`).
+  옮겼다), 다른 게시판 글 주소는 제 게시판으로 308, 없는 글은 404(`app/(site)/not-found.tsx`).
   검색 결과 쪽은 noindex, 2쪽부터는 그 쪽이 대표주소. `scripts/check-boards.py` 가 본다.
 - **메인(/)은 CMS 가 그린다**(관리 화면 「메인 화면」). 글·구역 차례·카드는 `cmsPageContent('home') ?? app/home/content.ts`,
   기간 배너·팝업은 `cmsHome()`(`/api/content/home`), 머리 그림의 숫자 셋은 `cmsBoardTotal`(특허·저작권·수행실적

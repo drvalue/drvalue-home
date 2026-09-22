@@ -1,5 +1,26 @@
-/* 관리 화면. 공개 화면의 css(style.css·header.css)가 루트 레이아웃에서 같이 오므로
-   전부 .dva 아래에 가두고 필요한 것은 되돌린다. */
+/* 관리 화면. 공개 화면과 루트 레이아웃이 따로라(app/admin/layout.tsx) 공개 css·스크립트가 안 온다.
+   이 파일은 관리 화면에서만 실린다. 꾸밈은 .dva 아래에 가둔다 — 로그인 화면(.dva_auth)도 같은 파일을 쓴다. */
+
+/* 공개 style.css 가 주던 기본 초기화. 루트를 가르기 전 관리 화면은 이것에 기대 있었다 — 같은 값으로 둔다. */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color: #191f28;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+ul,
+li {
+  list-style: none;
+}
 .dva,
 .dva * {
   box-sizing: border-box;
@@ -116,6 +137,34 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  /* 어두운 막대 위의 밝은 기본 스크롤 막대가 튀었다 — 가늘고 어둡게. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.dva .dva_site_link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--dva-side-on);
+  font-size: 13px;
+  font-weight: 700;
+}
+.dva .dva_site_link::after {
+  content: '↗';
+  font-size: 12px;
+  opacity: 0.8;
+}
+.dva .dva_site_link:hover {
+  text-decoration: underline;
+}
+/* 확인 칸 — 기본(13px)은 손끝으로 못 누른다. 강조색도 관리 화면 것으로. */
+.dva input[type='checkbox'],
+.dva input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--dva-accent);
+  vertical-align: -3px;
 }
 .dva .dva_brand {
   display: block;
@@ -793,6 +842,38 @@
 .dva_toast.is-err {
   background: #b3261e;
 }
+/* 단추가 있는 알림(삭제 뒤 「되돌리기」) — 알림 줄은 클릭을 흘려보내지만 이 알림만 받는다. */
+.dva_toast:has(.dva_toast_act) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: auto;
+}
+.dva_toast_act {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.dva_toast_act:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.dva_toast_act:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .dva_toast_act {
+    min-height: 44px;
+  }
+}
 /* 저장 안 한 입력이 있을 때 떠나려 하면 — 화면 아래 확인 막대. */
 .dva_leave {
   position: fixed;
@@ -963,11 +1044,18 @@
     transition: none;
   }
 }
-/* 손가락으로 누르는 화면은 누를 자리를 44px 로 — 표 안 작은 버튼 포함. */
+/* 손가락으로 누르는 화면은 누를 자리를 44px 로 — 표 안 작은 버튼 포함. 글 제목·장 이름 같은 글자 링크도
+   (실측 16~18px 높이였다) 줄 높이만큼 누를 자리를 준다. */
 @media (pointer: coarse) {
   .dva .dva_btn {
     min-height: 44px;
     min-width: 44px;
+  }
+  .dva .dva_table td.is-title a,
+  .dva .dva_table td a.dvp_name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 /* 좁은 화면: 글 목록 표를 카드로. 제목이 한 줄을 다 쓰고, 나머지 칸은 이름표를 달고 아래에. */

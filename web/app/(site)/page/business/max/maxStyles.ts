@@ -37,6 +37,9 @@ export const PAGE_CSS = `
 #dvmax .mx_hero .mx_wrap { position: relative; z-index: 2; color: #fff; }
 #dvmax .mx_kicker { font-size: 16px; font-weight: 800; color: #ff5b66; margin-bottom: 10px; letter-spacing: .02em; }
 #dvmax .mx_hero :is(h1, h2) { font-size: 42px; font-weight: 800; line-height: 1.25; letter-spacing: -1.5px; margin: 0; color: #fff; }
+/* 제목은 낱말 사이에서만 줄을 바꾼다 — 390px 에서 「안/내드립니다」처럼 음절 중간에서 끊겼다.
+   칸보다 긴 낱말(영문 제품명·주소)만 쪼갠다. 본문 문단은 이미 칸마다 keep-all 이다. */
+#dvmax :is(h1, h2, h3, h4) { word-break: keep-all; overflow-wrap: anywhere; }
 #dvmax .mx_hero :is(h1, h2) b { color: #a9c4dd; font-weight: 800; }
 #dvmax .mx_hero p { margin-top: 16px; font-size: 17px; line-height: 1.75; color: #d6e2ee;
   max-width: 820px; word-break: keep-all; }

@@ -14,6 +14,34 @@ const PREVIEW = '/api/admin/files/'
  * 공개 주소는 게시된 글의 그림만 내 준다 — 초안에 넣은 그림이 편집기에서 깨진다.
  */
 const toEditor = (html: string) => html.split(PUBLIC).join(PREVIEW)
+
+/**
+ * Quill 도구 막대에는 영어 이름(aria-label)만 있거나 이름이 없다. 한국어 이름과 풍선 도움말을 단다 —
+ * 화면 낭독기와 마우스를 올린 사람 모두 무엇을 하는 단추인지 안다. 머리 고르기의 「Normal」 같은 글자는 CSS 가 바꾼다.
+ */
+const TOOL_NAMES: [string, string][] = [
+  ['.ql-bold', '굵게'],
+  ['.ql-italic', '기울임'],
+  ['.ql-underline', '밑줄'],
+  ['.ql-list[value="ordered"]', '번호 목록'],
+  ['.ql-list[value="bullet"]', '점 목록'],
+  ['.ql-blockquote', '인용'],
+  ['.ql-link', '링크'],
+  ['.ql-image', '그림 넣기'],
+  ['.ql-clean', '서식 지우기'],
+  ['.ql-header .ql-picker-label', '글자 크기(제목·본문)'],
+  ['.ql-align .ql-picker-label', '정렬'],
+]
+function nameToolbar(root: HTMLElement | null) {
+  const bar = root?.querySelector('.ql-toolbar')
+  if (!bar) return
+  for (const [sel, name] of TOOL_NAMES) {
+    bar.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+      el.setAttribute('aria-label', name)
+      el.setAttribute('title', name)
+    })
+  }
+}
 const toStored = (html: string) => html.split(PREVIEW).join(PUBLIC)
 
 /**
@@ -103,6 +131,7 @@ export default function HtmlEditor({
       )
       q.clipboard.dangerouslyPasteHTML(toEditor(value ?? ''), 'silent')
       q.on('text-change', () => latest.current(toStored(q.root.innerHTML)))
+      nameToolbar(box.current.parentElement)
       quill.current = q
     })()
     return () => {
