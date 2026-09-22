@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+scripts/__pycache__

@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // public/ 아래 css·img·icon 은 PHP 쪽 원본을 가리키는 심볼릭 링크다.
-  // 이관이 끝나기 전까지 두 사이트가 같은 자산을 봐야 해서 복사하지 않는다.
-  outputFileTracingRoot: new URL('../', import.meta.url).pathname,
+  // 도커 이미지는 standalone 산출물(server.js + 필요한 node_modules 만)을 담는다.
+  // 로컬 next dev·next start 에는 영향 없다. (옛 PHP 자산 심볼릭 링크는 회사 저장소로
+  // 옮기며 실제 파일이 됐으므로 outputFileTracingRoot 를 위로 올릴 이유가 없어졌다.)
+  output: 'standalone',
 
   // 디자이너가 설계한 주소를 지금 있는 페이지로 넘긴다. 주소를 바꾸는
   // 것이라 rewrite 가 아니라 redirect 다 — 주소창이 실제 페이지를 가리켜야

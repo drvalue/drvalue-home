@@ -1,0 +1,25 @@
+# API(Nest) 이미지. 빌드 단계에서 nest build 를 돌리고, 실행 단계에는
+# 운영 의존성과 dist/ 만 담는다.
+#
+# 빌드:  docker build -t drvalue-api ./api
+# 실행:  docker run -p 3500:3500 --env-file api/.env drvalue-api
+# 세션 파일과 알림 상태는 /data 에 쓴다(NOTIFY_STATE_DIR) — 컨테이너를 갈아도
+# 남게 볼륨을 붙인다. 루트 docker-compose.yml 이 그렇게 한다.
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build && npm prune --omit=dev
+
+FROM node:24-alpine AS run
+WORKDIR /app
+ENV NODE_ENV=production PORT=3500 NOTIFY_STATE_DIR=/data
+RUN addgroup -S api && adduser -S api -G api && mkdir -p /data && chown api:api /data
+COPY --from=build --chown=api:api /app/node_modules ./node_modules
+COPY --from=build --chown=api:api /app/dist ./dist
+COPY --from=build --chown=api:api /app/package.json ./
+USER api
+VOLUME ["/data"]
+EXPOSE 3500
+CMD ["node", "dist/main.js"]

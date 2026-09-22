@@ -9,6 +9,18 @@ api/   Nest   사내 IAM · 메일 · 콘텐츠 API
 cms/   Directus 스키마 · 권한 · 예약 게시 · 다국어 · IAM 다리 · 서비스 계정
 ```
 
+## 도커로 띄우기
+
+```
+cp web/.env.example web/.env && cp api/.env.example api/.env && cp cms/.env.example cms/.env   # 값 채우기
+docker compose up -d --build        # web 3400 · api 3500 · directus 3350 · db 3330
+docker compose up -d --build web api   # CMS 는 그대로 두고 앞·뒤만
+```
+
+`web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(CMS 는 `cms/docker-compose.yml` 을 include).
+api 는 `SESSION_SECRET`·`IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다 — 기본값을 두면 관리자 세션을 누구나 만들 수 있어서다.
+컨테이너 안에서는 web → `http://api:3500`, api → `http://directus:8055` 로 부른다(compose 가 .env 값을 덮는다).
+
 ## IAM 이 두 군데 있는 이유
 
 이름이 같아 헷갈리지만 서로 다른 일을 한다. 하나가 다른 하나를 대신하지 못한다.
