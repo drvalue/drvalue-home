@@ -15,6 +15,13 @@ function trustProxyValue(raw: string): boolean | number | string {
 }
 
 async function bootstrap() {
+  // 관리자 세션 서명 비밀에 안전한 기본값은 없다. 없으면 뜨지 않는다.
+  if (!process.env.ADMIN_SESSION_SECRET) {
+    console.error(
+      'ADMIN_SESSION_SECRET 이 비어 있다. 관리자 세션을 서명할 수 없다.',
+    );
+    process.exit(1);
+  }
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // 프록시 뒤에서 req.ip 가 프록시 주소로 합쳐지면 IP 별 속도 제한이 한도 하나가 된다.
   if (process.env.TRUST_PROXY)
