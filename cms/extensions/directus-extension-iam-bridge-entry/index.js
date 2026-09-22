@@ -29,6 +29,9 @@ const EMBED = `<script>
   check();
   setInterval(check, 200);
   window.addEventListener('popstate', check);
+  // 뒤로 가기는 bfcache 로 페이지를 통째로 되살린다 — 요청도 없고 경로도 「안 바뀐」
+  // 것으로 보인다. 되살아날 때 처음부터 다시 본다.
+  window.addEventListener('pageshow', function () { last = ''; check(); });
 })();
 </script>`;
 
@@ -45,8 +48,14 @@ export default ({ init, embed }, { env, logger }) => {
     };
 
     app.get(['/admin', '/admin/'], (req, res, next) => {
-      if (!enabled() || hasSession(req)) return next();
-      return res.redirect('/iam-bridge/login');
+      if (!enabled()) return next();
+      if (!hasSession(req)) return res.redirect('/iam-bridge/login');
+      // 관리 앱 HTML 을 캐시하지 못하게 한다. 심은 스크립트가 없는 옛 HTML 을
+      // 304 로 계속 쓰면 폼이 되살아난다(실측).
+      delete req.headers['if-none-match'];
+      delete req.headers['if-modified-since'];
+      res.setHeader('Cache-Control', 'no-store');
+      return next();
     });
     // 세션이 있어도 /admin/login 을 여는 경우는 죽은 쿠키(로그아웃 실패·세션 만료)뿐이다.
     // 쿠키를 보고 통과시키면 폼이 계속 뜬다 — 무조건 IAM 으로.
