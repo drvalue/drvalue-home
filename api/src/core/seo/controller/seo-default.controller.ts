@@ -1,5 +1,6 @@
 import { Controller, Get, Logger, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataListResponse } from '../../../common/response/api-response.decorator';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
 import { ControllerSeoPublicPageResponseDto } from '../dto/controller-seo-default-response.dto';
@@ -21,7 +22,7 @@ export class SeoDefaultController {
     operationId: 'seoDefaultPublicList',
     summary: '덮어쓴 장 전부(언어 하나로)',
   })
-  @ApiOkResponse({ type: [ControllerSeoPublicPageResponseDto] })
+  @ApiDataListResponse(ControllerSeoPublicPageResponseDto)
   async list(
     @TransactionContext() ctx: ITransactionContext,
     @Query('lang') lang?: string,

@@ -34,4 +34,10 @@ export const SeoError = {
     message: '검색 설정을 되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.',
     status: HttpStatus.INTERNAL_SERVER_ERROR,
   } as ICommonErrorCode,
+
+  RESTORE_UNKNOWN: {
+    code: 'SEO_RESTORE_UNKNOWN',
+    message: '검색 설정을 되돌리지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
 };

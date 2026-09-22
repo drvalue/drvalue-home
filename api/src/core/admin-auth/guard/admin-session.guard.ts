@@ -15,6 +15,10 @@ import {
   readSession,
   SessionPayload,
 } from '../../../common/session/session-token';
+import {
+  ITransactionContext,
+  TX_CONTEXT_KEY,
+} from '../../../common/typeorm/transaction-context';
 import { AdminAuthError } from '../error/admin-auth.error';
 import { AdminUserService } from '../service/admin-user.service';
 
@@ -31,7 +35,7 @@ const RECHECK_MS = 60_000;
  */
 @Injectable()
 export class AdminSessionGuard implements CanActivate {
-  private readonly log = new Logger(AdminSessionGuard.name);
+  private readonly logger = new Logger(AdminSessionGuard.name);
   private readonly checked = new Map<string, number>();
 
   constructor(
@@ -48,7 +52,11 @@ export class AdminSessionGuard implements CanActivate {
       parseCookies(req.headers.cookie)[ADMIN_COOKIE],
     );
     if (session) {
-      await this.assertStillRegistered(session);
+      // 문맥은 미들웨어(DatabaseModule)가 가드보다 먼저 요청에 싣는다.
+      const tx = (req as unknown as Record<string, unknown>)[
+        TX_CONTEXT_KEY
+      ] as ITransactionContext;
+      await this.assertStillRegistered(tx, session);
       this.assertRole(ctx, session.role);
       req.admin = session;
       return true;
@@ -69,12 +77,15 @@ export class AdminSessionGuard implements CanActivate {
   }
 
   /** admin_users 행이 없거나 꺼지면(IAM 관리자 해제) 세션이 남아 있어도 60초 안에 막힌다. 범위 변경도 여기서 따라온다. */
-  private async assertStillRegistered(session: SessionPayload): Promise<void> {
+  private async assertStillRegistered(
+    tx: ITransactionContext,
+    session: SessionPayload,
+  ): Promise<void> {
     const key = `users:${session.email}`;
     if (Date.now() - (this.checked.get(key) ?? 0) < RECHECK_MS) return;
-    const row = await this.adminUserService.find(session.email);
+    const row = await this.adminUserService.find(tx, session.email);
     if (!row || !row.enabled) {
-      this.log.warn('admin_users 에서 빠진 사용자: 세션 거부');
+      this.logger.warn('admin_users 에서 빠진 사용자: 세션 거부');
       throw CommonError.createByErrorCode(AdminAuthError.NOT_ALLOWED);
     }
     session.role = row.role;

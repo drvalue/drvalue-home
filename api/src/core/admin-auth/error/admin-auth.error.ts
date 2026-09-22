@@ -53,4 +53,23 @@ export const AdminAuthError = {
     detail: 'dv_admin 세션이 없거나 만료됐다',
     status: HttpStatus.UNAUTHORIZED,
   } as ICommonErrorCode,
+
+  // ── 예상 못 한 실패(@ServiceException 이 바꾼다). 원인은 로그의 스택을 본다.
+  LOGIN_UNKNOWN: {
+    code: 'ADMIN_AUTH_LOGIN_UNKNOWN',
+    message: '로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
+
+  CALLBACK_UNKNOWN: {
+    code: 'ADMIN_AUTH_CALLBACK_UNKNOWN',
+    message: '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
+
+  USER_UNKNOWN: {
+    code: 'ADMIN_AUTH_USER_UNKNOWN',
+    message: '관리자 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+  } as ICommonErrorCode,
 };

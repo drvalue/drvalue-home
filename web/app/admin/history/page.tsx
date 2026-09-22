@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminFetch, Page } from '@/lib/admin'
+import { refreshSiteMenu } from '@/lib/admin-menu'
 import InlineConfirm from '../ui/InlineConfirm'
 import { pageOf, useQuery } from '../ui/query'
 import SearchBox from '../ui/SearchBox'
@@ -181,6 +182,8 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
     setErr('')
     try {
       const r = await adminFetch<{ warnings?: string[] }>(`/api/admin/revisions/${rev.id}/restore`, { method: 'POST' })
+      // 사이트 머리글은 메뉴를 60초 캐시한다 — 메뉴 저장 화면처럼 바로 비운다(실패해도 1분 안에 바뀐다).
+      if (rev.collection === 'menu') await refreshSiteMenu()
       const w = r.warnings?.length ? ' ' + r.warnings.join(' ') : ''
       setMsg(`이 변경 전 상태로 되돌렸습니다.${w}`)
       toast(`되돌렸습니다.${w}`)
@@ -237,13 +240,7 @@ function Detail({ rev, onRestored }: { rev: RevisionFull; onRestored: () => void
             </button>
           )
         ) : (
-          <span className="dvh_muted">
-            {rev.collection === 'files'
-              ? '파일은 되돌릴 수 없습니다. 필요하면 다시 올려 주세요.'
-              : rev.action === 'create'
-                ? '처음 만든 기록이라 이전 상태가 없습니다.'
-                : '되돌릴 수 없는 항목입니다.'}
-          </span>
+          <span className="dvh_muted">{rev.restore_note ?? '되돌릴 수 없는 항목입니다.'}</span>
         )}
         {err && <span className="dva_error dvh_inline_err">{err}</span>}
       </div>

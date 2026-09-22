@@ -1,10 +1,6 @@
 import { Body, Controller, Get, Logger, Put, UseGuards } from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataListResponse } from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -42,7 +38,7 @@ export class AdminHomeDefaultController {
     operationId: 'adminHomeDefaultFindBanners',
     summary: '배너 전부(꺼진 것·기간 밖 포함)',
   })
-  @ApiOkResponse({ type: [ControllerHomeDefaultBannerResponseDto] })
+  @ApiDataListResponse(ControllerHomeDefaultBannerResponseDto)
   async findBanners(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: ControllerHomeDefaultBannerResponseDto[] }> {
@@ -55,7 +51,7 @@ export class AdminHomeDefaultController {
     operationId: 'adminHomeDefaultSaveBanners',
     summary: '배너 전체 저장',
   })
-  @ApiOkResponse({ type: [ControllerHomeDefaultBannerResponseDto] })
+  @ApiDataListResponse(ControllerHomeDefaultBannerResponseDto)
   async saveBanners(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerHomeDefaultBannerSaveDto,
@@ -70,7 +66,7 @@ export class AdminHomeDefaultController {
     operationId: 'adminHomeDefaultFindPopups',
     summary: '팝업 전부(꺼진 것·기간 밖 포함)',
   })
-  @ApiOkResponse({ type: [ControllerHomeDefaultPopupResponseDto] })
+  @ApiDataListResponse(ControllerHomeDefaultPopupResponseDto)
   async findPopups(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: ControllerHomeDefaultPopupResponseDto[] }> {
@@ -83,7 +79,7 @@ export class AdminHomeDefaultController {
     operationId: 'adminHomeDefaultSavePopups',
     summary: '팝업 전체 저장',
   })
-  @ApiOkResponse({ type: [ControllerHomeDefaultPopupResponseDto] })
+  @ApiDataListResponse(ControllerHomeDefaultPopupResponseDto)
   async savePopups(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerHomeDefaultPopupSaveDto,

@@ -3,6 +3,7 @@ import { LANGUAGES } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
 import { RevisionService } from '../../../common/revision/revision.service';
+import { snapshotToDto } from '../../../common/revision/snapshot-dto';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { Transactional } from '../../../common/typeorm/transactional.decorator';
@@ -44,6 +45,19 @@ const when = (s: string | null | undefined): Date | null =>
  * 저장은 목록 전체를 한 번에 — 받은 id 는 고치고(팝업의 「보지 않기」가 id 에 걸려 있다), 없는 id 는 새로,
  * 목록에서 빠진 것은 지운다. 바꾸기 전·뒤 전체가 변경 이력 한 줄(collection home_banners · home_popups).
  */
+/** 변경 이력에 남은 배너·팝업 한 개(관리 화면 응답 모양) 중 되돌리기에 쓰는 칸. */
+interface SnapItem {
+  id?: number;
+  visible?: boolean;
+  image?: { id?: string } | null;
+  link_href?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  width?: number;
+  dismiss_days?: number;
+  translations?: unknown[];
+}
+
 @Injectable()
 export class HomeDefaultService {
   constructor(
@@ -126,6 +140,49 @@ export class HomeDefaultService {
     dto: ControllerHomeDefaultBannerSaveDto,
     who: SessionPayload,
   ): Promise<ControllerHomeDefaultBannerResponseDto[]> {
+    return this.writeBanners(ctx, dto, who, 'update');
+  }
+
+  /**
+   * 변경 이력의 배너 목록(관리 화면 모양)으로 되돌린다. 저장 DTO 로 바꿔 같은 규칙으로 검사하고,
+   * 그 사이에 지운 그림은 비우고 경고로 알린다.
+   */
+  @ServiceException({ errorCode: HomeError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restoreBanners(
+    ctx: ITransactionContext,
+    snapshot: unknown,
+    who: SessionPayload,
+  ): Promise<{
+    data: ControllerHomeDefaultBannerResponseDto[];
+    warnings: string[];
+  }> {
+    const items = (Array.isArray(snapshot) ? snapshot : []) as SnapItem[];
+    const dto = await snapshotToDto(ControllerHomeDefaultBannerSaveDto, {
+      items: items.map((b) => ({
+        id: b.id,
+        visible: b.visible,
+        image: b.image?.id ?? null,
+        link_href: b.link_href ?? null,
+        starts_at: b.starts_at ?? null,
+        ends_at: b.ends_at ?? null,
+        translations: b.translations ?? [],
+      })),
+    });
+    const warnings = await this.dropGoneImages(ctx, dto.items, '배너');
+    return {
+      data: await this.writeBanners(ctx, dto, who, 'restore'),
+      warnings,
+    };
+  }
+
+  /** 검사 · 저장(id 를 지킨다) · 변경 이력. 저장과 되돌리기가 같이 쓴다. */
+  private async writeBanners(
+    ctx: ITransactionContext,
+    dto: ControllerHomeDefaultBannerSaveDto,
+    who: SessionPayload,
+    action: 'update' | 'restore',
+  ): Promise<ControllerHomeDefaultBannerResponseDto[]> {
     for (const item of dto.items) this.assertBanner(item);
     await this.assertFiles(
       ctx,
@@ -171,7 +228,7 @@ export class HomeDefaultService {
     await this.revisionService.record(
       {
         actor: who.email,
-        action: 'update',
+        action,
         collection: 'home_banners',
         itemId: 'list',
         before,
@@ -189,6 +246,48 @@ export class HomeDefaultService {
     ctx: ITransactionContext,
     dto: ControllerHomeDefaultPopupSaveDto,
     who: SessionPayload,
+  ): Promise<ControllerHomeDefaultPopupResponseDto[]> {
+    return this.writePopups(ctx, dto, who, 'update');
+  }
+
+  /**
+   * 변경 이력의 팝업 목록(관리 화면 모양)으로 되돌린다. 저장 DTO 로 바꿔 같은 규칙으로 검사하고,
+   * 그 사이에 지운 그림은 비우고 경고로 알린다.
+   */
+  @ServiceException({ errorCode: HomeError.RESTORE_UNKNOWN })
+  @Transactional()
+  async restorePopups(
+    ctx: ITransactionContext,
+    snapshot: unknown,
+    who: SessionPayload,
+  ): Promise<{
+    data: ControllerHomeDefaultPopupResponseDto[];
+    warnings: string[];
+  }> {
+    const items = (Array.isArray(snapshot) ? snapshot : []) as SnapItem[];
+    const dto = await snapshotToDto(ControllerHomeDefaultPopupSaveDto, {
+      items: items.map((p) => ({
+        id: p.id,
+        visible: p.visible,
+        image: p.image?.id ?? null,
+        link_href: p.link_href ?? null,
+        starts_at: p.starts_at ?? null,
+        ends_at: p.ends_at ?? null,
+        width: p.width,
+        dismiss_days: p.dismiss_days,
+        translations: p.translations ?? [],
+      })),
+    });
+    const warnings = await this.dropGoneImages(ctx, dto.items, '팝업');
+    return { data: await this.writePopups(ctx, dto, who, 'restore'), warnings };
+  }
+
+  /** 검사 · 저장(id 를 지킨다 — 「N일 보지 않기」가 id 에 걸려 있다) · 변경 이력. */
+  private async writePopups(
+    ctx: ITransactionContext,
+    dto: ControllerHomeDefaultPopupSaveDto,
+    who: SessionPayload,
+    action: 'update' | 'restore',
   ): Promise<ControllerHomeDefaultPopupResponseDto[]> {
     const bodies = dto.items.map((item) => this.assertPopup(item));
     await this.assertFiles(
@@ -237,7 +336,7 @@ export class HomeDefaultService {
     await this.revisionService.record(
       {
         actor: who.email,
-        action: 'update',
+        action,
         collection: 'home_popups',
         itemId: 'list',
         before,
@@ -290,6 +389,25 @@ export class HomeDefaultService {
       throw CommonError.createByErrorCode(HomeError.DUPLICATE_LANGUAGE);
     if (codes.some((c) => !(LANGUAGES as readonly string[]).includes(c)))
       throw CommonError.createByErrorCode(HomeError.DUPLICATE_LANGUAGE);
+  }
+
+  /** 되돌릴 목록에서 지금 미디어에 없는 그림을 비운다. 비운 것이 있으면 경고 한 줄. */
+  private async dropGoneImages(
+    ctx: ITransactionContext,
+    items: { image?: string | null }[],
+    what: string,
+  ): Promise<string[]> {
+    const ids = items.flatMap((i) => (i.image ? [i.image.toLowerCase()] : []));
+    const sizes = await this.homeFileDefaultRepository.findSizes(ctx, ids);
+    let gone = 0;
+    for (const item of items)
+      if (item.image && !sizes.has(item.image.toLowerCase())) {
+        item.image = null;
+        gone += 1;
+      }
+    return gone
+      ? [`${what} 그림 ${gone}개는 파일이 지워져 있어 비워 두었습니다.`]
+      : [];
   }
 
   /** 그림이 미디어에 아직 있나 — 폼이 들고 있던 파일을 누가 지웠으면 409(FK 에 걸려 500 이 나기 전에). */

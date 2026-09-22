@@ -1,5 +1,6 @@
 import { Controller, Get, Logger, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../common/response/api-response.decorator';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
 import { ControllerHomeDefaultPublicResponseDto } from '../dto/controller-home-default-response.dto';
@@ -22,7 +23,7 @@ export class HomeDefaultController {
     operationId: 'homeDefaultFind',
     summary: '지금 살아 있는 배너 하나와 팝업들',
   })
-  @ApiOkResponse({ type: ControllerHomeDefaultPublicResponseDto })
+  @ApiDataResponse(ControllerHomeDefaultPublicResponseDto, { language: true })
   async find(
     @TransactionContext() ctx: ITransactionContext,
     @Query() query: ControllerHomeDefaultQueryDto,

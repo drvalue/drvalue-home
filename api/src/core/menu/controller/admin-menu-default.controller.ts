@@ -1,10 +1,6 @@
 import { Body, Controller, Get, Logger, Put, UseGuards } from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -36,7 +32,7 @@ export class AdminMenuDefaultController {
     operationId: 'adminMenuDefaultFind',
     summary: '메뉴 전체(꺼진 칸 포함)',
   })
-  @ApiOkResponse({ type: ControllerMenuDefaultAdminTreeResponseDto })
+  @ApiDataResponse(ControllerMenuDefaultAdminTreeResponseDto)
   async find(
     @TransactionContext() ctx: ITransactionContext,
   ): Promise<{ data: ControllerMenuDefaultAdminTreeResponseDto }> {
@@ -49,7 +45,7 @@ export class AdminMenuDefaultController {
     operationId: 'adminMenuDefaultSave',
     summary: '메뉴 전체 저장',
   })
-  @ApiOkResponse({ type: ControllerMenuDefaultAdminTreeResponseDto })
+  @ApiDataResponse(ControllerMenuDefaultAdminTreeResponseDto)
   async save(
     @TransactionContext() ctx: ITransactionContext,
     @Body() dto: ControllerMenuDefaultSaveDto,

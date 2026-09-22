@@ -4,6 +4,7 @@ import {
   ArrayMaxSize,
   IsArray as IsArrayValidator,
   IsBoolean as IsBooleanValidator,
+  IsEmail as IsEmailValidator,
   IsIn as IsInValidator,
   IsInt as IsIntValidator,
   IsISO8601 as IsISO8601Validator,
@@ -94,6 +95,34 @@ export function IsString(
       ...(min !== undefined && { minLength: min }),
       ...(max !== undefined && { maxLength: max }),
       ...(pattern && { pattern: pattern.source }),
+    })(target, key);
+  };
+}
+
+/** 이메일 주소. `message` 로 칸에 맞는 문구를 줄 수 있다(없으면 「○○ 주소를 확인해 주세요.」). */
+export function IsEmail(
+  opts: Common & { max?: number; message?: string },
+): PropertyDecorator {
+  return (target, propertyKey) => {
+    const key = propertyKey as string;
+    const { propertyName: name, max } = opts;
+    optionality(target, key, opts);
+    IsEmailValidator(
+      {},
+      { message: opts.message ?? `${name} 주소를 확인해 주세요.` },
+    )(target, key);
+    if (max !== undefined)
+      MaxLength(max, {
+        message: `${eun(name)} ${max}자까지 입력할 수 있습니다.`,
+      })(target, key);
+    ApiProperty({
+      description: opts.description,
+      example: opts.example ?? 'name@example.com',
+      type: String,
+      format: 'email',
+      required: !opts.optional,
+      nullable: opts.nullable,
+      ...(max !== undefined && { maxLength: max }),
     })(target, key);
   };
 }

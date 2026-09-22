@@ -1,5 +1,6 @@
 import { Controller, Get, Logger, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../common/response/api-response.decorator';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
 import { ControllerMenuDefaultPublicTreeResponseDto } from '../dto/controller-menu-default-response.dto';
@@ -22,7 +23,9 @@ export class MenuDefaultController {
     operationId: 'menuDefaultFind',
     summary: '공개 메뉴(상단·하단)',
   })
-  @ApiOkResponse({ type: ControllerMenuDefaultPublicTreeResponseDto })
+  @ApiDataResponse(ControllerMenuDefaultPublicTreeResponseDto, {
+    language: true,
+  })
   async find(
     @TransactionContext() ctx: ITransactionContext,
     @Query() query: ControllerMenuDefaultQueryDto,

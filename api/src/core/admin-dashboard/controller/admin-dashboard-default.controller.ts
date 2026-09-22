@@ -1,10 +1,6 @@
 import { Controller, Get, Logger, UseGuards } from '@nestjs/common';
-import {
-  ApiCookieAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiDataResponse } from '../../../common/response/api-response.decorator';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContext } from '../../../common/typeorm/transaction-context.decorator';
@@ -32,7 +28,7 @@ export class AdminDashboardDefaultController {
     operationId: 'adminDashboardDefaultSummary',
     summary: '홈 요약(새 문의·내 담당·초안·예약·최근 변경)',
   })
-  @ApiOkResponse({ type: ControllerAdminDashboardDefaultResponseDto })
+  @ApiDataResponse(ControllerAdminDashboardDefaultResponseDto)
   async summary(
     @TransactionContext() ctx: ITransactionContext,
     @AdminUser() who: SessionPayload,
