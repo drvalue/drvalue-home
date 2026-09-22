@@ -53,6 +53,12 @@ export class AdminRevisionDefaultService {
     return { ...r, data: r.data.map((x) => this.row(x)) };
   }
 
+  /** 가장 최근 변경 몇 줄. 홈(대시보드)이 쓴다 — 목록과 같은 모양. */
+  async recent(limit: number): Promise<RevisionRow[]> {
+    const r = await this.revisionService.listRecent({ pageSize: limit });
+    return r.data.map((x) => this.row(x));
+  }
+
   async item(collection: string, itemId: string, who: SessionPayload) {
     const rows = await this.revisionService.listFor(collection, itemId, 100);
     if (rows[0]) this.assertCanSee(rows[0], who);

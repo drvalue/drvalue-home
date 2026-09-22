@@ -50,7 +50,33 @@ export default function InquiriesPage() {
       .catch(() => {})
   }, [])
 
-  const sel = rows?.data.find((x) => x.id === selId) ?? null
+  // ?id= 가 지금 쪽 목록에 없으면(다른 쪽 · 거른 목록 밖 · 받은 링크) 하나만 따로 받아 연다.
+  const [outside, setOutside] = useState<InquiryDetail | null>(null)
+  const [outsideErr, setOutsideErr] = useState('')
+  const inPage = rows?.data.find((x) => x.id === selId) ?? null
+  useEffect(() => {
+    if (!selId || !rows || inPage) {
+      setOutside(null)
+      setOutsideErr('')
+      return
+    }
+    let alive = true
+    adminFetch<{ data: InquiryDetail }>(`/api/admin/inquiries/${selId}`)
+      .then((r) => {
+        if (!alive) return
+        setOutside(r.data)
+        setOutsideErr('')
+      })
+      .catch((e) => {
+        if (!alive) return
+        setOutside(null)
+        setOutsideErr((e as Error).message)
+      })
+    return () => {
+      alive = false
+    }
+  }, [selId, rows, inPage])
+  const sel = inPage ?? (outside && outside.id === selId ? outside : null)
   const pages = rows ? Math.max(1, Math.ceil(rows.total / rows.pageSize)) : 1
 
   function pick(id: number) {
@@ -63,6 +89,7 @@ export default function InquiriesPage() {
 
   function replace(next: InquiryDetail) {
     setRows((r) => (r ? { ...r, data: r.data.map((x) => (x.id === next.id ? next : x)) } : r))
+    setOutside((o) => (o && o.id === next.id ? next : o))
     refreshCounts()
   }
 
@@ -154,9 +181,14 @@ export default function InquiriesPage() {
 
         <aside ref={detail} className="dvi_detail" aria-label="문의 상세">
           {sel ? (
-            <Detail key={sel.id} item={sel} people={people} onSaved={replace} />
+            <>
+              {!inPage && <small className="dva_hint">지금 목록 쪽에는 없는 문의입니다.</small>}
+              <Detail key={sel.id} item={sel} people={people} onSaved={replace} />
+            </>
+          ) : selId && rows && outsideErr ? (
+            <div className="dva_empty">{outsideErr}</div>
           ) : selId && rows ? (
-            <div className="dva_empty">이 쪽 목록에 없는 문의입니다. 거르기나 쪽을 바꿔 보세요.</div>
+            <div className="dva_empty">불러오는 중…</div>
           ) : (
             <div className="dva_empty">목록에서 문의를 고르면 내용이 여기에 나옵니다.</div>
           )}

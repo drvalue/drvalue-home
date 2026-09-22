@@ -10,6 +10,7 @@ import { AdminInquiryModule } from '../core/admin-inquiry/admin-inquiry.module';
 import { AdminScheduleModule } from '../core/admin-schedule/admin-schedule.module';
 import { AdminRevisionModule } from '../core/admin-revision/admin-revision.module';
 import { AdminUserModule } from '../core/admin-user/admin-user.module';
+import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AdminUserModule } from '../core/admin-user/admin-user.module';
     AdminScheduleModule,
     AdminRevisionModule,
     AdminUserModule,
+    AdminDashboardModule,
   ],
 })
 export class AppModule {}

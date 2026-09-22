@@ -23,6 +23,7 @@ import {
   ControllerAdminPostTranslationDto,
 } from '../dto/controller-admin-post-default.dto';
 import { AdminPostError } from '../error/admin-post.error';
+import { FileDefaultRepository } from '../repository/file-default.repository';
 import { PostDefaultRepository } from '../repository/post-default.repository';
 import { PostFileDefaultRepository } from '../repository/post-file-default.repository';
 import { PostTranslationDefaultRepository } from '../repository/post-translation-default.repository';
@@ -51,6 +52,7 @@ export class AdminPostDefaultService {
     private readonly postDefaultRepository: PostDefaultRepository,
     private readonly postTranslationDefaultRepository: PostTranslationDefaultRepository,
     private readonly postFileDefaultRepository: PostFileDefaultRepository,
+    private readonly fileDefaultRepository: FileDefaultRepository,
     private readonly revisionService: RevisionService,
   ) {}
 
@@ -127,6 +129,7 @@ export class AdminPostDefaultService {
     this.requireKoTitle(dto);
     const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
     await this.assertSlugFree(ctx, slug);
+    await this.assertFilesExist(ctx, dto);
 
     const posts = this.postDefaultRepository.repository(ctx);
     const row = posts.create({
@@ -177,6 +180,7 @@ export class AdminPostDefaultService {
     const row = await this.findOrThrow(ctx, id);
     this.assertBoard(who, row.board);
     const before = ControllerAdminPostDefaultDetailResponseDto.from(row);
+    await this.assertFilesExist(ctx, dto);
 
     if (dto.slug && dto.slug !== row.slug) {
       await this.assertSlugFree(ctx, dto.slug);
@@ -277,6 +281,27 @@ export class AdminPostDefaultService {
   ): Promise<void> {
     if (await this.postDefaultRepository.findBySlug(ctx, slug))
       throw CommonError.createByErrorCode(AdminPostError.SLUG_TAKEN);
+  }
+
+  /**
+   * 걸려는 첨부·증서 그림이 아직 있나. 미디어에서 지운 파일을 폼이 들고 있다가 저장하면
+   * FK(migrations/0003)에 걸려 500 이 됐다 — 사용자가 고칠 수 있는 일이라 409 로 알린다.
+   * 글 게시판의 대표 그림은 본문에서 고르므로(`columns`) 보낸 thumbnail 은 보지 않는다.
+   */
+  private async assertFilesExist(
+    ctx: ITransactionContext,
+    dto: ControllerAdminPostDefaultSaveDto,
+  ): Promise<void> {
+    const files = dto.file_ids ?? [];
+    const thumb = THUMB_FROM_BODY.includes(dto.board)
+      ? null
+      : dto.thumbnail || null;
+    const ids = [...new Set(thumb ? [...files, thumb] : files)];
+    const have = await this.fileDefaultRepository.findExistingIds(ctx, ids);
+    if (files.some((id) => !have.has(id)))
+      throw CommonError.createByErrorCode(AdminPostError.FILE_GONE);
+    if (thumb && !have.has(thumb))
+      throw CommonError.createByErrorCode(AdminPostError.THUMB_GONE);
   }
 
   private requireKoTitle(dto: ControllerAdminPostDefaultSaveDto): void {

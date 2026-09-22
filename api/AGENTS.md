@@ -44,7 +44,8 @@ src/
 ```
 
 기능: `content` · `inquiry`(공개) · `admin-auth` · `admin-post` · `admin-file` ·
-`admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user`(관리).
+`admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user` ·
+`admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -149,6 +150,9 @@ src/
 - 공지·보도·뉴스의 대표 이미지(`thumbnail`)는 저장할 때 **본문의 첫 그림**으로 정한다
   (`/api/content/assets/<uuid>`, 한국어 본문 먼저). 보낸 `thumbnail` 은 보지 않는다. 본문에 그림이
   없으면 비운다. 증서(특허·저작권)만 `thumbnail` 을 직접 받는다.
+- 글 저장은 첨부·증서 그림 파일이 아직 있는지 먼저 본다. 미디어에서 지운 파일을 폼이 들고 있다가
+  저장하면 `409 ADMIN_POST_FILE_GONE`·`ADMIN_POST_THUMB_GONE`(예전에는 FK 에 걸려 500). 관리 화면은
+  `resultCode` 로 그 칸을 짚는다(`AdminError.code`).
 - 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 센다. `force` 삭제는
   본문의 `<img>` 까지 걷어 낸다 — 남기면 글에 깨진 그림이 보인다.
 - 업로드는 `AppConfig.uploadsDir` 폴더에 `<uuid>.<ext>` + `directus_files` 행(compose 는
@@ -162,7 +166,7 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs   # 20 (6 + 9 + 5)
-bash scripts/verify.sh          # 161 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 176 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

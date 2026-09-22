@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, Page, PostRow, shortWhen, yymm } from '@/lib/admin'
+import { adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, isFuture, Page, PostRow, shortDate, shortWhen, yymm } from '@/lib/admin'
 import InlineConfirm from '../../ui/InlineConfirm'
 import { pageOf, useQuery } from '../../ui/query'
 import SearchBox from '../../ui/SearchBox'
@@ -11,6 +11,16 @@ import { useToast } from '../../ui/toast'
 
 /** 목록에 대표 그림 칸이 있는 게시판. 나머지는 빈 칸을 두지 않는다. */
 const WITH_THUMB = ['notice', 'press', 'news', 'patent', 'copyright']
+
+/** 상태 거름 한 칸에 공개/초안과 예약/내림 예정을 같이 둔다. 앞 둘은 ?status=, 뒤 둘은 ?schedule=. */
+const SCHEDULES = ['scheduled', 'unpublishing']
+const FILTERS: { value: string; label: string }[] = [
+  { value: '', label: '전체 상태' },
+  { value: 'published', label: '공개' },
+  { value: 'draft', label: '초안' },
+  { value: 'scheduled', label: '예약' },
+  { value: 'unpublishing', label: '내림 예정' },
+]
 
 /**
  * 게시판 목록. 증서·수행실적·FAQ·연혁은 화살표로 순서를 바꾼다 — 사이트가 그 순서로 그린다.
@@ -23,6 +33,9 @@ export default function PostListPage() {
   const query = useQuery()
   const q = query.get('q')
   const status = query.get('status')
+  // 예약 거름은 api 의 schedule(scheduled | unpublishing). 그 밖의 값은 api 가 400 이라 여기서 버린다.
+  const scheduleRaw = query.get('schedule')
+  const schedule = SCHEDULES.includes(scheduleRaw) ? scheduleRaw : ''
   const page = pageOf(query.get('page'))
   const toast = useToast()
   const [rows, setRows] = useState<Page<PostRow> | null>(null)
@@ -35,14 +48,15 @@ export default function PostListPage() {
     if (!board) return
     const qs = new URLSearchParams({ board: board.key, page: String(page) })
     if (q) qs.set('q', q)
-    if (status) qs.set('status', status)
+    if (schedule) qs.set('schedule', schedule)
+    else if (status) qs.set('status', status)
     try {
       setRows(await adminFetch<Page<PostRow>>(`/api/admin/posts?${qs}`))
       setError('')
     } catch (e) {
       setError((e as Error).message)
     }
-  }, [board, page, q, status])
+  }, [board, page, q, status, schedule])
 
   useEffect(() => {
     load()
@@ -123,10 +137,20 @@ export default function PostListPage() {
       </div>
       <div className="dva_tools">
         <SearchBox value={q} onSearch={(v) => query.set({ q: v, page: null })} placeholder="제목·주소로 찾기" label="제목·주소로 찾기" />
-        <select value={status} onChange={(e) => query.set({ status: e.target.value, page: null })} aria-label="상태로 거르기">
-          <option value="">전체 상태</option>
-          <option value="published">공개</option>
-          <option value="draft">초안</option>
+        <select
+          value={schedule || status}
+          onChange={(e) => {
+            const v = e.target.value
+            if (SCHEDULES.includes(v)) query.set({ schedule: v, status: null, page: null })
+            else query.set({ status: v, schedule: null, page: null })
+          }}
+          aria-label="상태로 거르기"
+        >
+          {FILTERS.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
         </select>
         {board.ordered && (
           <small className="dva_hint">
@@ -161,9 +185,9 @@ export default function PostListPage() {
               <tr className="is-empty">
                 <td colSpan={cols}>
                   <div className="dva_empty">
-                    <p>{q || status ? '조건에 맞는 글이 없습니다.' : '아직 쓴 글이 없습니다.'}</p>
-                    {q || status ? (
-                      <button type="button" className="dva_btn" onClick={() => query.set({ q: null, status: null, page: null })}>
+                    <p>{q || status || schedule ? '조건에 맞는 글이 없습니다.' : '아직 쓴 글이 없습니다.'}</p>
+                    {q || status || schedule ? (
+                      <button type="button" className="dva_btn" onClick={() => query.set({ q: null, status: null, schedule: null, page: null })}>
                         조건 지우기
                       </button>
                     ) : (
@@ -208,8 +232,16 @@ export default function PostListPage() {
                     </td>
                     <td className="is-status" data-label="상태">
                       <span className={`dva_pill is-${r.status}`}>{r.status === 'published' ? '공개' : '초안'}</span>
-                      {r.publish_at && new Date(r.publish_at) > new Date() && <span className="dva_pill is-draft">예약 {shortWhen(r.publish_at)}</span>}
-                      {r.unpublish_at && new Date(r.unpublish_at) > new Date() && <span className="dva_pill is-draft">내림 {shortWhen(r.unpublish_at)}</span>}
+                      {isFuture(r.publish_at) && (
+                        <span className="dva_pill is-scheduled" title={`${shortWhen(r.publish_at)}에 사이트에 나옵니다.`}>
+                          예약 {shortWhen(r.publish_at)}
+                        </span>
+                      )}
+                      {isFuture(r.unpublish_at) && (
+                        <span className="dva_pill is-unpublishing" title={`${shortWhen(r.unpublish_at)}에 초안으로 돌아갑니다.`}>
+                          내림 예정 {shortDate(r.unpublish_at)}
+                        </span>
+                      )}
                     </td>
                     {extra.map((x) => (
                       <td key={x.label} className={x.num ? 'is-num' : undefined} data-label={x.label}>

@@ -50,6 +50,12 @@ export class AdminInquiryDefaultController {
     return { data: await this.adminInquiryDefaultService.assignees() };
   }
 
+  /** 문의 하나. 목록의 지금 쪽에 없는 문의를 `?id=` 로 바로 열 때 쓴다. */
+  @Get(':id')
+  async get(@Param('id', ParseIntPipe) id: number) {
+    return { data: await this.adminInquiryDefaultService.get(id) };
+  }
+
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,

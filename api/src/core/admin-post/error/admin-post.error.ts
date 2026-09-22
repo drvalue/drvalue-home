@@ -22,6 +22,21 @@ export const AdminPostError = {
     status: HttpStatus.BAD_REQUEST,
   } as ICommonErrorCode,
 
+  FILE_GONE: {
+    code: 'ADMIN_POST_FILE_GONE',
+    message: '첨부 파일 중 지워진 것이 있습니다. 첨부 목록을 확인해 주세요.',
+    detail:
+      'file_ids 에 directus_files 에 없는 id — 미디어에서 지운 뒤 저장했다',
+    status: HttpStatus.CONFLICT,
+  } as ICommonErrorCode,
+
+  THUMB_GONE: {
+    code: 'ADMIN_POST_THUMB_GONE',
+    message: '그림 파일이 지워졌습니다. 그림을 다시 올려 주세요.',
+    detail: 'thumbnail 이 directus_files 에 없는 id',
+    status: HttpStatus.CONFLICT,
+  } as ICommonErrorCode,
+
   // ── 예상 못 한 실패(@ServiceException 이 바꾼다). 원인은 로그의 스택을 본다.
   LIST_UNKNOWN: {
     code: 'ADMIN_POST_LIST_UNKNOWN',
