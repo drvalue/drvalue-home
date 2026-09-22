@@ -18,8 +18,10 @@ docker compose up -d --build web api   # DB 는 그대로 두고 앞·뒤만
 ```
 
 `web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(db · api · web).
-api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 여덟 개뿐이다.
+api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수는 `.env.example` 의 일곱 개뿐이다.
 컨테이너 안에서는 web → `http://api:3500`, api → `db:5432` 로 부른다(compose 가 .env 값을 덮는다).
+web 의 `/api` 프록시 주소는 빌드 때 굳어서 compose 가 빌드 인자로도 넘긴다. 3400 이 차 있으면
+`WEB_PORT=3410 docker compose up -d --build`(콜백 주소도 같은 포트로).
 업로드 파일은 `data/uploads`(gitignore) 를 `/data/uploads` 에 물린다. 처음 까는 곳은 `db/schema.sql` 로 테이블을 만든다.
 
 ## 관리 화면 — Directus 를 버렸다
@@ -28,10 +30,11 @@ api 는 `ADMIN_SESSION_SECRET` 이 없으면 일부러 안 뜬다. 환경변수�
 없음·seat 3명)에 우회를 쌓다가 직접 만들었다. web 의 `/admin` 이 화면, api 의
 `/api/admin/*` 가 CRUD 다. DB 와 테이블은 그대로다.
 
-로그인은 **사내 IAM 만** — 버튼 하나. IAM 은 「누구냐」만 답하고, 들어와도 되는지와
-역할(admin · marketing · hr)은 우리 DB 의 **`admin_users`** 가 정한다. 표에 없는 IAM
-사용자는 `403`. 표가 비어 있을 때만 첫 로그인자(IAM `PLATFORM_ADMIN`, 또는 nxcms
-drvalue 테넌트 root)를 admin 으로 등록한다. 세션 30분, 60초마다 표를 다시 본다.
+로그인은 **사내 IAM 만** — 버튼 하나. 들어올 수 있는지는 **IAM 이 정한다**(결정 0015):
+토큰 최상위 `role` 이 `ADMIN`·`PLATFORM_ADMIN` 인 계정만. 로그인마다 그 판정을 우리 DB 의
+**`admin_users`** 에 받아 적고(처음이면 범위 admin), 관리자가 아니면 그 행을 끄고 로그인
+화면에 안내를 띄운다. `admin_users` 의 범위(admin · marketing · hr)는 CMS 안에서 만질 곳만
+정한다. 세션 30분, 60초마다 표를 다시 본다.
 글을 고치면 `admin_revisions` 에 이력이 남는다. 자세한 것은 `api/AGENTS.md` 의
 「관리 화면 인가」.
 
@@ -247,7 +250,7 @@ IP 별로 동작한다 — 안 그러면 전부 프록시 IP 하나로 합쳐진
 |---|---|
 | `ADMIN_SESSION_SECRET` | api 가 **안 뜬다** |
 | `DB_PASSWORD` | compose 가 **안 띄운다** |
-| nxcms(`ADMIN_MAX_DB_URL`) 설정됐는데 안 닿음 | 관리 화면 로그인 **거부** |
+| IAM 토큰의 최상위 `role` 이 관리자가 아님 | 관리 화면 입장 **거부** — 우리 표에 무엇이 있든 |
 | 세션에 역할이 없음 | 역할이 걸린 곳 **거부** — admin 으로 올리지 않는다 |
 
 IAM 을 안 거치는 관리자 문(토큰·헤더)은 두지 않는다. 검사 스크립트도 같은 서명 키로
@@ -583,19 +586,20 @@ IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 
 | | 무엇을 본다 | 현재 |
 |---|---|---|
-| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 기본값이 닫힌 쪽인가 (DB 직결) | 55/55 |
-| `api: node --test …/authorize.test.mjs` | 첫 관리자 판정 · 역할별 게시판 | 15/15 |
+| `api/scripts/verify.sh` | 공개 API + 관리 API 왕복 + 첨부 관문 + 문의 + 에러 본문·문구 + 기본값이 닫힌 쪽인가 (DB 직결) | 133 통과 · 판정불가 1 |
+| `api: node --test …/authorize.test.mjs …/last-admin.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 | 14/14 |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
 두 번 돌리면 그 구간이 `판정불가` 로 빠진다** — 통과도 실패도 아니다.
 예전에는 429 본문을 읽고 "내부 상태가 샌다" 로 엉뚱하게 실패했다.
 | `web/scripts/compare-all.sh` | 옮긴 페이지가 PHP 원본과 같은가 | **통과 기준에서 뺐다** (3/14 — 헤더·모달·홈을 일부러 바꿨다. `docs/tracking/decisions/` 참고) |
 | `web/scripts/check-a11y.py` | 문의 모달의 라벨·입력칸 묶임 (다섯 칸, 이메일 포함) | 323/323 |
-| `web/scripts/check-assets.py` | 화면이 부르는 파일이 실재하나 | 51개, 빠진 것 0 |
+| `web/scripts/check-assets.py` | 화면이 부르는 파일이 실재하나 | 63개, 빠진 것 0 |
 | `web/scripts/check-home.py` | 홈에서 원본이 안 없어졌나 + 새 구역이 그려지나 + 시연용 글이 안 남았나 | 23/23 |
-| `web/scripts/check-header.py` | 위쪽 탭 막대 + 현재 위치 줄 — 대조가 둘을 떼므로(REDESIGNED) 그 자리를 대신 본다 | 104/104 |
-| `web/scripts/check-src.py` | PAGE_CSS 안에 백틱이 섞였나 | 7개 확인, 0건 |
-| `web/scripts/check-pages.py` | 채운 장의 본문·그림 바닥 (`NEXT_ORIGIN` 으로 포트) | 98/98 |
+| `web/scripts/check-header.py` | 위쪽 탭 막대 + 현재 위치 줄 — 대조가 둘을 떼므로(REDESIGNED) 그 자리를 대신 본다 | 107/107 |
+| `web/scripts/check-src.py` | PAGE_CSS 안에 백틱이 섞였나 | 10개 확인, 0건 |
+| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·검증 message · 관리 화면 문자열)가 합니다체인가 | 373곳, 0건 |
+| `web/scripts/check-pages.py` | 채운 장의 본문·그림 바닥 (`NEXT_ORIGIN` 으로 포트) | 110/110 |
 | `npx next build` · `npx tsc --noEmit` | 운영 빌드가 되는가 | 통과 |
 
 `check-src.py` 는 `compare-all.sh` 가 먼저 돌린다. `PAGE_CSS` 는 템플릿
@@ -629,5 +633,5 @@ api  npm run build && node dist/main.js → http://localhost:3500
 web  npm run build && npm start        → http://localhost:3400  (/admin 포함)
 ```
 
-`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(여덟 개)을 복사해서 채운다.
+`.env` 는 저장소에 넣지 않는다. 루트 `.env.example`(일곱 개)을 복사해서 채운다.
 처음이면 `db/schema.sql` 다음에 `db/migrations/0001-admin-foundation.sql` 도 돌린다.

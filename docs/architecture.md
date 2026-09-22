@@ -34,12 +34,13 @@ data/uploads                             업로드 파일 (bind mount, 저장소
 Nest(api)
   │  /api/content/*                → DB (published 만). 파일은 data/uploads 에서 관문 뒤로
   │  /api/inquiry                  → 메일 발송 + DB(inquiries)
-  │  /api/admin/auth/*             → 사내 IAM (code 교환) → M.AX(nxcms) DB 의 root 표 → 세션 쿠키
-  └─ /api/admin/{posts,files,inquiries}  → DB. 세션 쿠키 또는 검사용 토큰 뒤
+  │  /api/admin/auth/*             → 사내 IAM (code 교환 → 토큰 최상위 role 판정) → admin_users 동기화 → 세션 쿠키
+  └─ /api/admin/{posts,files,inquiries,revisions,users}  → DB. 세션 쿠키(dv_admin) 뒤. 다른 문은 없다
 ```
 
 브라우저는 Nest 가 어디 있는지 모른다. `/api` 만 알고, 실제 주소는 Next 의
-`API_ORIGIN` 이 정한다. DB 는 api 만 부른다.
+`API_ORIGIN` 이 정한다 — 프록시(rewrites)는 **빌드 때** 값으로 굳는다(docker 는 빌드 인자로
+넘긴다). DB 는 api 만 부른다.
 
 ## 대표 흐름 하나 — 공지 목록이 화면에 뜨기까지
 
@@ -48,7 +49,7 @@ Nest(api)
 2. 화면의 스크립트가 /api/content/posts?board=notice 를 부른다
 3. next.config.mjs 의 rewrite 가 API_ORIGIN 의 Nest 로 넘긴다
 4. Nest 의 content 서비스가 TypeORM 으로 posts · posts_translations 를 읽는다
-   - 언어는 DEFAULT_LANGUAGE, 공개 상태(status=published)만
+   - 언어는 기본 `ko-KR`(상수), 공개 상태(status=published)이면서 예약 시각 안의 글만
    - 칸 이름을 그대로 내보낸다(is_pinned · published_date). 변환 코드 없음
 5. JSON 이 화면으로 간다
 ```
@@ -61,14 +62,14 @@ Nest(api)
 
 | 단계 | 누가 답하나 |
 |---|---|
-| 누구냐 | 사내 IAM. api 의 `core/admin-auth` 가 IAM 으로 보내고 code 를 토큰으로 바꿔 claim(`sub` · `email` · `role`)을 읽는다. IAM 패키지 없이 공개 엔드포인트를 직접 부른다 |
-| 들어와도 되냐 · 무엇을 만지냐 | 우리 DB 의 `admin_users`(email · role · enabled). 표에 없는 IAM 사용자는 `403` |
-| 첫 관리자 | 표가 비어 있을 때만 — IAM `PLATFORM_ADMIN`, 또는(`ADMIN_MAX_DB_URL` 설정 시) nxcms drvalue 테넌트 root |
+| 누구냐 | 사내 IAM. api 의 `core/admin-auth` 가 IAM 으로 보내고 code 를 토큰으로 바꿔 claim(`sub` · `email` · `role` · `groups`)을 읽는다. IAM 패키지 없이 공개 엔드포인트를 직접 부른다 |
+| 들어와도 되냐 | 사내 IAM. 토큰 **최상위** `role` 이 `ADMIN`·`PLATFORM_ADMIN` 인 사람만(`isIamAdmin`). 그룹 안의 role 은 안 본다 — 누구나 자기 워크스페이스의 OWNER 다 |
+| 무엇을 만지냐 | 우리 DB 의 `admin_users`. 로그인마다 IAM 판정을 받아 적는다(없으면 범위 admin 으로 만들고 enabled · iam_sub · last_login_on 갱신). 관리자가 아니면 그 행을 끈다 |
 
-세션은 HMAC 쿠키 `dv_admin`, 30분. 60초마다 `admin_users` 와(설정 시) nxcms root 표를
-다시 본다. nxcms 가 설정됐는데 안 닿으면 로그인을 **거부**한다(열리는 쪽으로 안 떨어진다).
-역할은 admin 전부 · marketing 채용 빼고 · hr 채용만. 변경 이력은 `admin_revisions`.
-결정 `0014`(덧붙임).
+세션은 HMAC 쿠키 `dv_admin`, 30분. 60초마다 `admin_users` 를 다시 본다 — 꺼지면 막히고
+범위 변경은 따라온다. 범위는 admin 전부 · marketing 채용 빼고 · hr 채용만. 변경 이력은
+`admin_revisions`. 로그인·콜백 실패는 JSON 이 아니라 `/admin/login?error=<코드>` 로 돌아간다.
+결정 `0014`(자체 관리 화면) · `0015`(입장은 IAM 관리자만).
 
 게이트웨이 서명 검증(`@drvalue-oss/iam-nestjs`)은 없앴다 — 이 api 는 브라우저가 직접
 부르는 자리라 게이트웨이 뒤가 아니고, 지키던 경로가 0개였다.
@@ -78,7 +79,6 @@ Nest(api)
 | 대상 | 무엇에 쓰나 | 없으면 |
 |---|---|---|
 | 사내 IAM (`iam.drvalue.co.kr`) | 관리자 사람 로그인 | 관리 화면에 못 들어간다. 공개 화면은 멀쩡하다 |
-| M.AX(nxcms) 마스터 DB (선택) | 첫 관리자 판정 · 60초 root 재검 | 설정돼 있는데 안 닿으면 로그인 거부. 비어 있으면 `PLATFORM_ADMIN` 만 첫 관리자가 된다 |
 | PostgreSQL | 글·문의·파일 행 | api 가 안 뜬다 |
 | GrowChat 위젯 | 우하단 상담 | 위젯이 **조용히** 안 뜬다(도메인 잠금) |
 | 메일 발송 | 문의 전달 | 문의가 저장은 되고 메일만 안 간다 |
@@ -88,7 +88,7 @@ Nest(api)
 | 모듈 | 소유 | 의존 방향 |
 |---|---|---|
 | `web` | 공개 화면, 관리 화면, 주소 체계, 검사 스크립트 | → `api` (HTTP `/api` 만) |
-| `api` | 공개 API, 관리 API, IAM 로그인, `admin_users` 인가·역할, 변경 이력, 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM, → M.AX DB(읽기, 선택) |
+| `api` | 공개 API, 관리 API, IAM 로그인, `admin_users` 동기화·범위, 변경 이력, 예약 게시, 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM |
 | `db` | 테이블. 이름은 옛 관리 도구(Directus) 시절 것 그대로 — `directus_files` 포함 | 아무것도 안 부른다 |
 | 루트 PHP | 현재 운영 화면 | 저장소 안에서 아무것도 안 부른다 |
 

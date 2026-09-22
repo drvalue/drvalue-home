@@ -49,11 +49,17 @@
 
 - `app/admin/**` 와 `lib/admin.ts`(fetch 헬퍼. 401 이면 `/admin/login` 으로) 뿐이다.
   공개 화면 CSS 와 섞지 않는다 — `app/admin/admin.css` 하나, 전부 `.dva` 아래.
-- 메뉴는 **되는 것만**: 게시판 6(공지·보도·특허·저작권·수행실적·연혁) + 문의.
+- 메뉴는 **되는 것만**, 범위(`me.role`)로 거른다(`lib/admin.ts` 의 `BOARDS` · `canEditBoard`):
+  게시판 9(공지·뉴스·보도자료·채용·FAQ·특허·저작권·수행실적·연혁 — hr 은 채용만, marketing 은
+  채용 빼고) + 운영(문의·미디어 — hr 에는 없다) + 관리(변경 이력·권한 — 전체 권한만).
 - 로그인은 버튼 하나 「사내 IAM 으로 로그인」. 자동 리다이렉트 없음 — 로그아웃 뒤
   즉시 재로그인되는 것을 막는다.
 - 브라우저 다이얼로그(`confirm`·`alert`)를 쓰지 않는다. 삭제는 인라인 확인 버튼.
-- 본문은 HTML textarea 다(편집기 없음). 라벨에 그렇게 적혀 있다.
+- 본문은 Quill 편집기다(`app/admin/posts/[board]/HtmlEditor.tsx`). 그림은 본문 안에 올려 넣는다.
+- **화면 문구는 합니다체다.** 에러는 api 가 준 `message` 를 그대로 띄운다 — `adminFetch` 가
+  그 말로 에러를 던지니 화면은 `e.message` 만 쓴다. 로그인 실패만 예외다: api 가
+  `/admin/login?error=<코드>` 로 돌려보내고 `login/page.tsx` 의 `LOGIN_ERRORS` 가 코드로 문구를
+  고른다. `scripts/check-copy.py` 가 반말을 잡는다.
 - 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · growchat 위젯)는 `components/SiteScripts.tsx`
   가 싣고 `/admin` 아래에서는 아무것도 싣지 않는다. `robots.ts` 가 `/admin` 을 막는다.
 
@@ -77,11 +83,12 @@
 
 ```bash
 python3 scripts/check-src.py      # 제일 먼저. CSS 문자열이 깨졌나
-python3 scripts/check-home.py     # 21/21   (:3400 이 떠 있어야 한다)
-python3 scripts/check-header.py   # 103/103
-python3 scripts/check-a11y.py     # 266/266
+python3 scripts/check-home.py     # 23/23   (:3400 이 떠 있어야 한다 — 다른 포트는 NEXT_ORIGIN)
+python3 scripts/check-header.py   # 107/107
+python3 scripts/check-a11y.py     # 323/323
 python3 scripts/check-assets.py   # 빠진 파일 0
-NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 98/98
+NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 110/110
+python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 npx tsc --noEmit && npx next build
 ```
 

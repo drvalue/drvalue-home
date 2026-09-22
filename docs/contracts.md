@@ -9,9 +9,13 @@
   상세는 `{ data, language }` 모양이다.
 - 언어는 `?lang=` 으로 고른다. 안 주면 서버 기본값이다. 응답의 `language`
   가 실제로 쓰인 언어다.
-- 잘못된 입력은 `400`, 없는 것은 `404`, 한도 초과는 `429`.
-  오류 본문은 `{ statusCode, code, message }` 다. `code` 는
-  `api/src/**/error/*.error.ts` 에 있다.
+- 잘못된 입력은 `400`, 없는 것은 `404`, 한도 초과는 `429`. HTTP 상태는 실제 값이다.
+- 오류 본문은 `{ data: null, status, resultCode, message, path, timestamp }` 다.
+  - `resultCode` 는 `api/src/**/error/*.error.ts`(기능별)와 `api/src/common/error/common.error.ts`
+    (`COMMON_*` — 없는 주소·검증·429·500)에 있다. 화면이 분기할 때는 이것을 본다.
+  - `message` 는 **사용자에게 그대로 보여 줄 말**이다(합니다체, 마침표). 화면은 따로 문구를
+    만들지 않고 이것을 띄운다. 개발자용 원인(`detail`)은 응답에 없다 — 5xx 는 api 로그에 남는다.
+  - `path` 는 쿼리를 뺀 주소다.
 - 공개 목록은 전부 익명으로 부른다. `/api/admin/*` 는 IAM 로그인이 만든 세션 쿠키
   (`dv_admin`) 만 받는다 — `Authorization` 헤더는 보지 않는다. 없으면 `401`,
   입장 권한이 없으면 `403 ADMIN_AUTH_NOT_ALLOWED`, 역할이 안 맞으면 `403 ADMIN_AUTH_FORBIDDEN`.
@@ -74,27 +78,32 @@
 | `user_type` | 목록 중 하나 | ○ |
 | `user_msg` | 5000자 | ○ |
 
-- 성공 `201`. 실패 `400`(칸이 비었거나 한도 초과), `429`(한도 초과).
+- 성공 `201`. 실패 `400`(칸이 비었거나 한도 초과), `429`(한도 초과), `502`
+  (`INQUIRY_SUBMIT_FAILED` — 메일과 DB 저장이 둘 다 실패).
+- `400` 의 `message` 는 틀린 칸을 말한다(「이메일 주소를 확인해 주세요.」). 공개 문의 폼은
+  이 말을 그대로 띄운다.
 - **한 IP 가 분당 5건 · 시간당 30건.** 넘으면 `429`.
 - 정의 안 한 칸은 버려진다.
 
 ## 관리 API `/api/admin/*`
 
-관리 화면(`/admin`)만 부른다. 오류 본문은 공개 API 와 같고, DTO 검증 실패는
-class-validator 모양(`{ message: [...] }`)이다.
+관리 화면(`/admin`)만 부른다. 오류 본문은 공개 API 와 같다. DTO 검증 실패도
+`400 COMMON_INVALID_INPUT` 한 건이고, `message` 는 DTO 에 적은 한국어 문구(없으면
+「입력한 내용을 다시 확인해 주세요.」)다.
 
 ### 로그인
 
 | 경로 | 뜻 |
 |---|---|
-| `GET /api/admin/auth/login` | 사내 IAM 으로 보낸다(302). state 쿠키를 심는다 |
-| `GET /api/admin/auth/callback?code=&state=` | IAM 에서 돌아오는 자리. 통과하면 `dv_admin` 쿠키를 심고 `/admin` 으로 302. 거부는 `403` (`ADMIN_AUTH_NOT_ALLOWED` · `BAD_STATE` · `EXCHANGE_FAILED`) |
+| `GET /api/admin/auth/login` | 사내 IAM 으로 보낸다(302). state 쿠키를 심는다. 설정이 비었으면 `/admin/login?error=ADMIN_AUTH_NOT_CONFIGURED` |
+| `GET /api/admin/auth/callback?code=&state=` | IAM 에서 돌아오는 자리. 통과하면 `dv_admin` 쿠키를 심고 `/admin` 으로 302. 실패는 JSON 이 아니라 `/admin/login?error=<resultCode>` 로 302 (`ADMIN_AUTH_NOT_ALLOWED` · `BAD_STATE` · `EXCHANGE_FAILED` · `NO_EMAIL` · `NOT_CONFIGURED`). 로그인 화면이 코드로 문구를 고른다 |
 | `GET /api/admin/auth/me` | `{ data: { email, name, role } }`. 세션 없으면 `401` |
 | `POST /api/admin/auth/logout` | 쿠키를 지운다. `{ ok: true }` |
 
-입장은 `admin_users` 표(등록 + enabled). 표가 비어 있을 때만 첫 로그인자(IAM `PLATFORM_ADMIN`
-또는 nxcms root)를 admin 으로 등록한다. 세션은 30분. 60초마다 `admin_users` 와(설정 시)
-nxcms root 표를 다시 본다 — 그 사이에 빠진 사람은 다음 요청부터 `403`.
+입장은 IAM 이 정한다(결정 0015). 토큰 최상위 `role` 이 `ADMIN`·`PLATFORM_ADMIN` 인 사람만
+들어오고, 로그인 때마다 `admin_users` 에 받아 적는다(없으면 범위 `admin` 으로 만든다).
+관리자가 아니면 그 행을 끄고 `ADMIN_AUTH_NOT_ALLOWED`. 세션은 30분. 60초마다 `admin_users`
+를 다시 본다 — 그 사이에 꺼진 사람은 다음 요청부터 `403 ADMIN_AUTH_NOT_ALLOWED`.
 
 역할: `admin` 전부 · `marketing` 채용 빼고 · `hr` 채용만. 게시판이 역할과 안 맞으면
 목록·낱개·저장·삭제 모두 `403 ADMIN_AUTH_FORBIDDEN`.
