@@ -22,6 +22,8 @@ import {
   AdminUser,
 } from '../guard/admin-session.guard';
 import { AdminAuthDefaultService } from '../service/admin-auth-default.service';
+import { visibleBoards } from '../service/board-access';
+import { BOARDS } from '../../../common/entity/post.entity';
 
 const STATE_COOKIE = 'dv_admin_state';
 
@@ -74,6 +76,8 @@ export class AdminAuthDefaultController {
         email: admin.email,
         name: admin.name ?? null,
         role: admin.role ?? null,
+        // 이 범위로 만질 수 있는 게시판. 화면은 규칙을 따로 들지 않고 이 목록만 본다.
+        boards: visibleBoards(admin.role, BOARDS),
       },
     };
   }

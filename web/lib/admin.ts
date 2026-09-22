@@ -31,15 +31,8 @@ export const INQUIRY_STATUS: Record<string, string> = {
 }
 
 export type AdminRole = 'admin' | 'marketing' | 'hr'
-export type AdminMe = { email: string; name: string | null; role: AdminRole | null }
-
-/** api 의 board-access 와 같은 규칙. 메뉴를 가리는 용도 — 막는 것은 api 가 한다. */
-export function canEditBoard(role: AdminRole | null, board: string): boolean {
-  if (role === 'admin') return true
-  if (role === 'hr') return board === 'recruit'
-  if (role === 'marketing') return board !== 'recruit'
-  return false
-}
+/** `boards` 는 이 범위로 만질 수 있는 게시판 키 — 규칙은 api(board-access.ts)에만 있다. */
+export type AdminMe = { email: string; name: string | null; role: AdminRole | null; boards: string[] }
 
 export type PostRow = {
   id: number

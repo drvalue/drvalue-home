@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { adminFetch, AdminMe, BOARDS, canEditBoard } from '@/lib/admin'
+import { adminFetch, AdminMe, BOARDS } from '@/lib/admin'
 import { ROLE_LABEL } from '@/lib/admin-extra'
 
 /**
@@ -38,7 +38,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <aside className="dva_side" aria-label="관리 메뉴">
         <div className="dva_brand">디알밸류 관리</div>
         <div className="dva_group">게시판</div>
-        {BOARDS.filter((b) => canEditBoard(me.role, b.key)).map((b) => {
+        {BOARDS.filter((b) => me.boards.includes(b.key)).map((b) => {
           const href = `/admin/posts/${b.key}`
           const on = pathname === href || pathname.startsWith(href + '/')
           return (

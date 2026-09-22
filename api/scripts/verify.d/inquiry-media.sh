@@ -43,6 +43,11 @@ else
   IM_HRS=$(cd "$HERE" && node -e "const {issueSession}=require('./dist/common/session/session-token.js');console.log(issueSession(process.env.ADMIN_SESSION_SECRET,{email:'$IM_HR',role:'hr',name:'verify hr',exp:Date.now()+600000}))")
   check "인사 역할은 문의 목록 403" "ADMIN_AUTH_FORBIDDEN" \
     "$(curl -s -H "Cookie: dv_admin=$IM_HRS" "$API/api/admin/inquiries" --max-time 30 | pick 'print(d.get("resultCode",""))')"
+  # 화면은 게시판 규칙을 따로 들지 않고 /me 의 boards 만 본다.
+  check "인사 /me 는 채용 게시판만" "recruit" \
+    "$(curl -s -H "Cookie: dv_admin=$IM_HRS" "$API/api/admin/auth/me" --max-time 30 | pick 'print(",".join((d.get("data") or {}).get("boards") or []))')"
+  check "전체 권한 /me 는 게시판 9개" "9" \
+    "$(adm "/auth/me" | pick 'print(len((d.get("data") or {}).get("boards") or []))')"
 
   curl -s -o /dev/null -X DELETE -H "$AUTH" "$API/api/admin/inquiries/$IM_IID" --max-time 30
   check "검사 문의가 남지 않음" "0" "$(dbq "select count(*) from inquiries where id=$IM_IID")"
