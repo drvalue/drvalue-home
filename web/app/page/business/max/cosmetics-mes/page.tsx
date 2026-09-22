@@ -46,8 +46,7 @@ export default function Page() {
             kicker: '품질 → 규제',
             title: '단계별 검사부터 cGMP·클레임·규제까지',
             desc: '원료부터 완제품까지 일곱 단계 검사, GMP 양식 출력과 감사 추적, 클레임·CAPA, 국가별 규제·성분·MSDS 대조를 한 시스템에서 합니다.',
-            nos: [6, 7, 8, 5],
-            layout: 'bento',
+            nos: [5, 6, 7, 8],
           },
           {
             kicker: '모니터링',
