@@ -130,10 +130,16 @@ Core 는 로컬 로그인 창을 끌 수 없어서, IAM 은 **문을 하나 더 
 스크립트는 `directus.py`·`verify.sh`·`smoke.sh` 가 시드 비밀번호가 막히면 같은
 파생값으로 다시 시도하므로 계속 돈다 — 환경에 `DIRECTUS_SECRET` 이 있어야 한다.
 
-**브라우저의 비밀번호 폼은 죽어 있다.** `iam-bridge-entry` 훅이 세션 없는
-`/admin`·`/admin/login` 을 IAM 으로 보내고, 브라우저(Origin 헤더가 있는 요청)의
-`POST /auth/login` 을 403 으로 막는다. 스크립트 요청에는 Origin 이 없어 통과한다.
+**브라우저의 비밀번호 폼은 없다.** `iam-bridge-entry` 훅이 셋을 한다 — 세션 없는
+`/admin` 과 모든 `/admin/login` 을 IAM 으로 보낸다. 브라우저(Origin 헤더가 있는
+요청)의 `POST /auth/login` 을 403 으로 막는다. 관리 앱에 스크립트를 심어(embed)
+SPA 가 자기 안에서 `/admin/login` 으로 옮겨 가도(세션 만료·로그아웃) 폼을 그리기
+전에 IAM 으로 보낸다. 스크립트 요청에는 Origin 이 없어 통과한다.
 IAM 이 죽어 아무도 못 들어가면 `IAM_BRIDGE_ENABLED=false` 로 재기동한다.
+
+state 는 `nonce.exp.sig` 로 서명해 쿠키와 IAM 쿼리 양쪽에 싣는다. 둘 중 하나만
+유효하면 된다 — IAM 은 state 를 되돌려주기도 안 주기도 하고, `127.0.0.1` 로 열고
+`localhost` 로 돌아오면 쿠키가 못 따라온다(둘 다 실측).
 
 ### 실제 IAM 으로 확인하기
 

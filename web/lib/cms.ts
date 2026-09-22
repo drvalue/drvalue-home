@@ -2,8 +2,9 @@
  * 서버에서 CMS 목록을 읽는다 — 특허·저작권·수행실적·연혁처럼 한 장에 다 보이는 것.
  *
  * 브라우저의 `/api` 되넘김이 서버에는 없으므로 Nest 주소를 직접 쓴다
- * (next.config.mjs 의 rewrite 와 같은 환경변수). 실패하면 null 을 돌려주고
- * 화면이 코드에 남긴 예비 목록을 쓴다 — CMS 가 죽어도 장이 비면 안 된다.
+ * (next.config.mjs 의 rewrite 와 같은 환경변수). 응답이 안 오면(non-2xx·예외) null 을
+ * 돌려주고 화면이 코드에 남긴 예비 목록을 쓴다 — CMS 가 죽어도 장이 비면 안 된다.
+ * 빈 배열은 null 이 아니다. 편집자가 전부 내린 것이다.
  * 5분 캐시. 관리 화면에서 고친 것이 바로 안 보이는 이유가 이것이다.
  */
 
@@ -35,7 +36,8 @@ export async function cmsBoard(board: string, limit = 100): Promise<CmsPost[] | 
     })
     if (!res.ok) return null
     const body = (await res.json()) as { data?: CmsPost[] }
-    return Array.isArray(body.data) && body.data.length ? body.data : null
+    // 빈 목록은 편집자가 다 내린 것이지 장애가 아니다. 예비 목록으로 되돌리지 않는다.
+    return Array.isArray(body.data) ? body.data : null
   } catch {
     return null
   }

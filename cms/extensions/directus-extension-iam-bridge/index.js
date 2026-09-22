@@ -73,13 +73,13 @@ export default {
       const nonce = randomBytes(24).toString('hex');
       const exp = Date.now() + STATE_TTL_MS;
       const state = `${nonce}.${exp}`;
-      res.cookie(STATE_COOKIE, `${state}.${sign(c.secret, state)}`, {
-        ...cookieOpts(),
-        maxAge: STATE_TTL_MS,
-      });
+      const signed = `${state}.${sign(c.secret, state)}`;
+      res.cookie(STATE_COOKIE, signed, { ...cookieOpts(), maxAge: STATE_TTL_MS });
       const url = new URL(`${c.iamBase}/auth/login`);
       url.searchParams.set('redirect_url', c.callbackUrl);
-      url.searchParams.set('state', state);
+      // 서명까지 실어 보낸다. 쿠키가 못 따라오는 경우(127.0.0.1 로 열고 localhost 로
+      // 돌아옴 — 실측)에도 IAM 이 되돌려준 값만으로 우리가 보낸 것임을 안다.
+      url.searchParams.set('state', signed);
       return res.redirect(url.toString());
     });
 
@@ -93,16 +93,16 @@ export default {
       };
 
       try {
-      // 1) state — 우리가 보낸 쿠키가 유효해야 한다. IAM 이 state 를 되돌려주면
-      //    그것까지 맞아야 하고, 안 돌려주면(PHP 는 redirect_url 만 보냈다) 쿠키만 본다.
+      // 1) state — 우리가 서명한 값이어야 하고 10분 안이어야 한다. 쿠키로 오든
+      //    IAM 이 되돌려준 쿼리로 오든 둘 중 하나만 맞으면 된다 (IAM 은 state 를
+      //    되돌려주기도 안 주기도 하고, 호스트가 다르면 쿠키가 못 따라온다 — 둘 다 실측).
       const cookie = parseCookie(req.headers.cookie)[STATE_COOKIE] ?? '';
       const given = String(req.query.state ?? '');
-      const stateOk = verifyState(c.secret, cookie, given || null);
+      const stateOk = verifySigned(c.secret, given) || verifySigned(c.secret, cookie);
       if (!stateOk) {
         logger.warn(`iam-bridge: bad state (cookie=${cookie ? 'yes' : 'no'} query=${given ? 'yes' : 'no'})`);
         return fail('bad state');
       }
-      if (!given) logger.warn('iam-bridge: IAM did not echo state; cookie only');
 
       const code = String(req.query.code ?? '');
       if (!code) {
@@ -143,7 +143,8 @@ export default {
       // 4) 인가
       let allowed = false;
       if (c.group) {
-        const hit = groups.find((g) => [g?.id, g?.name, g?.slug, g?.code].some((v) => String(v ?? '').toLowerCase() === c.group));
+        // id(uuid)만 본다. 이름("Default")은 어느 IAM 워크스페이스에나 있다.
+        const hit = groups.find((g) => String(g?.id ?? '').toLowerCase() === c.group);
         allowed = role === 'PLATFORM_ADMIN' || (Boolean(hit) && c.groupRoles.includes(String(hit.role ?? '').toUpperCase()));
       }
       if (!allowed && c.routeBase) allowed = await gatewayCheck(c, iamToken, logger);
@@ -223,14 +224,13 @@ function derive(secret, email) {
   return createHmac('sha256', secret).update(`iam-bridge:${email.trim().toLowerCase()}`).digest('hex');
 }
 
-function verifyState(secret, cookie, given) {
-  const [nonce, exp, sig] = cookie.split('.');
+/** `nonce.exp.sig` — 우리가 서명했고 아직 유효한가. */
+function verifySigned(secret, value) {
+  const [nonce, exp, sig] = String(value ?? '').split('.');
   if (!nonce || !exp || !sig) return false;
-  const state = `${nonce}.${exp}`;
-  if (given !== null && given !== state) return false;
-  if (Number(exp) < Date.now()) return false;
+  if (!/^\d+$/.test(exp) || Number(exp) < Date.now()) return false;
   const a = Buffer.from(sig);
-  const b = Buffer.from(sign(secret, state));
+  const b = Buffer.from(sign(secret, `${nonce}.${exp}`));
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
