@@ -31,9 +31,7 @@ cms/    Directus 12 + PostgreSQL         게시판 내용 · 권한 · 예약 �
 
 Nest(api)
   │  /api/content/*                → Directus(cms) REST, 서비스 토큰으로
-  │  /api/inquiry                  → 메일 발송
-  └─ /page/support/notice_api.php  → 사내 게이트웨이 api.growchat.co.kr/api/serv
-                                      (읽기·로그인만. 쓰기는 410 으로 닫힘)
+  └─ /api/inquiry                  → 메일 발송 + Directus(inquiries)
 
 Directus(cms)
   └─ 관리자 로그인                  → 확장(iam-bridge) → 사내 IAM
@@ -87,7 +85,7 @@ resource) 확장으로 우회한다. Nest 쪽은 그런 제약이 없고 애초�
 | 모듈 | 소유 | 의존 방향 |
 |---|---|---|
 | `web` | 공개 화면, 주소 체계, 검사 스크립트 | → `api` (HTTP `/api` 만) |
-| `api` | 공개 API, 세션, 속도 제한, 게이트웨이 연동 | → `cms`(Directus REST), → 사내 게이트웨이 |
+| `api` | 공개 API, 속도 제한 | → `cms`(Directus REST), → 네이버 클라우드 메일 |
 | `cms` | 컬렉션 스키마, 권한, 예약 게시, 다국어, IAM 다리 | 바깥을 안 부른다(IAM 확장 제외) |
 | 루트 PHP | 현재 운영 화면 | 저장소 안에서 아무것도 안 부른다 |
 

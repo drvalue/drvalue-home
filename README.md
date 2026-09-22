@@ -18,7 +18,7 @@ docker compose up -d --build web api   # CMS 는 그대로 두고 앞·뒤만
 ```
 
 `web/Dockerfile`(Next standalone) · `api/Dockerfile`(Nest) · 루트 `docker-compose.yml`(CMS 는 `cms/docker-compose.yml` 을 include).
-api 는 `SESSION_SECRET`·`IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다 — 기본값을 두면 관리자 세션을 누구나 만들 수 있어서다.
+api 는 `IAM_GATEWAY_SECRET` 이 없으면 일부러 안 뜬다(게이트웨이 검증이 기본 켜짐).
 컨테이너 안에서는 web → `http://api:3500`, api → `http://directus:8055` 로 부른다(compose 가 .env 값을 덮는다).
 
 ## IAM 이 두 군데 있는 이유
@@ -241,13 +241,11 @@ IP 별로 동작한다 — 안 그러면 전부 프록시 IP 하나로 합쳐진
 
 | 값 | 없으면 |
 |---|---|
-| `SESSION_SECRET` | **안 뜬다.** 기본값을 두면 그 값으로 서명된 관리자 세션을 누구나 만든다 |
 | `IAM_ENFORCE_GATEWAY` | 검증을 **켠 것으로** 본다 (`!== 'false'`) |
 | `IAM_GATEWAY_SECRET` | 검증이 켜져 있으면 **안 뜬다** |
-| `SESSION_SECURE` | 쿠키 secure 를 **켠 것으로** 본다 |
 
 `@Public()` 은 인증만 면제할 뿐 게이트웨이 가드는 통과하지 못한다. 그래서
-공개 홈페이지가 직접 부르는 컨트롤러 셋(content·inquiry·notify)에만
+공개 홈페이지가 직접 부르는 컨트롤러 둘(content·inquiry)에만
 `@SkipGatewaySignature()` 를 붙였다. **표시하지 않은 새 경로는 자동으로
 게이트웨이 뒤에 선다** — 표시를 떼면 403 이 되는 것을 확인했다.
 
@@ -256,19 +254,7 @@ IP 별로 동작한다 — 안 그러면 전부 프록시 IP 하나로 합쳐진
 필요한 것은 모듈이 만들어지기 위해서지, 어딘가에서 그 값으로 서명을
 맞춰 보기 때문이 아니다. 관리자 전용 경로가 생기는 날부터 의미가 생긴다.
 
-`TRUST_PROXY` 는 속도 제한뿐 아니라 **세션 쿠키와 채팅 쿠키의 secure
-판정**에도 쓰인다. 게이트웨이 뒤에서는 이 값이 없으면 `req.protocol` 이
-`http` 로 보인다.
-
-**세션 쿠키 쪽이 실제로 배포를 막는다.** nginx 가 TLS 를 끊으면 Nest 가
-받는 요청은 평문이고, `SESSION_SECURE` 는 기본이 켜짐이다. 이때
-express-session 은 쿠키를 **오류도 로그도 없이 그냥 안 보낸다** — 로그인
-콜백은 성공하고, 다음 요청에서 세션이 없다. PHP 는 nginx 가
-`fastcgi_param` 으로 `HTTPS` 를 넣어 줘서 이 문제가 없었다. 즉 **위의
-닫힌 기본값이 이 설정을 새로 필수로 만들었다.** 빠뜨리면 부팅 로그에
-경고가 뜬다(TLS 를 이 프로세스가 직접 받는 배치도 있어서 죽이지는 않는다).
-
-값은 홉 수(`1`)나 신뢰할 대역이다. **문자열 그대로 넘기면 안 된다** —
+`TRUST_PROXY` 는 홉 수(`1`)나 신뢰할 대역이다. **문자열 그대로 넘기면 안 된다** —
 Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록으로 읽어서
 결과적으로 아무것도 신뢰하지 않는다. `.env` 값은 항상 문자열이라 Nest 쪽에서
 숫자로 바꿔 넘긴다(`trustProxyValue`). 바꾸지 않으면 IP 별 한도가 하나로
@@ -277,41 +263,7 @@ Express 는 `"1"` 을 홉 수가 아니라 IP `0.0.0.1` 하나를 믿는 목록�
 속도 제한 저장소는 **프로세스 메모리**다. PHP 는 파일로 php-fpm 워커끼리
 공유했다. **컨테이너를 한 개만 띄우기로 했으므로 이대로 둔다.** 여러 개로
 늘리는 순간 IP 당 한도가 프로세스당 한도가 되므로, 그때 Redis 저장소로
-바꿔야 한다. 세션과 채팅 토큰도 같은 전제다(파일 저장소를 공유하지 않는다).
-
-## 게시판 API
-
-`page/support/notice_api.php` 를 Nest 가 그대로 받는다. 사내 게이트웨이
-(`api.growchat.co.kr/api/serv`)에 대신 물어보고, 관리자 세션과 CSRF 를
-지킨다.
-
-**주소를 바꾸지 않았다.** IAM 화이트리스트에 콜백 주소가 글자 그대로
-등록돼 있어서, 여기서 주소를 바꾸면 IAM 쪽 재등록이 필요하다. 그래서
-Nest 인데 경로가 `.php` 다(`main.ts` 의 `setGlobalPrefix` 제외 목록).
-
-원본과 일부러 다르게 옮긴 것이 하나 있다. by-root 가 거부했을 때 원본은
-`iam_tok`·`app_tok` 을 **주소창 쿼리에 실어** 보냈다([임시 진단] 표시가
-달려 있었다). 옮기지 않았다 — 실토큰이 브라우저 기록·리퍼러·프록시 로그에
-전부 남는다. 진단은 서버 로그로 한다.
-
-**게시판 내용은 이제 CMS 에서 온다.** 공지·보도자료 화면이 읽는 곳이
-사내 게이트웨이에서 `/api/content/posts` 로 바뀌었다. 자세한 것은 아래
-"게시판을 CMS 가 대체한다".
-
-관리자 세션 쿠키 이름은 늘 `DVADMINSID` 다. PHP 는 채팅 연동이 꺼져 있으면
-`PHPSESSID` 를 썼다. 동작은 같지만(둘 다 HttpOnly), PHP 쿠키 이름으로
-찾으면 안 나온다.
-
-이 컨트롤러는 **읽기와 로그인만 남았다.** `create`·`update`·`delete` 는
-`410 Gone` 으로 닫혔다 — 게시판이 CMS 로 옮겨간 뒤에도 이 경로가 살아
-있으면, 성공 응답을 받으면서 사이트에는 안 나오는 글이 생긴다. 화면에서
-폼만 감추는 것으로는 북마크·직접 호출·사내 자동화를 못 막는다.
-나머지(채팅 `chat_resolve`, IAM 콜백)는 그대로다.
-
-검증: `bash api/scripts/verify-notify.sh` (37/37). 사내 게이트웨이는
-로컬에서 못 부르므로 가짜 게이트웨이를 세운다. 응답만 보는 게 아니라
-**우리가 무엇을 보냈는지**까지 본다 — `type`·`showYn` 을 서버가 강제하는지,
-`thumbnailImage` 를 빼고 보내는지는 요청을 봐야 안다.
+바꿔야 한다.
 
 ## 알림은 페이지를 멈추지 않는다
 
@@ -401,9 +353,6 @@ Nest 인데 경로가 `.php` 다(`main.ts` 의 `setGlobalPrefix` 제외 목록).
 
 - **옛 글 주소가 안 살아난다.** 예전 `?id=<업스트림 번호>` 링크는 CMS 번호와
   맞지 않는다. 내용 자체가 옮겨 오는 것이라 매핑표 없이는 복원할 수 없다.
-- **머리의 로그인 버튼은 그대로 뒀다.** 게시판이 읽기 전용이 되면서 쓸 일이
-  없어졌지만, 지금도 IAM 로그인을 시도하고 403 으로 끝난다(위 "관리자 로그인이
-  막힌 이유"). 게시판 대체와 별개 문제라 건드리지 않았다.
 - **`public_api.py` 의 공개 플로우와 Public 정책은 은퇴시키지 않았다.**
   Nest 는 서비스 토큰으로 직접 읽으므로 플로우를 쓰지 않는다. 지우는 것은
   되돌리기 어려운 작업이고 스모크 109건이 그 위에 서 있다 — 별도 단계다.
@@ -412,87 +361,6 @@ Nest 인데 경로가 `.php` 다(`main.ts` 의 `setGlobalPrefix` 제외 목록).
 - 잘못된 `startDate`/`endDate` 는 **오류 없이 무시한다.** 원본 PHP 가
   `preg_match` 로 거르고 넘어가던 것을 그대로 뒀다 — 동작을 바꾸면 이관
   대조가 깨진다.
-
-## 사내 IAM 연동 현황
-
-`bash api/scripts/probe-upstream.sh` 로 잰다. 자격증명 없이 되는 데까지 본다.
-
-| | 결과 |
-|---|---|
-| IAM 로그인 화면 | **확인** — `iam.drvalue.co.kr/auth/login` 200 |
-| IAM code 교환 | **확인** — 틀린 code 에 `{"error":"invalid_grant"}`. 봉투 없이 `access_token` 을 주는 구조가 맞다 |
-| 게이트웨이 주소 | **확인** — `https://api.growchat.co.kr/api/serv` |
-| `root/basic` 필드 이름 | **확인** — 빈 본문에 "userId·password 가 없다" 로 답한다. 우리가 보내는 이름과 같다 |
-| 게시판 경로 | **확인** — `/baseinfo/v1/default-notify/many` 가 401 `GLB_CORE_ACL_INVALID_TOKEN`. 없는 경로면 404 다 |
-| `by-root` 경로 | **확인** — 404 아님 |
-| `tenant_code` 값 | **판정 불가** — `drvalue` 는 sample 값이다. 경로가 산다는 것과 코드가 맞다는 것은 다르다. 앱 토큰 없이는 못 잰다 |
-| 게이트웨이 서명 공유 비밀 | **확인** — 서명을 붙이면 거절 이유가 "Invalid gateway signature" → "Missing IAM user headers" 로 바뀐다 |
-| 서비스 계정(`root_id`/`root_pw`) | **막힘** — 값이 없다 |
-| 관리자 IAM 로그인(`root/iam`) | **막힘** — 아래 |
-
-### 주소를 어떻게 찾았나
-
-**가장 짧은 답: 이 저장소 안에 이미 적혀 있다.**
-`.github/workflows/deploy-ssh.yml` 이 배포 때 `notice_config.php` 를 만드는데,
-거기 `NOTIFY_API_BASE` 의 기본값이 `https://api.growchat.co.kr/api/serv/` 로
-박혀 있다. 처음에 그걸 못 보고 다른 길로 돌았다.
-
-돌아간 길도 남긴다 — 저 파일이 없어져도 다시 찾을 수 있어야 한다.
-`notice_config.sample.php` 의 예시 `https://route.drvalue.co.kr` 로는 모든
-경로가 404 다. 그 호스트는 지금 `/actuator/health` 만 200 이고 라우트가
-하나도 안 걸려 있다(`/actuator/gateway/routes` 도 404). 프리픽스는
-Doppler 의 `drvalue-chat-backend` → `GATEWAY_PREFIX = api/serv` 에서 나왔고,
-호스트는 PHP 안에 남아 있던 `workspace.growchat.co.kr` 를 단서로 찾았다.
-
-### 값은 Doppler 에 있다
-
-| 필요한 값 | 어디에 |
-|---|---|
-| `IAM_GATEWAY_SECRET` | Doppler `drvalue-chat-backend` / `prd` / `GATEWAY_SHARED_SECRET` |
-| `NOTIFY_IAM_BASE_URL` | 같은 곳 `IAM_INTERNAL_API_BASE_URL` (= `https://iam.drvalue.co.kr`) |
-| `NOTIFY_API_BASE` | `GATEWAY_PREFIX` + 실측 호스트 |
-| `NOTIFY_ROOT_ID`/`PW` | **Doppler 에 없다.** GitHub Actions Secrets (`NOTIFY_ROOT_ID`/`NOTIFY_ROOT_PW`) 와 운영 서버의 `notice_config.php` 에 있다 |
-
-파일에 적지 말고 주입한다:
-
-```bash
-doppler run --project drvalue-chat-backend --config prd \
-  --only-secrets GATEWAY_SHARED_SECRET -- bash api/scripts/probe-upstream.sh
-```
-
-### 관리자 로그인이 막힌 이유 (PHP 때부터)
-
-`root/iam` 만 게이트웨이 서명을 요구한다. **PHP 는 서명을 붙이지 않는다**
-(`notify_curl` 이 넣는 헤더는 `Accept`·`Authorization`·`Content-Type` 뿐이다).
-그래서 **지금 닿는 호스트를 상대로는 PHP 원본도 403 이다** — 이관이 만든
-문제가 아니다. 다만 PHP 가 겨냥하던 `route.drvalue.co.kr` 가 살아 있을 때
-그 앞단이 서명까지 해 줬는지는 **모른다**(지금은 모든 경로가 404라 잴 수
-없다). 원본에 `[임시 진단]` 으로 토큰을 주소창에 실어 보내는 코드가 남아
-있는 것은 누군가 이 근처를 쫓던 흔적으로 보인다.
-
-공유 비밀로 서명을 맞춰 보면 거절 이유가 바뀐다 — `Missing IAM user
-headers`. 즉 그 경로는 **게이트웨이가 IAM 토큰을 검증한 뒤 `x-user-*` 를
-채워 넣고** 부르는 내부 경로다. 우리 쪽에서 그 헤더를 지어내면 아무 사용자나
-사칭할 수 있다(패키지 문서도 같은 경고를 한다). **그래서 하지 않았다.**
-
-갈 수 있는 길은 둘이다. ① `route.drvalue.co.kr` 의 라우트 테이블을 되살려
-홈페이지가 그 앞단을 통해 들어가게 한다(원래 설계로 보인다). ② 우리 Nest 를
-게이트웨이 동급으로 승격해 IAM 토큰 검증과 `x-user-*` 주입을 직접 한다 —
-그러면 이 프로세스가 뚫릴 때 사내 전 서비스의 사용자 사칭이 가능해진다.
-**①이 맞다고 본다.** 어느 쪽이든 인프라 결정이라 여기서 못 고른다.
-
-그때까지 `.env.example` 두 개(`api/`·`cms/`)는 **닿는 주소**를 기본값으로
-둔다. 게시판 조회는 그걸로 되고 관리자 로그인만 안 된다 — 죽은 주소를
-기본값으로 두면 둘 다 안 되고, 왜 안 되는지도 안 보인다. `route.*` 가
-복구되면 두 파일 모두 되돌린다.
-
-이 하나가 막는 곳은 **두 군데다.** 게시판 API 말고 CMS 의 IAM 로그인
-다리(`directus-extension-iam-bridge`)도 같은 `root/iam` 을 부른다. 그쪽
-검증 11/11 은 **가짜 게이트웨이를 상대로 낸 숫자**다.
-
-게시판 응답 모양은 운영 API 를 실제로 불러 맞췄다
-(`{data, total, take, skip}`, 항목 13개 키). 가짜 게이트웨이도 같은 모양으로
-답하므로, 검증이 "우리끼리만 맞는" 검사가 아니다.
 
 ## 주소에서 `.php` 를 뺐다
 
@@ -506,13 +374,6 @@ headers`. 즉 그 경로는 **게이트웨이가 IAM 토큰을 검증한 뒤 `x-
 목록은 `lib/phpRoutes.mjs` 한 곳에 있다. `next.config.mjs` 의 리다이렉트도,
 `scripts/compare-all.sh` 의 검사 대상도 여기서 읽는다. 두 군데 적으면 새
 페이지를 넣을 때 한쪽만 고쳐 놓게 된다.
-
-**여기 넣으면 안 되는 두 주소**가 있다.
-
-| 주소 | 왜 |
-|---|---|
-| `/page/support/notice_api.php` | 화면이 아니라 Nest 로 넘기는 rewrite 다 |
-| `/page/support/notice_login_callback.php` | 사내 IAM 화이트리스트에 글자 그대로 올라가 있다. 바꾸면 로그인이 죽는다 |
 
 **홈은 폴더로 두지 않는다.** `/index.php` 는 `/` 로 넘기는 308 인데,
 `app/index.php/page.tsx` 가 생기면 파일이 리다이렉트를 이겨서 홈이 조용히
@@ -685,8 +546,8 @@ JS 가 죽어도 화면은 멀쩡하고, 돌면 제자리로 올라온다. 옮�
 
 ## 로그인을 뺐다
 
-관리자 로그인은 CMS 관리 화면으로 간다. 공개 사이트가 `notice_api.php` 로
-세션을 묻던 요청은 페이지를 열 때마다 404 가 나고 있었다(실측).
+관리자 로그인은 CMS 관리 화면으로 간다. 옛 게시판 API(`notice_api.php`)와
+IAM 로그인 콜백은 Nest 에서도 지웠다 — 부르는 화면이 없다.
 `compare.py` 의 `PHP_ONLY_CLASS` 가 원본 쪽에서 그 단추를 떼어낸다.
 
 ## 브랜드 필름을 누를 때 불러온다
@@ -743,13 +604,11 @@ JS 가 죽어도 화면은 멀쩡하고, 돌면 제자리로 올라온다. 옮�
 |---|---|---|
 | `cms/scripts/smoke.sh` | Directus 권한 · 예약 게시 · 다국어 · 공개 엔드포인트 | 109/109 |
 | `cms/scripts/verify-iam-bridge.sh` | IAM 다리 전체 흐름 (가짜 IAM 필요) | 11/11 |
-| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 기본값이 닫힌 쪽인가 | 55/55 |
+| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 기본값이 닫힌 쪽인가 | 46/46 (기대값 — 이번에는 CMS 없이 못 돌렸다) |
 
 `verify.sh` 의 문의 구간은 POST 를 3번 쓰고 한도는 분당 5회다. **1분 안에
 두 번 돌리면 그 구간이 `판정불가` 로 빠진다** — 통과도 실패도 아니다.
 예전에는 429 본문을 읽고 "내부 상태가 샌다" 로 엉뚱하게 실패했다.
-| `api/scripts/verify-notify.sh` | 게시판 읽기·관리자 로그인·채팅·옛 쓰기 차단·프록시 뒤 쿠키 | 37/37 |
-| `api/scripts/probe-upstream.sh` | 사내 IAM·게이트웨이가 기대대로 답하나 | 7/7, 건너뜀 2 (아래) |
 | `web/scripts/compare-all.sh` | 옮긴 페이지가 PHP 원본과 같은가 | **통과 기준에서 뺐다** (3/14 — 헤더·모달·홈을 일부러 바꿨다. `docs/tracking/decisions/` 참고) |
 | `web/scripts/check-a11y.py` | 문의 모달의 라벨·입력칸 묶임 (19장) | 266/266 |
 | `web/scripts/check-assets.py` | 화면이 부르는 파일이 실재하나 | 51개, 빠진 것 0 |

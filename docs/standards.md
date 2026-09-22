@@ -25,7 +25,6 @@
 - `.env` 를 저장소에 넣지 않는다. `*.env.example` 을 복사해서 채운다.
 - 토큰·비밀번호·해시를 출력·로그·문서에 그대로 쓰지 않는다.
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다 —
-  특히 세션 서명 키는 기본값이 있으면 그 값으로 관리자 세션이 위조된다.
 
 ## 검사 통과 기준
 
@@ -35,9 +34,7 @@
 |---|---|---|
 | `cms/scripts/smoke.sh` | Directus 권한·예약 게시·다국어·공개 엔드포인트 | 109/109 |
 | `cms/scripts/verify-iam-bridge.sh` | 관리자 로그인 전체 흐름 (가짜 IAM 필요) | 11/11 |
-| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 닫힌 기본값 | 55/55 |
-| `api/scripts/verify-notify.sh` | 게시판 읽기·관리자 로그인·채팅·옛 쓰기 차단 | 37/37 |
-| `api/scripts/probe-upstream.sh` | 사내 IAM·게이트웨이가 기대대로 답하나 | 7/7 · 건너뜀 2 |
+| `api/scripts/verify.sh` | Nest 가 CMS 를 읽고 쓰는 것 + 게시판 + 닫힌 기본값 | 46/46 (pages·menu·notify 검사 9건을 기능과 함께 뺐다. 55→46 은 회귀가 아니다) |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 |
 | `web/scripts/check-pages.py` | 새로 채운 24장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 98/54 |
 | `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 104/104 |
