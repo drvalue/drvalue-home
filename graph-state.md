@@ -78,18 +78,18 @@ A3 합친 뒤 할 것: 관리 목록 검색·상태 필터·쪽 넘김을 브라
 | A1. api bmes 바닥 | ✅ | common/typeorm(ctx·@Transactional·BaseRepository)·@ServiceException·검증+swagger DTO 데코레이터·/api/docs(운영 끔), admin-post 전환, 예약 목록 필터 | 합침 b8e0c0c · 부모 docker api 에서 verify 161/0/1 · node --test 20/20 · admin-post 서비스 8/8 @ServiceException+JSDoc · 컨트롤러 8/8 @ApiOperation · 서비스의 QueryBuilder/DataSource 0 · 저장소 3/3 BaseRepository · web 게시판·페이지·홈 검사 통과 | 권한 구멍 수정: 순서 바꾸기가 게시판 범위를 안 봤다(인사가 공지 순서를 바꿈). DB 비밀번호를 import 때 읽던 것(forRootAsync). 목록 질의가 이제 잘못된 값에 400 |
 | A2. 게시판 서버 렌더 | ✅ | notice·press·news 목록+상세 서버 렌더, 옛 ?id= 308, h1, not-found | 합침 f1da062 · 부모 docker web 에서 check-boards 35/35 · src 0 · copy 0 · assets 0 · home 23/23 · header 107/107 · a11y 323/323 · pages 110/110 · 옛 ?id= 308 → /notice/legacy-… · 없는 글 404 | 규칙 4 수리. 브라우저 눈 확인은 A3 가 브라우저를 놓은 뒤 |
 | A3. 관리 UX 1차 | ✅ | 서랍 메뉴·대시보드·문의 배지·저장 막대·알림·이탈 확인·모바일 카드·검색 주소·입력칸·삭제 확인·연혁 묶음·이력 말·게시판별 칸·건너뛰기 | 합침 · web 검사 8종 통과(copy 451곳 0) · 브라우저: 목록 검색·상태 필터 요청 4건 전부 200(A1 의 400 규칙과 맞음) · A3 측정표(390 미디어 375/375, 본문 시작 52px, 로그아웃 대비 16.27:1) | 일부: 이탈 보호(브라우저 뒤로 가기 못 막음) · 삭제 되돌리기 없음 · 연혁 끌어 옮기기 없음. api 요청: GET /inquiries/:id · 대시보드 요약 한 번에 |
-| A3b. 예약 글 표시·필터 | ⬜ | 목록 배지 · 「예약」 필터 · 대시보드 예약 수 | 예약 글이 목록·대시보드에 보임 | A1 의 목록 필터 뒤 |
-| A4. 페이지 편집 엔진 | ⬜ | pages 표(0004) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
+| A3b. 예약 글 표시·필터 | 🔄 | 목록 배지 · 「예약」 필터 · 대시보드 예약 수 | 예약 글이 목록·대시보드에 보임 | A1 의 목록 필터 뒤 |
+| A4. 페이지 편집 엔진 | 🔄 | pages 표(0004) · 스키마는 api · 관리 화면 자동 폼 · 공개 읽기 + 코드 예비 | 오시는 길: 저장 → 화면 즉시 · api 꺼도 코드 내용 | |
 | E7. 회사·사업·서비스 페이지 | ⬜ | 스키마 · 씨앗(지금 TS 내용) | 장마다 저장→반영 · check-pages 110/110 그대로 | |
 | E8. 메인 화면 | ⬜ | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
-| E9. 메뉴 관리 | ⬜ | menu_items(0006) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
-| E10. SEO·GEO·GA | ⬜ | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
+| E9. 메뉴 관리 | 🔄 | menu_items(0006) · menu.ts 는 예비 | 숨김→헤더에서 사라짐 · check-header 107/107 | |
+| E10. SEO·GEO·GA | 🔄 | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
 | R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 · 새 표(pages 등) 변경 이력 되돌리기 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | 3차 물결. A4·E9·E10 합친 뒤(admin-revision 을 같이 고치므로) |
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
 | C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
 | V3. 전체 검증 | ⬜ | | docker 새로 띄움 · verify · web 검사 전부 · 브라우저 4종 · advisor | |
-| P1. 지워진 첨부로 저장하면 500 | ⬜ | admin-post 저장 전 파일 존재 확인 또는 pg 23503 → 409 「첨부 파일이 지워졌습니다」 | 지운 파일 id 로 PUT → 409 · 에러 로그 없음 | A1 의 FK 뒤로 사용자가 닿는 경로(미디어에서 지운 뒤 글 저장). R1 과 함께 |
-| P2. 404 장의 작은 것 | ⬜ | 404 에서 `$ is not defined` 2건(jQuery 없이 헤더 스크립트) · 제목이 「공지사항」 · 공개 히어로 제목이 낱말 중간에서 끊김(keep-all 없음, 사이트 전체) | 콘솔 오류 0 · 404 제목 · 390 히어로 | E10 에 넣는다 |
+| P1. 지워진 첨부로 저장하면 500 | 🔄 | admin-post 저장 전 파일 존재 확인 또는 pg 23503 → 409 「첨부 파일이 지워졌습니다」 | 지운 파일 id 로 PUT → 409 · 에러 로그 없음 | A1 의 FK 뒤로 사용자가 닿는 경로(미디어에서 지운 뒤 글 저장). R1 과 함께 |
+| P2. 404 장의 작은 것 | 🔄 | 404 에서 `$ is not defined` 2건(jQuery 없이 헤더 스크립트) · 제목이 「공지사항」 · 공개 히어로 제목이 낱말 중간에서 끊김(keep-all 없음, 사이트 전체) | 콘솔 오류 0 · 404 제목 · 390 히어로 | E10 에 넣는다 |
 | S1. 본문 HTML 소독 | ⬜ | api 저장 때 허용 태그만(편집기가 만드는 것) · 공개 렌더도 같은 규칙 | <script>·on* 속성이 저장 뒤 사라짐 | 지금은 관리자 글을 그대로 낸다(채용·게시판). 관리자 세션이 털리면 공개 사이트 XSS. security.md 가 이 기계에 없다 |
 | X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
 | X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |
