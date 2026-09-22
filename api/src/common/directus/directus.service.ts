@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { CommonError } from '../error/common-error'
+import { DirectusError } from './directus.error'
+
+export type DirectusRow = Record<string, unknown>
 
 /**
  * Directus 를 서비스 토큰으로 읽는다.
  *
- * 이 토큰은 seat 을 먹지 않는 계정의 것이다(역할 없음 + app_access:false 정책).
- * 관리 화면에는 못 들어가고 API 만 읽는다.
- *
- * **초안까지 다 보인다.** Directus Core 는 권한에 조건을 못 걸어서
- * (custom_permission_rules_enabled is a restricted resource) 걸러 내는 일은
- * 여기서 한다. 그래서 공개로 내보내는 조회는 반드시 `status = published` 를 건다.
+ * 토큰은 초안까지 다 본다(Core 는 권한에 조건을 못 건다). 공개로 내보내는
+ * 조회는 부르는 쪽이 반드시 `status = published` 를 걸어야 한다.
  */
 @Injectable()
 export class DirectusService {
@@ -18,6 +18,11 @@ export class DirectusService {
 
   get configured(): boolean {
     return Boolean(this.base && this.token)
+  }
+
+  /** 설정이 비어 있으면 503. 부르는 쪽에서 매번 검사하지 않도록 여기서 던진다. */
+  assertConfigured(): void {
+    if (!this.configured) throw new CommonError(DirectusError.NOT_CONFIGURED)
   }
 
   async get<T = unknown>(
@@ -30,12 +35,11 @@ export class DirectusService {
     }
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${this.token}` },
-      // Directus 가 멈추면 이쪽 요청도 같이 멈춘다.
       signal: AbortSignal.timeout(10_000),
     })
     if (!res.ok) {
       this.log.warn(`Directus ${res.status} ${path}`)
-      throw new Error(`directus ${res.status}`)
+      throw new CommonError(DirectusError.UPSTREAM_ERROR)
     }
     return (await res.json()) as { data: T; meta?: Record<string, unknown> }
   }
@@ -43,47 +47,32 @@ export class DirectusService {
   async post<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${this.base}${path}`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10_000),
     })
     if (!res.ok) {
       this.log.warn(`Directus ${res.status} ${path}`)
-      throw new Error(`directus ${res.status}`)
+      throw new CommonError(DirectusError.UPSTREAM_ERROR)
     }
     const text = await res.text()
     return (text ? JSON.parse(text) : null) as T
   }
 
-  /**
-   * 파일 원본. 게시판 첨부와 대표 이미지가 이 길로 나간다.
-   *
-   * 브라우저를 Directus 로 직접 보내지 않는다. 운영에서 Directus 가 바깥에
-   * 열려 있으리라는 보장이 없고, 열어 두면 파일 목록 전체가 노출된다.
-   * 여기서 받아 넘기면 주소도 우리 것이고 토큰도 서버에 남는다.
-   */
+  /** 파일 원본. 브라우저가 Directus 를 직접 부르지 않도록 여기서 받아 넘긴다. */
   async file(id: string): Promise<Response> {
     return fetch(`${this.base}/assets/${encodeURIComponent(id)}`, {
       headers: { Authorization: `Bearer ${this.token}` },
-      // 첨부는 본문보다 크다. 10초로는 큰 파일이 끊긴다.
       signal: AbortSignal.timeout(30_000),
     })
   }
 
-
-  /**
-   * 조회에 실을 언어들. 요청 언어가 먼저고 기본 언어가 예비다.
-   * 한 언어만 실으면 그 언어 번역이 없는 글이 제목 없이 나간다.
-   */
+  /** 요청 언어 + 기본 언어. 한 언어만 실으면 번역 없는 글이 제목 없이 나간다. */
   languages(requested: string): string[] {
     const fallback = process.env.DEFAULT_LANGUAGE ?? 'ko-KR'
     return requested === fallback ? [requested] : [requested, fallback]
   }
 
-  /** 요청 언어. 목록에 없는 값은 기본 언어로 떨어뜨린다. */
   language(requested?: string): string {
     const allowed = ['ko-KR', 'en-US']
     const fallback = process.env.DEFAULT_LANGUAGE ?? 'ko-KR'

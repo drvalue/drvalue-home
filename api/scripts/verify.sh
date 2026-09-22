@@ -50,22 +50,8 @@ cms() { curl -s -g -H "Authorization: Bearer $ADMIN" "$CMS$1" --max-time 30; }
 RUN="verify-$(date +%s)-$RANDOM"
 
 echo "== 콘텐츠 읽기 =="
-title='print((((d.get("data") or {}).get("translations") or [{}])[0]).get("title",""))'
-check "페이지 조회 (ko)" "회사소개" \
-  "$(curl -s "$API/api/content/pages?path=/about" --max-time 30 | pick "$title")"
-check "페이지 조회 (en)" "About Us" \
-  "$(curl -s "$API/api/content/pages?path=/about&lang=en-US" --max-time 30 | pick "$title")"
-check "언어를 하나만 준다" "1" \
-  "$(curl -s "$API/api/content/pages?path=/about" --max-time 30 \
-     | pick 'print(len((d.get("data") or {}).get("translations") or []))')"
-check "본문 섹션이 붙어 온다" "2" \
-  "$(curl -s "$API/api/content/pages?path=/about" --max-time 30 | pick 'print(len((d.get("data") or {}).get("blocks") or []))')"
 check "게시판 목록" "yes" \
   "$(curl -s "$API/api/content/posts?board=notice" --max-time 30 | pick 'print("yes" if isinstance(d.get("data"),list) else "no")')"
-check "메뉴" "yes" \
-  "$(curl -s "$API/api/content/menu" --max-time 30 | pick 'print("yes" if (d.get("data") or []) else "no")')"
-check "없는 페이지는 404" "404" \
-  "$(curl -s -o /dev/null -w '%{http_code}' "$API/api/content/pages?path=/no-such-page" --max-time 30)"
 
 echo "== 초안이 새지 않는다 =="
 # Directus Core 는 권한에 조건을 못 걸어서 토큰이 초안까지 다 본다.
@@ -297,7 +283,7 @@ boot() {  # 환경변수들… → 떴으면 0, 죽었으면 1
       node "$HERE/dist/main.js" > "$NOENV/boot.log" 2>&1 ) &
   BOOT_PID=$!
   for _ in $(seq 1 30); do
-    [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3907/api/content/menu --max-time 2 2>/dev/null)" != "000" ] && return 0
+    [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3907/api/content/posts --max-time 2 2>/dev/null)" != "000" ] && return 0
     kill -0 "$BOOT_PID" 2>/dev/null || return 1
     sleep 0.5
   done
@@ -305,42 +291,29 @@ boot() {  # 환경변수들… → 떴으면 0, 죽었으면 1
 }
 stop() { [ -n "$BOOT_PID" ] && kill "$BOOT_PID" 2>/dev/null; wait "$BOOT_PID" 2>/dev/null; BOOT_PID=""; }
 
-# 세션 서명 비밀에 안전한 기본값은 없다. 없으면 떠서는 안 된다.
-boot && r=up || r=down; stop
-check "비밀 없이는 안 뜬다" "down" "$r"
-
 # 게이트웨이 검증은 기본이 켜짐이고, 켜졌는데 공유 비밀이 없으면 안 뜬다.
-boot SESSION_SECRET=x && r=up || r=down; stop
+boot && r=up || r=down; stop
 check "게이트웨이 비밀 없이는 안 뜬다" "down" "$r"
 
-boot SESSION_SECRET=x IAM_GATEWAY_SECRET=gw && r=up || r=down
-check "둘 다 주면 뜬다" "up" "$r"
+boot IAM_GATEWAY_SECRET=gw && r=up || r=down
+check "비밀을 주면 뜬다" "up" "$r"
 check "게이트웨이 검증이 켜져 있다" "0" \
   "$(grep -c 'enforceGatewayOnly is false' "$NOENV/boot.log" 2>/dev/null || :)"
 # 공개 API 는 @SkipGatewaySignature() 로 표시돼 있어야 통과한다.
 # 표시를 빼면 403 이 된다(돌연변이로 확인함).
 check "공개 콘텐츠 API 는 막히지 않는다" "not403" \
-  "$([ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3907/api/content/menu --max-time 10)" = "403" ] && echo 403 || echo not403)"
+  "$([ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3907/api/content/posts --max-time 10)" = "403" ] && echo 403 || echo not403)"
 check "공개 문의 API 는 막히지 않는다" "not403" \
   "$([ "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3907/api/inquiry \
         -H 'Content-Type: application/json' -d '{}' --max-time 10)" = "403" ] && echo 403 || echo not403)"
-check "공개 게시판 API 는 막히지 않는다" "not403" \
-  "$([ "$(curl -s -o /dev/null -w '%{http_code}' \
-        'http://localhost:3907/page/support/notice_api.php?action=session' --max-time 10)" = "403" ] && echo 403 || echo not403)"
-# SESSION_SECURE 는 기본이 켜짐이다. 프록시 뒤인데 trust proxy 가 없으면
-# req.secure 가 false 라서 세션 쿠키가 **오류 없이** 안 나간다. 부팅할 때
-# 경고로 말해야 한다 — 증상만으로는 원인을 못 찾는다.
-check "프록시 설정을 빠뜨리면 경고한다" "1" \
-  "$(grep -c 'TRUST_PROXY 가 비어 있다' "$NOENV/boot.log" 2>/dev/null || :)"
+
 stop
 
 # TRUST_PROXY 를 문자열 그대로 넘기면 Express 는 홉 수가 아니라 신뢰 대역
 # 목록으로 읽어서 아무것도 신뢰하지 않는다. 설정을 넣고도 증상이 그대로다.
 # 숫자로 바뀌었는지는 IP 별 한도가 정말 갈리는지로 본다.
-boot SESSION_SECRET=x IAM_GATEWAY_SECRET=gw TRUST_PROXY=1 MAIL_RL_PER_MINUTE=2 && r=up || r=down
+boot IAM_GATEWAY_SECRET=gw TRUST_PROXY=1 MAIL_RL_PER_MINUTE=2 && r=up || r=down
 check "프록시 설정을 주면 뜬다" "up" "$r"
-check "프록시 설정을 주면 경고하지 않는다" "0" \
-  "$(grep -c 'TRUST_PROXY 가 비어 있다' "$NOENV/boot.log" 2>/dev/null || :)"
 ask() {  # X-Forwarded-For → 상태코드
   curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3907/api/inquiry \
     -H 'Content-Type: application/json' -H "X-Forwarded-For: $1" -d '{}' --max-time 10

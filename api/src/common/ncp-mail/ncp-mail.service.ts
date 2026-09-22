@@ -1,18 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { createHmac } from 'node:crypto'
 
+export interface NcpMailInput {
+  user_name: string
+  user_tel: string
+  user_type: string
+  user_msg: string
+}
+
 /**
- * mail_send.php 를 옮긴 것. 네이버 클라우드 Outbound Mailer 로 보낸다.
- *
- * 브라우저로 옮길 수 없다. NCP_SECRET_KEY 로 요청에 서명해야 하는데, 그 키가
- * 프런트로 나가는 순간 누구나 이 회사 이름으로 메일을 보낼 수 있다.
- *
- * 서명 규칙은 PHP 와 한 글자도 다르면 안 된다. 서명이 틀리면 NCP 가 401 만
- * 돌려주고 어디가 틀렸는지는 알려 주지 않는다.
+ * 네이버 클라우드 Outbound Mailer.
+ * NCP_SECRET_KEY 로 요청을 서명한다 — 서명이 틀리면 401 만 온다.
  */
 @Injectable()
-export class MailService {
-  private readonly log = new Logger(MailService.name)
+export class NcpMailService {
+  private readonly log = new Logger(NcpMailService.name)
 
   private get cfg() {
     return {
@@ -29,14 +31,13 @@ export class MailService {
     return Boolean(c.accessKey && c.secretKey && c.sender && c.to.length)
   }
 
-  /** `POST {uriPath}\n{timestamp}\n{accessKey}` 를 HMAC-SHA256 하고 base64. */
+  /** `{method} {uriPath}\n{timestamp}\n{accessKey}` 를 HMAC-SHA256 → base64. */
   signature(method: string, uriPath: string, timestampMs: string): string {
     const { accessKey, secretKey } = this.cfg
     const message = `${method} ${uriPath}\n${timestampMs}\n${accessKey}`
     return createHmac('sha256', secretKey).update(message).digest('base64')
   }
 
-  /** PHP 의 htmlspecialchars(ENT_QUOTES) 와 같은 범위를 막는다. */
   private escape(v: string): string {
     return v
       .replace(/&/g, '&amp;')
@@ -46,7 +47,7 @@ export class MailService {
       .replace(/'/g, '&#039;')
   }
 
-  buildBody(input: { user_name: string; user_tel: string; user_type: string; user_msg: string }) {
+  buildBody(input: NcpMailInput): string {
     const e = (v: string) => this.escape(v)
     return (
       `<p><strong>회사명 / 성함</strong><br>${e(input.user_name)}</p>` +
@@ -57,7 +58,7 @@ export class MailService {
     )
   }
 
-  async send(input: { user_name: string; user_tel: string; user_type: string; user_msg: string }) {
+  async send(input: NcpMailInput): Promise<void> {
     const c = this.cfg
     const uriPath = new URL(`${c.apiBase}/mails`).pathname || '/api/v1/mails'
     const timestamp = String(Date.now())
@@ -85,6 +86,5 @@ export class MailService {
       this.log.warn(`NCP ${res.status}`)
       throw new Error(`ncp ${res.status}`)
     }
-    return true
   }
 }

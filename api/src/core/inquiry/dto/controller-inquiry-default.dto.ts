@@ -1,6 +1,6 @@
 import { IsIn, IsNotEmpty, IsString, MaxLength } from 'class-validator'
 
-/** header.php 의 문의 모달이 보내는 필드. select 의 선택지까지 같게 둔다. */
+/** 문의 모달 select 의 선택지와 같게 둔다. */
 export const INQUIRY_TYPES = [
   '지원사업',
   'CutON(레이저 견적)',
@@ -9,9 +9,8 @@ export const INQUIRY_TYPES = [
   '기타',
 ] as const
 
-export class CreateInquiryDto {
-  // 길이는 mail_send.php 와 같게 둔다(200/50/5000). 더 좁히면 PHP 로는
-  // 들어가던 문의가 이관 뒤에 거절된다.
+/** 길이 한도(200/50/5000)는 좁히지 않는다 — 받던 문의가 거절된다. */
+export class ControllerInquiryDefaultCreateDto {
   @IsString() @IsNotEmpty() @MaxLength(200)
   user_name!: string
 
