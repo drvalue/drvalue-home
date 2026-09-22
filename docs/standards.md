@@ -44,7 +44,7 @@
 | `web/scripts/check-assets.py` | 화면이 가리키는 파일이 실제로 있나 | 빠진 것 0 |
 | `web/scripts/check-boards.py` | 공지·보도·뉴스가 JS 없이 서버 HTML 에 있나 · 글 주소·canonical · 옛 ?id= 308 · 없는 글 404 | 35/35 (`NEXT_ORIGIN`) |
 | `web/scripts/check-src.py` | 페이지 CSS 문자열에 역따옴표가 섞였나 | 0건 |
-| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (752곳) |
+| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (783곳) |
 | `npx tsc --noEmit` · `npx next build` | 운영 빌드가 되는가 | 종료코드 0 |
 
 **못 돌린 검사는 통과가 아니라 판정 불가다.** 값을 0 으로 적지 않고

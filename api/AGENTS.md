@@ -168,7 +168,7 @@ src/
   - **소개 장 15장**(E7 — 회사 안내·비전, M.AX 소개·PCB·화장품·MES AI·스마트 팩토리, AI 솔루션 개발·오토폼·
     컷온·CADON·채팅·한건·GrowTalk·GrowXD)은 `schema/intro-pages.schema.ts` 한 파일이다. 칸 묶음은
     `schema/parts.ts`(머리말·요약·화면 판·큰 문장·카드·기능 줄·게이지 탭·전/후)를 조립한다 — web 의
-    `app/page/pageContentParts.ts` 가 같은 모양의 형·변환을 갖는다. 씨앗은 `db/migrations/0008`.
+    `app/(site)/page/pageContentParts.ts` 가 같은 모양의 형·변환을 갖는다. 씨앗은 `db/migrations/0008`.
     허브 둘(M.AX 소개·AI 솔루션 개발)의 제품 카드·구역 제목은 하위 장의 머리말·요약을 읽는다(두 곳에 안 적는다).
     움직이는 시연·실제 응답 기록(한건 「모르면 모른다」 등)·흐름도(FlowBand)는 코드다.
   - 표 이름이 `pages` 가 아닌 이유: Directus 를 시험할 때 만든 `pages`·`page_blocks` 가 남은 DB 가 있다.
