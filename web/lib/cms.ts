@@ -39,6 +39,12 @@ export type CmsPost = {
   /** 검색 결과에 쓸 제목·설명. 비어 있으면 제목·요약을 쓴다. */
   seo_title?: string | null
   seo_description?: string | null
+  /** 공유 카드 그림(우리 주소). 없으면 대표 이미지 → 사이트 기본 그림. */
+  og_image?: string | null
+  /** 검색에서 제외 — noindex, 사이트맵에서 뺀다. 사이트에는 그대로 보인다. */
+  no_index?: boolean
+  /** 마지막 저장 시각(ISO). 사이트맵 lastmod. */
+  updated_on?: string | null
 }
 
 export type CmsPostFull = CmsPost & { body: string | null; attachments: { id: string; name: string; url: string }[] }

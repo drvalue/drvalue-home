@@ -47,7 +47,8 @@ src/
 `admin-inquiry` · `admin-schedule`(예약 게시 1분 cron) · `admin-revision` · `admin-user` ·
 `admin-dashboard`(홈 요약 한 번에 — 범위가 못 보는 칸은 비운다)(관리) ·
 `menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘) ·
-`page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스).
+`page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
+`seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈과 R1(나머지 모듈 전환)은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 아직 안 옮긴 모듈은 옛 모양이다.
 
@@ -165,11 +166,14 @@ src/
 - 공지·보도·뉴스의 대표 이미지(`thumbnail`)는 저장할 때 **본문의 첫 그림**으로 정한다
   (`/api/content/assets/<uuid>`, 한국어 본문 먼저). 보낸 `thumbnail` 은 보지 않는다. 본문에 그림이
   없으면 비운다. 증서(특허·저작권)만 `thumbnail` 을 직접 받는다.
-- 글 저장은 첨부·증서 그림 파일이 아직 있는지 먼저 본다. 미디어에서 지운 파일을 폼이 들고 있다가
-  저장하면 `409 ADMIN_POST_FILE_GONE`·`ADMIN_POST_THUMB_GONE`(예전에는 FK 에 걸려 500). 관리 화면은
-  `resultCode` 로 그 칸을 짚는다(`AdminError.code`).
-- 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 센다. `force` 삭제는
-  본문의 `<img>` 까지 걷어 낸다 — 남기면 글에 깨진 그림이 보인다.
+- 글 저장은 첨부·증서 그림·공유 그림 파일이 아직 있는지 먼저 본다. 미디어에서 지운 파일을 폼이 들고 있다가
+  저장하면 `409 ADMIN_POST_FILE_GONE`·`ADMIN_POST_THUMB_GONE`·`ADMIN_POST_OG_IMAGE_NOT_FOUND`(예전에는 FK 에 걸려 500).
+  관리 화면은 `resultCode` 로 그 칸을 짚는다(`AdminError.code`).
+- 파일이 「쓰이는 곳」은 대표·공유 이미지 · 첨부 · 본문 그림을 글 단위로 세고, 페이지 글(`page_contents`)의 그림과
+  정적 장의 공유 그림(`page_meta.og_image`)을 더한다. `force` 삭제는 본문의 `<img>` 까지 걷어 내고 페이지 글의 그림 칸은 비운다.
+- 검색 정보: 글은 `posts_translations.seo_title·seo_description` + `posts.og_image·no_index`(글 저장에 같이),
+  정적 장은 `page_meta`(+ 언어별 `page_meta_translations`). 공개 파일 관문은 `page_meta.og_image` 도 연다.
+  `posts.updated_on`(사이트맵 lastmod)은 `@UpdateDateColumn` 이라 저장·예약 전환 때 저절로 바뀐다.
 - 업로드는 `AppConfig.uploadsDir` 폴더에 `<uuid>.<ext>` + `directus_files` 행(compose 는
   `/data/uploads`, 로컬은 저장소 `data/uploads`). 치수는 헤더에서 직접 읽는다. cwd 기준으로
   잡지 않는다(api/ 에서 띄우면 빈 폴더를 본다).
@@ -186,7 +190,7 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs   # 30 (6 + 9 + 5 + 10)
-bash scripts/verify.sh          # 214 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+bash scripts/verify.sh          # 측정 대기(E7·E8 합친 뒤 잰다) (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 ../web/scripts/check-copy.py   # 화면으로 가는 문구의 반말 0건
 ```
 

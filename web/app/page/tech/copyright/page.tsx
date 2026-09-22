@@ -1,7 +1,7 @@
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import CertGrid from '../CertGrid'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { cmsBoard, dots, type CmsPost } from '@/lib/cms'
 
 /** CMS 에서 고친 것이 바로 보이게 요청마다 그린다(lib/cms.ts). */
@@ -25,7 +25,7 @@ const CERT_H = 1089
 
 const PATH = '/page/tech/copyright'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '프로그램 저작권',
   description:
     '클라우드 네이티브 SaaS 생산관리시스템, AI 하이브리드 LLM 기반 클라우드 MES 등 디알밸류가 등록한 프로그램 저작권 5건입니다.',

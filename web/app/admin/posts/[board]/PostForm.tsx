@@ -8,6 +8,7 @@ import FileDrop from '../../ui/FileDrop'
 import { useLeaveGuard } from '../../ui/leave'
 import { useToast } from '../../ui/toast'
 import HtmlEditor from './HtmlEditor'
+import SeoPanel from './SeoPanel'
 
 type Lang = 'ko-KR' | 'en-US'
 const LANGS: { code: Lang; label: string }[] = [
@@ -84,7 +85,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
     if (id === undefined) {
       start({
         id: 0, board: board.key, slug: '', status: 'draft', published_date: today(), sort: null,
-        is_pinned: false, is_featured: false, thumbnail: null, thumbnail_url: null, press_media: null,
+        is_pinned: false, is_featured: false, thumbnail: null, thumbnail_url: null,
+        og_image: null, og_image_url: null, no_index: false, press_media: null,
         period_start: null, period_end: null, cert_state: board.key === 'patent' ? 'applied' : null,
         cert_no: null, cert_date: null, cert_made_date: null, cert_kind: null, history_year: null,
         employment_type: board.key === 'recruit' ? 'fulltime' : null, is_open_ended: false, deadline: null,
@@ -192,6 +194,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       published_date: post.published_date,
       is_pinned: post.is_pinned,
       thumbnail: post.thumbnail,
+      og_image: post.og_image,
+      no_index: post.no_index,
       press_media: post.press_media,
       period_start: post.period_start,
       period_end: post.period_end,
@@ -208,7 +212,11 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       unpublish_at: post.unpublish_at,
       translations: post.translations
         // 영어 칸을 하나도 안 채웠으면 보내지 않는다 — 빈 번역 행을 남기지 않는다.
-        .filter((x) => x.languages_code === 'ko-KR' || [x.title, x.summary, x.body, x.case_category_label, x.faq_category].some((v) => v && v.trim()))
+        .filter(
+          (x) =>
+            x.languages_code === 'ko-KR' ||
+            [x.title, x.summary, x.body, x.case_category_label, x.faq_category, x.seo_title, x.seo_description].some((v) => v && v.trim()),
+        )
         .map((x) => ({
           languages_code: x.languages_code,
           title: x.title ?? '',
@@ -300,6 +308,11 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
         </h1>
         <div className="dva_actions">
           {dirty && <span className="dva_dirty">저장하지 않은 변경이 있습니다</span>}
+          {id !== undefined && dated && post.status === 'published' && post.slug && (
+            <a className="dva_btn" href={`/page/support/${k}/${encodeURIComponent(post.slug)}`} target="_blank" rel="noreferrer">
+              사이트에서 보기
+            </a>
+          )}
           <Link href={`/admin/posts/${k}`} className="dva_btn">
             목록
           </Link>
@@ -542,6 +555,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
           )}
         </div>
 
+        <div className="dva_aside">
         <div className="dva_card">
           <h2>설정</h2>
           <div className="dva_field">
@@ -598,6 +612,8 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
               </div>
             </details>
           )}
+        </div>
+        {dated && <SeoPanel post={post} t={t} setT={setT} set={set} busy={busy} onError={setError} />}
         </div>
       </div>
     </>

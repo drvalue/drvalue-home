@@ -5,6 +5,10 @@ import { TransactionContextMiddleware } from '../typeorm/transaction-context.mid
 import { FileEntity } from '../entity/file.entity';
 import { InquiryEntity } from '../entity/inquiry.entity';
 import { AdminUserEntity } from '../entity/admin-user.entity';
+import {
+  PageMetaEntity,
+  PageMetaTranslationEntity,
+} from '../entity/page-meta.entity';
 import { RevisionEntity } from '../entity/revision.entity';
 import { PostFileEntity } from '../entity/post-file.entity';
 import { PostTranslationEntity } from '../entity/post-translation.entity';
@@ -24,6 +28,8 @@ export const ENTITIES = [
   MenuItemEntity,
   MenuItemTranslationEntity,
   PageEntity,
+  PageMetaEntity,
+  PageMetaTranslationEntity,
 ];
 
 /**

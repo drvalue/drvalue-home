@@ -9,7 +9,8 @@ import '@/styles/tw.css'
 import '@/styles/motion.css'
 import Reveal from '@/components/Reveal'
 import HomeCountUp from '@/app/home/HomeCountUp'
-import { SITE_ORIGIN } from '@/lib/seo'
+import { SITE_DESCRIPTION, SITE_ORIGIN } from '@/lib/seo'
+import { JQUERY_SRC, tagsGtmId } from '@/lib/analytics'
 import OrgJsonLd from '@/components/OrgJsonLd'
 
 /**
@@ -33,8 +34,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // 페이지마다 제목을 따로 쓴다(lib/seo.ts). 여기 것은 그것이 없을 때만 쓰인다.
   title: '디알밸류 - AI 제조 솔루션',
-  description:
-    '제조 현장의 언어를 데이터로 통일합니다. MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat 을 실제 현장에서 운영해 온 디알밸류.',
+  description: SITE_DESCRIPTION,
   metadataBase: new URL(SITE_ORIGIN),
   icons: {
     icon: [
@@ -46,9 +46,9 @@ export const metadata: Metadata = {
   manifest: '/icon/site.webmanifest',
 }
 
-const GTM_ID = 'GTM-NLL3QGRF' // noscript iframe 용. 스크립트 쪽은 components/SiteScripts.tsx
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // 통계 태그를 실을지(lib/analytics.ts). 빌드에 NEXT_PUBLIC_GTM_ID 가 있고 미리보기가 아닐 때만.
+  const gtmId = tagsGtmId()
   return (
     <html lang="ko">
       <head>
@@ -76,32 +76,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           우리 마크업이 아니고 고칠 수도 없다. 여기서만 그 경고를 끈다 —
           안쪽 내용의 불일치는 그대로 잡힌다. */}
       <body suppressHydrationWarning>
-        {/* Google Tag Manager (noscript) — PHP 와 같은 자리에 둔다. */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
-
+        {/* GTM 의 noscript iframe 은 뺐다 — 스크립트가 꺼진 사람에게는 동의를 물을 수 없으니 기록하지 않는다. */}
         {children}
         <HomeCountUp />
         <Reveal />
 
         {/* PHP 는 <head> 에서 동기 로드했다. beforeInteractive 로 순서를 맞춘다 —
             푸터 스크립트가 $ 와 Swiper 를 쓰기 때문이다. */}
-        <Script
-          src="https://code.jquery.com/jquery-3.6.0.min.js"
-          strategy="beforeInteractive"
-        />
+        <Script src={JQUERY_SRC} strategy="beforeInteractive" />
         <Script
           src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"
           strategy="beforeInteractive"
         />
         {/* GTM · 헤더 동작 · 등장 효과 · 채팅 위젯. /admin 에서는 안 실린다. */}
-        <SiteScripts />
+        <SiteScripts gtmId={gtmId} />
       </body>
     </html>
   )

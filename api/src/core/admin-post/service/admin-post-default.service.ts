@@ -130,6 +130,7 @@ export class AdminPostDefaultService {
     const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
     await this.assertSlugFree(ctx, slug);
     await this.assertFilesExist(ctx, dto);
+    await this.assertOgImage(ctx, dto);
 
     const posts = this.postDefaultRepository.repository(ctx);
     const row = posts.create({
@@ -179,6 +180,7 @@ export class AdminPostDefaultService {
     this.requireKoTitle(dto);
     const row = await this.findOrThrow(ctx, id);
     this.assertBoard(who, row.board);
+    await this.assertOgImage(ctx, dto);
     const before = ControllerAdminPostDefaultDetailResponseDto.from(row);
     await this.assertFilesExist(ctx, dto);
 
@@ -337,7 +339,19 @@ export class AdminPostDefaultService {
       deadline: nul(dto.deadline),
       publishAt: when(dto.publish_at),
       unpublishAt: when(dto.unpublish_at),
+      ogImage: nul(dto.og_image?.toLowerCase()),
+      noIndex: dto.no_index ?? undefined,
     };
+  }
+
+  /** 공유 그림이 실제 파일인가. 미디어에서 지운 파일이면 FK 가 500 을 내기 전에 400 으로 알린다. */
+  private async assertOgImage(
+    ctx: ITransactionContext,
+    dto: ControllerAdminPostDefaultSaveDto,
+  ): Promise<void> {
+    if (!dto.og_image) return;
+    if (!(await this.fileDefaultRepository.exists(ctx, dto.og_image)))
+      throw CommonError.createByErrorCode(AdminPostError.OG_IMAGE_NOT_FOUND);
   }
 
   /** 한국어 본문의 첫 그림, 없으면 다른 언어 본문의 첫 그림. */

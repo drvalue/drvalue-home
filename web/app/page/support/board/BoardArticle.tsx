@@ -1,10 +1,33 @@
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { cmsBoard, type CmsPostFull } from '@/lib/cms'
+import JsonLd from '@/components/JsonLd'
+import { DEFAULT_OG_IMAGE, ORG, SITE_ORIGIN } from '@/lib/seo'
 import { PAGE_CSS } from './boardStyles'
 import { detailPath, type BoardConf } from './boards'
 import CopyLink from './CopyLink'
-import { bodyHtml, dotDate } from './text'
+import { bodyHtml, dotDate, plainText } from './text'
+
+/** 화면에 보이는 글 그대로 — 제목·요약·게시일·고친 날·그림. 글쓴이는 회사(바이라인 「디알밸류」). */
+function newsArticle(conf: BoardConf, post: CmsPostFull): Record<string, unknown> {
+  const url = `${SITE_ORIGIN}${detailPath(conf, post.slug)}`
+  const image = post.og_image || post.thumbnail || DEFAULT_OG_IMAGE.url
+  const org = { '@type': 'Organization', '@id': `${SITE_ORIGIN}/#organization`, name: ORG.name, url: SITE_ORIGIN }
+  return {
+    '@type': conf.key === 'notice' ? 'Article' : 'NewsArticle',
+    headline: post.title.slice(0, 110),
+    description: post.summary || plainText(post.body),
+    // 게시 날짜는 날짜만 있다 — 한국 자정으로 적는다. 날짜만 두면 UTC 자정으로 읽혀 updated_on(같은 한국 자정을
+    // UTC 로 적은 값)보다 늦어 보인다(dateModified < datePublished).
+    ...(post.published_date ? { datePublished: `${post.published_date.slice(0, 10)}T00:00:00+09:00` } : {}),
+    ...(post.updated_on ? { dateModified: post.updated_on } : {}),
+    image: [image.startsWith('http') ? image : `${SITE_ORIGIN}${image}`],
+    author: org,
+    publisher: { ...org, logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/opt/logo.png` } },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'ko-KR',
+  }
+}
 
 /**
  * 공지·보도·뉴스 글 한 건. 서버가 다 그린다 — 예전에는 목록 장이 `?id=` 를 보고 스크립트로
@@ -24,6 +47,7 @@ export default async function BoardArticle({ conf, post }: { conf: BoardConf; po
 
   return (
     <>
+      {post && <JsonLd data={newsArticle(conf, post)} />}
       <style dangerouslySetInnerHTML={{ __html: MAX_CSS + PAGE_CSS }} />
       <SolutionShell
         path={conf.path}

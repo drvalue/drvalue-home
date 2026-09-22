@@ -17,9 +17,11 @@ COPY . .
 # 빌드 때만 쓰는 값. 검색 차단(NOINDEX)은 미리보기 배포에서만 1 로 넘긴다.
 # /api 프록시(next.config 의 rewrites)는 빌드 때 주소가 굳는다 — 실행 때 API_ORIGIN 을
 # 바꿔도 프록시는 안 바뀐다. compose 가 http://api:3500 을 넘긴다.
+# 방문 통계 GTM id(NEXT_PUBLIC_ 이라 빌드 때 번들에 굳는다). 비우면 통계 태그·동의 창이 안 실린다.
 ARG NOINDEX=
 ARG API_ORIGIN=
-ENV NOINDEX=$NOINDEX API_ORIGIN=$API_ORIGIN NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_GTM_ID=
+ENV NOINDEX=$NOINDEX API_ORIGIN=$API_ORIGIN NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:24-alpine AS run

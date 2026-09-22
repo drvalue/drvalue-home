@@ -25,7 +25,7 @@
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다.
 - **IAM 을 안 거치는 관리자 문을 만들지 않는다.** 토큰·헤더 우회 경로 금지. 검사는
   `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다.
-- 환경변수는 `.env.example` 의 일곱 개뿐이다. 새로 만들기 전에 코드 상수나 compose
+- 환경변수는 `.env.example` 의 필수 일곱 개 + 선택 하나(`NEXT_PUBLIC_GTM_ID`, 비우면 통계가 안 실린다)뿐이다. 새로 만들기 전에 코드 상수나 compose
   배선으로 되는지 먼저 본다. api 에서 읽는 곳은 `common/config/app-config.ts` 하나다.
 
 ## 검사 통과 기준
@@ -36,7 +36,7 @@
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
 | `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) | 30/30 |
-| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 214 통과 · 판정불가 1 |
+| `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지·SEO) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 측정 대기(E7·E8 합친 뒤 잰다) |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |
 | `web/scripts/check-pages.py` | 새로 채운 장의 본문·그림 바닥, 등장 표시, 화면 파일 실재, 안 쓰는 화면 0 | 110/110 (`NEXT_ORIGIN` 으로 다른 포트) |
 | `web/scripts/check-header.py` | 탭 막대와 현재 위치 줄 | 107/107 (`NEXT_ORIGIN`) |
@@ -44,7 +44,7 @@
 | `web/scripts/check-assets.py` | 화면이 가리키는 파일이 실제로 있나 | 빠진 것 0 |
 | `web/scripts/check-boards.py` | 공지·보도·뉴스가 JS 없이 서버 HTML 에 있나 · 글 주소·canonical · 옛 ?id= 308 · 없는 글 404 | 35/35 (`NEXT_ORIGIN`) |
 | `web/scripts/check-src.py` | 페이지 CSS 문자열에 역따옴표가 섞였나 | 0건 |
-| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (373곳) |
+| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (524곳) |
 | `npx tsc --noEmit` · `npx next build` | 운영 빌드가 되는가 | 종료코드 0 |
 
 **못 돌린 검사는 통과가 아니라 판정 불가다.** 값을 0 으로 적지 않고

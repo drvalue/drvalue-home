@@ -6,7 +6,7 @@ import { CUTON_CSS } from '../cutonStyles'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 컷온(CutOn) — 디알밸류가 만들어 운영하는 레이저 절단 자동 견적 플랫폼(cuton.co.kr).
@@ -22,7 +22,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/cuton'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '컷온(CutOn) AI 자동 견적',
   description: '도면(DXF)을 올리면 AI 가 형상을 분석해 재질·두께·수량 기준 레이저 절단 견적을 즉시 산출합니다. 보관함에 저장하고 입찰마켓에 올려 파트너 업체의 제안을 받습니다. 디알밸류가 만들어 운영합니다.',
   path: PATH,

@@ -136,6 +136,8 @@ function Shell({ children }: { children: React.ReactNode }) {
       items: [
         { href: '/admin/pages', label: '페이지' },
         { href: '/admin/menu', label: '메뉴' },
+        // 정적 장의 검색 제목·설명·공유 그림.
+        { href: '/admin/seo', label: 'SEO' },
       ],
     })
   }

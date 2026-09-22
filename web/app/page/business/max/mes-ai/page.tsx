@@ -2,7 +2,7 @@ import { AI_HEAD, AI_LEAD, AI_SHOWN } from '../maxContent'
 import { PAGE_CSS } from '../maxStyles'
 import SolutionShell from '../SolutionShell'
 import { Bento, FlowCard } from '../Patterns'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 원본 PHP 에 없는 새 페이지다. M.AX 의 「제조 특화 AI」 탭에서 세 기능을 떼어 냈다.
@@ -16,7 +16,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/business/max/mes-ai'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'MES AI',
   description:
     '거래명세서·성적서를 OCR 로 읽어 MES 에 자동 입고하고, 국가별 규제를 자동 대조해 검증하며, 쌓인 제조 지식을 대화로 꺼내 씁니다.',

@@ -79,6 +79,11 @@ export type PostFull = {
   is_featured: boolean
   thumbnail: string | null
   thumbnail_url: string | null
+  /** 공유 카드 그림(파일 id)과 관리 미리보기 주소. 비우면 본문 첫 그림 → 사이트 기본 그림. */
+  og_image: string | null
+  og_image_url: string | null
+  /** 검색에서 제외(noindex · 사이트맵 제외). 사이트에는 그대로 보인다. */
+  no_index: boolean
   press_media: string | null
   period_start: string | null
   period_end: string | null

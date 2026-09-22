@@ -4,13 +4,13 @@ import SiteHeader from '@/components/SiteHeader'
 import { SITE_NAME } from '@/lib/seo'
 
 /**
- * 없는 주소·없는 글(notFound). 상태는 404 이고 Next 가 noindex 를 붙인다.
+ * 없는 주소·없는 글(notFound). 상태는 404 이고 Next 가 noindex 를 붙인다 — 여기서 robots 를 또 적으면
+ * robots 메타가 두 줄이 된다(실측).
  * 기본 영어 화면(「This page could not be found.」) 대신 사이트 껍데기 안에서 한국어로 —
  * 막다른 길이 아니라 갈 곳 셋을 준다.
  */
 export const metadata: Metadata = {
   title: `페이지를 찾을 수 없습니다 | ${SITE_NAME}`,
-  robots: { index: false, follow: true },
 }
 
 /* 이 장 전용 CSS — 이름이 PAGE_CSS 여야 check-src 가 본다. */

@@ -2,10 +2,44 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PAGE_CSS as MAX_CSS } from '../../../business/max/maxStyles'
 import SolutionShell from '../../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
-import { cmsPost, dots } from '@/lib/cms'
+import { ORG, pageMeta, SITE_NAME, SITE_ORIGIN } from '@/lib/seo'
+import { cmsPost, dots, type CmsPostFull } from '@/lib/cms'
+import JsonLd from '@/components/JsonLd'
+import { plainText } from '../../board/text'
 import { PAGE_CSS } from '../recruitStyles'
 import { dueOf, EMPLOYMENT_LABEL } from '../recruit'
+
+/** schema.org JobPosting 의 고용 형태. */
+const EMPLOYMENT_SCHEMA: Record<string, string> = { fulltime: 'FULL_TIME', contract: 'CONTRACTOR', intern: 'INTERN' }
+
+/** 화면에 보이는 공고 그대로 — 제목·본문·게시일·마감일·고용 형태·회사 주소. */
+function jobPosting(p: CmsPostFull, url: string): Record<string, unknown> {
+  return {
+    '@type': 'JobPosting',
+    title: p.title,
+    description: p.body || p.summary || p.title,
+    datePosted: p.published_date,
+    ...(p.deadline && !p.is_open_ended ? { validThrough: `${p.deadline}T23:59:59+09:00` } : {}),
+    ...(p.employment_type && EMPLOYMENT_SCHEMA[p.employment_type]
+      ? { employmentType: EMPLOYMENT_SCHEMA[p.employment_type] }
+      : {}),
+    url,
+    hiringOrganization: { '@type': 'Organization', '@id': `${SITE_ORIGIN}/#organization`, name: ORG.name, sameAs: SITE_ORIGIN },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: ORG.addr,
+        addressLocality: ORG.locality,
+        addressRegion: ORG.region,
+        addressCountry: 'KR',
+      },
+    },
+    directApply: false,
+    inLanguage: 'ko-KR',
+    publisher: SITE_NAME,
+  }
+}
 
 /**
  * 채용공고 한 건. 본문은 관리 화면 편집기가 만든 HTML 이다(관리자만 쓴다).
@@ -18,11 +52,17 @@ type Props = { params: Promise<{ slug: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const p = await cmsPost(slug)
-  const title = p && p !== 'missing' ? p.title : '채용'
+  // 없는 공고는 머리 정보부터 404 — 안 그러면 404 장이 「채용」 제목을 달고 나간다.
+  if (p === 'missing') notFound()
+  const path = `/page/support/recruit/${encodeURIComponent(slug)}`
+  if (!p) return pageMeta({ title: '채용', description: '디알밸류 채용 공고입니다.', path })
   return pageMeta({
-    title,
-    description: (p && p !== 'missing' && p.summary) || '디알밸류 채용 공고입니다.',
-    path: `/page/support/recruit/${encodeURIComponent(slug)}`,
+    title: p.seo_title?.trim() || `${p.title} | 채용`,
+    description: p.seo_description?.trim() || p.summary?.trim() || plainText(p.body) || '디알밸류 채용 공고입니다.',
+    path,
+    image: p.og_image || p.thumbnail,
+    noIndex: Boolean(p.no_index),
+    article: { publishedTime: p.published_date, modifiedTime: p.updated_on },
   })
 }
 
@@ -32,6 +72,7 @@ export default async function Page({ params }: Props) {
   if (p === 'missing') notFound()
   return (
     <>
+      {p && <JsonLd data={jobPosting(p, `${SITE_ORIGIN}/page/support/recruit/${encodeURIComponent(p.slug)}`)} />}
       <style dangerouslySetInnerHTML={{ __html: MAX_CSS + PAGE_CSS }} />
       <SolutionShell
         path="/page/support/recruit"

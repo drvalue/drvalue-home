@@ -7,7 +7,7 @@ import HomeNews from './home/HomeNews'
 import HomeProof from './home/HomeProof'
 import { HOME_ADD_CSS } from './home/homeStyles'
 import { latestNews } from './home/news'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /** 소식 카드가 CMS 저장 즉시 보이게 요청마다 그린다(home/news.ts). */
 export const dynamic = 'force-dynamic'
@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic'
 
 const PATH = '/'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '제조 AI·DX 구축',
   description:
     'MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat, 상담 솔루션. 특허·출원 6건·저작권 5건·수행실적 9건으로 검증된 제조 AI·DX 파트너, 디알밸류.',

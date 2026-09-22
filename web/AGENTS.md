@@ -109,6 +109,11 @@
   `lib/cms.ts` 의 `cmsPageContent(key) ?? content.ts 기본 글` 로 그린다 — api 가 죽어도 장이 안 빈다.
 - 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · growchat 위젯)는 `components/SiteScripts.tsx`
   가 싣고 `/admin` 아래에서는 아무것도 싣지 않는다. `robots.ts` 가 `/admin` 을 막는다.
+- **검색 노출**: 글마다 주소가 있는 게시판(공지·보도·뉴스·채용)의 폼 오른쪽에 「검색 노출」 카드
+  (`posts/[board]/SeoPanel.tsx` — 검색 제목·설명 글자 수·검색 결과 미리 보기·공유 그림 고르기·검색에서
+  제외). 정적 장은 「운영 › SEO」(`/admin/seo`, `?path=`) — 메뉴의 장 + 홈. 장을 고르면 지금 사이트가 내는
+  제목·설명을 그 장 HTML 에서 읽어 보여 준다. 저장은 1분 안에 사이트에 반영된다(공개 장의 1분 캐시).
+  api 가 전체 권한·마케팅만 받는다(인사 403).
 
 ## 이 덩어리의 방식
 
@@ -129,6 +134,24 @@
 - **h1 은 장마다 하나, 장 제목이다.** SolutionShell 머리말이 h1(`heroTag`), 헤더 로고는 div
   (`#toss_logo` — 글자 크기·굵기는 h1 기본값 그대로 둬서 줄 높이가 안 바뀐다). 글 한 건 장(게시판 글·
   채용 글)은 글 제목이 h1 이고 머리말을 `heroTag="h2"` 로 내린다. 머리말 CSS 는 `:is(h1, h2)` 로 둘 다 본다.
+- **정적 장의 머리 정보는 `export const generateMetadata = seoMeta({ title, description, path })`** 다
+  (`lib/seo.ts`). 코드의 값 위에 관리 화면 「SEO」의 덮어쓰기(`/api/content/page-meta`, 1분 캐시)를 얹는다 —
+  그래서 정적 장은 1분 ISR 이다(빌드 표의 `1m`). 빌드 때는 api 가 없어 코드의 값으로 굳고 1분 뒤 첫 요청에
+  덮어쓰기가 실린다. `export const metadata = pageMeta(...)` 로 새 장을 만들면 관리 화면에서 못 고친다.
+- **공유 그림은 머리 정보마다 넣는다**(`pageMeta` 가 한다). 하위 장의 openGraph 가 부모 것을 통째로 덮어서
+  레이아웃에 한 번 두는 것으로는 안 된다. 기본 그림은 `public/og/default.png`(`scripts/make-og-default.py`).
+  글은 공유 그림 → 대표 이미지 → 기본 그림.
+- **구조화 데이터**(`components/JsonLd.tsx`): Organization·WebSite(루트, `OrgJsonLd`) · BreadcrumbList
+  (`Breadcrumb`) · Article/NewsArticle(게시판 글) · JobPosting(채용 글) · FAQPage(FAQ, 질문이 있을 때만).
+  화면에 보이는 값만 넣는다. sameAs 는 사이트에 걸린 공식 계정이 없어 안 싣는다.
+- **사이트맵**은 요청마다 만든다 — 정적 장(lastmod 없음) + 글(lastmod = `updated_on`). 검색에서 제외한 장·글,
+  빈 게시판(뉴스·채용·FAQ — 그동안 그 목록 장은 noindex) 은 뺀다. `/llms.txt` 는 AI 답변 엔진용 요약(회사 정보 ·
+  메뉴의 장 · 최근 소식).
+- **통계**: `NEXT_PUBLIC_GTM_ID`(빌드 인자)가 있을 때만 GTM 과 동의 창(`components/ConsentBanner.tsx`)이 실린다.
+  동의 모드 v2 기본 거부 — 「동의」해야 analytics 만 켜진다. 판단은 루트 레이아웃(서버, `lib/analytics.ts`)이 해서
+  미리보기(NOINDEX=1)에는 안 실린다. noscript iframe 은 뺐다(스크립트 없이는 동의를 물을 수 없다).
+- **없는 주소로 그린 장(404)에는 Next 가 beforeInteractive 스크립트(jQuery)를 넣지 않는다**(실측). `SiteScripts`
+  가 jQuery 가 없으면 직접 싣고, jQuery 를 쓰는 스크립트는 준비된 뒤에만 건다.
 - 원본과 일부러 다르게 만든 자리는 **등록하고, 대신 볼 검사를 같이 만든다.**
   등록만 하고 검사를 안 만들면 그건 검사를 끈 것이다.
 

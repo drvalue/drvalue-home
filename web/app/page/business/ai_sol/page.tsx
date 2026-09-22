@@ -8,7 +8,7 @@ import Tabbed from '../max/Tabbed'
 import ShowTabs from '../max/ShowTabs'
 import { plain } from '../max/text'
 import type { Lead } from '../max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { MENU_ITEMS } from '@/lib/menu'
 import { menuLabelOf } from '@/lib/menu-cms'
 
@@ -20,7 +20,7 @@ import { menuLabelOf } from '@/lib/menu-cms'
  */
 const PATH = '/page/business/ai_sol'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'AI 솔루션 개발',
   description: '최신 LLM 부터 보안이 강조된 온프레미스 로컬 AI 까지. 기업 내부 데이터를 기반으로 답변하는 RAG 시스템을 구축합니다.',
   path: PATH,

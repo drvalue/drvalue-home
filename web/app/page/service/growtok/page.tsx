@@ -2,7 +2,7 @@ import { GROWTOK, GROWTOK_LEAD } from '../solutionContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { FeatureBlock } from '../../business/max/FeatureBlocks'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * /page/service/growtok.php 를 옮긴 것. 2026-09-18 옛 꾸밈(가운데 정렬 사진 머리 + 아이콘 카드 + AOS)
@@ -11,7 +11,7 @@ import { pageMeta } from '@/lib/seo'
  */
 const PATH = '/page/service/growtok'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: 'GrowTalk 협업 플랫폼',
   description: '제조·공공기관·쇼핑몰 운영사의 현장 상황을 데이터화해 의사결정을 돕는 협업 플랫폼. 실시간 이슈 공유와 모바일 최적화를 제공합니다.',
   path: PATH,

@@ -84,15 +84,16 @@ A3 합친 뒤 할 것: 관리 목록 검색·상태 필터·쪽 넘김을 브라
 | E7. 회사·사업·서비스 페이지 | 🔄 | 스키마 · 씨앗(지금 TS 내용) · 0008 | 장마다 저장→반영 · check-pages 110/110 그대로 | |
 | E8. 메인 화면 | 🔄 | 배너·팝업(0005) · 홈 문구 스키마 | 순서 바꿈→홈 반영 · 팝업 기간·오늘 안 보기 · check-home 23/23 | |
 | E9. 메뉴 관리 | ✅ | site_menu_items(0006, 옛 Directus menu_items 와 이름을 피함) · 공개 GET /api/content/menu · 관리 GET·PUT /api/admin/menu · /admin/menu · 헤더·경로 줄·왼쪽 차례·하단이 getMenu() · 60초 캐시 + 저장 뒤 비우기 | 합침 · 부모 docker verify 194/0/1 · web 8종 통과 · 공개 메뉴 200 · E9 실측: 「뉴스」 숨김→헤더에서 사라짐→복구, api 꺼도 lib/menu.ts | 할 것: sitemap.ts 를 getMenu() 로(E10 뒤) · 메뉴 이력 되돌리기(R1) · 화면 눈 확인(C2) |
-| E10. SEO·GEO·GA | 🔄 | 글 SEO 칸·OG·색인 제외 · 정적 장 SEO(0007) · sitemap 글 · robots · JSON-LD · llms.txt · GTM env + 동의 | og:image 25/25 · sitemap 에 글 · JSON-LD 종류 · GTM 없으면 안 실림 | |
+| E10. SEO·GEO·GA | 🔶 합침·검증 대기 | 글 「검색 노출」(제목·설명·미리보기·공유 그림·검색 제외) · page_meta(0007)+/admin/seo · 기본 공유 그림 · sitemap 글+lastmod · robots AI 크롤러 · llms.txt · JSON-LD(Organization·WebSite·BreadcrumbList·Article·JobPosting·FAQPage) · GTM 은 NEXT_PUBLIC_GTM_ID + 동의 모드 | 합침 커밋 · api typecheck·build · node --test 30/30 · web tsc·next build · src 0 · copy 660곳 0. E10 측정(자기 빌드): og:image 23/23 · 설명<50 0 · sitemap 글 5 · llms.txt 200. **부모 docker verify·web 검사는 E7·E8 뒤** | **운영 .env 에 NEXT_PUBLIC_GTM_ID=GTM-NLL3QGRF 를 넣고 web 을 다시 빌드해야 분석이 켜진다** — 안 넣으면 배포 순간 꺼진다. 공유 그림 없음은 409 로 맞춤(첨부와 같게) |
 | R1. 나머지 모듈 bmes | ⬜ | content·inquiry·admin-* 전환 · 새 표(pages 등) 변경 이력 되돌리기 | 서비스 N/N · 컨트롤러 N/N · verify 전부 | 3차 물결. A4·E9·E10 합친 뒤(admin-revision 을 같이 고치므로) |
 | C1. web 타입 생성 | ⬜ | openapi → web/lib/api-types.gen.ts, 낡으면 실패하는 검사 | 생성 검사 0 차이 | 공용 패키지 대신(빌드 범위를 안 바꾼다) |
 | C2. 크리틱 2차 | ⬜ | 새 화면 포함 전 화면 · 관리 전용 레이아웃 | 감사 지적 처리표 | |
 | V3. 전체 검증 | ⬜ | | docker 새로 띄움 · verify · web 검사 전부 · 브라우저 4종 · advisor · 바뀐 장과 안 바뀐 장의 TTFB 비교 | 공개 장이 거의 다 동적이 됐다(게시판·페이지 no-store, 헤더 메뉴 60초 캐시). 장마다 api 왕복 2~3. 페이지 글도 메뉴처럼 태그 캐시 + 저장 뒤 비우기로 갈지 재고 정한다 |
 | P1. 지워진 첨부로 저장하면 500 | ✅ | ADMIN_POST_FILE_GONE·THUMB_GONE 409, 폼이 코드로 칸을 짚음 | verify.d/dashboard.sh 포함 176/0/1 · 409 에 오류 로그 0 | 트랜잭션 검사는 이 실행 전용 트리거(그 파일 id 에만)로 |
-| P2. 404 장의 작은 것 | 🔄 | 404 에서 `$ is not defined` 2건(jQuery 없이 헤더 스크립트) · 제목이 「공지사항」 · 공개 히어로 제목이 낱말 중간에서 끊김(keep-all 없음, 사이트 전체) | 콘솔 오류 0 · 404 제목 · 390 히어로 | E10 에 넣는다 |
+| P2. 404 장의 작은 것 | 🔶 합침·검증 대기 | 404 에서 `$ is not defined` 2건(jQuery 없이 헤더 스크립트) · 제목이 「공지사항」 · 공개 히어로 제목이 낱말 중간에서 끊김(keep-all 없음, 사이트 전체) | 콘솔 오류 0 · 404 제목 · 390 히어로 | E10 에 넣는다 |
 | S1. 본문 HTML 소독 | ⬜ | api 저장 때 허용 태그만(편집기가 만드는 것) · 공개 렌더도 같은 규칙 | <script>·on* 속성이 저장 뒤 사라짐 | 지금은 관리자 글을 그대로 낸다(채용·게시판). 관리자 세션이 털리면 공개 사이트 XSS. security.md 가 이 기계에 없다 |
 | S2. multer DoS 권고 4건(high) | ✅ | package.json overrides multer 2.4.0 (@nestjs/platform-express 11.2.5 유지) | npm audit --omit=dev 0 · docker api 에서 verify 214/0/1(업로드·형식 400·영상 필터 포함) | Nest 12(multer 2.4.0 기본)로 올리면 override 를 뺀다 |
 | X3. 옛 Directus 표 정리 | ⛔ | pages·page_blocks·pages_translations·menu_items·menu_items_translations(로컬 DB, 코드가 안 씀) | | 지우는 것은 되돌릴 수 없다 — 사용자 결정. 운영 DB 에도 있는지 먼저 본다 |
+| P3. 메뉴의 손으로 적은 숫자 | ⬜ | lib/menu.ts 의 「등록 1건 · 출원 5건」 「9건의 과제」 | 자료에서 센 값 | web 규칙 「화면 숫자는 자료에서 센다」 위반(원래 있던 것). E10 이 찾음 |
 | X1. 공개 영어 사이트(/en) | ⛔ | | | 영어 원고 1건뿐 · 주소 방식(/en 접두 vs 도메인) 결정 필요. CMS 는 ko/en 칸을 다 받는다 |
 | X2. 실제 IAM 로그인 한 번 | ⛔ | | | 사용자 계정이 필요 — 마지막에 한 번 눌러 확인 |

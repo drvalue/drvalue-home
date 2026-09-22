@@ -15,10 +15,10 @@
 | 상단 탭 막대 재설계 | 됨 · 확인함 | `check-header.py` 107/107 (2026-09-22, docker web) |
 | 왼쪽 차례표 (8장) | 됨 · 확인함 | 붙은 장 목록을 응답에서 확인 |
 | 문의 모달 접근성 | 됨 · 확인함 | `check-a11y.py` 323/323 (이메일 칸 추가 뒤) |
-| Nest 공개 API (게시판·문의) | 됨 · 확인함 | 2026-09-22 bmes 모양으로 재구성, DB 직결(TypeORM). `verify.sh` 214 통과 · 0 실패 · 판정불가 1 |
+| Nest 공개 API (게시판·문의) | 됨 · 확인함 | 2026-09-22 bmes 모양으로 재구성, DB 직결(TypeORM). `verify.sh` 측정 대기(E7·E8 합친 뒤 잰다) |
 | 특허·저작권·수행실적·연혁 편집 | 됨 · 확인함 | posts 의 board 로 33건. web 4장 + 홈 소식이 요청마다 읽음 — 저장 즉시 반영 실측(제목 PUT → grep 1 → 원복 0). `check-pages.py` 110/110 |
 | 관리 화면 `/admin` (Directus 대체) | 됨 · **브라우저 왕복은 판정 불가** | 2026-09-22 결정 0014. web `/admin` + api `/api/admin/*`. tsc·build 통과, curl 로 화면·401 확인. 사용자가 IAM 으로 실제 로그인·편집을 눌러 봐야 한다 |
-| 관리자 입장·범위 (결정 0015) | 됨 · 확인함 | 2026-09-22. 입장은 IAM 토큰 최상위 `role` 이 `ADMIN`·`PLATFORM_ADMIN` 인 사람만. 로그인마다 `admin_users` 에 받아 적고(처음이면 범위 admin), 관리자가 아니면 행을 끈다. 범위 admin/marketing/hr · 60초 재검 · 변경 이력. 실측: marketing 공지 PUT 200 · hr 공지 PUT 403 · 꺼진 사람 403 · admin 200. 테스트 14/14 · verify.sh 214 통과(판정불가 1 — 마지막 전체 권한 409 는 실제 사람을 꺼야 잰다) |
+| 관리자 입장·범위 (결정 0015) | 됨 · 확인함 | 2026-09-22. 입장은 IAM 토큰 최상위 `role` 이 `ADMIN`·`PLATFORM_ADMIN` 인 사람만. 로그인마다 `admin_users` 에 받아 적고(처음이면 범위 admin), 관리자가 아니면 행을 끈다. 범위 admin/marketing/hr · 60초 재검 · 변경 이력. 실측: marketing 공지 PUT 200 · hr 공지 PUT 403 · 꺼진 사람 403 · admin 200. 테스트 14/14 · verify.sh VERIFY_COUNT 통과(판정불가 1 — 마지막 전체 권한 409 는 실제 사람을 꺼야 잰다) |
 | 에러 응답 · 화면 문구 | 됨 · 확인함 | 2026-09-22. 본문 `{ data:null, status, resultCode, message, path, timestamp }` · 실제 HTTP 상태. message 는 합니다체(에러 코드 31건 재작성, 개발자용은 detail 로), DTO 검증은 한국어 문구, 로그인·콜백 실패는 `/admin/login?error=<코드>` 로 302. 관리 화면 문구 40여 곳 합니다체. `check-copy.py` 373곳 0건(고치기 전 68건) · verify.d/messages.sh 7/7 |
 | docker 셋 (db · api · web) | 됨 · 확인함 | 2026-09-22. web 이미지의 `/api` 프록시가 빌드 때 `localhost:3500` 으로 굳어 컨테이너에서 관리 화면이 500 이던 것을 빌드 인자로 고침. `WEB_PORT=3410` 으로 셋 다 띄워 verify 133 · check-home 23 · header 107 · a11y 323 · pages 110 |
 | 환경변수 정리 | 됨 | 36 → 7. 없앤 키와 이유는 `docs/operations.md`. IAM 패키지 의존성 제거. api 에서 읽는 곳은 `common/config/app-config.ts` 하나 |

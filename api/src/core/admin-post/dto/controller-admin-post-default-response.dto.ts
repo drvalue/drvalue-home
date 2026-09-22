@@ -44,6 +44,7 @@ export class ControllerAdminPostDefaultRowResponseDto {
   publish_at!: string | null;
   @ApiProperty({ nullable: true, type: String, format: 'date-time' })
   unpublish_at!: string | null;
+  @ApiProperty({ description: '검색에서 제외' }) no_index!: boolean;
 
   static from(r: PostEntity): ControllerAdminPostDefaultRowResponseDto {
     const ko = koOf(r);
@@ -68,6 +69,7 @@ export class ControllerAdminPostDefaultRowResponseDto {
       faq_category: ko?.faqCategory ?? null,
       publish_at: iso(r.publishAt),
       unpublish_at: iso(r.unpublishAt),
+      no_index: r.noIndex,
     };
   }
 }
@@ -119,6 +121,19 @@ export class ControllerAdminPostDefaultDetailResponseDto {
     description: '관리 미리보기 주소',
   })
   thumbnail_url!: string | null;
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    description: '공유 그림 파일 id',
+  })
+  og_image!: string | null;
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    description: '공유 그림 관리 미리보기 주소',
+  })
+  og_image_url!: string | null;
+  @ApiProperty({ description: '검색에서 제외' }) no_index!: boolean;
   @ApiProperty({ nullable: true, type: String }) press_media!: string | null;
   @ApiProperty({ nullable: true, type: String }) period_start!: string | null;
   @ApiProperty({ nullable: true, type: String }) period_end!: string | null;
@@ -153,6 +168,9 @@ export class ControllerAdminPostDefaultDetailResponseDto {
       is_featured: r.isFeatured,
       thumbnail: r.thumbnail,
       thumbnail_url: adminFileUrl(r.thumbnail),
+      og_image: r.ogImage,
+      og_image_url: adminFileUrl(r.ogImage),
+      no_index: r.noIndex,
       press_media: r.pressMedia,
       period_start: r.periodStart,
       period_end: r.periodEnd,

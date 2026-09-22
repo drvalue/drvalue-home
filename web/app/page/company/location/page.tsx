@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { COMPANY_CSS } from '../companyContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 import { cmsPageContent, pageImageSrc } from '@/lib/cms'
 import { LOCATION_DEFAULT, LOCATION_PAGE_KEY, mapEmbedSrc, telHref, type LocationContent } from './content'
 
@@ -15,7 +15,7 @@ const PATH = '/page/company/location'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '찾아오시는 길',
   description:
     '디알밸류는 한양대학교 ERICA 창업보육센터에 있습니다. 주소·전화·이메일과 방문 안내를 확인하세요. 경기도 안산시 상록구 한양대학로 55.',

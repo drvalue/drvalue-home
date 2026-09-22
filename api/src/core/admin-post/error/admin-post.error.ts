@@ -37,6 +37,13 @@ export const AdminPostError = {
     status: HttpStatus.CONFLICT,
   } as ICommonErrorCode,
 
+  OG_IMAGE_NOT_FOUND: {
+    code: 'ADMIN_POST_OG_IMAGE_NOT_FOUND',
+    message: '공유 그림 파일을 찾을 수 없습니다. 다시 골라 주세요.',
+    detail: 'og_image 가 directus_files 에 없다(미디어에서 지웠다)',
+    status: HttpStatus.CONFLICT,
+  } as ICommonErrorCode,
+
   // ── 예상 못 한 실패(@ServiceException 이 바꾼다). 원인은 로그의 스택을 본다.
   LIST_UNKNOWN: {
     code: 'ADMIN_POST_LIST_UNKNOWN',

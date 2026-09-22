@@ -6,7 +6,7 @@ import { AI_HEAD, INDUSTRIES } from './maxContent'
 import { PAGE_CSS } from './maxStyles'
 import { MENU_ITEMS } from '@/lib/menu'
 import { menuLabelOf } from '@/lib/menu-cms'
-import { pageMeta } from '@/lib/seo'
+import { seoMeta } from '@/lib/seo'
 
 /**
  * 제조AI(M.AX) 소개 — 허브. 옮긴 페이지가 아니라 새로 만든 장이라 대조(compare.py) 대상이 아니다.
@@ -28,7 +28,7 @@ const SUB = (MENU_ITEMS.find((m) => m.title === 'M.AX')?.sub ?? []).filter((s) =
 const pcb = INDUSTRIES.find((i) => i.id === 'pcb')!
 const cos = INDUSTRIES.find((i) => i.id === 'cos')!
 
-export const metadata = pageMeta({
+export const generateMetadata = seoMeta({
   title: '제조AI(M.AX)',
   description:
     '견적부터 출고까지 하나의 흐름으로 연결된 업종 특화 MES 와 제조 AI. PCB·화장품 업종 특화 기능과 5대 제조 AI 를 제공합니다.',
