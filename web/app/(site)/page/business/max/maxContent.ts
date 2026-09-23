@@ -277,7 +277,6 @@ export const INDUSTRIES: IndustryTab[] = [
           '연구 데이터 → **그대로 제조 BOM으로** 이관(제품 제조 정보)',
         ],
         chips: ['처방 등록', '단가 산출', '버전 비교', '제조 BOM 이관'],
-        shots: [{ src: '/screens/cos-note.jpg', alt: '연구노트 목록 화면 — 버전·연구번호·연구결과·원료총단가·확정일', w: 1600, h: 1000 }],
       },
       {
         no: 2,
@@ -290,7 +289,6 @@ export const INDUSTRIES: IndustryTab[] = [
         ],
         callout: { lead: '수주부터 수금까지 다시 입력하지 않습니다.', result: '출하 한 건 → 명세서·계산서·수금·재고 자동 갱신' },
         chips: ['견적', '수주', '출하', '세금계산서', '수금', '제품 재고'],
-        shots: [{ src: '/screens/cos-sales.jpg', alt: '견적 현황 화면 — 상태(수주·견적)·견적번호·제품 품목수·견적총금액·유효일·예상수주일', w: 1600, h: 1000 }],
       },
       {
         no: 3,
@@ -314,7 +312,6 @@ export const INDUSTRIES: IndustryTab[] = [
           '**칭량 확인** 뒤 다음 공정으로 전환, 공정별·월간 실적과 공정불량률',
         ],
         chips: ['생산계획', '작업지시', '필요 재고', '칭량', '공정 전환', '실적'],
-        shots: [{ src: '/screens/cos-plan.jpg', alt: '생산계획 현황 화면 — 생산확정일·구분(수주/자사)·생산예정일·생산량·외주 여부·제조정보', w: 1600, h: 1000 }],
       },
       {
         no: 5,
@@ -326,7 +323,6 @@ export const INDUSTRIES: IndustryTab[] = [
           '불합 사유 기록 → **재투입 요청**까지 같은 화면에서',
         ],
         chips: ['검사기준서', '단계별 검사', '불합 사유', '재투입 요청'],
-        shots: [{ src: '/screens/cos-inspect.jpg', alt: '품질검사 현황 화면 — 공정중·반제품·완제품·포장/규제·자주검사 토글과 상단의 검사 단계 탭', w: 1600, h: 1000 }],
       },
       {
         no: 6,
@@ -373,7 +369,6 @@ export const INDUSTRIES: IndustryTab[] = [
           'SCADA(PLC 접속·정지 동작)·센서 관리·설비 점검/수리 이력',
         ],
         chips: ['공정 모니터링', '환경 데이터', 'SCADA', '설비 유지보수', '이상 알림'],
-        shots: [{ src: '/screens/cos-maint.jpg', alt: '설비 점검/수리 화면 — 제조·유틸리티·계측·운반·충진 설비 트리와 정기점검 결과', w: 1600, h: 1000 }],
       },
     ],
   },

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export const generateMetadata = seoMeta({
   title: '화장품 MES',
   description:
-    '화장품 제조를 위한 MES. 배합과 LOT 이력, 원료·부자재 입출고, 공정과 품질 기록을 이어 붙여 출하까지의 근거를 남깁니다.',
+    '화장품 제조를 위한 MES. 연구노트·처방, 견적·수주·출하·수금, 원료 발주·입고, 생산계획·작업지시, 단계별 품질검사, cGMP 양식·감사, 클레임·CAPA, 국가별 규제·MSDS, 공정·설비 모니터링까지 한 시스템입니다.',
   path: PATH,
 })
 
