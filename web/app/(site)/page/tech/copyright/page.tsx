@@ -82,7 +82,8 @@ const COPYRIGHT_LIST = [
  * #dvmax 를 앞에 붙인다. 템플릿 문자열이다 — 안에 역따옴표를 넣지 않는다.
  */
 const CERT_CSS = `
-#dvmax .cert_grid { list-style: none; margin: 26px 0 0; padding: 0; }
+/* 아래 96px — 없으면 마지막 칸이 문의 띠에 그대로 붙는다(사용자 2026-09-23). 게시판·문의 폼과 같은 값. */
+#dvmax .cert_grid { list-style: none; margin: 26px 0 96px; padding: 0; }
 #dvmax .cert_card { padding-top: 22px; }
 #dvmax .cert_open {
   display: block; width: 100%; position: relative; padding: 0; margin: 0; border: 0;

@@ -60,7 +60,8 @@ const PF_CSS = `
 #dvmax .pf_fbtn.is-on i { color: rgba(255,255,255,.72); }
 #dvmax .pf_fbtn:focus-visible { outline: 3px solid #d71920; outline-offset: 2px; }
 
-#dvmax .pf_table_wrap { overflow-x: auto; }
+/* 아래 96px — 없으면 목록 마지막 칸이 문의 띠에 그대로 붙는다(사용자 2026-09-23). 게시판·문의 폼과 같은 값. */
+#dvmax .pf_table_wrap { overflow-x: auto; margin-bottom: 96px; }
 #dvmax .pf_table {
   width: 100%; border-collapse: separate; border-spacing: 0 12px;
   font-family: 'Pretendard', sans-serif; }
