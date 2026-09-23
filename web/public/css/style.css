@@ -1224,7 +1224,20 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body ul { list-style: disc; margin: 0 0 1.25em; padding-left: 22px; }
 .dv_art_body li { margin: 4px 0; }
 .dv_art_body img { max-width: 100%; height: auto; border-radius: 8px; }
-.dv_art_link { color: #1b64da; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+/* 편집기가 만든 본문 서식. 규칙이 없으면 소제목·인용이 본문과 같은 크기로 보이고,
+   링크는 글자색 그대로라 눌리는 줄 모른다(사용자 2026-09-23: 「하이퍼링크인줄도 모르겠네」). */
+.dv_art_body h2 { font-size: 22px; font-weight: 700; color: #191f28; letter-spacing: -.4px; margin: 2em 0 .7em; }
+.dv_art_body h3 { font-size: 19px; font-weight: 700; color: #191f28; letter-spacing: -.3px; margin: 1.9em 0 .6em; }
+.dv_art_body :is(h2, h3):first-child { margin-top: 0; }
+.dv_art_body ol { list-style: decimal; margin: 0 0 1.25em; padding-left: 22px; }
+.dv_art_body strong { font-weight: 700; color: #191f28; }
+.dv_art_body blockquote {
+  margin: 0 0 1.25em; padding: 2px 0 2px 18px; border-left: 3px solid #d71920;
+  color: #4e5968; font-size: 16px;
+}
+.dv_art_body blockquote p:last-child { margin-bottom: 0; }
+.dv_art_body a, .dv_art_link { color: #1b64da; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+.dv_art_body a:hover { text-decoration-thickness: 2px; }
 .dv_art_foot { margin-top: 44px; padding-top: 22px; border-top: 1px solid #e5e8eb; }
 .dv_art_back { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; color: #4e5968; text-decoration: none; }
 .dv_art_back:hover { color: #191f28; text-decoration: underline; text-underline-offset: 4px; }
