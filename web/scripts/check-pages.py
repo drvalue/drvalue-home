@@ -49,9 +49,12 @@ FLOORS: dict[str, tuple[int, int]] = {
     # 2026-09-22 밤 두 레퍼런스(marketing·documents) 재작업: Tabbed·Group·CaseCard·MaxFlow 제거, Showcase 카드 한 장씩 → 글 1176, 그림 = 머리말 넘김 4 + Showcase 1 + FlowBand 0 + 인증 0.
     "/page/business/max": (1176, 5),
     # 2026-09-22 밤: FeatureBlock 지그재그 → ShowTabs 게이지 탭(한 번에 화면 한 장) + KPI 화면 제외(사용자 「우리 KPI 아니잖아」) → 1243/7.
-    "/page/business/max/pcb-mes": (1243, 7),
+    # 2026-09-22 밤 2차: FeatureShow — 기능 7개 전문(요점·콜아웃·칩) 복원, KPI 화면 제외 → 1497/7.
+    "/page/business/max/pcb-mes": (1556, 7),
     # 2026-09-22 밤: ShowTabs 게이지 탭 + 모니터링 Cols(화면 없음) → 849/4.
-    "/page/business/max/cosmetics-mes": (849, 4),
+    # 2026-09-22 밤 2차: mes-cosmetics-front 실제 화면 목록으로 기능 5→9(영업·구매·생산·품질검사·규제·설비) → 1642/4.
+    # 머리말 화면을 뺐다(넷 있는 캡처가 전부 본문 판에 쓰여 겹침) → 3. workspace 캡처가 오면 올린다.
+    "/page/business/max/cosmetics-mes": (1652, 3),
     # 2026-09-22 밤: Bento(화면 3) + FlowCard 단계 + 머리말 넘김 3 → 1288/8.
     "/page/business/max/mes-ai": (1288, 8),
     "/page/business/smart_fac": (852, 2),

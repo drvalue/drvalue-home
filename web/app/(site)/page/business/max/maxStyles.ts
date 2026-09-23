@@ -8,7 +8,7 @@
  * 파일로 빼도 `<style>` 로 심는 방식은 그대로다. 원본의 <style> 블록과 같은
  * 자리에서 같은 순서로 들어가야 우선순위가 안 바뀐다.
  */
-import { PATTERN_CSS, PATTERN_CSS2, PATTERN_CSS3 } from './patternStyles'
+import { PATTERN_CSS, PATTERN_CSS2, PATTERN_CSS3, PATTERN_CSS4 } from './patternStyles'
 
 export const PAGE_CSS = `
 /* 헤더(80px)만큼 밀어 두지 않는다. 히어로가 헤더 **밑으로** 들어가야
@@ -871,4 +871,4 @@ export const PAGE_CSS = `
   #dvmax.mx_v4 .hk_steps li { transition: none; }
   #dvmax.mx_v4 .hk_show_plate .hk_bid { animation: none; }
 }
-` + PATTERN_CSS + PATTERN_CSS2 + PATTERN_CSS3
+` + PATTERN_CSS + PATTERN_CSS2 + PATTERN_CSS3 + PATTERN_CSS4

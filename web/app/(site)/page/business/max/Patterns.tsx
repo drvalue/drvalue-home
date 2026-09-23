@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { mark, plain } from './text'
 import type { Shot, Tone } from './V4'
 
@@ -102,6 +102,10 @@ export type BentoItem = {
   url?: string
   /** 남색 카드 — 화면 없이 글과 화살표 링크만. */
   dark?: boolean
+  /** 첫 카드 말고도 폭을 다 쓰게. */
+  wide?: boolean
+  /** 있으면 d 대신 요점 목록으로. */
+  pts?: string[]
 }
 
 /**
@@ -122,10 +126,10 @@ export function Bento({ items, kicker, title, desc }: { items: BentoItem[]; kick
         )}
         <ul className="mx_bento_grid" data-rv="pop">
           {items.map((b, i) => (
-            <li key={b.t} className={`${i === 0 ? 'wide' : ''}${b.dark ? ' dark' : ''}`}>
+            <li key={b.t} className={`${i === 0 || b.wide ? 'wide' : ''}${b.dark ? ' dark' : ''}`}>
               <div className="mx_bento_txt">
                 <h3>{mark(b.t)}</h3>
-                <p>{b.d}</p>
+                {b.pts ? <ul className="mx_bento_pts">{b.pts.map((x) => <li key={x}>{mark(x)}</li>)}</ul> : <p>{b.d}</p>}
                 {b.href && <a className="mx_bento_more" href={b.href}>{b.more ?? '자세히 보기'}<i aria-hidden="true">→</i></a>}
               </div>
               {b.shot && (
@@ -202,6 +206,20 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
   }, [on, every, shots.length])
 
   const c = shots[cur]
+
+  // 상자 비율은 **한 번만** 정한다. 예전엔 지금 보이는 장의 w/h 를 그대로 써서
+  // (게다가 aspect-ratio 에 transition 까지 걸려 있어) 장이 넘어갈 때마다 판 높이가
+  // 늘었다 줄었다 했다 — 화면이 출렁여서 읽기가 어렵다.
+  // 기준은 **가장 높은 장**이고, 그림은 잘라 채우지 않고 넣어 맞춘다(contain).
+  // 납작한 장에 맞추면 판이 얇은 띠가 되고(실측 305px), 잘라 채우면 표가 대부분인
+  // MES 화면에서 좌측 라벨·앞 열이 날아가 뭘 보는 화면인지 알 수 없다.
+  // 높은 장에 맞춰 두면 납작한 장은 툴바 바로 밑에 붙고 아래가 흰 여백으로 남는데,
+  // 브라우저 창 안이라 「짧은 페이지」처럼 읽혀 어색하지 않다.
+  const ratio = useMemo(() => {
+    const tallest = shots.reduce((a, s) => (s.w / s.h < a.w / a.h ? s : a), shots[0])
+    return `${tallest.w} / ${tallest.h}`
+  }, [shots])
+
   return (
     <figure className="mx_plate" ref={box}>
       <div className="mx_plate_in">
@@ -209,7 +227,7 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
         <span key={c.tag} className="mx_plate_tag mx_cycle_tag">{c.tag}</span>
         <div className="mx_browser">
           <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span key={c.url ?? c.tag}>{c.url ?? 'max.drvalue.co.kr'}</span></div>
-          <div className="mx_cycle" style={{ aspectRatio: `${c.w} / ${c.h}` }}>
+          <div className="mx_cycle" style={{ aspectRatio: ratio }}>
             {shots.map((s, i) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={s.src} src={s.src} alt={s.alt} width={s.w} height={s.h} className={i === cur ? 'on' : undefined}
