@@ -2,6 +2,8 @@
 -- 목록 질의(게시판·상태·날짜)와 글 상세(번역 찾기)에 쓰는 인덱스도 같이 만든다.
 -- 그리고 로컬에만 남아 있던 옛 외래키를 뗀다 — 빈 DB 에서 만든 스키마에는 없어 구조가 갈렸다.
 -- 여러 번 돌려도 같다.
+-- 주의: 이미 같은 글·같은 언어 번역이 두 줄인 DB 에서는 1번이 실패하고 api 가 안 뜬다(닫히는 쪽).
+--       그때는 먼저 중복을 지운다: select posts, languages_code, count(*) from posts_translations group by 1,2 having count(*)>1;
 
 -- 1. 한 글 + 한 언어 = 한 줄. (posts, languages_code) 로 찾는 질의도 이 인덱스를 쓴다.
 CREATE UNIQUE INDEX IF NOT EXISTS posts_translations_post_lang_uniq

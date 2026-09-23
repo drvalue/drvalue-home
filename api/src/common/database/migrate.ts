@@ -22,21 +22,50 @@ function dbDir(): string {
     resolve(__dirname, '../../../../db'),
   ];
   const found = candidates.find((d) => existsSync(join(d, 'schema.sql')));
-  if (!found) throw new Error(`db/schema.sql 을 찾지 못했다: ${candidates.join(' · ')}`);
+  if (!found)
+    throw new Error(`db/schema.sql 을 찾지 못했다: ${candidates.join(' · ')}`);
   return found;
 }
 
-async function connect(): Promise<Client> {
-  const c = new Client({
+function client(database: string): Client {
+  return new Client({
     host: AppConfig.db.host,
     port: AppConfig.db.port,
-    database: AppConfig.db.name,
+    database,
     user: AppConfig.db.user,
     password: AppConfig.db.password,
     ssl: AppConfig.db.ssl,
   });
-  await c.connect();
-  return c;
+}
+
+/**
+ * DB 이름은 우리가 정한다. 관리형 DB 에 그 이름이 아직 없으면(3D000) 관리용 DB 로 붙어 한 번 만든다 —
+ * 새 서버에서 `docker compose up` 한 번으로 끝나게. 만들 권한이 없으면 그대로 실패한다(닫히는 쪽).
+ */
+async function connect(): Promise<Client> {
+  const c = client(AppConfig.db.name);
+  try {
+    await c.connect();
+    return c;
+  } catch (e) {
+    if ((e as { code?: string }).code !== '3D000') throw e;
+    await c.end().catch(() => undefined);
+    const admin = client('postgres');
+    await admin.connect();
+    try {
+      // 이름은 식별자라 바인딩할 수 없다 — 따옴표를 막고 큰따옴표로 감싼다.
+      const name = AppConfig.db.name;
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))
+        throw new Error(`DB_NAME 에 쓸 수 없는 글자가 있다: ${name}`);
+      await admin.query(`CREATE DATABASE "${name}"`);
+      console.log(`migrate: 데이터베이스 ${name} 를 만들었다`);
+    } finally {
+      await admin.end().catch(() => undefined);
+    }
+    const again = client(AppConfig.db.name);
+    await again.connect();
+    return again;
+  }
 }
 
 async function hasTable(c: Client, name: string): Promise<boolean> {
@@ -69,7 +98,9 @@ async function main(): Promise<void> {
     );
     const done = new Set(
       (
-        await c.query<{ name: string }>('SELECT name FROM public.schema_migrations')
+        await c.query<{ name: string }>(
+          'SELECT name FROM public.schema_migrations',
+        )
       ).rows.map((r) => r.name),
     );
     const files = readdirSync(join(dir, 'migrations'))
@@ -82,7 +113,10 @@ async function main(): Promise<void> {
       await c.query('BEGIN');
       try {
         await c.query(sql);
-        await c.query('INSERT INTO public.schema_migrations(name) VALUES ($1)', [f]);
+        await c.query(
+          'INSERT INTO public.schema_migrations(name) VALUES ($1)',
+          [f],
+        );
         await c.query('COMMIT');
       } catch (e) {
         await c.query('ROLLBACK');

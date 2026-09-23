@@ -36,5 +36,5 @@ services:
 
 volumes:
   pgdata:
-    # 옛 이름 그대로 — 로컬에 있는 데이터를 잃지 않게.
+    # 옛 이름 그대로 — 이 이름으로 만들어 둔 것이 여기저기 적혀 있다(검사·문서).
     name: drvalue_directus_pgdata

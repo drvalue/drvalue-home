@@ -84,7 +84,7 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 
 | 이름 | 뜻 | 비우면 |
 |---|---|---|
-| `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | DB 연결. 운영은 iwinv 관리형 PostgreSQL 값. 로컬 개발은 `DB_PASSWORD` 만 — 나머지는 dev compose 가 `db` 컨테이너로 넣는다 | api 가 DB 에 못 붙어 **안 뜬다**(migrate 실패). 로컬 개발은 dev compose 가 `DB_PASSWORD` 없이 **안 띄운다** |
+| `DB_HOST` · `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | DB 연결. 주소·포트(5432)·계정은 iwinv 가 정하고 **`DB_NAME` 은 우리가 짓는다**(없으면 api 가 처음 뜰 때 만든다). 로컬 개발은 `DB_PASSWORD` 만 — 나머지는 dev compose 가 `db` 컨테이너로 넣는다 | api 가 DB 에 못 붙어 **안 뜬다**(migrate 실패). 로컬 개발은 dev compose 가 `DB_PASSWORD` 없이 **안 띄운다** |
 | `DB_SSL` (선택) | `require` 면 TLS 로 붙는다(인증서 검증 안 함) | 평문 |
 | `WEB_PORT` (선택) | web 을 여는 호스트 포트(127.0.0.1 에만) | 3400 |
 | `COMPOSE_FILE` (로컬만) | `docker-compose.yml:docker-compose.dev.yml` — db 컨테이너 + 개발용 포트 | 운영 모양(web·api 둘, api 포트 없음) |
@@ -144,7 +144,10 @@ docker compose version && docker buildx version
 # 2. 저장소와 .env
 git clone <저장소> /srv/drvalue && cd /srv/drvalue
 cp .env.example .env && chmod 600 .env
-#   DB_HOST=drvaluehome.sldb.iwinv.net · DB_PORT · DB_NAME · DB_USER · DB_PASSWORD  (iwinv 콘솔의 값)
+#   DB_HOST=drvaluehome.sldb.iwinv.net · DB_PORT=5432 · DB_USER · DB_PASSWORD   ← iwinv 콘솔·메일의 값
+#   DB_NAME=drvalue_cms                                    ← 이건 우리가 짓는 이름이다(서버 안의 DB).
+#       없으면 api 가 뜰 때 관리용 DB(postgres)로 붙어 한 번 만든다 — DB_USER 에 CREATE DATABASE 권한이
+#       있어야 한다(관리형 DB 의 최초 계정에는 있다). 권한이 없으면 안 뜨니 콘솔에서 먼저 만든다.
 #   ADMIN_SESSION_SECRET=$(openssl rand -hex 32)           ← 로컬 값을 쓰지 않는다
 #   ADMIN_IAM_CALLBACK_URL=https://drvalue.co.kr/api/admin/auth/callback   ← IAM 화이트리스트에도
 #   NCP_ACCESS_KEY · NCP_SECRET_KEY · NCP_MAIL_SENDER_ADDRESS · NCP_MAIL_TO   ← 비면 문의 메일이 안 간다
@@ -171,7 +174,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ```bash
 # 원본(로컬 개발 DB) → 대상(관리형 DB). 먼저 보기만, 그다음 --apply.
 SRC_HOST=… SRC_PORT=3330 SRC_DB=drvalue_cms SRC_USER=drvalue SRC_PASSWORD=… \
-DST_HOST=drvaluehome.sldb.iwinv.net DST_PORT=… DST_DB=… DST_USER=… DST_PASSWORD=… \
+DST_HOST=drvaluehome.sldb.iwinv.net DST_PORT=5432 DST_DB=drvalue_cms DST_USER=… DST_PASSWORD=… \
 bash deploy/copy-content.sh [--apply]
 # 파일 본체: 로컬 data/uploads/ → 서버 /srv/drvalue/data/uploads/ (scp·rsync), 그 뒤 chown 100:101
 ```
