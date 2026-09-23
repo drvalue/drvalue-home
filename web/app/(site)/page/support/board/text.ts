@@ -10,7 +10,11 @@ function linkifyText(escaped: string): string {
   return escaped.replace(URL_RE, (m) => {
     const trail = /[)\].,;!?]+$/.exec(m)?.[0] ?? ''
     const url = trail ? m.slice(0, -trail.length) : m
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="dv_art_link">${url}</a>${trail}`
+    // 주소에 든 따옴표만 막는다. 소독기는 텍스트의 &<> 만 되돌리고 " 는 날것으로 두며,
+    // URL_RE 도 " 를 안 거른다 — 그대로 꽂으면 href 가 일찍 닫혀 뒤가 속성이 된다(실측: onfocus 가 붙었다).
+    // escapeHtml 로 넓히면 안 된다: 두 갈래 다 이미 & 가 엔티티라 &amp; 가 &amp;amp; 가 된다.
+    const attr = url.replace(/"/g, '&quot;')
+    return `<a href="${attr}" target="_blank" rel="noopener noreferrer" class="dv_art_link">${url}</a>${trail}`
   })
 }
 

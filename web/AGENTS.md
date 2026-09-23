@@ -225,6 +225,8 @@ NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 110/110
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
 python3 scripts/check-types.py    # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버 없이)
+node --test "app/(site)/page/support/board/text.test.mjs"   # 7 — 본문 링크화가 href 에 날 " 를 안 남긴다
+                                  #     (.ts 를 그대로 읽는다 — node 22.6+ 의 형 지우기. 서버 없이)
 npx tsc --noEmit && npx next build
 ```
 
