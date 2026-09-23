@@ -1,3 +1,4 @@
+import ClientAction from '@/components/ClientAction'
 import type { Metadata } from 'next'
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
@@ -48,7 +49,7 @@ export default async function Page() {
             <p className="rc_state">채용 공고를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</p>
           ) : rows.length === 0 ? (
             <p className="rc_state">
-              지금 진행 중인 채용이 없습니다. 함께하고 싶으시면 <a href="/page/support/notify_form">문의</a>로 알려 주세요.
+              지금 진행 중인 채용이 없습니다. 함께하고 싶으시면 <ClientAction as="a" calls={[{ fn: 'openContactModal' }]}>문의</ClientAction>로 알려 주세요.
             </p>
           ) : (
             <ul className="rc_list">

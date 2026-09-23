@@ -1,3 +1,4 @@
+import ClientAction from '@/components/ClientAction'
 import type { Metadata } from 'next'
 import SiteFooter from '@/components/SiteFooter'
 import SiteHeader from '@/components/SiteHeader'
@@ -37,7 +38,7 @@ export default function NotFound() {
         <div className="nf_act">
           <a className="is-main" href="/">홈으로</a>
           <a href="/page/support/notice">공지사항</a>
-          <a href="/page/support/notify_form">문의하기</a>
+          <ClientAction as="a" calls={[{ fn: 'openContactModal' }]}>문의하기</ClientAction>
         </div>
       </main>
       <SiteFooter />
