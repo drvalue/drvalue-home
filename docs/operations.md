@@ -13,6 +13,10 @@ cp .env.example .env
 docker compose up -d --build        # db · api · web. web → http://localhost:3410 (127.0.0.1 에만)
 ```
 
+- **로컬 DB 를 운영과 같은 구조로 새로 만들려면**(권장 — 로컬에는 Directus 시절 표가 남아 있었다):
+  내용을 먼저 받아 두고(`pg_dump --data-only` 로 앱 표만, `deploy/copy-content.sh` 의 표 목록 참고),
+  `docker compose down && docker volume rm drvalue_directus_pgdata && docker compose up -d --build`,
+  그다음 받아 둔 내용을 `TRUNCATE … RESTART IDENTITY CASCADE` 뒤에 넣는다. 업로드 파일은 `data/uploads` 라 영향 없다.
 - **스키마는 api 가 뜰 때 맞춘다**(`api/src/common/database/migrate.ts`). 빈 DB 면 `db/schema.sql`,
   그다음 `schema_migrations` 에 없는 `db/migrations/*.sql` 만 차례로(파일마다 한 트랜잭션). 하나라도
   실패하면 api 가 안 뜬다. 손으로 psql 을 돌리지 않는다. 컨테이너 밖에서 돌리려면
