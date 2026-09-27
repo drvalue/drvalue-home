@@ -9,8 +9,8 @@
 #   1) 운영이 업로드 고침이 든 이미지로 떠 있어야 한다: cd /srv/drvalue && git pull && docker compose up -d --build
 #   2) 마스킹본이 deploy/masked/ 에 있어야 한다(이 저장소에 커밋돼 있다).
 #
-# 실행(비밀값은 명령행에 노출되지 않게 앞에 export 로 준다):
-#   export ADMIN_SESSION_SECRET="$(grep '^ADMIN_SESSION_SECRET=' .env.production | cut -d= -f2)"
+# 실행(비밀값은 명령행에 노출되지 않게 앞에 export 로 준다. 정본 env 는 루트 .env 하나다):
+#   export ADMIN_SESSION_SECRET="$(grep '^ADMIN_SESSION_SECRET=' .env | cut -d= -f2)"
 #   ADMIN_EMAIL=you@drvalue.co.kr bash deploy/attach-cert-images.sh
 #
 # 멱등: 이미 그림이 붙은 글은 건너뛴다. 부분 실행 뒤 다시 돌려도 안전하다.
@@ -59,13 +59,20 @@ copyright|차량관제 및 관리 시스템|copyright4.png
 copyright|마이크로 서비스 아키텍처(MSA) 기반 제조 입찰 플랫폼|copyright5.png
 EOF
 
+# SHA-256 — 리눅스는 sha256sum, 맥은 shasum. 둘 다 없으면 대조를 못 하니 중단(닫히는 쪽).
+sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1
+  elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | cut -d' ' -f1
+  else echo "❌ sha256sum·shasum 둘 다 없다 — 무결성 대조 불가." >&2; exit 3; fi
+}
+
 # (a) 마스킹본 무결성 — 하나라도 어긋나면 아무 업로드도 안 한다.
 echo "마스킹본 대조…"
 while read -r want name; do
   [ -z "$name" ] && continue
   f="$MASK_DIR/$name"
   [ -f "$f" ] || { echo "❌ 마스킹본 없음: $f" >&2; exit 3; }
-  got=$(shasum -a 256 "$f" | cut -d' ' -f1)
+  got=$(sha256 "$f")
   [ "$got" = "$want" ] || { echo "❌ 해시 불일치(원본이 섞였을 수 있다): $name" >&2; echo "   기대 $want / 실제 $got" >&2; exit 3; }
 done <<< "$MANIFEST"
 echo "  11장 전부 승인된 마스킹본과 일치."
@@ -77,11 +84,16 @@ COOKIE="dv_admin=$TOK"
 api() { curl -s -m 90 -H "Cookie: $COOKIE" "$@"; }
 
 # (b) 대상이 전부 정확히 1건인지 먼저 검증 — 하나라도 0건/복수면 쓰기 전에 중단.
+#     목록은 한 쪽 30건이라, 그 게시판 전체(total)가 30 을 넘으면 우리가 다 못 본 것이라 판정을 못 한다 → 중단.
+#     특허·저작권은 각 6·5 건이라 정상 범위. total 이 커지면 스크립트를 페이지 처리로 고쳐야 한다.
 echo "대상 글 검증…"
 while IFS='|' read -r board title file; do
   [ -z "$board" ] && continue
-  n=$(api "$BASE/api/admin/posts?board=$board&pageSize=100" \
-    | python3 -c "import sys,json;d=json.load(sys.stdin);t=sys.argv[1];print(sum(1 for x in d['data'] if x.get('title')==t))" "$title")
+  n=$(api "$BASE/api/admin/posts?board=$board" \
+    | python3 -c "import sys,json;d=json.load(sys.stdin);t=sys.argv[1]
+if d.get('total',0) > len(d['data']): print('OVERFLOW'); raise SystemExit
+print(sum(1 for x in d['data'] if x.get('title')==t))" "$title")
+  [ "$n" = "OVERFLOW" ] && { echo "❌ $board  게시판이 한 쪽(30)을 넘는다 — 이 스크립트는 못 쓴다(페이지 처리 필요)." >&2; exit 4; }
   [ "$n" = "1" ] || { echo "❌ $board  제목 매칭 $n 건(1 이어야 한다): $title" >&2; exit 4; }
 done <<< "$MAP"
 echo "  11건 전부 정확히 1건."
@@ -91,7 +103,7 @@ while IFS='|' read -r board title file; do
   [ -z "$board" ] && continue
   img="$MASK_DIR/$file"
 
-  post=$(api "$BASE/api/admin/posts?board=$board&pageSize=100" \
+  post=$(api "$BASE/api/admin/posts?board=$board" \
     | python3 -c "import sys,json;d=json.load(sys.stdin);t=sys.argv[1];r=next((x for x in d['data'] if x.get('title')==t),None);print(json.dumps(r) if r else '')" "$title")
   id=$(echo "$post" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
   has=$(echo "$post" | python3 -c "import sys,json;print('y' if json.load(sys.stdin).get('thumbnail') else 'n')")
@@ -121,7 +133,7 @@ print(json.dumps(out,ensure_ascii=False))" "$fid")
   got=$(echo "$res" | python3 -c "import sys,json
 try: print((json.load(sys.stdin).get('data') or {}).get('thumbnail') or '')
 except Exception: print('')" 2>/dev/null)
-  # 상세 GET 은 thumbnail 이 파일 id 라 우리가 올린 fid 와 같아야 한다.
+  # PUT 응답의 thumbnail 은 파일 id 라 우리가 올린 fid 와 같아야 붙은 것이다.
   if [ "$got" = "$fid" ]; then echo "✅ $board  ${title:0:30}"; ok=$((ok+1))
   else echo "❌ $board  붙이기 실패(fid=$fid got=$got): ${title:0:24} — $(echo "$res" | head -c 100)"; fail=$((fail+1)); fi
 done <<< "$MAP"
