@@ -217,6 +217,11 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .hk_center { text-align: left; }
 #dvmax.mx_v4 .mx_bento_head { text-align: left; }
 #dvmax.mx_v4 .mx_cycle_tabs { margin: 20px 0 0; justify-content: flex-start; }
+/* 화면 없는 머리말(M.AX 허브) — 오른쪽이 비어 보이지 않게 글 폭을 넓히고, 바로 밑 흐름도(허브의 대표 그림)로 곧장 잇는다. */
+#dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) :is(h1, h2) { max-width: 28em; }
+#dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) > .mx_wrap > p:not(.mx_kicker) { max-width: 46em; }
+#dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) { padding-bottom: 24px; }
+#dvmax.mx_v4 .mx_main > .mx_fb:first-child { padding-top: 40px; }
 /* ── 제품군 판 셋(고정) ── */
 #dvmax.mx_v4 .mx_show_rows { margin: 36px 0 0; }
 #dvmax.mx_v4 .mx_show_row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; padding: 48px 0; border-top: 1px solid #e5e8eb; }
