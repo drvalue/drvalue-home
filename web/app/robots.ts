@@ -14,7 +14,8 @@ import { SITE_ORIGIN } from '@/lib/seo'
  *  - 검색·답변용(막으면 그 회사 AI 검색 답변에서 빠진다): OAI-SearchBot · ChatGPT-User(OpenAI), Claude-SearchBot ·
  *    Claude-User(Anthropic), PerplexityBot · Perplexity-User, Yeti(네이버), Daumoa(다음), Bingbot(빙·코파일럿), Applebot
  *  - 학습용(막아도 검색 노출과 무관하다고 각 회사가 밝힌다): GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot
- * 지금은 둘 다 연다. 학습용만 막기로 하면 AI_TRAINING 의 allow 를 disallow: '/' 로 바꾼다.
+ * 지금은 둘 다 연다. 학습용만 막기로 하면 AI_TRAINING 묶음을 { userAgent: AI_TRAINING, disallow: '/' } 로 바꾼다(allow 없이 —
+ * allow '/' 가 남으면 disallow '/' 와 길이가 같아 구글은 allow 쪽을 택한다).
  * 요약본은 /llms.txt(구글은 쓰지 않는다고 밝혔다 — 비용이 없어서 둔다), 새 글은 /rss.xml.
  */
 const AI_SEARCH = ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Yeti', 'Daumoa', 'Bingbot', 'Applebot']

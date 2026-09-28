@@ -34,7 +34,9 @@ export const viewport: Viewport = {
 
 /**
  * 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). 값은 실행 환경(.env)에서 읽는다 —
- * 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다. 요청마다 읽으려고 metadata 대신 generateMetadata.
+ * 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다.
+ * generateMetadata 는 요청마다 그리는 장에서만 실행 환경값을 읽는다 — 빌드 때 굳는 정적 장(예: patent_old)에는 안 붙는다.
+ * 소유 확인은 첫 화면(/)으로 하므로 / 는 요청마다 그리는 장이어야 한다(지금 CMS 글을 no-store 로 읽어 그렇다).
  */
 export function generateMetadata(): Metadata {
   const env = (k: string) => (process.env[k] ?? '').trim() || undefined

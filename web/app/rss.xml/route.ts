@@ -13,11 +13,20 @@ export const dynamic = 'force-dynamic'
 
 const KEYS = ['notice', 'press', 'news'] as const
 
-/** XML 본문에 넣을 글. 태그 문자와 & 만 막는다. */
-const x = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+/**
+ * XML 본문에 넣을 글. XML 1.0 이 금지하는 제어 문자(한글·워드에서 붙여 넣은 글에 \x0B·\x0C 가 섞여 온다)를 먼저 지운다 —
+ * 하나만 섞여도 피드 전체가 깨져 네이버가 통째로 거부한다. 그다음 태그 문자와 & 를 막는다.
+ */
+const x = (s: string) =>
+  s
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '')
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 export async function GET(): Promise<Response> {
   const lists = await Promise.all(KEYS.map((b) => cmsBoard(b, 30)))
+  // api 가 안 닿으면 빈 피드(200)를 5분 캐시하지 않는다 — 크롤러가 「글 없음」으로 읽는다.
+  if (lists.every((l) => l === null)) return new Response('feed unavailable', { status: 503, headers: { 'cache-control': 'no-store' } })
   const items = lists
     .flatMap((rows, i) => (rows ?? []).filter((r) => !r.no_index).map((r) => ({ conf: BOARDS[KEYS[i]], r })))
     .sort((a, b) => (b.r.published_date ?? '').localeCompare(a.r.published_date ?? ''))
