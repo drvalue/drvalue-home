@@ -16,7 +16,6 @@ export default function AutoformShow() {
   const [tick, setTick] = useState(0)
 
   const go = (i: number) => { setCur(i % AF_FORMS.length); setTick((t) => t + 1) }
-  const f = AF_FORMS[cur]
 
   return (
     <div className="hk_show" data-rv>
@@ -31,7 +30,9 @@ export default function AutoformShow() {
           </ul>
         </div>
         <i className="hk_show_link" aria-hidden="true" />
-        <article key={`${f.k}-${tick}`} className="af_form" aria-live="polite">
+        {/* 판정·양식을 전부 HTML 에 싣고 고르지 않은 것만 숨긴다 — 고른 것만 그리면 나머지 내용이 검색·AI 크롤러에게 아예 없다(2026-09-28 SEO·GEO). */}
+        {AF_FORMS.map((f, i) => (
+          <article key={`${f.k}-${i === cur ? tick : 'x'}`} className={"af_form"} hidden={i !== cur} aria-live={i === cur ? "polite" : undefined}>
           <p className="af_form_head"><b>{f.file}</b><em>{f.kind}</em><span>저장됨</span></p>
           <p className="af_form_meta">{f.meta} · {f.when}</p>
           {f.pairs.length > 0 && (
@@ -41,6 +42,7 @@ export default function AutoformShow() {
           )}
           {f.pairs.length === 0 && <p className="af_form_note">라벨·리스트를 자동 감지하고 매핑 초안을 만들어 드려요</p>}
         </article>
+        ))}
       </div>
       <div className="hk_show_tabs" role="tablist" aria-label="양식 예시">
         {AF_FORMS.map((x, i) => (

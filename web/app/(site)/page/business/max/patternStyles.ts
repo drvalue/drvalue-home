@@ -249,4 +249,6 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fb .mx_state_p { margin-bottom: 32px; }
 /* 폰: 구역 제목이 그 밑 판 제목보다 작아지지 않게. */
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_state { font-size: 24px; } #dvmax.mx_v4 .mx_show_row .mx_show_txt h3 { font-size: 20px; } }
+/* 탭 패널을 전부 HTML 에 싣고 hidden 으로 숨긴다 — 클래스의 display 가 hidden 을 이기지 않게. */
+#dvmax.mx_v4 article[hidden] { display: none !important; }
 `

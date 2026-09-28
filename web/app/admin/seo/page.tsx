@@ -335,7 +335,7 @@ function Editor({
         <label htmlFor="s-desc">검색 설명</label>
         <textarea id="s-desc" value={cur.description} placeholder={liveOk?.description || ''} aria-describedby="s-desc-hint" onChange={(e) => setCur({ description: e.target.value })} />
         <small id="s-desc-hint" className={cur.description.length > DESC_MAX ? 'dva_counter is-over' : 'dva_counter'}>
-          {cur.description.length}/{DESC_MAX}자 · 비워 두면 코드의 설명. 장에 실제로 적힌 내용을 줄여 쓰는 것이 좋습니다.
+          {cur.description.length}/{DESC_MAX}자 · 비워 두면 코드의 설명. 장에 실제로 적힌 내용을 줄여 쓰는 것이 좋습니다. 첫 문장에 무엇인지 바로 답하고 제품명·숫자·날짜를 넣으면 검색과 AI 답변에 인용되기 좋습니다.
         </small>
       </div>
       {lang === 'en-US' && <small className="dva_hint">영어 장은 아직 사이트에 없습니다. 영어 주소가 생기면 이 값이 쓰입니다.</small>}

@@ -16,7 +16,6 @@ export default function CadonCases() {
   const [tick, setTick] = useState(0)
 
   const go = (i: number) => { setCur(i % CD_CASES.length); setTick((t) => t + 1) }
-  const c = CD_CASES[cur]
 
   return (
     <div className="cd_show" data-rv>
@@ -30,7 +29,9 @@ export default function CadonCases() {
           </ul>
         </div>
         <i className="cd_show_link" aria-hidden="true" />
-        <article key={`${c.k}-${tick}`} className={`cd_panel ${c.k}`} aria-live="polite">
+        {/* 판정·양식을 전부 HTML 에 싣고 고르지 않은 것만 숨긴다 — 고른 것만 그리면 나머지 내용이 검색·AI 크롤러에게 아예 없다(2026-09-28 SEO·GEO). */}
+        {CD_CASES.map((c, i) => (
+          <article key={`${c.k}-${i === cur ? tick : 'x'}`} className={`cd_panel ${c.k}`} hidden={i !== cur} aria-live={i === cur ? "polite" : undefined}>
           <p className="cd_panel_head"><b>CutON</b> {c.card.head}<span>{c.card.file}</span></p>
           <p className="cd_panel_chips">{c.card.chips.map((x) => <em key={x}>{x}</em>)}</p>
           <div className="cd_panel_box">
@@ -38,6 +39,7 @@ export default function CadonCases() {
             <ul>{c.card.rows.map((r, i) => <li key={i}>{r}</li>)}</ul>
           </div>
         </article>
+        ))}
       </div>
       <div className="cd_show_tabs" role="tablist" aria-label="판정 예시">
         {CD_CASES.map((x, i) => (

@@ -18,7 +18,6 @@ export default function BizShowcase() {
 
 
   const go = (i: number) => { setCur(i % HK_BIZ.cases.length); setTick((t) => t + 1) }
-  const c = HK_BIZ.cases[cur]
   const mark = (k: string) => (k === 'ok' ? '✓' : k === 'no' ? '✕' : '?')
 
   return (
@@ -33,13 +32,16 @@ export default function BizShowcase() {
           </ul>
         </div>
         <i className="hk_show_link" aria-hidden="true" />
-        <article key={c.k} className={`hk_bid ${c.k}`}>
+        {/* 판정·양식을 전부 HTML 에 싣고 고르지 않은 것만 숨긴다 — 고른 것만 그리면 나머지 내용이 검색·AI 크롤러에게 아예 없다(2026-09-28 SEO·GEO). */}
+        {HK_BIZ.cases.map((c, i) => (
+          <article key={c.k} className={`hk_bid ${c.k}`} hidden={i !== cur}>
           <p className="hk_bid_src"><i aria-hidden="true" />{c.card.src}</p>
           <h4>{c.card.t}</h4>
           <p className="hk_bid_org">{c.card.org}</p>
           <p className="hk_bid_price"><span>추정가</span><b>{c.card.price}</b><em>{c.card.kind}</em></p>
           <p className="hk_bid_verdict"><b>{mark(c.k)} {c.v}</b>{c.card.why}</p>
         </article>
+        ))}
       </div>
       <div className="hk_show_tabs" role="tablist" aria-label="판정 예시">
         {HK_BIZ.cases.map((x, i) => (
