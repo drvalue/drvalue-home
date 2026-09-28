@@ -91,7 +91,7 @@ export const CADON_CSS = `
 #dvmax.mx_v4 .cd_parts small { display: none; }
 #dvmax.mx_v4 .cd_parts b { font-size: 17px; font-weight: 700; color: #191f28; }
 #dvmax.mx_v4 .cd_parts span { font-size: 14px; color: #8b95a1; }
-#dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 96px 0 0; padding: 0 0 14px; border-bottom: 2px solid #191f28; font-size: 24px; font-weight: 700; color: #191f28; scroll-margin-top: 96px; }
+#dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 96px 0 0; padding: 0 0 14px; border-bottom: 1px solid #e5e8eb; font-size: 24px; font-weight: 700; color: #191f28; scroll-margin-top: 96px; }
 #dvmax.mx_v4 .cd_part small { display: none; }
 @media (max-width: 900px) {
   #dvmax.mx_v4 .cd_parts { gap: 20px; margin-top: 32px; }

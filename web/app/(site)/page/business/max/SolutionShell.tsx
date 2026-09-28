@@ -153,11 +153,14 @@ export default function SolutionShell({
           <section className="mx_sec mx_sec_body" id="mx_body">
             <div className="mx_wrap">
               <div className="mx_main">
-                {/* 요약은 큰 문장 하나만. 밑의 제목·한 줄 3열은 뺐다(2026-09-28 사용자 「이 부분 마음에 안 든다」) —
-                    바로 밑 구역을 한 줄씩 미리 말하던 것이라 글만 늘었다. 관리 화면의 요약 항목(lead.items)은 이 틀에서 쓰지 않는다. */}
+                {/* 요약 = 큰 문장 + 낮은 테두리 카드(2026-09-28). 글만 있는 3열은 사용자가 싫다 했고, 문장만 두니 「덩그러니」였다.
+                    레퍼런스(업스테이지 제조 장)는 큰 문장 바로 밑에 테두리 1px 카드를 붙인다 — 그 짜임. */}
                 {lead?.items && (
                   <div className="mx_sec4 big mx_keys">
                     <Statement desc={lead.desc}>{lead.title}</Statement>
+                    <ul className="mx_keycards">
+                      {lead.items.map((it) => <li key={it.t}><b>{it.t}</b><span>{it.d}</span></li>)}
+                    </ul>
                   </div>
                 )}
                 <V3Provider>{children}</V3Provider>

@@ -230,4 +230,18 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_show_row:last-child { border-bottom: 1px solid #e5e8eb; }
 #dvmax.mx_v4 .mx_show_row .mx_show_txt h3 { font-size: clamp(22px, 2.2vw, 30px); }
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_show_row { grid-template-columns: 1fr; gap: 22px; padding: 32px 0; } }
+/* 요약 카드 — 큰 문장 바로 밑, 테두리 1px 의 낮은 카드(업스테이지 제조 장의 2×2 카드 짜임). 겹 없음: 카드 안에 카드 · 그림자 · 알약 없음. */
+#dvmax.mx_v4 .mx_keys { padding-top: 72px; }
+#dvmax.mx_v4 .mx_keycards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 32px 0 0; padding: 0; list-style: none; }
+#dvmax.mx_v4 .mx_keycards li { padding: 24px 24px 26px; border: 1px solid #e5e8eb; border-radius: 10px; background: #fff; }
+#dvmax.mx_v4 .mx_keycards b { display: block; font-size: 18px; font-weight: 700; line-height: 1.4; color: #191f28; word-break: keep-all; }
+#dvmax.mx_v4 .mx_keycards span { display: block; margin-top: 8px; font-size: 15px; line-height: 1.65; color: #4e5968; word-break: keep-all; }
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_keycards { grid-template-columns: 1fr; gap: 10px; margin-top: 24px; } #dvmax.mx_v4 .mx_keys { padding-top: 48px; } }
+/* 화면 판(Plate) 전부 — 2026-09-28: 머리말·시연의 그라데이션 판 › 방울 › 점 무늬 › 창의 겹을 v4 장 전체에서 뺀다(M.AX 허브에서 먼저 한 것과 같은 결정, 결정 0018).
+   바탕 없이 창 하나 — 1px 테두리 · 옅은 그림자. 판 머리 꼬리표도 끈다(화면 이름은 창 주소줄과 밑 탭이 말한다). */
+#dvmax.mx_v4 .mx_plate { background: none; border-radius: 0; overflow: visible; }
+#dvmax.mx_v4 .mx_plate_in { margin: 0; padding: 0; min-height: 0; border-radius: 0; overflow: visible; }
+#dvmax.mx_v4 .mx_plate_in::before, #dvmax.mx_v4 .mx_plate_in::after { content: none; }
+#dvmax.mx_v4 .mx_plate .mx_blob, #dvmax.mx_v4 .mx_plate_tag { display: none; }
+#dvmax.mx_v4 .mx_plate .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
 `
