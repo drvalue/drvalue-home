@@ -40,54 +40,26 @@ function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean
   )
 }
 
+/**
+ * 제품군 판 셋 — 2026-09-28 사용자: 좌우 화살표로 넘기는 판(블라인드 비평: 「흔한 슬라이더」) 대신 셋을 고정해 차례로 편다.
+ * 판마다 글 왼쪽 · 화면 오른쪽, 구분선 한 줄(하위 장 기능 판과 같은 짜임). 주소의 #id 는 판의 id 라 그대로 그 자리로 간다.
+ */
 export function Showcase({ items, label = '제품군' }: { items: ShowcaseItem[]; label?: string }) {
-  const [cur, setCur] = useState(0)
-  const box = useRef<HTMLDivElement>(null)
-  const n = items.length
-  const go = (i: number) => setCur(((i % n) + n) % n)
-
-  useEffect(() => {
-    // 주소의 #id 로 오면 그 탭. 메뉴·바깥 링크가 특정 제품군을 가리킬 수 있게.
-    const byHash = () => {
-      const i = items.findIndex((x) => `#${x.id}` === window.location.hash)
-      if (i >= 0) setCur(i)
-    }
-    byHash()
-    window.addEventListener('hashchange', byHash)
-    return () => window.removeEventListener('hashchange', byHash)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const c = items[cur]
   return (
-    <div className="mx_show" ref={box}>
-      <div className="mx_show_tabs" role="tablist" aria-label={label}>
-        {items.map((x, i) => (
-          <button key={x.id} type="button" role="tab" id={`show-${x.id}`} aria-selected={i === cur} aria-controls={x.id} className={i === cur ? 'on' : undefined} onClick={() => go(i)}>
-            {x.tab}
-          </button>
-        ))}
-      </div>
-      <div className="mx_show_stage">
-        <button type="button" className="mx_show_arr prev" aria-label={`이전 ${label}`} onClick={() => go(cur - 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-        </button>
-        <article key={c.id} id={c.id} role="tabpanel" aria-labelledby={`show-${c.id}`} className="mx_show_card">
+    <div className="mx_show mx_show_rows" role="list" aria-label={label}>
+      {items.map((c, i) => (
+        <article key={c.id} id={c.id} role="listitem" className="mx_show_row">
           <div className="mx_show_txt">
-            <p className="mx_show_k">{c.kicker}</p>
+            <p className="mx_show_k">{c.tab}</p>
             <h3>{mark(c.headLead)}<b>{plain(c.headStrong)}</b></h3>
             <p>{c.desc}</p>
-            <a className="mx_show_more" href={c.href}>자세히 보기<i aria-hidden="true">›</i></a>
+            <a className="mx_show_more" href={c.href}>{c.tab} 자세히 보기<i aria-hidden="true">›</i></a>
           </div>
           <figure className="mx_show_fig">
-            <Frame shot={c.shot} url={c.url} eager={cur === 0} />
+            <Frame shot={c.shot} url={c.url} eager={i === 0} />
           </figure>
         </article>
-        <button type="button" className="mx_show_arr next" aria-label={`다음 ${label}`} onClick={() => go(cur + 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-        </button>
-      </div>
-      <p className="mx_show_dots" aria-hidden="true">{items.map((x, i) => <i key={x.id} className={i === cur ? 'on' : undefined} />)}</p>
+      ))}
     </div>
   )
 }

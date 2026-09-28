@@ -29,7 +29,7 @@ export const MAX_HUB_DEFAULT: MaxHubContent = {
   statement: {
     kicker: '제품군',
     title: '업종별 기능과 그 위에서 도는 제조 AI 를 나눠 두었습니다',
-    desc: '업종 특화 MES 둘과 그 위에서 도는 제조 AI. 탭을 누르거나 화살표로 넘겨 보세요.',
+    desc: '업종 특화 MES 둘과 그 위에서 도는 제조 AI 를 차례로 봅니다.',
   },
   pcbCard: {
     kicker: 'PCB MES',

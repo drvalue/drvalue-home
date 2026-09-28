@@ -206,4 +206,21 @@ export const PATTERN_CSS4 = `
 @media (max-width: 900px) {
   #dvmax.mx_v4 .mx_fs_panel, #dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; gap: 22px; padding: 36px 0; }
 }
+/* ── 한 축: 왼쪽 정렬(2026-09-28 사용자 · 블라인드 비평 R3 「가운데 정렬 템플릿」) — 머리말·구역 제목·탭. 문의 띠만 가운데. ── */
+#dvmax.mx_v4 .mx_hero4 { text-align: left; }
+#dvmax.mx_v4 .mx_hero4 :is(h1, h2) { margin: 0; }
+#dvmax.mx_v4 .mx_hero4 > .mx_wrap > p:not(.mx_kicker) { margin: 18px 0 30px; }
+#dvmax.mx_v4 .mx_hero4 .mx_kicker, #dvmax.mx_v4 .mx_kicker.hk_center, #dvmax.mx_v4 .mx_kicker[style*="center"] { margin-left: 0; margin-right: 0; }
+#dvmax.mx_v4 .mx_hero4_act { justify-content: flex-start; }
+#dvmax.mx_v4 .mx_state { text-align: left; margin: 0; }
+#dvmax.mx_v4 .mx_state_p { text-align: left; margin: 16px 0 0; }
+#dvmax.mx_v4 .hk_center { text-align: left; }
+#dvmax.mx_v4 .mx_bento_head { text-align: left; }
+#dvmax.mx_v4 .mx_cycle_tabs { margin: 20px 0 0; justify-content: flex-start; }
+/* ── 제품군 판 셋(고정) ── */
+#dvmax.mx_v4 .mx_show_rows { margin: 36px 0 0; }
+#dvmax.mx_v4 .mx_show_row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; padding: 48px 0; border-top: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_show_row:last-child { border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_show_row .mx_show_txt h3 { font-size: clamp(22px, 2.2vw, 30px); }
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_show_row { grid-template-columns: 1fr; gap: 22px; padding: 32px 0; } }
 `
