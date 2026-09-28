@@ -32,7 +32,27 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export const metadata: Metadata = {
+/**
+ * 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). 값은 실행 환경(.env)에서 읽는다 —
+ * 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다. 요청마다 읽으려고 metadata 대신 generateMetadata.
+ */
+export function generateMetadata(): Metadata {
+  const env = (k: string) => (process.env[k] ?? '').trim() || undefined
+  const naver = env('NAVER_SITE_VERIFICATION')
+  const bing = env('BING_SITE_VERIFICATION')
+  const other: Record<string, string> = {}
+  if (naver) other['naver-site-verification'] = naver
+  if (bing) other['msvalidate.01'] = bing
+  const google = env('GOOGLE_SITE_VERIFICATION')
+  return {
+    ...SITE_METADATA,
+    ...(google || naver || bing ? { verification: { ...(google ? { google } : {}), ...(Object.keys(other).length ? { other } : {}) } } : {}),
+    alternates: { types: { 'application/rss+xml': [{ url: '/rss.xml', title: '디알밸류 소식' }] } },
+  }
+}
+
+/** 공개 레이아웃의 머리 정보. global-not-found 가 같은 값을 쓴다. */
+export const SITE_METADATA: Metadata = {
   // 페이지마다 제목을 따로 쓴다(lib/seo.ts). 여기 것은 그것이 없을 때만 쓰인다.
   title: '디알밸류 - AI 제조 솔루션',
   description: SITE_DESCRIPTION,

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import SiteLayout, { metadata as siteMetadata, viewport as siteViewport } from './(site)/layout'
+import SiteLayout, { SITE_METADATA as siteMetadata, viewport as siteViewport } from './(site)/layout'
 import NotFound from './(site)/not-found'
 import { SITE_NAME } from '@/lib/seo'
 
