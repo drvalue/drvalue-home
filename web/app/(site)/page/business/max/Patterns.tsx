@@ -170,9 +170,12 @@ export function HeroCycle({ shots }: { shots: HeroItem[] }) {
   // MES 화면에서 좌측 라벨·앞 열이 날아가 뭘 보는 화면인지 알 수 없다.
   // 높은 장에 맞춰 두면 납작한 장은 툴바 바로 밑에 붙고 아래가 흰 여백으로 남는데,
   // 브라우저 창 안이라 「짧은 페이지」처럼 읽혀 어색하지 않다.
+  // 2026-09-28 사용자 「이미지 꽉 채워」: 높은 장 기준이면 납작한 장 밑이 하얗게 비었다(MES AI 첫 장).
+  // 이제 **가장 납작한 장**에 맞추고(단 16:9 보다 납작하게는 안 한다 — 얇은 띠 방지) 잘라 채운다(cover, 왼쪽 위 고정).
+  // 높은 장은 아래만 잘린다 — 좌측 라벨·앞 열·툴바는 남는다.
   const ratio = useMemo(() => {
-    const tallest = shots.reduce((a, s) => (s.w / s.h < a.w / a.h ? s : a), shots[0])
-    return `${tallest.w} / ${tallest.h}`
+    const flattest = Math.min(16 / 9, Math.max(...shots.map((s) => s.w / s.h)))
+    return `${flattest.toFixed(4)} / 1`
   }, [shots])
 
   return (

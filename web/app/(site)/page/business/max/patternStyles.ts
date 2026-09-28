@@ -115,8 +115,8 @@ export const PATTERN_CSS2 = `
 /* ── HeroCycle: 머리말 화면 여럿 — 판 밑 탭을 눌러 바꾼다(자동 넘김은 2026-09-28 뺐다) ── */
 /* 비율은 HeroCycle 이 한 번만 정한다(가장 납작한 장 기준). 장마다 바꾸면 판이 출렁인다 — transition 도 없앴다. */
 #dvmax.mx_v4 .mx_cycle { position: relative; overflow: hidden; background: #fff; }
-/* contain — 잘라 채우면 표 화면의 좌측 라벨·앞 열이 날아간다. 툴바 밑에 붙이고 남는 아래는 흰 여백. */
-#dvmax.mx_v4 .mx_cycle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: top center; background: #fff; opacity: 0; transform: scale(1.04); transition: opacity .9s ease, transform .9s ease; }
+/* cover + 왼쪽 위 — 틀을 꽉 채우고 잘리는 쪽은 아래(와 16:9 보다 납작한 장의 오른쪽 끝)뿐. 좌측 라벨·앞 열은 남는다(2026-09-28). */
+#dvmax.mx_v4 .mx_cycle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: left top; background: #fff; opacity: 0; transform: scale(1.04); transition: opacity .9s ease, transform .9s ease; }
 #dvmax.mx_v4 .mx_cycle img.on { opacity: 1; transform: scale(1); animation: mxKen 6s ease-out both; }
 @keyframes mxKen { from { transform: scale(1); } to { transform: scale(1.025); } }
 #dvmax.mx_v4 .mx_cycle_tag { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }

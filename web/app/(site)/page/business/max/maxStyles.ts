@@ -621,6 +621,18 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_sec_body { padding: 0; }
 #dvmax.mx_v4 .mx_sec4 { padding: 60px 0; }
 #dvmax.mx_v4 .mx_sec4.big { padding: 96px 0 60px; }
+/* 2026-09-28 사용자: 「히어로로 구분 · 위아래 구분 · 왼쪽 사이더」.
+   머리말을 옅은 바탕 띠로 두르고 밑줄로 끊는다 — 장이 바뀌면 띠부터 다르게 읽힌다.
+   본문 구역끼리는 1px 줄로 끊는다(카드로 감싸지 않는다 — 겹카드는 9-28 에 뺐다). */
+#dvmax.mx_v4 .mx_hero4 { background: #f5f7f9; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_main > .mx_sec4 + .mx_sec4, #dvmax.mx_v4 .mx_main > .mx_fb + .mx_sec4 { border-top: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_split { gap: 56px; }
+/* 다음 구역이 윗줄을 긋는다 — 앞 구역 마지막 줄의 밑줄과 겹쳐 두 줄이 되지 않게 지운다. */
+#dvmax.mx_v4 .mx_main > :is(.mx_sec4, .mx_fb):not(:last-child) :is(.mx_fs_panel, .mx_show_row):last-child { border-bottom: 0; }
+/* 차례표 첫 줄을 첫 구역 제목 높이에 맞춘다. sticky 는 안쪽 칸이라 바깥 여백은 따라 올라가지 않는다. */
+#dvmax.mx_v4 .mx_side { padding-top: 96px; }
+/* 머리 그림은 흰 바탕 파일이다 — 띠 위에서 흰 상자로 뜨지 않게 곱하기로 섞는다. */
+#dvmax.mx_v4 .mx_hero_art img { mix-blend-mode: multiply; }
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
 #dvmax.mx_v4 .mx_state_p { text-align: center; max-width: 44em; margin: 18px auto 0; font-size: 17px; color: #333d4b; }
 #dvmax.mx_v4 .mx_cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin: 64px 0 0; padding: 0; list-style: none; }

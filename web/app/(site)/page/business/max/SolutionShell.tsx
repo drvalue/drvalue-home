@@ -155,8 +155,10 @@ export default function SolutionShell({
 
           {proof === true && <ProofBand />}
 
+          {/* 왼쪽 차례표 — 2026-09-28 사용자: 「왼쪽에 사이더도 둬주고」. v4 로 넘어오며 빠졌던 것을 되살린다(옛 모양과 같은 SideNav). */}
           <section className="mx_sec mx_sec_body" id="mx_body">
-            <div className="mx_wrap">
+            <div className="mx_wrap mx_split">
+              <SideNav currentPath={path} />
               <div className="mx_main">
                 {/* 요약 = 큰 문장 + 낮은 테두리 카드(2026-09-28). 글만 있는 3열은 사용자가 싫다 했고, 문장만 두니 「덩그러니」였다.
                     레퍼런스(업스테이지 제조 장)는 큰 문장 바로 밑에 테두리 1px 카드를 붙인다 — 그 짜임. */}
