@@ -168,6 +168,7 @@ export const PATTERN_CSS2 = `
 `
 export const PATTERN_CSS3 = `
 /* ── 글씨 크고 깔끔하게(2026-09-22 사용자): channel.io marketing·documents 실측 h1 64/600/-2px · h2 52/600/-1.5px ── */
+/* 2026-09-28 사용자 「3/2로 내려줘」 — 머리말 제목·큰 문장·묶음 제목·기능 판 제목을 모두 위 값의 2/3 로 내렸다. */
 /* 머리말 제목은 위 크기의 2/3 (2026-09-28 사용자: 「3/2로 내려줘」) */
 #dvmax.mx_v4 .mx_hero4 :is(h1, h2) { font-size: clamp(23px, 3.07vw, 43px); font-weight: 600; letter-spacing: -1.3px; line-height: 1.22; max-width: 20em; }
 #dvmax.mx_v4 .mx_hero4 :is(h1, h2) b { font-weight: 600; }
@@ -200,7 +201,7 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs_panel.one .mx_fs_txt { padding-bottom: 0; }
 #dvmax.mx_v4 .mx_fs_txt { padding-bottom: 0; }
 #dvmax.mx_v4 .mx_fs_k { display: inline-block; margin: 0 0 16px; padding: 6px 14px; border-radius: 999px; background: #152238; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
-#dvmax.mx_v4 .mx_fs_txt h3 { margin: 0; font-size: clamp(24px, 2.4vw, 32px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_txt h3 { margin: 0; font-size: clamp(16px, 1.6vw, 21px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
 #dvmax.mx_v4 .mx_fs_txt h3 .mx_hl { color: #191f28; }
 #dvmax.mx_v4 .mx_fs_pts { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
 #dvmax.mx_v4 .mx_fs_pts li { position: relative; padding: 12px 16px 12px 40px; border-radius: 12px; background: rgba(255,255,255,.72); font-size: 16px; line-height: 1.6; color: #333d4b; word-break: keep-all; }
