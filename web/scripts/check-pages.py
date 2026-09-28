@@ -44,7 +44,9 @@ SHELL = 831  # 헤더 메뉴 569 + 문의 모달 108 + 푸터 154. 2026-09-22 �
 # 이어 「AutoCAD 명령 셋」 구역도 시연과 겹쳐 뺐다(2378→2071). 채팅 장은 머리말 요약 2열 대신 선언 구역(alf-customer).
 FLOORS: dict[str, tuple[int, int]] = {
     # 2026-09-28 사용자: 메인의 「CREDENTIALS · 말보다 먼저 쌓아 온 것들」 구역을 숨겼다(1525→901).
-    "/": (901, 2),
+    # 2026-09-28 사용자: AI솔루션 메뉴에서 한건을 뺐다(db/migrations/0017) — 머리 드롭다운의 「한건 · 설명」 글이 모든 장에서 빠져
+    # 본문이 장마다 15~31자 줄었다. 아래 12장은 그 실측으로 다시 쟀다.
+    "/": (873, 2),
     # 2026-09-22 v4 허브(채널웍스 골격): 「무엇이 달라집니까」 고르개 여섯·하위 장 카드 셋을
     # 제품군 구역 셋(판 화면 1장씩)이 대신한다. 글자는 고르개 요점, 그림은 고르개 6장+카드 3장이 빠진 것.
     # 09-22 탭으로: 구역마다 있던 알약 탭 셋이 하나로 (2704→2664).
@@ -59,26 +61,26 @@ FLOORS: dict[str, tuple[int, int]] = {
     # 머리말 화면을 뺐다(넷 있는 캡처가 전부 본문 판에 쓰여 겹침) → 3. workspace 캡처가 오면 올린다.
     "/page/business/max/cosmetics-mes": (1652, 3),
     # 2026-09-22 밤: Bento(화면 3) + FlowCard 단계 + 머리말 넘김 3 → 1288/8.
-    "/page/business/max/mes-ai": (1288, 8),
-    "/page/business/smart_fac": (852, 2),
+    "/page/business/max/mes-ai": (1273, 8),
+    "/page/business/smart_fac": (824, 2),
     # 2026-09-28: 왼쪽 차례표에서 「AI 솔루션 개발」·「컷온」 줄이 빠져 AI솔루션 장마다 8자 줄었다(문장은 그대로).
-    "/page/service/autoform": (1840, 5),
+    "/page/service/autoform": (1809, 5),
     # 09-22 컷온: 기능 칸의 화면(머리말 판과 같은 그림)을 뺐다 — 화면 하나뿐인 장은 한 곳에만. 그림 3→2.
     "/page/service/cadon": (2071, 8),
     "/page/service/chat": (1070, 3),
     "/page/service/hangeon": (726, 1),
-    "/page/service/growtok": (692, 2),
-    "/page/service/growxd": (830, 3),
+    "/page/service/growtok": (661, 2),
+    "/page/service/growxd": (799, 3),
     # 2026-09-18 옛 꾸밈 8장을 새 틀로 옮긴 뒤 잰 값. 게시판 두 장은 글이 스크립트로
     # 들어오므로 본문 바닥이 낮다(껍데기만 센다).
     # 2026-09-28 사용자: 회사소개 · 안내(intro)·AI 솔루션 개발(ai_sol)을 숨겨 비전·오토폼으로 넘기고, 컷온을 CADON 장에 합쳐
     # CADON #cuton 으로 넘긴다 — 세 주소는 장이 아니라 넘김이라 여기서 뺐다. 회사소개 장은 차례표 「안내」 줄이 빠져 25자 줄었다.
-    "/page/company/vision": (845, 2),
-    "/page/company/history": (661, 2),
-    "/page/company/location": (456, 2),
-    "/page/portfolio/portfolio": (904, 2),
-    "/page/tech/patent": (745, 8),
-    "/page/tech/copyright": (713, 7),
+    "/page/company/vision": (817, 2),
+    "/page/company/history": (633, 2),
+    "/page/company/location": (428, 2),
+    "/page/portfolio/portfolio": (876, 2),
+    "/page/tech/patent": (717, 8),
+    "/page/tech/copyright": (685, 7),
     "/page/support/notice": (233, 2),
     "/page/support/press": (231, 2),
     # 2026-09-22 게시판 3종. 글이 없는 빈 상태(안내 문구)에서 잰 껍데기 바닥 — 공지·보도와 같은 방식(실측의 약 70%).
