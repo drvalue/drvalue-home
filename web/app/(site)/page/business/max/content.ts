@@ -12,10 +12,10 @@ export const MAX_HUB_DEFAULT: MaxHubContent = {
   shell: {
     kicker: '제조서비스플랫폼',
     kickerSub: '제조AI(M.AX)',
-    headLead: '현장의 흐르는 데이터를 자동으로 축적·처리하는 M.AX, ',
-    headStrong: '견적부터 출고·정산까지 번호 하나로 이어집니다',
-    desc: '견적부터 출고까지 하나의 흐름으로 연결된 업종 특화 기능과 제조 AI를 더해 데이터 입력 부담 없이 스스로 기록되고 자동 처리되는 시스템을 만들어 가고 있습니다.',
-    heroLink: '어디부터 볼까',
+    headLead: 'PCB·화장품 제조를 위한 ',
+    headStrong: 'MES와 제조 AI, M.AX',
+    desc: '견적부터 출고·정산까지, 한 번 입력한 데이터가 다음 공정으로 이어집니다.',
+    heroLink: '제품 보기',
     ctaTitle: '우리 공장에 맞는 M.AX 구성이 궁금하신가요?',
     ctaDesc: '',
   },
@@ -28,8 +28,8 @@ export const MAX_HUB_DEFAULT: MaxHubContent = {
   ],
   statement: {
     kicker: '제품군',
-    title: '업종별 기능과 그 위에서 도는 제조 AI 를 나눠 두었습니다',
-    desc: '업종 특화 MES 둘과 그 위에서 도는 제조 AI 를 차례로 봅니다.',
+    title: '업종별 MES와 제조 AI',
+    desc: '',
   },
   pcbCard: {
     kicker: 'PCB MES',

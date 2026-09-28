@@ -62,7 +62,8 @@ FLOORS: dict[str, tuple[int, int]] = {
     # 머리말 화면을 뺐다(넷 있는 캡처가 전부 본문 판에 쓰여 겹침) → 3. workspace 캡처가 오면 올린다.
     "/page/business/max/cosmetics-mes": (1652, 3),
     # 2026-09-22 밤: Bento(화면 3) + FlowCard 단계 + 머리말 넘김 3 → 1288/8.
-    "/page/business/max/mes-ai": (1273, 8),
+    # 2026-09-28 사용자 승인(내용 검토): 같은 세 기능을 요약·카드·상세로 세 번 말하던 것 중 카드 구역(Bento)을 뺐다 — 1273 → 1054(실측).
+    "/page/business/max/mes-ai": (1054, 8),
     "/page/business/smart_fac": (824, 2),
     # 2026-09-28: 왼쪽 차례표에서 「AI 솔루션 개발」·「컷온」 줄이 빠져 AI솔루션 장마다 8자 줄었다(문장은 그대로).
     "/page/service/autoform": (1809, 5),

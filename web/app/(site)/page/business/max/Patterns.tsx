@@ -30,7 +30,7 @@ export type ShowcaseItem = {
   url?: string
 }
 
-function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean }) {
+export function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean }) {
   return (
     <div className="mx_browser">
       <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span>{url ?? 'max.drvalue.co.kr'}</span></div>

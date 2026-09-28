@@ -77,19 +77,21 @@ export const PATTERN_CSS = `
 #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig { align-self: center; }
 
 /* ── FlowCard: 연한 카드, 글 왼쪽 · 단계 카드 ↓ 오른쪽 ── */
-#dvmax.mx_v4 .mx_fcard { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 40px; align-items: center; margin: 24px 0 0; padding: 56px 56px; border-radius: 24px; background: #eef2f8; }
-#dvmax.mx_v4 .mx_fcard.sand { background: #f4efe6; } #dvmax.mx_v4 .mx_fcard.steel { background: #dbe6f5; }
-#dvmax.mx_v4 .mx_fcard_txt h3 { margin: 0; font-size: clamp(26px, 2.6vw, 36px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fcard_txt p { margin: 14px 0 0; font-size: 18px; line-height: 1.7; color: #4e5968; max-width: 30em; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fcard_steps { position: relative; margin: 0; padding: 0; list-style: none; display: grid; gap: 22px; justify-self: center; width: min(100%, 420px); }
-#dvmax.mx_v4 .mx_fcard_steps li { position: relative; display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: center; padding: 16px 20px; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(21,34,56,.10); font-size: 15px; line-height: 1.55; color: #191f28; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fcard_steps li:first-child { background: #191f28; color: #fff; }
-#dvmax.mx_v4 .mx_fcard_steps li:first-child .mx_hl { color: #fff; }
-#dvmax.mx_v4 .mx_fcard_steps li i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #eef2f8; color: #191f28; font-style: normal; font-weight: 800; font-size: 14px; }
-#dvmax.mx_v4 .mx_fcard_steps li:first-child i { background: rgba(255,255,255,.16); color: #fff; }
-#dvmax.mx_v4 .mx_fcard_steps li + li::before { content: ''; position: absolute; left: 50%; top: -22px; width: 2px; height: 22px; background: #98a4b3; }
-#dvmax.mx_v4 .mx_fcard_steps li + li::after { content: ''; position: absolute; left: calc(50% - 4px); top: -8px; border: 5px solid transparent; border-top-color: #98a4b3; border-bottom: 0; }
-#dvmax.mx_v4 .mx_fcard_steps.rv-wait > li { opacity: 0; transform: translateY(12px); }
+/* FlowCard — 2026-09-28 사용자: 틴트 판 속 흰 단계 카드(첫 칸 검정)도 겹 카드. 하위 장 기능 판과 같이 흰 바탕 · 구분선,
+   단계는 상자 없이 번호 원 + 세로 이음선(차례가 뜻을 가지는 자리라 번호는 둔다). */
+#dvmax.mx_v4 .mx_fcard { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: start; margin: 16px 0 0; padding: 40px 0 8px; border-top: 1px solid #e5e8eb; border-radius: 0; background: none; }
+#dvmax.mx_v4 .mx_fcard.sand, #dvmax.mx_v4 .mx_fcard.steel { background: none; }
+#dvmax.mx_v4 .mx_fcard_txt h3 { margin: 0; font-size: clamp(20px, 2vw, 26px); line-height: 1.35; letter-spacing: -.03em; font-weight: 700; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fcard_txt h3 .mx_hl { color: #191f28; }
+#dvmax.mx_v4 .mx_fcard_txt p { margin: 12px 0 0; font-size: 16px; line-height: 1.65; color: #4e5968; max-width: 34em; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fcard_txt .mx_bento_fig { margin: 24px 0 0; }
+#dvmax.mx_v4 .mx_fcard_txt .mx_bento_fig .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
+#dvmax.mx_v4 .mx_fcard_steps { position: relative; margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+#dvmax.mx_v4 .mx_fcard_steps li { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: start; padding: 0 0 20px; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: 16px; line-height: 1.6; color: #333d4b; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fcard_steps li .mx_hl { color: #191f28; }
+#dvmax.mx_v4 .mx_fcard_steps li i { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #d1d6db; border-radius: 50%; background: #fff; color: #4e5968; font-style: normal; font-weight: 700; font-size: 13px; position: relative; z-index: 1; }
+#dvmax.mx_v4 .mx_fcard_steps li:not(:last-child)::before { content: ''; position: absolute; left: 13.5px; top: 28px; bottom: 0; width: 1px; background: #e5e8eb; }
+#dvmax.mx_v4 .mx_fcard_steps.rv-wait > li { opacity: 0; transform: translateY(8px); }
 #dvmax.mx_v4 .mx_fcard_steps.rv-wait.rv-in > li { opacity: 1; transform: none; transition: opacity .5s, transform .5s; transition-delay: calc(var(--i, 0) * .12s); }
 
 @media (max-width: 900px) {
@@ -102,7 +104,7 @@ export const PATTERN_CSS = `
   #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_txt { padding-bottom: 22px; }
   #dvmax.mx_v4 .mx_bento_grid > li.wide.dark .mx_bento_pts { grid-template-columns: 1fr; }
   #dvmax.mx_v4 .mx_bento_fig, #dvmax.mx_v4 .mx_bento_grid > li.wide .mx_bento_fig { margin: 0 0 22px; }
-  #dvmax.mx_v4 .mx_fcard { grid-template-columns: 1fr; gap: 28px; padding: 28px 22px; border-radius: 18px; }
+  #dvmax.mx_v4 .mx_fcard { grid-template-columns: 1fr; gap: 24px; padding: 28px 0 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #dvmax.mx_v4 .mx_show_card { animation: none; }
