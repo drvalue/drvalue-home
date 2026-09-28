@@ -13,9 +13,9 @@ export const PATTERN_CSS = `
 #dvmax.mx_v4 .mx_show_tabs button.on { background: #191f28; color: #fff; }
 #dvmax.mx_v4 .mx_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 2px; }
 #dvmax.mx_v4 .mx_show_stage { position: relative; }
-#dvmax.mx_v4 .mx_show_card { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: center; min-height: 520px; padding: 56px 64px; border-radius: 28px; overflow: hidden; color: #191f28;
-  background: linear-gradient(135deg, #e9f1fc 0%, #d3e2f6 60%, #bcd2ef 100%); animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
-#dvmax.mx_v4 .mx_show_card::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(21,34,56,.12) 1px, transparent 1.3px); background-size: 22px 22px; opacity: .5; }
+#dvmax.mx_v4 .mx_show_card { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: center; min-height: 0; padding: 8px 72px; color: #191f28;
+  animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
+/* 2026-09-28 사용자: 카드 속 카드 — 틴트 판·점 무늬를 빼고 글과 창을 흰 바탕에 바로 둔다. */
 #dvmax.mx_v4 .mx_show_txt { position: relative; z-index: 2; }
 #dvmax.mx_v4 .mx_show_k { display: inline-block; margin: 0 0 18px; padding: 6px 14px; border-radius: 999px; background: #152238; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
 #dvmax.mx_v4 .mx_show_txt h3 { margin: 0; font-size: clamp(28px, 3vw, 40px); line-height: 1.28; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
@@ -26,7 +26,7 @@ export const PATTERN_CSS = `
 #dvmax.mx_v4 .mx_show_more i { font-style: normal; font-size: 20px; line-height: 1; transition: transform .2s; }
 #dvmax.mx_v4 .mx_show_more:hover i { transform: translateX(3px); }
 #dvmax.mx_v4 .mx_show_fig { position: relative; z-index: 1; margin: 0; }
-#dvmax.mx_v4 .mx_show_fig .mx_browser { position: relative; width: 100%; border-radius: 12px; box-shadow: 0 30px 80px rgba(21,34,56,.30); }
+#dvmax.mx_v4 .mx_show_fig .mx_browser { position: relative; width: 100%; border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
 #dvmax.mx_v4 .mx_show_arr { position: absolute; top: 50%; z-index: 4; width: 48px; height: 48px; margin-top: -24px; border: 0; border-radius: 50%; background: rgba(255,255,255,.7); backdrop-filter: blur(8px); color: #191f28; box-shadow: 0 6px 20px rgba(21,34,56,.12); cursor: pointer; display: grid; place-items: center; transition: background .2s, transform .2s; }
 #dvmax.mx_v4 .mx_show_arr svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #dvmax.mx_v4 .mx_show_arr:hover { background: #fff; transform: scale(1.06); }
@@ -114,6 +114,11 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_cycle img.on { opacity: 1; transform: scale(1); animation: mxKen 6s ease-out both; }
 @keyframes mxKen { from { transform: scale(1); } to { transform: scale(1.025); } }
 #dvmax.mx_v4 .mx_cycle_tag { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }
+/* 2026-09-28 사용자: 틀 › 그라데이션 판 › 브라우저 창으로 겹겹이 싸면 「AI 느낌」 — 판·틀·방울·꼬리표를 빼고 창 하나만. 화면 이름은 밑 탭이 말한다. */
+#dvmax.mx_v4 .mx_plate.flat { background: none; border-radius: 0; overflow: visible; }
+#dvmax.mx_v4 .mx_plate.flat .mx_plate_in { margin: 0; padding: 0; min-height: 0; border-radius: 0; overflow: visible; }
+#dvmax.mx_v4 .mx_plate.flat .mx_plate_in::before, #dvmax.mx_v4 .mx_plate.flat .mx_plate_in::after { content: none; }
+#dvmax.mx_v4 .mx_plate.flat .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
 #dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 0; }
 #dvmax.mx_v4 .mx_cycle_tabs button { padding: 8px 16px; border: 1px solid #d5dae0; border-radius: 999px; background: #fff; color: #4e5968; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
 #dvmax.mx_v4 .mx_cycle_tabs button:hover { border-color: #191f28; color: #191f28; }

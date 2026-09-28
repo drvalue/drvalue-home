@@ -204,10 +204,8 @@ export function HeroCycle({ shots }: { shots: HeroItem[] }) {
   }, [shots])
 
   return (
-    <figure className="mx_plate">
+    <figure className="mx_plate flat">
       <div className="mx_plate_in">
-        <i className="mx_blob mx_b1" aria-hidden="true" /><i className="mx_blob mx_b2" aria-hidden="true" /><i className="mx_blob mx_b3" aria-hidden="true" />
-        <span key={c.tag} className="mx_plate_tag mx_cycle_tag">{c.tag}</span>
         <div className="mx_browser">
           <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span key={c.url ?? c.tag}>{c.url ?? 'max.drvalue.co.kr'}</span></div>
           <div className="mx_cycle" style={{ aspectRatio: ratio }}>

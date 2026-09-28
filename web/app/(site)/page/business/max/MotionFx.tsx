@@ -47,7 +47,8 @@ export default function MotionFx() {
     })
 
     // 2. 패럴랙스
-    const plates = Array.from(document.querySelectorAll<HTMLElement>('.mx_plate'))
+    // 판을 벗긴 창(.flat)은 움직이지 않는다 — 창만 떠다니면 밑 탭과 겹친다(2026-09-28).
+    const plates = Array.from(document.querySelectorAll<HTMLElement>('.mx_plate:not(.flat)'))
     if (!plates.length) return
     let frame: number | null = null
     const apply = () => {
