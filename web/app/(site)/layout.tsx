@@ -8,6 +8,7 @@ import '@/styles/tw.css'
 // 스크롤 등장 효과. 표시(data-rv·data-count)가 없는 장에는 아무 영향이 없다.
 import '@/styles/motion.css'
 import Reveal from '@/components/Reveal'
+import ScrollJump from '@/components/ScrollJump'
 import HomeCountUp from '@/app/home/HomeCountUp'
 import { SITE_DESCRIPTION, SITE_ORIGIN } from '@/lib/seo'
 import { JQUERY_SRC, tagsGtmId } from '@/lib/analytics'
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <HomeCountUp />
         <Reveal />
+        <ScrollJump />
 
         {/* PHP 는 <head> 에서 동기 로드했다. beforeInteractive 로 순서를 맞춘다 —
             푸터 스크립트가 $ 와 Swiper 를 쓰기 때문이다. */}

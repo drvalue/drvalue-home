@@ -43,7 +43,7 @@ export const PATTERN_CSS = `
 #dvmax.mx_v4 .mx_bento .mx_b2 { width: 480px; height: 480px; right: -160px; top: 30%; background: #ffd9c2; opacity: .5; }
 #dvmax.mx_v4 .mx_bento .mx_wrap { position: relative; }
 #dvmax.mx_v4 .mx_bento_head { text-align: center; color: #191f28; margin: 0 0 44px; }
-#dvmax.mx_v4 .mx_bento_k { display: inline-block; margin: 0 0 18px; padding: 7px 16px; border-radius: 999px; background: #3e78c8; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+#dvmax.mx_v4 .mx_bento_k { display: inline-block; margin: 0 0 14px; padding: 0; border-radius: 0; background: none; color: #d71920; font-size: 15px; font-weight: 600; letter-spacing: 0; }
 #dvmax.mx_v4 .mx_bento_head h2 { margin: 0; font-size: clamp(32px, 3.8vw, 52px); line-height: 1.25; letter-spacing: -1.5px; font-weight: 600; color: #191f28; }
 #dvmax.mx_v4 .mx_bento_d { margin: 18px auto 0; max-width: 40em; font-size: 19px; line-height: 1.65; color: #4e5968; word-break: keep-all; }
 #dvmax.mx_v4 .mx_bento_grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; list-style: none; }
@@ -158,9 +158,11 @@ export const PATTERN_CSS3 = `
 #dvmax.mx_v4 .mx_state { font-size: clamp(20px, 2.53vw, 35px); font-weight: 600; letter-spacing: -1px; line-height: 1.25; }
 #dvmax.mx_v4 .mx_state_p { font-size: clamp(16px, 1.4vw, 19px); }
 #dvmax.mx_v4 .mx_ghead h2 { font-size: clamp(19px, 2.13vw, 29px); font-weight: 600; letter-spacing: -.8px; }
-#dvmax.mx_v4 .mx_kicker { display: table; padding: 7px 16px; border-radius: 999px; background: #3e78c8; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
-#dvmax.mx_v4 .mx_kicker span { color: rgba(255,255,255,.7); }
-#dvmax.mx_v4 .mx_hero4 .mx_kicker { color: #fff; }
+/* 구역 머리 글 — 2026-09-28 사용자·블라인드 비평: 파란 알약은 「AI 느낌」. 레퍼런스(업스테이지·flex·c3·Tulip 안쪽 장 19곳)에
+   알약 라벨은 하나도 없었다 — 바탕 없이 브랜드색 글자만. */
+#dvmax.mx_v4 .mx_kicker { display: table; padding: 0; border-radius: 0; background: none; color: #d71920; font-size: 15px; font-weight: 600; letter-spacing: 0; }
+#dvmax.mx_v4 .mx_kicker span { color: #8b95a1; }
+#dvmax.mx_v4 .mx_hero4 .mx_kicker { color: #d71920; }
 #dvmax.mx_v4 .mx_hero4 .mx_kicker, #dvmax.mx_v4 .mx_kicker.hk_center, #dvmax.mx_v4 .mx_kicker[style*="center"] { margin-left: auto; margin-right: auto; }
 `
 export const PATTERN_CSS4 = `
