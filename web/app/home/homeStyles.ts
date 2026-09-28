@@ -14,9 +14,10 @@ export const HOME_ADD_CSS = `
 /* ── 머리 그림 ──────────────────────────────────────────────────
    원본 홈에는 머리 그림이 있다가 주석으로 꺼져 있었다(swiper 두 장).
    슬라이드는 되살리지 않는다 — 두 장을 번갈아 보여 주는 것은 읽는 사람의
-   눈을 뺏기만 하고 말하는 것이 없다. 한 장을 크게 두고 천천히 당긴다. */
+   눈을 뺏기만 하고 말하는 것이 없다. 한 장을 크게 두고 천천히 당긴다.
+   2026-09-28 첫 화면을 꽉 채운다(86vh·최대 820px → 화면 높이 그대로). 아래 구역은 스크롤로 만난다. */
 .dv_hero {
-  position: relative; min-height: 640px; height: 86vh; max-height: 820px;
+  position: relative; min-height: 640px; height: 100vh; height: 100svh;
   display: flex; align-items: center; overflow: hidden; background: #0b0f14;
 }
 .dv_hero_bg {
@@ -102,13 +103,13 @@ export const HOME_ADD_CSS = `
 .dv_hero_cue { animation: dvHeroRise .9s ease 1.1s both; }
 
 @media (max-width: 1024px) {
-  .dv_hero { min-height: 560px; height: auto; padding: 130px 0 90px; }
+  .dv_hero { min-height: 100vh; min-height: 100svh; height: auto; padding: 130px 0 90px; }
   .dv_hero h1 { font-size: 42px; letter-spacing: -1.4px; }
   .dv_hero p { font-size: 17px; }
   .dv_hero_cue { display: none; }
 }
 @media (max-width: 560px) {
-  .dv_hero { padding: 116px 0 74px; min-height: 0; }
+  .dv_hero { padding: 116px 0 74px; }
   .dv_hero h1 { font-size: 33px; letter-spacing: -1px; }
   .dv_hero p { font-size: 15.5px; }
   .dv_hero_btns > * { height: 50px; padding: 0 22px; font-size: 15px; flex: 1 1 auto; justify-content: center; }
