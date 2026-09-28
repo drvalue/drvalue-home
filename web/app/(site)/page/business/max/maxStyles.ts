@@ -737,7 +737,7 @@ export const PAGE_CSS = `
   /* 탭 다섯이 한 줄에 다 보이게 — 잘리면 뒤에 더 있는지 모른다(390 실측: 셋만 보임). */
   #dvmax.mx_v4 .mx_tabs { display: flex; width: 100%; padding: 3px; gap: 0; }
   #dvmax.mx_v4 .mx_tabs button { flex: 1 1 0; padding: 8px 4px; font-size: 13px; min-height: 44px; white-space: nowrap; }
-  #dvmax.mx_v4 .mx_proof { padding: 32px 0 36px; }
+  #dvmax.mx_v4 .mx_proof { padding: 32px 0 36px; } #dvmax.mx_v4 .mx_proof li { padding-right: 12px; } #dvmax.mx_v4 .mx_proof li:nth-child(even) { padding-left: 16px; } #dvmax.mx_v4 .mx_proof li b { font-size: 18px; }
   #dvmax.mx_v4 .mx_proof li b { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {

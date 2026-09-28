@@ -57,6 +57,8 @@ export default async function Page() {
   const cos = (cosPage ?? COSMETICS_MES_DEFAULT).shell
   const ai = (aiPage ?? MES_AI_DEFAULT).shell
   const { shell, statement } = c
+  const hs = toHeroShots(c.heroShots)
+  const heroOne = hs && (Array.isArray(hs) ? hs : [hs]).slice(0, 1)
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
@@ -70,7 +72,10 @@ export default async function Page() {
         headStrong={shell.headStrong}
         desc={shell.desc}
         heroLink={orUndefined(shell.heroLink)}
-        heroShot={toHeroShots(c.heroShots)}
+        // 허브 머리말은 한 장만(2026-09-28 사용자: 서로 다른 제품 화면 넷을 탭으로 섞으니 「여기저기서 가져다 쓴」 것 같다).
+        // 관리 화면 목록의 첫 장이 대표 — 나머지 장은 제품군 카드와 하위 장이 보여 준다.
+        // 배열 한 장으로 넘겨야 판 없는 창(HeroCycle .flat)으로 그린다 — 한 장짜리 객체는 그라데이션 판(Plate)이 된다.
+        heroShot={heroOne}
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
