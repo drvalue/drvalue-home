@@ -633,7 +633,7 @@ export const PAGE_CSS = `
 #dvmax.mx_fam .mx_side { padding-top: 96px; }
 /* 머리 그림은 흰 바탕 파일이다 — 띠 위에서 흰 상자로 뜨지 않게 곱하기로 섞는다. */
 #dvmax.mx_fam .mx_hero_art img { mix-blend-mode: multiply; }
-/* M.AX 네 장 머리 화면 여럿: 가장 납작한 장 기준(16:9 상한) + cover·왼쪽 위 — 틀을 꽉 채우고 잘리는 쪽은 아래뿐. 좌측 라벨·앞 열은 남는다. */
+/* M.AX 네 장 머리 화면 여럿: 가장 납작한 장 기준(16:9 상한) + cover·왼쪽 위 — 틀을 꽉 채운다. 높은 장은 아래가, 16:9 보다 납작한 장은 오른쪽 끝이 잘린다(MES AI 첫 장 2:1 → 약 11%). 좌측 라벨·앞 열은 남는다. */
 #dvmax.mx_v4.mx_fam .mx_cycle img { object-fit: cover; object-position: left top; }
 /* 차례표(212px)가 본문을 좁힌다 — 1200px 아래는 숨긴다(흐름 6칸이 비좁아진다). 그 자리는 현재 위치 줄이 맡는다. */
 @media (max-width: 1200px) { #dvmax.mx_fam .mx_split { display: block; } #dvmax.mx_fam .mx_side { display: none; } }
