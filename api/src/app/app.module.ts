@@ -15,6 +15,7 @@ import { MenuModule } from '../core/menu/menu.module';
 import { PageModule } from '../core/page/page.module';
 import { SeoModule } from '../core/seo/seo.module';
 import { HomeModule } from '../core/home/home.module';
+import { SearchSettingsModule } from '../core/search-settings/search-settings.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HomeModule } from '../core/home/home.module';
     PageModule,
     SeoModule,
     HomeModule,
+    SearchSettingsModule,
   ],
 })
 export class AppModule {}

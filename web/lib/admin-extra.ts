@@ -32,6 +32,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   menu: '메뉴',
   pages: '페이지',
   page_meta: 'SEO',
+  site_search_settings: '검색엔진 설정',
   home_banners: '메인 배너',
   home_popups: '메인 팝업',
 }
@@ -102,6 +103,11 @@ const FIELD_LABEL: Record<string, string> = {
   role: '범위',
   enabled: '사용',
   files: '첨부',
+  naver_site_verification: '네이버 확인 코드',
+  google_site_verification: '구글 확인 코드',
+  bing_site_verification: '빙 확인 코드',
+  ai_search_allowed: 'AI 검색 답변 허용',
+  ai_training_allowed: 'AI 학습 수집 허용',
 }
 
 const LANG_LABEL: Record<string, string> = { 'ko-KR': '한국어', 'en-US': 'English' }

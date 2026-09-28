@@ -14,6 +14,18 @@ const BATCH_MS = 2_000;
 const TIMEOUT_MS = 5_000;
 /** 규약의 한 번 한도. */
 const MAX_URLS = 10_000;
+/** 관리 화면 「검색엔진 설정」이 보여 줄 최근 보내기 수. 프로세스 메모리라 api 를 다시 띄우면 빈다. */
+const RECENT_MAX = 20;
+
+/** 보내기 한 번의 기록. 주소·키·응답 본문은 싣지 않는다(수와 상태만). */
+export interface IndexNowSubmission {
+  /** 보낸 시각(ISO). */
+  at: string;
+  url_count: number;
+  status: 'ok' | 'fail';
+  /** 받은 HTTP 상태. 응답이 없었으면(네트워크·시간 초과) null. */
+  http_status: number | null;
+}
 
 /**
  * 공개 내용이 바뀐 주소를 IndexNow 로 알린다(Bing · Naver 가 빨리 다시 긁어 가게).
@@ -27,6 +39,32 @@ export class IndexNowService implements OnModuleDestroy {
   private readonly logger = new Logger(IndexNowService.name);
   private readonly pending = new Set<string>();
   private timer: NodeJS.Timeout | null = null;
+  /** 최근 보내기(새것이 앞). RECENT_MAX 를 넘으면 오래된 것부터 버린다. */
+  private readonly log: IndexNowSubmission[] = [];
+
+  /** 알림이 켜져 있나 — 키가 있고 모양이 맞고 미리보기(NOINDEX=1)가 아니다. 키 자체는 밖으로 안 낸다. */
+  get enabled(): boolean {
+    return AppConfig.indexNowKey !== null;
+  }
+
+  /** 최근 보내기 기록(새것이 앞, 최대 RECENT_MAX). 복사본을 준다. */
+  recent(): IndexNowSubmission[] {
+    return this.log.map((e) => ({ ...e }));
+  }
+
+  private remember(
+    urlCount: number,
+    status: 'ok' | 'fail',
+    httpStatus: number | null,
+  ): void {
+    this.log.unshift({
+      at: new Date().toISOString(),
+      url_count: urlCount,
+      status,
+      http_status: httpStatus,
+    });
+    if (this.log.length > RECENT_MAX) this.log.length = RECENT_MAX;
+  }
 
   /** 트랜잭션이 커밋된 뒤 이 경로들을 알린다. 꺼져 있거나 경로가 없으면 아무것도 안 한다. 던지지 않는다. */
   submitAfterCommit(ctx: ITransactionContext, paths: string[]): void {
@@ -65,6 +103,7 @@ export class IndexNowService implements OnModuleDestroy {
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       // 200 받음 · 202 받음(키 확인 중). 403 은 키 파일이 안 열린다는 뜻 — web 의 INDEXNOW_KEY 를 본다.
+      this.remember(urls.length, res.ok ? 'ok' : 'fail', res.status);
       if (res.ok)
         this.logger.log(`IndexNow ${res.status}: 주소 ${urls.length}개`);
       else
@@ -72,6 +111,7 @@ export class IndexNowService implements OnModuleDestroy {
           `IndexNow ${res.status}: 주소 ${urls.length}개를 못 보냈다`,
         );
     } catch (e) {
+      this.remember(urls.length, 'fail', null);
       const why = e instanceof Error ? e.name : 'Error';
       this.logger.warn(`IndexNow 보내기 실패(${why}): 주소 ${urls.length}개`);
     }

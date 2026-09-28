@@ -742,6 +742,57 @@ export interface ControllerPageDefaultSaveDto {
   languages_code: "ko-KR" | "en-US"
 }
 
+export interface ControllerSearchSettingsDefaultResponseDto {
+  ai_search_allowed: boolean
+  ai_training_allowed: boolean
+  bing_site_verification: string | null
+  google_site_verification: string | null
+  index_now: ControllerSearchSettingsIndexNowResponseDto
+  naver_site_verification: string | null
+  updated_by: string | null
+  updated_on: string | null
+}
+
+export interface ControllerSearchSettingsDefaultSaveDto {
+  /** false 면 robots.txt 가 AI 답변 봇(ChatGPT·Claude·Perplexity 검색)을 막는다. 검색엔진(네이버·빙 등)은 그대로 */
+  ai_search_allowed: boolean
+  /** false 면 robots.txt 가 학습용 수집 봇(GPTBot·ClaudeBot·Google-Extended 등)을 막는다 */
+  ai_training_allowed: boolean
+  /** 빙 웹마스터 HTML 태그(msvalidate.01)의 content 값. 비우면 실행 환경값 */
+  bing_site_verification?: string | null
+  /** 구글 서치 콘솔 HTML 태그의 content 값. 비우면 실행 환경값 */
+  google_site_verification?: string | null
+  /** 네이버 서치어드바이저 HTML 태그의 content 값. 비우면 실행 환경값 */
+  naver_site_verification?: string | null
+}
+
+export interface ControllerSearchSettingsIndexNowEntryResponseDto {
+  at: string
+  /** 받은 HTTP 상태. 응답이 없었으면(네트워크·시간 초과) null */
+  http_status: number | null
+  status: "ok" | "fail"
+  url_count: number
+}
+
+export interface ControllerSearchSettingsIndexNowResponseDto {
+  /** 키가 설정돼 있고 미리보기(NOINDEX)가 아니면 true */
+  enabled: boolean
+  /** 최근 보내기(새것이 앞, 최대 20). api 를 다시 띄우면 빈다 */
+  recent: ControllerSearchSettingsIndexNowEntryResponseDto[]
+}
+
+export interface ControllerSearchSettingsPublicResponseDto {
+  ai_search_allowed: boolean
+  ai_training_allowed: boolean
+  /** 비었으면 null */
+  bing_site_verification: string | null
+  /** 비었으면 null */
+  google_site_verification: string | null
+  index_now_enabled: boolean
+  /** 비었으면 null */
+  naver_site_verification: string | null
+}
+
 export interface ControllerSeoDefaultPageResponseDto {
   no_index: boolean
   /** 파일 id */
@@ -1044,6 +1095,20 @@ export interface ApiOperations {
     response: ControllerAdminRevisionDefaultRestoreResponseDto
     body: never
   }
+  /** 검색엔진 설정 + IndexNow 켜짐·최근 보내기 */
+  "GET /api/admin/search-settings": {
+    response: {
+      data: ControllerSearchSettingsDefaultResponseDto
+    }
+    body: never
+  }
+  /** 검색엔진 설정 저장(통째로) */
+  "PUT /api/admin/search-settings": {
+    response: {
+      data: ControllerSearchSettingsDefaultResponseDto
+    }
+    body: ControllerSearchSettingsDefaultSaveDto
+  }
   /** 덮어쓰기 지우기(코드의 값으로 돌아간다) */
   "DELETE /api/admin/seo/pages": {
     response: {
@@ -1120,6 +1185,13 @@ export interface ApiOperations {
   /** 공개 글 하나(본문·첨부) */
   "GET /api/content/posts/{slug}": {
     response: ControllerContentDefaultPostDetailEnvelopeDto
+    body: never
+  }
+  /** 확인 코드 · AI 스위치 · IndexNow 켜짐 */
+  "GET /api/content/search-settings": {
+    response: {
+      data: ControllerSearchSettingsPublicResponseDto
+    }
     body: never
   }
   /** 문의 접수(메일 + DB, IP 당 분 5회 · 시 30회) */

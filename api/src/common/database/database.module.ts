@@ -20,6 +20,7 @@ import { HomeBannerEntity } from '../entity/home-banner.entity';
 import { HomeBannerTranslationEntity } from '../entity/home-banner-translation.entity';
 import { HomePopupEntity } from '../entity/home-popup.entity';
 import { HomePopupTranslationEntity } from '../entity/home-popup-translation.entity';
+import { SearchSettingsEntity } from '../entity/search-settings.entity';
 
 export const ENTITIES = [
   PostEntity,
@@ -38,6 +39,7 @@ export const ENTITIES = [
   HomeBannerTranslationEntity,
   HomePopupEntity,
   HomePopupTranslationEntity,
+  SearchSettingsEntity,
 ];
 
 /**

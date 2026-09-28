@@ -2910,6 +2910,181 @@
         ],
         "type": "object"
       },
+      "ControllerSearchSettingsDefaultResponseDto": {
+        "properties": {
+          "ai_search_allowed": {
+            "type": "boolean"
+          },
+          "ai_training_allowed": {
+            "type": "boolean"
+          },
+          "bing_site_verification": {
+            "nullable": true,
+            "type": "string"
+          },
+          "google_site_verification": {
+            "nullable": true,
+            "type": "string"
+          },
+          "index_now": {
+            "$ref": "#/components/schemas/ControllerSearchSettingsIndexNowResponseDto"
+          },
+          "naver_site_verification": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_by": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_on": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "naver_site_verification",
+          "google_site_verification",
+          "bing_site_verification",
+          "ai_search_allowed",
+          "ai_training_allowed",
+          "updated_on",
+          "updated_by",
+          "index_now"
+        ],
+        "type": "object"
+      },
+      "ControllerSearchSettingsDefaultSaveDto": {
+        "properties": {
+          "ai_search_allowed": {
+            "description": "false 면 robots.txt 가 AI 답변 봇(ChatGPT·Claude·Perplexity 검색)을 막는다. 검색엔진(네이버·빙 등)은 그대로",
+            "example": true,
+            "type": "boolean"
+          },
+          "ai_training_allowed": {
+            "description": "false 면 robots.txt 가 학습용 수집 봇(GPTBot·ClaudeBot·Google-Extended 등)을 막는다",
+            "example": true,
+            "type": "boolean"
+          },
+          "bing_site_verification": {
+            "description": "빙 웹마스터 HTML 태그(msvalidate.01)의 content 값. 비우면 실행 환경값",
+            "example": "0123456789ABCDEF0123456789ABCDEF",
+            "maxLength": 120,
+            "nullable": true,
+            "pattern": "^(?:[A-Za-z0-9_=:.-]{1,120})?$",
+            "type": "string"
+          },
+          "google_site_verification": {
+            "description": "구글 서치 콘솔 HTML 태그의 content 값. 비우면 실행 환경값",
+            "example": "AbCdEf-0123456789_AbCdEf0123456789AbCdEf012",
+            "maxLength": 120,
+            "nullable": true,
+            "pattern": "^(?:[A-Za-z0-9_=:.-]{1,120})?$",
+            "type": "string"
+          },
+          "naver_site_verification": {
+            "description": "네이버 서치어드바이저 HTML 태그의 content 값. 비우면 실행 환경값",
+            "example": "0123456789abcdef0123456789abcdef01234567",
+            "maxLength": 120,
+            "nullable": true,
+            "pattern": "^(?:[A-Za-z0-9_=:.-]{1,120})?$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ai_search_allowed",
+          "ai_training_allowed"
+        ],
+        "type": "object"
+      },
+      "ControllerSearchSettingsIndexNowEntryResponseDto": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "http_status": {
+            "description": "받은 HTTP 상태. 응답이 없었으면(네트워크·시간 초과) null",
+            "nullable": true,
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "fail"
+            ],
+            "type": "string"
+          },
+          "url_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "at",
+          "url_count",
+          "status",
+          "http_status"
+        ],
+        "type": "object"
+      },
+      "ControllerSearchSettingsIndexNowResponseDto": {
+        "properties": {
+          "enabled": {
+            "description": "키가 설정돼 있고 미리보기(NOINDEX)가 아니면 true",
+            "type": "boolean"
+          },
+          "recent": {
+            "description": "최근 보내기(새것이 앞, 최대 20). api 를 다시 띄우면 빈다",
+            "items": {
+              "$ref": "#/components/schemas/ControllerSearchSettingsIndexNowEntryResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled",
+          "recent"
+        ],
+        "type": "object"
+      },
+      "ControllerSearchSettingsPublicResponseDto": {
+        "properties": {
+          "ai_search_allowed": {
+            "type": "boolean"
+          },
+          "ai_training_allowed": {
+            "type": "boolean"
+          },
+          "bing_site_verification": {
+            "description": "비었으면 null",
+            "nullable": true,
+            "type": "string"
+          },
+          "google_site_verification": {
+            "description": "비었으면 null",
+            "nullable": true,
+            "type": "string"
+          },
+          "index_now_enabled": {
+            "type": "boolean"
+          },
+          "naver_site_verification": {
+            "description": "비었으면 null",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "naver_site_verification",
+          "google_site_verification",
+          "bing_site_verification",
+          "ai_search_allowed",
+          "ai_training_allowed",
+          "index_now_enabled"
+        ],
+        "type": "object"
+      },
       "ControllerSeoDefaultPageResponseDto": {
         "properties": {
           "no_index": {
@@ -4827,6 +5002,84 @@
         ]
       }
     },
+    "/api/admin/search-settings": {
+      "get": {
+        "operationId": "adminSearchSettingsDefaultGet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ControllerSearchSettingsDefaultResponseDto"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "dv_admin": []
+          }
+        ],
+        "summary": "검색엔진 설정 + IndexNow 켜짐·최근 보내기",
+        "tags": [
+          "Admin Search Settings Default - 관리 화면 검색엔진 설정"
+        ]
+      },
+      "put": {
+        "operationId": "adminSearchSettingsDefaultSave",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControllerSearchSettingsDefaultSaveDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ControllerSearchSettingsDefaultResponseDto"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "dv_admin": []
+          }
+        ],
+        "summary": "검색엔진 설정 저장(통째로)",
+        "tags": [
+          "Admin Search Settings Default - 관리 화면 검색엔진 설정"
+        ]
+      }
+    },
     "/api/admin/seo/pages": {
       "delete": {
         "operationId": "adminSeoDefaultRemove",
@@ -5409,6 +5662,36 @@
         "summary": "공개 글 하나(본문·첨부)",
         "tags": [
           "Content Default - 공개 게시판·파일"
+        ]
+      }
+    },
+    "/api/content/search-settings": {
+      "get": {
+        "operationId": "searchSettingsDefaultPublicGet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ControllerSearchSettingsPublicResponseDto"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "확인 코드 · AI 스위치 · IndexNow 켜짐",
+        "tags": [
+          "Search Settings Default - 공개 검색엔진 설정"
         ]
       }
     },

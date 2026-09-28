@@ -181,3 +181,65 @@ test('보내기: 네트워크가 죽어도 · 4xx 여도 던지지 않는다', a
     });
   }
 });
+
+test('최근 기록: 성공·실패·응답 없음을 새것부터 남기고, 키·주소는 안 싣는다', async () => {
+  const seq = [
+    async () => ({ ok: true, status: 200 }),
+    async () => ({ ok: false, status: 403 }),
+    async () => {
+      throw new Error('network down');
+    },
+  ];
+  let i = 0;
+  await withEnv({ INDEXNOW_KEY: KEY, NOINDEX: undefined }, (...a) => seq[i++](...a), async () => {
+    const s = new IndexNowService();
+    assert.equal(s.enabled, true);
+    assert.deepEqual(s.recent(), []);
+    s.enqueue(['/', '/page/company/intro']);
+    await s.flush();
+    s.enqueue(['/']);
+    await s.flush();
+    s.enqueue(['/']);
+    await s.flush();
+    s.onModuleDestroy();
+    const r = s.recent();
+    assert.deepEqual(
+      r.map((e) => [e.status, e.http_status, e.url_count]),
+      [
+        ['fail', null, 1],
+        ['fail', 403, 1],
+        ['ok', 200, 2],
+      ],
+    );
+    for (const e of r) {
+      assert.deepEqual(Object.keys(e).sort(), ['at', 'http_status', 'status', 'url_count']);
+      assert.ok(!Number.isNaN(Date.parse(e.at)));
+    }
+    assert.ok(!JSON.stringify(r).includes(KEY));
+    assert.ok(!JSON.stringify(r).includes('drvalue.co.kr'));
+    // 복사본이다 — 받은 쪽이 고쳐도 기록은 그대로다.
+    r[0].status = 'ok';
+    assert.equal(s.recent()[0].status, 'fail');
+  });
+});
+
+test('최근 기록: 20개까지만 둔다 · 꺼져 있으면 enabled 가 false', async () => {
+  await withEnv({ INDEXNOW_KEY: KEY, NOINDEX: undefined }, async () => ({ ok: true, status: 202 }), async () => {
+    const s = new IndexNowService();
+    for (let n = 1; n <= 25; n++) {
+      s.enqueue(Array.from({ length: n }, (_, k) => `/page/support/notice/n${k}`));
+      await s.flush();
+    }
+    s.onModuleDestroy();
+    const r = s.recent();
+    assert.equal(r.length, 20);
+    assert.equal(r[0].url_count, 25);
+    assert.equal(r[19].url_count, 6);
+  });
+  await withEnv({ INDEXNOW_KEY: KEY, NOINDEX: '1' }, globalThis.fetch, async () => {
+    assert.equal(new IndexNowService().enabled, false);
+  });
+  await withEnv({ INDEXNOW_KEY: undefined, NOINDEX: undefined }, globalThis.fetch, async () => {
+    assert.equal(new IndexNowService().enabled, false);
+  });
+});

@@ -22,6 +22,7 @@
 | 에러 응답 · 화면 문구 | 됨 · 확인함 | 2026-09-22. 본문 `{ data:null, status, resultCode, message, path, timestamp }` · 실제 HTTP 상태. message 는 합니다체(에러 코드 31건 재작성, 개발자용은 detail 로), DTO 검증은 한국어 문구, 로그인·콜백 실패는 `/admin/login?error=<코드>` 로 302. 관리 화면 문구 40여 곳 합니다체. `check-copy.py` 373곳 0건(고치기 전 68건) · verify.d/messages.sh 7/7 |
 | docker 셋 (db · api · web) | 됨 · 확인함 | 2026-09-22. web 이미지의 `/api` 프록시가 빌드 때 `localhost:3500` 으로 굳어 컨테이너에서 관리 화면이 500 이던 것을 빌드 인자로 고침. `WEB_PORT=3410` 으로 셋 다 띄워 verify 133 · check-home 23 · header 107 · a11y 323 · pages 110 |
 | 환경변수 정리 | 됨 | 36 → 7. 없앤 키와 이유는 `docs/operations.md`. IAM 패키지 의존성 제거. api 에서 읽는 곳은 `common/config/app-config.ts` 하나 |
+| M.AX·AI솔루션 화면 정리 + SEO·GEO (2026-09-28, PR #1) | 됨 · 확인함 | 결정 0018. 겹 카드·그라데이션 제거, 허브 재구성, 글 줄임(마이그레이션 0017~0020), robots AI 크롤러·`/rss.xml`·소유 확인 메타·IndexNow. web 검사 전부 통과 · api 54/54 · verify.sh 331. **남은 것**: 화면 새 캡처 4장(흐린 금액·빈 재고 표·적층구조 빈 칸·어두운 납기 화면), 허브 머리말 그림을 실제 전체 현황 화면으로 교체, IndexNow 실제 전송 확인, 헤더 밑 위치 줄 여부, 화장품 MES·MES AI 구역별 검수 |
 | 운영 배포 통로 | 있음 · 안 써 봄 | GitHub Actions 수동 실행. 이 저장소에서 아직 안 눌렀다 |
 
 ## 남은 것

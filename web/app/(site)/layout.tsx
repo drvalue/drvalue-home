@@ -11,6 +11,7 @@ import Reveal from '@/components/Reveal'
 import ScrollJump from '@/components/ScrollJump'
 import HomeCountUp from '@/app/home/HomeCountUp'
 import { SITE_DESCRIPTION, SITE_ORIGIN } from '@/lib/seo'
+import { getSearchSettings } from '@/lib/search-settings'
 import { JQUERY_SRC, tagsGtmId } from '@/lib/analytics'
 import OrgJsonLd from '@/components/OrgJsonLd'
 
@@ -33,19 +34,23 @@ export const viewport: Viewport = {
 }
 
 /**
- * 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). 값은 실행 환경(.env)에서 읽는다 —
- * 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다.
- * generateMetadata 는 요청마다 그리는 장에서만 실행 환경값을 읽는다 — 빌드 때 굳는 정적 장(예: patent_old)에는 안 붙는다.
+ * 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). 관리 화면 「SEO › 검색엔진 설정」의
+ * 코드가 먼저고(lib/search-settings.ts, 1분 캐시), 그 칸이 비었거나 api 를 못 읽으면 실행 환경(.env)값을 예비로 쓴다 —
+ * 둘 다 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다.
+ * generateMetadata 는 그리는 때에 값을 읽는다 — 요청마다 그리는 장은 요청 때, 빌드 때 굳는 장(예: patent_old, 1분 ISR)은
+ * 빌드 때(api 도 실행 환경값도 없어 태그가 없다)와 그 뒤 1분마다 다시 그릴 때다. 정적 장에는 빌드 직후 한동안 안 붙는다.
  * 소유 확인은 첫 화면(/)으로 하므로 / 는 요청마다 그리는 장이어야 한다(지금 CMS 글을 no-store 로 읽어 그렇다).
  */
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
   const env = (k: string) => (process.env[k] ?? '').trim() || undefined
-  const naver = env('NAVER_SITE_VERIFICATION')
-  const bing = env('BING_SITE_VERIFICATION')
+  const cms = await getSearchSettings()
+  const pick = (v: string | null | undefined, k: string) => v?.trim() || env(k)
+  const naver = pick(cms?.naver_site_verification, 'NAVER_SITE_VERIFICATION')
+  const bing = pick(cms?.bing_site_verification, 'BING_SITE_VERIFICATION')
   const other: Record<string, string> = {}
   if (naver) other['naver-site-verification'] = naver
   if (bing) other['msvalidate.01'] = bing
-  const google = env('GOOGLE_SITE_VERIFICATION')
+  const google = pick(cms?.google_site_verification, 'GOOGLE_SITE_VERIFICATION')
   return {
     ...SITE_METADATA,
     ...(google || naver || bing ? { verification: { ...(google ? { google } : {}), ...(Object.keys(other).length ? { other } : {}) } } : {}),

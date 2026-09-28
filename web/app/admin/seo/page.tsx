@@ -6,9 +6,10 @@ import { when } from '@/lib/admin-extra'
 import { MENU_ITEMS } from '@/lib/menu'
 import FileDrop from '../ui/FileDrop'
 import InlineConfirm from '../ui/InlineConfirm'
-import { useLeaveGuard } from '../ui/leave'
+import { LeaveGroup, LeaveScope, useLeaveGuard } from '../ui/leave'
 import { useQuery } from '../ui/query'
 import { useToast } from '../ui/toast'
+import EngineSettings from './EngineSettings'
 import './seo.css'
 import type * as Api from '@/lib/api-types.gen'
 import type { ApiResponse } from '@/lib/api-types.gen'
@@ -53,7 +54,16 @@ async function readLive(path: string): Promise<Live> {
 
 const cut = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).trimEnd() + '…')
 
+/** 장별 검색 정보와 검색엔진 설정은 저장이 따로다 — 이탈 경고는 둘을 모아 본다(한쪽 저장이 다른 쪽 입력을 안 지운다). */
 export default function SeoPage() {
+  return (
+    <LeaveGroup>
+      <SeoPageBody />
+    </LeaveGroup>
+  )
+}
+
+function SeoPageBody() {
   const q = useQuery()
   const toast = useToast()
   const { setDirty } = useLeaveGuard()
@@ -95,7 +105,8 @@ export default function SeoPage() {
       </div>
       <p className="dvs_lead">
         사이트 장의 검색 제목·설명·공유 그림을 바꿉니다. 비운 칸은 코드에 적힌 값이 그대로 나갑니다. 저장하면 1분 안에
-        사이트에 반영됩니다. 글 한 편의 검색 정보는 그 글의 「검색 노출」에서 바꿉니다.
+        사이트에 반영됩니다. 글 한 편의 검색 정보는 그 글의 「검색 노출」에서 바꿉니다. 소유 확인 코드와 AI 봇 허용은 아래{' '}
+        <a href="#engines">검색엔진 설정</a>에서 바꿉니다.
       </p>
       {error && (
         <div className="dva_error" role="alert">
@@ -144,21 +155,26 @@ export default function SeoPage() {
         </div>
         <div className="dvs_detail" ref={detailBox}>
           {selected ? (
-            <Editor
-              key={selected.path}
-              path={selected.path}
-              name={selected.group === selected.name ? selected.name : `${selected.group} › ${selected.name}`}
-              override={overrides ? (byPath.get(selected.path) ?? null) : undefined}
-              onSaved={async (msg) => {
-                toast(msg)
-                await load()
-              }}
-            />
+            <LeaveScope name="page">
+              <Editor
+                key={selected.path}
+                path={selected.path}
+                name={selected.group === selected.name ? selected.name : `${selected.group} › ${selected.name}`}
+                override={overrides ? (byPath.get(selected.path) ?? null) : undefined}
+                onSaved={async (msg) => {
+                  toast(msg)
+                  await load()
+                }}
+              />
+            </LeaveScope>
           ) : (
             <div className="dva_empty">목록에서 장을 고르면 지금 나가는 검색 정보와 바꿀 칸이 나옵니다.</div>
           )}
         </div>
       </div>
+      <LeaveScope name="engines">
+        <EngineSettings />
+      </LeaveScope>
     </>
   )
 }

@@ -28,7 +28,7 @@ src/
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
 │   │                            #   · TransactionContextFactory(요청 밖 — cron) · onCommit(커밋 뒤 할 일)
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
-│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations)
+│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations · site_search_settings)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
 │   ├── revision/                # 변경 이력 기록기 (admin_revisions) · 되돌리기 핸들러 모음(RevisionRestoreRegistry)
@@ -53,7 +53,8 @@ src/
 `menu`(공개 `GET /api/content/menu` + 관리 `GET·PUT /api/admin/menu` — 한 모듈에 컨트롤러 둘) ·
 `page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
 `seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`) ·
-`home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`).
+`home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`) ·
+`search-settings`(검색엔진 설정 한 행 `site_search_settings` — 공개 `content/search-settings`(확인 코드·AI 스위치 둘·IndexNow 켜짐, 키 없음) + 관리 `admin/search-settings`(+ IndexNow 최근 보내기 20건, 프로세스 메모리). 저장은 IndexNow 로 안 알린다).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 같은 날 R1 로 모듈 14개가 전부 이 모양이다 —
 `python3 scripts/check-pattern.py` 가 모듈마다 재고(`--table` 은 표만), 어긋나면 종료코드 1 이다.
@@ -135,7 +136,7 @@ src/
 5. 범위: admin 전부 · marketing 채용(`recruit`) 빼고 · hr 채용만(`service/board-access.ts`).
    `@AdminRoles()` 가 붙은 핸들러는 그 역할만. **역할 없는 세션은 거부한다** — 조용히
    admin 으로 올리지 않는다.
-6. 변경 이력: 관리 화면의 쓰기(글·문의·파일·권한·페이지 글·메뉴·검색 정보·메인 배너·팝업)가 `admin_revisions` 에
+6. 변경 이력: 관리 화면의 쓰기(글·문의·파일·권한·페이지 글·메뉴·검색 정보·검색엔진 설정·메인 배너·팝업)가 `admin_revisions` 에
    actor · before · after 를 남긴다. 목록·되돌리기는 전체 권한만, 한 항목의 이력은 마케팅도(볼 수 있는 것만).
 
 **IAM 을 안 거치는 문은 없다.** 토큰 우회 경로를 두지 않는다. 검사(verify.sh)는
@@ -250,8 +251,8 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs   # 54 (8 + 9 + 5 + 16 + 7 + 9)
-bash scripts/verify.sh          # 331 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs   # 61 (8 + 9 + 5 + 16 + 7 + 11 + 5)
+bash scripts/verify.sh          # 342 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)
 python3 ../web/scripts/check-types.py   # web 의 생성 형이 낡았나 — 낡은 것 0
