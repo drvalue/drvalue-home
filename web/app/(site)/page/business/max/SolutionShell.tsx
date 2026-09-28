@@ -149,7 +149,7 @@ export default function SolutionShell({
               </div>
               {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {!heroShot && heroArt && <figure className="mx_hero_art"><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
+              {!heroShot && heroArt && <figure className="mx_hero_art" aria-hidden={heroArt.alt ? undefined : true}><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
             </div>
           </section>
 
