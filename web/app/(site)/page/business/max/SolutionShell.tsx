@@ -124,6 +124,9 @@ export default function SolutionShell({
   children: ReactNode
 }) {
   const HeroTitle = heroTag
+  // M.AX 네 장만(2026-09-28 사용자 「이거 4페이지」): 머리말 띠 · 구역 줄 · 왼쪽 차례표 · 머리 화면 꽉 채움.
+  // 같은 껍데기를 쓰는 AI솔루션 장들은 그대로 둔다.
+  const fam = path === '/page/business/max' || path.startsWith('/page/business/max/')
   if (look === 'v4') {
     return (
       <>
@@ -131,7 +134,7 @@ export default function SolutionShell({
 
         {/* 이름을 mx_hero 로 두지 않는다 — header.css 가 html:has(.mx_hero) 를 보고
             헤더를 투명(흰 글씨)으로 만든다. 여기는 바탕이 밝아서 흰 글씨가 사라진다. */}
-        <div id="dvmax" className="mx_v4">
+        <div id="dvmax" className={fam ? 'mx_v4 mx_fam' : 'mx_v4'}>
           <MotionFx />
           <div className="mx_v4_top"><Breadcrumb currentPath={path} /></div>
 
@@ -147,7 +150,7 @@ export default function SolutionShell({
                 </ClientAction>
                 <a className="mx_pill o" href={heroHref ?? '#mx_body'}>{heroLink ?? '기능 보기'}</a>
               </div>
-              {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
+              {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} fill={fam} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {!heroShot && heroArt && <figure className="mx_hero_art" aria-hidden={heroArt.alt ? undefined : true}><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
             </div>
@@ -157,8 +160,8 @@ export default function SolutionShell({
 
           {/* 왼쪽 차례표 — 2026-09-28 사용자: 「왼쪽에 사이더도 둬주고」. v4 로 넘어오며 빠졌던 것을 되살린다(옛 모양과 같은 SideNav). */}
           <section className="mx_sec mx_sec_body" id="mx_body">
-            <div className="mx_wrap mx_split">
-              <SideNav currentPath={path} />
+            <div className={fam ? 'mx_wrap mx_split' : 'mx_wrap'}>
+              {fam && <SideNav currentPath={path} />}
               <div className="mx_main">
                 {/* 요약 = 큰 문장 + 낮은 테두리 카드(2026-09-28). 글만 있는 3열은 사용자가 싫다 했고, 문장만 두니 「덩그러니」였다.
                     레퍼런스(업스테이지 제조 장)는 큰 문장 바로 밑에 테두리 1px 카드를 붙인다 — 그 짜임. */}
