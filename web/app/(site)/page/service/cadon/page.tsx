@@ -65,6 +65,13 @@ export default async function Page() {
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
+        {/* 두 제품을 나눠 보여 준다(2026-09-28 사용자 「CADON 과 CUTON 을 나눠서 2개를 다」) — 내용은 둘 다 펼쳐 두고 바로 가기만. */}
+        <nav className="cd_parts" aria-label="이 장의 제품">
+          <a href="#cadon"><small>01</small><b>CADON</b><span>AutoCAD 판금 전개·검토</span></a>
+          <a href="#cuton"><small>02</small><b>컷온</b><span>도면 AI 자동 견적</span></a>
+        </nav>
+
+        <p className="cd_part" id="cadon"><small>01</small>CADON</p>
         {/* 시연 — 실제 실행 화면 네 장을 순서대로 */}
         <section className="mx_sec4 hk_sec">
           {demo.kicker && <p className="mx_kicker hk_center">{demo.kicker}</p>}
@@ -95,7 +102,8 @@ export default async function Page() {
         </section>
 
         {/* 컷온 — 옛 컷온 장의 구역을 빠짐없이 잇는다 */}
-        <section className="mx_sec4 hk_sec" id="cuton">
+        <p className="cd_part" id="cuton"><small>02</small>컷온</p>
+        <section className="mx_sec4 hk_sec">
           {ct.shell.kicker && <p className="mx_kicker hk_center">{ct.shell.kicker}</p>}
           <Statement desc={orUndefined(ct.shell.desc)}>
             {ct.shell.headLead + ct.shell.headStrong}

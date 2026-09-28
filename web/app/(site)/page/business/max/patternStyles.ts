@@ -106,7 +106,7 @@ export const PATTERN_CSS = `
 }
 `
 export const PATTERN_CSS2 = `
-/* ── HeroCycle: 머리말 화면이 몇 초마다 넘어간다 ── */
+/* ── HeroCycle: 머리말 화면 여럿 — 판 밑 탭을 눌러 바꾼다(자동 넘김은 2026-09-28 뺐다) ── */
 /* 비율은 HeroCycle 이 한 번만 정한다(가장 납작한 장 기준). 장마다 바꾸면 판이 출렁인다 — transition 도 없앴다. */
 #dvmax.mx_v4 .mx_cycle { position: relative; overflow: hidden; background: #fff; }
 /* contain — 잘라 채우면 표 화면의 좌측 라벨·앞 열이 날아간다. 툴바 밑에 붙이고 남는 아래는 흰 여백. */
@@ -114,6 +114,11 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_cycle img.on { opacity: 1; transform: scale(1); animation: mxKen 6s ease-out both; }
 @keyframes mxKen { from { transform: scale(1); } to { transform: scale(1.025); } }
 #dvmax.mx_v4 .mx_cycle_tag { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }
+#dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 0; }
+#dvmax.mx_v4 .mx_cycle_tabs button { padding: 8px 16px; border: 1px solid #d5dae0; border-radius: 999px; background: #fff; color: #4e5968; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+#dvmax.mx_v4 .mx_cycle_tabs button:hover { border-color: #191f28; color: #191f28; }
+#dvmax.mx_v4 .mx_cycle_tabs button.on { background: #191f28; border-color: #191f28; color: #fff; }
+#dvmax.mx_v4 .mx_cycle_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
 
 /* ── FlowBand: 처음 시안(max-page-draft.html)의 흐름 — 흰 바탕, 칸·상자는 maxStyles.ts 의 .mx_kpi·.mx_flow* ── */
 /* 2026-09-28 사용자: 어두운 그라데이션 판·흐린 방울은 「AI 느낌」이라 뺐다. 장 위쪽(인증 띠 밑)에 붙는다. */
