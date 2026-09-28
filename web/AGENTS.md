@@ -218,10 +218,10 @@
 ```bash
 python3 scripts/check-src.py      # 제일 먼저. CSS 문자열이 깨졌나
 python3 scripts/check-home.py     # 23/23   (:3400 이 떠 있어야 한다 — 다른 포트는 NEXT_ORIGIN)
-python3 scripts/check-header.py   # 107/107
+python3 scripts/check-header.py   # 99/99
 python3 scripts/check-a11y.py     # 323/323
 python3 scripts/check-assets.py   # 빠진 파일 0
-NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 110/110
+NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 98/98
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
 python3 scripts/check-types.py    # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버 없이)
