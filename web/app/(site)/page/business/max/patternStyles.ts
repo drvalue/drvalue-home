@@ -149,6 +149,28 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_fb_notes li em { flex: 0 0 auto; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; background: #d71920; color: #fff; }
 #dvmax.mx_v4 .mx_fb_link { position: relative; align-self: center; margin-top: 30px; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 6px, transparent 6px 12px); }
 #dvmax.mx_v4 .mx_fb_link::after { content: ''; position: absolute; right: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.3); }
+/* 단계 여섯을 한 번에(2026-09-28) — 넓은 화면 3열, 폰은 2열로 줄인다. */
+#dvmax.mx_v4 .mx_fb_head h2 { font-size: clamp(22px, 2.53vw, 35px); letter-spacing: -1px; }
+#dvmax.mx_v4 .mx_fb_stages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; counter-reset: none; }
+#dvmax.mx_v4 .mx_fb_stages .mx_fb_card { display: flex; flex-direction: column; }
+#dvmax.mx_v4 .mx_fb_card header small { font-variant-numeric: tabular-nums; }
+#dvmax.mx_v4 .mx_fb_sub { margin-top: auto; border-top: 1px dashed #d1d6db; background: #eef2f8; }
+#dvmax.mx_v4 .mx_fb_sub p { display: flex; align-items: baseline; gap: 10px; margin: 0; padding: 12px 22px 0; }
+#dvmax.mx_v4 .mx_fb_sub p small { font-size: 12px; font-weight: 700; color: #8b95a1; letter-spacing: .04em; }
+#dvmax.mx_v4 .mx_fb_sub p b { font-size: 16px; font-weight: 800; color: #191f28; }
+#dvmax.mx_v4 .mx_fb_sub .mx_fb_notes li { background: #fff; }
+@media (max-width: 900px) {
+  #dvmax.mx_v4 .mx_fb_stages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #dvmax.mx_v4 .mx_fb_stages .mx_fb_card { border-radius: 12px; box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+  #dvmax.mx_v4 .mx_fb_stages header { gap: 8px; padding: 10px 12px; }
+  #dvmax.mx_v4 .mx_fb_stages h3 { font-size: 15px; }
+  #dvmax.mx_v4 .mx_fb_stages .mx_fb_notes { gap: 4px; padding: 8px 10px 10px; }
+  #dvmax.mx_v4 .mx_fb_stages .mx_fb_notes li { gap: 6px; padding: 5px 8px; border-radius: 7px; font-size: 12px; line-height: 1.4; }
+  #dvmax.mx_v4 .mx_fb_stages .mx_fb_notes li em { font-size: 9px; padding: 1px 4px; border-radius: 4px; }
+  #dvmax.mx_v4 .mx_fb_sub p { gap: 6px; padding: 8px 12px 0; }
+  #dvmax.mx_v4 .mx_fb_sub p small { font-size: 10px; }
+  #dvmax.mx_v4 .mx_fb_sub p b { font-size: 13px; }
+}
 #dvmax.mx_v4 .mx_fb_kpi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 56px 0 0; padding: 0; list-style: none; }
 #dvmax.mx_v4 .mx_fb_kpi li { padding: 28px 26px 26px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); transition: background .25s, transform .25s; }
 #dvmax.mx_v4 .mx_fb_kpi li:hover { background: rgba(255,255,255,.12); transform: translateY(-3px); }

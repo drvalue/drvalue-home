@@ -74,6 +74,9 @@ export default async function Page() {
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
+        {/* 업종 공통 흐름을 업종 카드보다 위에(2026-09-28 사용자). */}
+        <FlowBand />
+
         <section className="mx_sec4 big" id="mx_body">
           {statement.kicker && <p className="mx_kicker hk_center">{statement.kicker}</p>}
           <Statement desc={orUndefined(statement.desc)}>
@@ -88,8 +91,6 @@ export default async function Page() {
               shot: cardShot(c.aiCard, MAX_HUB_DEFAULT.aiCard), url: c.aiCard.url },
           ]} />
         </section>
-
-        <FlowBand />
       </SolutionShell>
     </>
   )
