@@ -8,7 +8,7 @@ import { AF_DEMO } from './autoformContent'
  * 맺기 → 레코드 고르면 문서 생성. 단계가 켜지면 그 화면이 뜨고, 화면에 찍힌 값들이 라벨로
  * 하나씩 튀어나온다(라벨 글은 전부 그 화면에 있는 것 — autoformContent.ts).
  *
- * 「다시 보기」를 누를 때만 처음부터 돈다. 단계 단추를 누르면 그 단계로 바로 간다.
+ * 화면에 들어오면 한 번 돈다. 「다시 보기」로 되감는다. 단계 단추를 누르면 그 단계로 바로 간다.
  * 움직임을 줄인 사람과 스크립트가 없는 환경에는 마지막 단계(문서 생성)가 바로 보인다.
  */
 const HOLD_MS = 2600
@@ -18,6 +18,7 @@ export default function AutoformDemo() {
   const [cur, setCur] = useState(last)
   const [playing, setPlaying] = useState(false)
   const [tick, setTick] = useState(0)
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -32,13 +33,22 @@ export default function AutoformDemo() {
   }
   const pick = (i: number) => { clear(); setPlaying(false); setTick((t) => t + 1); setCur(i) }
 
-  // 화면에 들어와도 스스로 돌지 않는다 — 끝난 화면을 지우고 기다리게 하던 것(2026-09-28 사용자). 나갈 때 남은 타이머만 치운다.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => clear, [])
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const el = box.current
+    if (!el) return
+    const io = new IntersectionObserver((es) => {
+      if (es.some((e) => e.isIntersecting)) { io.disconnect(); play() }
+    }, { threshold: 0.35 })
+    io.observe(el)
+    return () => { io.disconnect(); clear() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const s = AF_DEMO.steps[cur]
   return (
-    <div className="af_demo">
+    <div className="af_demo" ref={box}>
       <ol className="af_steps" aria-label="단계">
         {AF_DEMO.steps.map((x, i) => (
           <li key={x.t}>

@@ -8,7 +8,7 @@ import { CD_STEPS } from './cadonContent'
  * 절곡 시뮬레이션 → 3D 되접기. 화면 네 장은 실제 실행 캡처(cadonContent.ts), 단계 이름과
  * 한 줄 설명만 우리 것이다. 화면이 바뀔 때 그 단계의 명령과 화면에 찍힌 값이 함께 뜬다.
  *
- * 「다시 보기」를 누를 때만 처음부터 돈다(단계당 2.6초). 단계를 누르면 그리로 간다.
+ * 화면에 들어오면 한 번 돈다(단계당 2.6초). 「다시 보기」로 되감는다. 단계를 누르면 그리로 간다.
  * 움직임을 줄인 사람에게는 끝 상태(마지막 단계·전 단계 완료)를 바로 보여 준다. 스크립트가 없어도
  * 끝 상태가 그려진다(기본값 = 완료).
  */
@@ -19,6 +19,7 @@ export default function CadonDemo() {
   const [cur, setCur] = useState(LAST)     // 보이는 화면
   const [done, setDone] = useState(LAST)   // 이 번호까지 완료 표시
   const [playing, setPlaying] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -33,13 +34,22 @@ export default function CadonDemo() {
   }
   const jump = (i: number) => { clear(); setPlaying(false); setCur(i); setDone(i) }
 
-  // 화면에 들어와도 스스로 돌지 않는다 — 끝난 화면을 지우고 기다리게 하던 것(2026-09-28 사용자). 나갈 때 남은 타이머만 치운다.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => clear, [])
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const el = box.current
+    if (!el) return
+    const io = new IntersectionObserver((es) => {
+      if (es.some((e) => e.isIntersecting)) { io.disconnect(); play() }
+    }, { threshold: 0.35 })
+    io.observe(el)
+    return () => { io.disconnect(); clear() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const s = CD_STEPS[cur]
   return (
-    <div className={`cd_demo${playing ? ' is-playing' : ''}`}>
+    <div className={`cd_demo${playing ? ' is-playing' : ''}`} ref={box}>
       <div className="cd_screen">
         <div className="cd_screen_bar"><i /><i /><i /><span>AutoCAD · 명령: {s.cmd}</span></div>
         <div className="cd_shots">

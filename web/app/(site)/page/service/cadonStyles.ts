@@ -71,8 +71,8 @@ export const CADON_CSS = `
 #dvmax.mx_v4 .cd_show_tabs button.on { color: #191f28; } #dvmax.mx_v4 .cd_show_tabs button.on span { color: #4e5968; }
 #dvmax.mx_v4 .cd_show_tabs button:hover { color: #4e5968; }
 #dvmax.mx_v4 .cd_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
-#dvmax.mx_v4 .cd_show_bar { display: block; height: 4px; border-radius: 999px; background: #e5e8eb; overflow: hidden; }
-#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { background: #191f28; }
+#dvmax.mx_v4 .cd_show_bar { display: block; height: 1px; border-radius: 0; background: #e5e8eb; }
+#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { height: 2px; background: #191f28; }
 
 @media (max-width: 900px) {
   #dvmax.mx_v4 .cd_demo { grid-template-columns: 1fr; gap: 16px; }
