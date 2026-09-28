@@ -62,16 +62,9 @@ export function Statement({ children, desc }: { children: string; desc?: string 
 
 export type Col = { t: string; d: string; href?: string; more?: string }
 
-/** 3열 카드의 아이콘 — 채널웍스 3열은 셋 다 같은 깃발 아이콘을 쓴다. 우리는 열마다 다른 획 하나. */
-const COL_ICONS = [
-  <svg key="a" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V5l6 3-6 3" /><path d="M5 5h12l-3 3 3 3H5" /></svg>,
-  <svg key="b" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2L20 9l-4 4 1 5.8-5-2.7-5 2.7 1-5.8-4-4 5.6-.8z" /></svg>,
-  <svg key="c" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></svg>,
-]
-
 /**
  * 3열 카드 — 채널웍스 「상담 혁신은 채널톡 / 업무 혁신은 채널웍스 / 진정한 All-as-one」 줄.
- * 아이콘 상자 · 제목(+ 링크면 ›) · 한 줄. 위쪽 굵은 막대(옛 꾸밈)는 사용자가 「이건 뭐하자는 거냐」고
+ * 제목(+ 링크면 ›) · 한 줄. 아이콘 상자는 2026-09-28 뺐다(뜻 없는 깃발·별·시계). 위쪽 굵은 막대(옛 꾸밈)는 사용자가 「이건 뭐하자는 거냐」고
  * 해서 뺐다(2026-09-22). 카드는 차례로 떠오른다.
  */
 export function Cols({ items, active = -1 }: { items: Col[]; active?: number }) {
@@ -81,7 +74,6 @@ export function Cols({ items, active = -1 }: { items: Col[]; active?: number }) 
         const dim = active >= 0 && i !== active
         const body = (
           <>
-            <i className="mx_cols_ic">{COL_ICONS[i % COL_ICONS.length]}</i>
             <b>{mark(c.t)}{c.href && <em className="mx_cols_go" aria-hidden="true">›</em>}</b>
             <span>{c.d}</span>
           </>

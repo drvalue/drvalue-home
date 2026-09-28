@@ -52,7 +52,8 @@ FLOORS: dict[str, tuple[int, int]] = {
     # 09-22 탭으로: 구역마다 있던 알약 탭 셋이 하나로 (2704→2664).
     # 2026-09-22 밤 두 레퍼런스(marketing·documents) 재작업: Tabbed·Group·CaseCard·MaxFlow 제거, Showcase 카드 한 장씩 → 글 1176, 그림 = 머리말 넘김 4 + Showcase 1 + FlowBand 0 + 인증 0.
     # 2026-09-28 사용자: 머리말 화면을 넷(탭 넘김)에서 대표 한 장으로 — 서로 다른 제품 화면을 섞으니 짜깁기 같다. 그림 5 → 4(실측).
-    "/page/business/max": (1176, 4),
+    # 같은 날 더: 허브 머리말에서 화면을 아예 뺐다 — PCB 장 대시보드와 겹치고, 허브의 「총괄」 그림은 흐름도가 맡는다. 그림 4 → 3(실측).
+    "/page/business/max": (1176, 3),
     # 2026-09-22 밤: FeatureBlock 지그재그 → ShowTabs 게이지 탭(한 번에 화면 한 장) + KPI 화면 제외(사용자 「우리 KPI 아니잖아」) → 1243/7.
     # 2026-09-22 밤 2차: FeatureShow — 기능 7개 전문(요점·콜아웃·칩) 복원, KPI 화면 제외 → 1497/7.
     "/page/business/max/pcb-mes": (1556, 7),

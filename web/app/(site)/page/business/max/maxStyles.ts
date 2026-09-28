@@ -624,9 +624,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
 #dvmax.mx_v4 .mx_state_p { text-align: center; max-width: 44em; margin: 18px auto 0; font-size: 17px; color: #333d4b; }
 #dvmax.mx_v4 .mx_cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin: 64px 0 0; padding: 0; list-style: none; }
+/* 3열 — 2026-09-28 사용자: 뜻 없는 아이콘(깃발·별·시계) 상자를 뺀다. 위 막대는 9-22 에 사용자가 거부했으니 선도 두지 않는다 — 제목과 한 줄만(c3 의 기능 3열). */
 #dvmax.mx_v4 .mx_cols > * { position: relative; display: block; text-decoration: none; color: inherit; }
-#dvmax.mx_v4 .mx_cols_ic { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 20px; border-radius: 14px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 4px 14px rgba(21,34,56,.06); font-style: normal; }
-#dvmax.mx_v4 .mx_cols_ic svg { width: 22px; height: 22px; fill: none; stroke: #191f28; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#dvmax.mx_v4 .mx_cols_ic { display: none; }
 #dvmax.mx_v4 .mx_cols > .dim { opacity: .55; }
 #dvmax.mx_v4 .mx_cols h3, #dvmax.mx_v4 .mx_cols b { position: relative; display: block; padding-right: 28px; font-size: 20px; font-weight: 700; line-height: 1.4; margin: 0; color: #191f28; word-break: keep-all; }
 #dvmax.mx_v4 .mx_cols .mx_cols_go { position: absolute; right: 0; top: 0; font-style: normal; font-weight: 400; color: #8b95a1; font-size: 22px; transition: transform .2s, color .2s; }

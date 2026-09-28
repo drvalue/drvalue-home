@@ -7,7 +7,7 @@ import { MENU_ITEMS } from '@/lib/menu'
 import { menuLabelOf } from '@/lib/menu-cms'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
-import { orUndefined, toHeroShots, toShot, type ShowcaseCardContent } from '../../pageContentParts'
+import { orUndefined, toShot, type ShowcaseCardContent } from '../../pageContentParts'
 import { MAX_HUB_DEFAULT, MAX_HUB_KEY } from './content'
 import { PCB_MES_DEFAULT, PCB_MES_KEY } from './pcb-mes/content'
 import { COSMETICS_MES_DEFAULT, COSMETICS_MES_KEY } from './cosmetics-mes/content'
@@ -57,25 +57,22 @@ export default async function Page() {
   const cos = (cosPage ?? COSMETICS_MES_DEFAULT).shell
   const ai = (aiPage ?? MES_AI_DEFAULT).shell
   const { shell, statement } = c
-  const hs = toHeroShots(c.heroShots)
-  const heroOne = hs && (Array.isArray(hs) ? hs : [hs]).slice(0, 1)
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
       <SolutionShell
         path={PATH}
         look="v4"
-        proof
+        proof="end"
         kicker={shell.kicker}
         kickerSub={shell.kickerSub}
         headLead={shell.headLead}
         headStrong={shell.headStrong}
         desc={shell.desc}
         heroLink={orUndefined(shell.heroLink)}
-        // 허브 머리말은 한 장만(2026-09-28 사용자: 서로 다른 제품 화면 넷을 탭으로 섞으니 「여기저기서 가져다 쓴」 것 같다).
-        // 관리 화면 목록의 첫 장이 대표 — 나머지 장은 제품군 카드와 하위 장이 보여 준다.
-        // 배열 한 장으로 넘겨야 판 없는 창(HeroCycle .flat)으로 그린다 — 한 장짜리 객체는 그라데이션 판(Plate)이 된다.
-        heroShot={heroOne}
+        // 허브 머리말에는 화면을 싣지 않는다(2026-09-28 사용자): 한 제품의 대시보드는 하위 장(PCB MES)에서 또 나오고,
+        // 넷을 섞으면 짜깁기 같다. 허브를 「총괄」하는 그림은 바로 밑 제조 흐름도(FlowBand)가 맡는다.
+        // 관리 화면의 머리말 화면(heroShots) 칸은 이 장에서 쓰지 않는다.
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >

@@ -99,8 +99,8 @@ export default function SolutionShell({
   lead?: Lead
   ctaTitle?: string
   ctaDesc?: string
-  /** 「인증·선정」 남색 판. 허브 장에만(사용자 2026-09-22: 「AI 솔루션 개발 페이지에서만」). */
-  proof?: boolean
+  /** 「인증·선정」 띠. 허브 장에만(사용자 2026-09-22). true = 머리말 바로 밑, 'end' = 문의 띠 바로 앞(M.AX 허브, 2026-09-28). */
+  proof?: boolean | 'end'
   /**
    * 「v4」 — 2026-09-22 사용자가 지정한 레퍼런스(channel.io/kr/works·alf-customer)대로.
    * 가운데 큰 제목 + 판 위 제품 화면(움직이는 배경·패럴랙스) + 인증 띠 + 큰 문장·3열 +
@@ -148,7 +148,7 @@ export default function SolutionShell({
             </div>
           </section>
 
-          {proof && <ProofBand />}
+          {proof === true && <ProofBand />}
 
           <section className="mx_sec mx_sec_body" id="mx_body">
             <div className="mx_wrap">
@@ -165,6 +165,9 @@ export default function SolutionShell({
               </div>
             </div>
           </section>
+
+          {/* 인증 띠를 문의 바로 앞에 — 믿을 근거를 본 뒤에 문의 단추(2026-09-28 사용자: 「어디에 배치할지」). */}
+          {proof === 'end' && <ProofBand />}
 
           <section className="mx_cta">
             <div className="mx_wrap">

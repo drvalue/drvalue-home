@@ -123,10 +123,10 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_plate.flat .mx_plate_in { margin: 0; padding: 0; min-height: 0; border-radius: 0; overflow: visible; }
 #dvmax.mx_v4 .mx_plate.flat .mx_plate_in::before, #dvmax.mx_v4 .mx_plate.flat .mx_plate_in::after { content: none; }
 #dvmax.mx_v4 .mx_plate.flat .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
-#dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 0; }
-#dvmax.mx_v4 .mx_cycle_tabs button { padding: 8px 16px; border: 1px solid #d5dae0; border-radius: 999px; background: #fff; color: #4e5968; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
-#dvmax.mx_v4 .mx_cycle_tabs button:hover { border-color: #191f28; color: #191f28; }
-#dvmax.mx_v4 .mx_cycle_tabs button.on { background: #191f28; border-color: #191f28; color: #fff; }
+#dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 24px; margin: 20px auto 0; width: max-content; max-width: 100%; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_cycle_tabs button { min-height: 44px; margin-bottom: -1px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: #8b95a1; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: color .2s, border-color .2s; }
+#dvmax.mx_v4 .mx_cycle_tabs button:hover { color: #4e5968; }
+#dvmax.mx_v4 .mx_cycle_tabs button.on { color: #191f28; border-bottom-color: #191f28; }
 #dvmax.mx_v4 .mx_cycle_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
 
 /* ── FlowBand: 처음 시안(max-page-draft.html)의 흐름 — 흰 바탕, 칸·상자는 maxStyles.ts 의 .mx_kpi·.mx_flow* ── */
@@ -174,52 +174,36 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_plate.narrow .mx_browser { max-width: 640px; margin: 0 auto; border-radius: 12px; }
 #dvmax.mx_v4 .mx_plate.narrow .mx_plate_in { padding-bottom: 48px; }
 
-/* ── FeatureShow: 게이지 레일 + 기능 전문 판(글 왼쪽 · 화면 오른쪽) ── */
-#dvmax.mx_v4 .mx_fs { margin: 40px 0 0; }
-#dvmax.mx_v4 .mx_fs_rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 18px; margin: 0 0 28px; padding: 0; list-style: none; }
-#dvmax.mx_v4 .mx_fs_rail button { display: block; width: 100%; text-align: left; padding: 0; border: 0; background: transparent; color: #8b95a1; cursor: pointer; transition: color .25s; }
-#dvmax.mx_v4 .mx_fs_rail button > b { display: block; margin-top: 14px; font-size: 17px; font-weight: 700; line-height: 1.3; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fs_rail button > b small { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: #b0b8c1; font-variant-numeric: tabular-nums; }
-#dvmax.mx_v4 .mx_fs_rail button.on { color: #191f28; } #dvmax.mx_v4 .mx_fs_rail button:hover { color: #4e5968; }
-#dvmax.mx_v4 .mx_fs_rail button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
-#dvmax.mx_v4 .mx_fs_panel { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; padding: 48px 56px; border-radius: 28px; overflow: hidden; min-height: 520px;
-  background: linear-gradient(135deg, #e9f1fc 0%, #d3e2f6 60%, #bcd2ef 100%); animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
-#dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; padding: 48px 56px; min-height: 0; }
-#dvmax.mx_v4 .mx_fs_panel.one .mx_fs_txt { padding-bottom: 0; }
-#dvmax.mx_v4 .mx_fs_txt { padding-bottom: 0; }
-#dvmax.mx_v4 .mx_fs_k { display: inline-block; margin: 0 0 16px; padding: 6px 14px; border-radius: 999px; background: #152238; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
-#dvmax.mx_v4 .mx_fs_txt h3 { margin: 0; font-size: clamp(16px, 1.6vw, 21px); line-height: 1.3; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
+/* ── FeatureShow: 기능 전문 줄(글 왼쪽 · 화면 오른쪽) ──
+   2026-09-28 사용자: 파란 그라데이션 판 › 흰 상자 요점 › 검은 알약 › 해시태그 칩 › 검은 콜아웃 = 카드 속 카드 속 카드.
+   레퍼런스(flex·업스테이지 기능 줄, Tulip 제품 장)처럼 흰 바탕에 구분선 한 줄로 나누고 겹을 전부 뺀다. 글·요점은 그대로. */
+#dvmax.mx_v4 .mx_fs { margin: 24px 0 0; }
+#dvmax.mx_v4 .mx_fs_panel { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; padding: 56px 0; border-top: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_fs_panel:last-child { border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; }
+#dvmax.mx_v4 .mx_fs_k { margin: 0 0 10px; font-size: 15px; font-weight: 600; color: #d71920; }
+#dvmax.mx_v4 .mx_fs_txt h3 { margin: 0; font-size: clamp(18px, 1.7vw, 23px); line-height: 1.35; letter-spacing: -.03em; font-weight: 700; color: #191f28; word-break: keep-all; }
 #dvmax.mx_v4 .mx_fs_txt h3 .mx_hl { color: #191f28; }
-#dvmax.mx_v4 .mx_fs_pts { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
-#dvmax.mx_v4 .mx_fs_pts li { position: relative; padding: 12px 16px 12px 40px; border-radius: 12px; background: rgba(255,255,255,.72); font-size: 16px; line-height: 1.6; color: #333d4b; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fs_pts li::before { content: ''; position: absolute; left: 16px; top: 19px; width: 12px; height: 12px; border-radius: 50%; background: #3e78c8; box-shadow: 0 0 0 4px rgba(62,120,200,.18); }
+#dvmax.mx_v4 .mx_fs_pts { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 8px; }
+#dvmax.mx_v4 .mx_fs_pts li { position: relative; padding-left: 16px; font-size: 16px; line-height: 1.65; color: #4e5968; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_pts li::before { content: ''; position: absolute; left: 2px; top: 11px; width: 5px; height: 5px; border-radius: 50%; background: #8b95a1; }
 #dvmax.mx_v4 .mx_fs_pts li .mx_hl { color: #191f28; }
-#dvmax.mx_v4 .mx_fs_callout { margin: 20px 0 0; padding: 18px 22px; border-radius: 14px; background: #152238; color: #fff; }
-#dvmax.mx_v4 .mx_fs_callout p { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.72); }
-#dvmax.mx_v4 .mx_fs_callout .mx_fs_res { margin-top: 6px; font-size: 15px; font-weight: 700; line-height: 1.35; color: #fff; word-break: keep-all; }
-#dvmax.mx_v4 .mx_fs_chips { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-#dvmax.mx_v4 .mx_fs_chips li { padding: 6px 12px; border-radius: 999px; background: rgba(21,34,56,.08); font-size: 13px; font-weight: 600; color: #4e5968; }
+#dvmax.mx_v4 .mx_fs_callout { margin: 20px 0 0; padding: 2px 0 2px 16px; border-left: 3px solid #d71920; }
+#dvmax.mx_v4 .mx_fs_callout p { margin: 0; font-size: 14px; line-height: 1.6; color: #6b7684; }
+#dvmax.mx_v4 .mx_fs_callout .mx_fs_res { margin-top: 4px; font-size: 16px; font-weight: 700; line-height: 1.45; color: #191f28; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_chips { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+#dvmax.mx_v4 .mx_fs_chips li { font-size: 14px; font-weight: 500; color: #8b95a1; }
 #dvmax.mx_v4 .mx_fs_fig { position: relative; margin: 0; }
-#dvmax.mx_v4 .mx_fs_fig .mx_browser { position: relative; width: 100%; border-radius: 12px; box-shadow: 0 24px 60px rgba(21,34,56,.22); }
-/* 화면 여럿일 때 ShotViewer 의 「N장 크게 보기」 — 프레임 밑은 판에 잘리므로 프레임 위 오른쪽에 띄운다. */
-#dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: absolute; right: 24px; top: -22px; z-index: 5; margin: 0; padding: 8px 14px; border-radius: 999px; background: #fff; box-shadow: 0 6px 18px rgba(21,34,56,.12); }
+#dvmax.mx_v4 .mx_fs_fig .mx_browser { position: relative; width: 100%; border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); will-change: auto; }
+/* 화면 여럿일 때 ShotViewer 의 「N장 크게 보기」 — 창 위에 떠 있던 흰 알약 → 창 밑 글자 단추. */
+#dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: static; display: flex; width: 100%; margin: 0; padding: 12px 16px; border: 0; border-top: 1px solid #eef0f2; border-radius: 0; background: #fafbfc; box-shadow: none; font-size: 14px; font-weight: 600; color: #4e5968; }
+#dvmax.mx_v4 .mx_fs_fig .dvshot_more:hover { color: #191f28; background: #f2f4f6; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_grid { display: block; }
-/* will-change: transform 은 fixed 자식(크게 보기 창)의 기준 상자가 된다 — 여기선 끈다. */
-#dvmax.mx_v4 .mx_fs_fig .mx_browser { will-change: auto; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot img { border: 0; border-radius: 0; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_frame { border-radius: 0; box-shadow: none; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot figcaption { display: none; }
 #dvmax.mx_v4 .mx_fs .mx_cols { margin-top: 24px; }
-/* 판을 넘기지 않고 전부 편다(2026-09-28) — 판 사이 간격, 넘길 때 쓰던 등장 효과는 끈다. */
-#dvmax.mx_v4 .mx_fs_panel + .mx_fs_panel { margin-top: 24px; }
-#dvmax.mx_v4 .mx_fs .mx_fs_panel { animation: none; }
-@media (hover: hover) { #dvmax.mx_v4 .mx_fs_rail:hover .hk_show_bar b { animation-play-state: paused; } }
 @media (max-width: 900px) {
-  #dvmax.mx_v4 .mx_fs_rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-  #dvmax.mx_v4 .mx_fs_rail button > b { font-size: 15px; }
-  #dvmax.mx_v4 .mx_fs_panel, #dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; gap: 20px; padding: 26px 20px; border-radius: 20px; min-height: 0; }
-  #dvmax.mx_v4 .mx_fs_fig { margin: 0; }
-  #dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: static; display: inline-flex; margin: 10px 0 0; box-shadow: none; background: transparent; padding: 8px 2px; }
+  #dvmax.mx_v4 .mx_fs_panel, #dvmax.mx_v4 .mx_fs_panel.one { grid-template-columns: 1fr; gap: 22px; padding: 36px 0; }
 }
-@media (prefers-reduced-motion: reduce) { #dvmax.mx_v4 .mx_fs_panel { animation: none; } }
 `
