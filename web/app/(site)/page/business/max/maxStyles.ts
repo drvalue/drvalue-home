@@ -637,6 +637,17 @@ export const PAGE_CSS = `
 #dvmax.mx_v4.mx_fam .mx_cycle img { object-fit: cover; object-position: left top; }
 /* 차례표(212px)가 본문을 좁힌다 — 1200px 아래는 숨긴다(흐름 6칸이 비좁아진다). 그 자리는 현재 위치 줄이 맡는다. */
 @media (max-width: 1200px) { #dvmax.mx_fam .mx_split { display: block; } #dvmax.mx_fam .mx_side { display: none; } }
+/* 2026-09-28 사용자: 「작은 빨간 글씨 빼고 강조할 걸 더 키워서 빨갛게」.
+   제목 위 15px 빨간 머리글(머리말·구역·제품 줄·기능)을 뺀다 — 제목과 같은 말을 한 번 더 하거나 위치 줄이 이미 말한다.
+   대신 제목 안의 강조(머리말 b · 제품 줄 b · 기능 제목 mx_hl)를 빨갛게, 제목을 한 단계 크게. */
+#dvmax.mx_v4.mx_fam :is(.mx_kicker, .mx_show_k, .mx_fs_k) { display: none; }
+#dvmax.mx_v4.mx_fam .mx_hero4 :is(h1, h2) { font-size: clamp(32px, 3.8vw, 52px); font-weight: 700; letter-spacing: -1.6px; line-height: 1.22; }
+#dvmax.mx_v4.mx_fam .mx_hero4 :is(h1, h2) b { color: #d71920; font-weight: 800; }
+#dvmax.mx_v4.mx_fam .mx_show_txt h3 { font-size: clamp(26px, 2.6vw, 36px); }
+#dvmax.mx_v4.mx_fam .mx_show_txt h3 b, #dvmax.mx_v4.mx_fam .mx_show_txt h3 .mx_hl { color: #d71920; }
+#dvmax.mx_v4.mx_fam .mx_fs_txt h3 { font-size: clamp(22px, 2.1vw, 30px); }
+#dvmax.mx_v4.mx_fam .mx_fs_txt h3 .mx_hl { color: #d71920; }
+#dvmax.mx_v4.mx_fam .mx_state { font-size: clamp(30px, 3.4vw, 46px); }
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
 #dvmax.mx_v4 .mx_state_p { text-align: center; max-width: 44em; margin: 18px auto 0; font-size: 17px; color: #333d4b; }
 #dvmax.mx_v4 .mx_cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin: 64px 0 0; padding: 0; list-style: none; }

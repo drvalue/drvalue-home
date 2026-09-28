@@ -111,6 +111,46 @@ const PAGE_CSS = `
 .dvnews .dvnews_row > a:hover .dvnews_arrow { color: #d71920; transform: translateX(3px); }
 .dvnews .dvnews_empty { color: #8b97a4; font-size: 16px; padding: 30px 0; margin: 0; }
 
+/* 2026-09-28 사용자 「고도몰 보면서 최근 소식 큼직하게」 — 왼쪽 큰 제목·밑줄 탭·전체 보기, 오른쪽 큰 글줄.
+   .dvnews_grid 아래로만 건다(증서 구역 .dvproof 가 탭 모양을 같이 쓴다). */
+.dvnews { padding: 120px 0; background: #fff; }
+.dvnews .dvnews_grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 72px; align-items: start; }
+.dvnews .dvnews_side { position: sticky; top: 120px; }
+.dvnews .dvnews_grid .dvnews_head { display: block; margin: 0 0 36px; }
+.dvnews .dvnews_grid .dvnews_head h3 { font-size: clamp(34px, 3.4vw, 48px); letter-spacing: -1.4px; line-height: 1.2; }
+.dvnews .dvnews_grid .dvnews_tabs { gap: 26px; margin: 0 0 40px; }
+.dvnews .dvnews_grid .dvnews_tab {
+  background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 0 0 8px;
+  font-size: 18px; font-weight: 700; color: #8b95a1; }
+.dvnews .dvnews_grid .dvnews_tab:hover { color: #191f28; }
+.dvnews .dvnews_grid .dvnews_tab.is-on { background: none; color: #191f28; border-bottom-color: #191f28; }
+.dvnews .dvnews_grid .dvnews_n, .dvnews .dvnews_grid .dvnews_tab.is-on .dvnews_n { background: none; padding: 0; margin-left: 5px; color: inherit; font-weight: 600; }
+.dvnews .dvnews_grid .dvnews_all {
+  display: inline-flex; padding: 14px 22px; border: 1px solid #d1d6db; border-radius: 10px; font-size: 16px; color: #191f28; }
+.dvnews .dvnews_grid .dvnews_all:hover { border-color: #191f28; color: #191f28; }
+.dvnews .dvnews_grid .dvnews_list { border-top: 2px solid #191f28; }
+.dvnews .dvnews_grid .dvnews_row > a {
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "b d" "t a" "s a";
+  row-gap: 10px; column-gap: 24px; padding: 30px 8px; }
+.dvnews .dvnews_grid .dvnews_row > a:hover { background: #f7f9fa; }
+.dvnews .dvnews_grid .dvnews_badge { grid-area: b; font-size: 13px; }
+.dvnews .dvnews_grid .dvnews_date { grid-area: d; font-size: 15px; }
+.dvnews .dvnews_grid .dvnews_row h4 {
+  grid-area: t; font-size: clamp(19px, 1.6vw, 23px); line-height: 1.4; letter-spacing: -.5px; white-space: normal; }
+.dvnews .dvnews_grid .dvnews_sum {
+  grid-area: s; margin: 0; font-size: 16px; line-height: 1.55; color: #6b7684;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dvnews .dvnews_grid .dvnews_arrow { grid-area: a; align-self: center; font-size: 22px; }
+@media (max-width: 900px) {
+  .dvnews { padding: 64px 0; }
+  .dvnews .dvnews_grid { grid-template-columns: 1fr; gap: 28px; }
+  .dvnews .dvnews_side { position: static; }
+  .dvnews .dvnews_grid .dvnews_head { margin-bottom: 20px; }
+  .dvnews .dvnews_grid .dvnews_tabs { margin-bottom: 20px; }
+  .dvnews .dvnews_grid .dvnews_row > a { padding: 22px 4px; grid-template-areas: "b d" "t a" "s a"; }
+  .dvnews .dvnews_grid .dvnews_sum { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
+
 /* 신뢰의 근거 카드 */
 .dvproof .dvproof_grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; list-style: none; padding: 0; margin: 0; }
@@ -253,22 +293,24 @@ export default async function Page() {
     ),
     news: (
       <section className="t_section dvnews" aria-labelledby="dvnews_h" key="news">
-        <div className="t_inner">
-          <div className="dvnews_head">
-            <div>
-              {c.news.kicker && <span className="dvnews_kicker">{c.news.kicker}</span>}
-              <h3 id="dvnews_h">{c.news.title}</h3>
-            </div>
-            {c.news.more.href && (
-              <a className="dvnews_all" href={c.news.more.href}>
-                {c.news.more.label}
-                <i className="fa fa-angle-right" />
-              </a>
-            )}
-          </div>
-          <div data-rv>
-            <HomeNews items={news} />
-          </div>
+        <div className="t_inner dvnews_grid" data-rv>
+          <HomeNews
+            items={news}
+            head={
+              <div className="dvnews_head">
+                {c.news.kicker && <span className="dvnews_kicker">{c.news.kicker}</span>}
+                <h3 id="dvnews_h">{c.news.title}</h3>
+              </div>
+            }
+            more={
+              c.news.more.href ? (
+                <a className="dvnews_all" href={c.news.more.href}>
+                  {c.news.more.label}
+                  <i className="fa fa-angle-right" />
+                </a>
+              ) : undefined
+            }
+          />
         </div>
       </section>
     ),
