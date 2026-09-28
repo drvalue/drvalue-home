@@ -244,4 +244,9 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_plate_in::before, #dvmax.mx_v4 .mx_plate_in::after { content: none; }
 #dvmax.mx_v4 .mx_plate .mx_blob, #dvmax.mx_v4 .mx_plate_tag { display: none; }
 #dvmax.mx_v4 .mx_plate .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
+/* 제목 줄바꿈 — 낱말(가운뎃점 묶음) 중간이나 「·」 앞에서 끊기지 않게 균형 줄바꿈. 전역 overflow-wrap: anywhere 는 칸보다 긴 낱말만을 위한 것. */
+#dvmax.mx_v4 :is(.mx_hero4 :is(h1, h2), .mx_state, .mx_show_txt h3, .mx_fs_txt h3, .mx_fcard_txt h3) { text-wrap: balance; overflow-wrap: normal; }
+#dvmax.mx_v4 .mx_fb .mx_state_p { margin-bottom: 32px; }
+/* 폰: 구역 제목이 그 밑 판 제목보다 작아지지 않게. */
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_state { font-size: 24px; } #dvmax.mx_v4 .mx_show_row .mx_show_txt h3 { font-size: 20px; } }
 `

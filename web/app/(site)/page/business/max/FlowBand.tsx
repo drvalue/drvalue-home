@@ -19,8 +19,10 @@ export default function FlowBand() {
   return (
     <section className="mx_fb">
       <div className="mx_wrap">
-        <h2 className="mx_sec_title">MES 공통 프로세스</h2>
-        <p className="mx_sec_desc">업종이 달라도 제조의 흐름은 같습니다. M.AX는 아래 전 과정을 하나의 데이터 흐름으로 연결합니다.</p>
+        {/* 제목은 다른 구역과 같은 규칙(빨간 머리 글 + mx_state) — 이 구역만 굵기·크기가 달랐다(2026-09-28 검수). */}
+        <p className="mx_kicker">공통 흐름</p>
+        <h2 className="mx_state">MES 공통 프로세스</h2>
+        <p className="mx_state_p">업종이 달라도 제조의 흐름은 같습니다. M.AX는 아래 전 과정을 하나의 데이터 흐름으로 연결합니다.</p>
 
         <div className="mx_kpi" role="group" aria-label="KPI 분석">
           <div className="mx_kpi_tag">KPI</div>
