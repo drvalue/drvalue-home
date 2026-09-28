@@ -6,33 +6,37 @@
 export const PATTERN_CSS = `
 /* ── Showcase: 알약 탭 줄 + 큰 카드 + ‹ › ── */
 #dvmax.mx_v4 .mx_show { margin: 40px 0 0; }
-#dvmax.mx_v4 .mx_show_tabs { display: flex; justify-content: center; gap: 4px; margin: 0 auto 22px; padding: 6px; width: max-content; max-width: 100%; border-radius: 999px; background: #f1efeb; overflow-x: auto; scrollbar-width: none; }
+/* 제품군 탭 — 베이지 캡슐 속 알약 → 밑줄 탭(2026-09-28, 레퍼런스: 채널톡·Tulip 의 누르는 탭). */
+#dvmax.mx_v4 .mx_show_tabs { display: flex; justify-content: center; gap: 28px; margin: 0 auto 36px; padding: 0; width: max-content; max-width: 100%; border-bottom: 1px solid #e5e8eb; overflow-x: auto; scrollbar-width: none; }
 #dvmax.mx_v4 .mx_show_tabs::-webkit-scrollbar { display: none; }
-#dvmax.mx_v4 .mx_show_tabs button { flex: 0 0 auto; min-height: 46px; padding: 0 26px; border: 0; border-radius: 999px; background: transparent; color: #4e5968; font-size: 16px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .25s, color .25s; }
+#dvmax.mx_v4 .mx_show_tabs button { flex: 0 0 auto; min-height: 48px; padding: 0 2px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: #8b95a1; font-size: 17px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: color .2s, border-color .2s; }
 #dvmax.mx_v4 .mx_show_tabs button:hover { color: #191f28; }
-#dvmax.mx_v4 .mx_show_tabs button.on { background: #191f28; color: #fff; }
+#dvmax.mx_v4 .mx_show_tabs button.on { color: #191f28; border-bottom-color: #191f28; }
 #dvmax.mx_v4 .mx_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 2px; }
 #dvmax.mx_v4 .mx_show_stage { position: relative; }
 #dvmax.mx_v4 .mx_show_card { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: center; min-height: 0; padding: 8px 72px; color: #191f28;
   animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
 /* 2026-09-28 사용자: 카드 속 카드 — 틴트 판·점 무늬를 빼고 글과 창을 흰 바탕에 바로 둔다. */
 #dvmax.mx_v4 .mx_show_txt { position: relative; z-index: 2; }
-#dvmax.mx_v4 .mx_show_k { display: inline-block; margin: 0 0 18px; padding: 6px 14px; border-radius: 999px; background: #152238; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+#dvmax.mx_v4 .mx_show_k { display: block; margin: 0 0 12px; padding: 0; border-radius: 0; background: none; color: #d71920; font-size: 15px; font-weight: 600; letter-spacing: 0; }
 #dvmax.mx_v4 .mx_show_txt h3 { margin: 0; font-size: clamp(28px, 3vw, 40px); line-height: 1.28; letter-spacing: -.03em; font-weight: 600; color: #191f28; word-break: keep-all; }
 #dvmax.mx_v4 .mx_show_txt h3 b { font-weight: 600; color: #191f28; }
 #dvmax.mx_v4 .mx_show_txt h3 .mx_hl { color: #191f28; }
 #dvmax.mx_v4 .mx_show_txt > p:not(.mx_show_k) { margin: 18px 0 0; font-size: 18px; line-height: 1.7; color: #4e5968; max-width: 30em; word-break: keep-all; }
-#dvmax.mx_v4 .mx_show_more { display: inline-flex; align-items: center; gap: 6px; margin-top: 28px; min-height: 48px; padding: 0 22px; border-radius: 12px; background: #fff; box-shadow: 0 6px 20px rgba(21,34,56,.10); font-size: 16px; font-weight: 700; color: #191f28; text-decoration: none; }
+/* 「자세히 보기」 — 흰 바탕 위에 떠 있던 그림자 카드 → 테두리 버튼(머리말 보조 버튼과 같은 모양). */
+#dvmax.mx_v4 .mx_show_more { display: inline-flex; align-items: center; gap: 6px; margin-top: 28px; min-height: 44px; padding: 0 18px; border: 1px solid #d1d6db; border-radius: 10px; background: #fff; font-size: 15px; font-weight: 600; color: #191f28; text-decoration: none; transition: background .15s, border-color .15s; }
+#dvmax.mx_v4 .mx_show_more:hover { background: #f2f4f6; border-color: #b0b8c1; }
 #dvmax.mx_v4 .mx_show_more i { font-style: normal; font-size: 20px; line-height: 1; transition: transform .2s; }
 #dvmax.mx_v4 .mx_show_more:hover i { transform: translateX(3px); }
 #dvmax.mx_v4 .mx_show_fig { position: relative; z-index: 1; margin: 0; }
 #dvmax.mx_v4 .mx_show_fig .mx_browser { position: relative; width: 100%; border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
-#dvmax.mx_v4 .mx_show_arr { position: absolute; top: 50%; z-index: 4; width: 48px; height: 48px; margin-top: -24px; border: 0; border-radius: 50%; background: rgba(255,255,255,.7); backdrop-filter: blur(8px); color: #191f28; box-shadow: 0 6px 20px rgba(21,34,56,.12); cursor: pointer; display: grid; place-items: center; transition: background .2s, transform .2s; }
+/* 좌우 화살표 — 흐림 유리 원 → 흰 원 + 1px 테두리. 점(dots)은 탭과 같은 말이라 끈다. */
+#dvmax.mx_v4 .mx_show_arr { position: absolute; top: 50%; z-index: 4; width: 44px; height: 44px; margin-top: -22px; border: 1px solid #e5e8eb; border-radius: 50%; background: #fff; color: #191f28; box-shadow: none; cursor: pointer; display: grid; place-items: center; transition: background .15s, border-color .15s; }
 #dvmax.mx_v4 .mx_show_arr svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#dvmax.mx_v4 .mx_show_arr:hover { background: #fff; transform: scale(1.06); }
+#dvmax.mx_v4 .mx_show_arr:hover { background: #f2f4f6; border-color: #d1d6db; }
 #dvmax.mx_v4 .mx_show_arr:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
-#dvmax.mx_v4 .mx_show_arr.prev { left: 20px; } #dvmax.mx_v4 .mx_show_arr.next { right: 20px; }
-#dvmax.mx_v4 .mx_show_dots { display: flex; justify-content: center; gap: 8px; margin: 18px 0 0; }
+#dvmax.mx_v4 .mx_show_arr.prev { left: 0; } #dvmax.mx_v4 .mx_show_arr.next { right: 0; }
+#dvmax.mx_v4 .mx_show_dots { display: none; justify-content: center; gap: 8px; margin: 18px 0 0; }
 #dvmax.mx_v4 .mx_show_dots i { width: 8px; height: 8px; border-radius: 50%; background: #d5dae0; transition: background .25s, transform .25s; }
 #dvmax.mx_v4 .mx_show_dots i.on { background: #191f28; transform: scale(1.25); }
 

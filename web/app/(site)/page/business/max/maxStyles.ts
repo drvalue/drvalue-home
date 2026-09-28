@@ -541,15 +541,16 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_wrap { max-width: 1265px; padding: 0 28px; }
 #dvmax.mx_v4 .mx_v4_top { padding-top: 80px; }
 /* 단추 — 알약 */
-#dvmax.mx_v4 .mx_pill { display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 24px; border: 0; border-radius: 999px;
+/* 버튼 — 2026-09-28 사용자 「버튼 디테일」: 알약(999px) → 모서리 10px. 레퍼런스(업스테이지 8 · flex 10 · Tulip 4)에 알약 버튼이 드물다. */
+#dvmax.mx_v4 .mx_pill { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 10px;
   background: #191f28; color: #fff; font: inherit; font-weight: 600; font-size: 17px; cursor: pointer; text-decoration: none;
   transition: transform .16s cubic-bezier(.2,.7,.2,1), background-color .16s, color .16s; }
 #dvmax.mx_v4 .mx_pill::after { content: '\\203A'; font-size: 20px; line-height: 1; }
 #dvmax.mx_v4 .mx_pill.red { background: #d71920; }
-#dvmax.mx_v4 .mx_pill.o { background: transparent; color: #191f28; border: 1px solid #191f28; font-weight: 500; }
-#dvmax.mx_v4 .mx_pill:hover { transform: translateY(-1px); }
+#dvmax.mx_v4 .mx_pill.o { background: #fff; color: #191f28; border: 1px solid #d1d6db; font-weight: 600; }
+#dvmax.mx_v4 .mx_pill:hover { transform: none; }
 #dvmax.mx_v4 .mx_pill.red:hover { background: #b3141a; }
-#dvmax.mx_v4 .mx_pill.o:hover { background: #191f28; color: #fff; }
+#dvmax.mx_v4 .mx_pill.o:hover { background: #f2f4f6; border-color: #b0b8c1; }
 /* 머리말 — 가운데. 뒤에 빛 하나 */
 #dvmax.mx_v4 .mx_hero4 { position: relative; overflow: hidden; padding: 96px 0 0; text-align: center; }
 /* 판이 없는 장(화면 없는 제품)은 밑 여백을 판이 못 맡는다 — 단추가 인증 띠에 붙었다(사용자 지적). */
@@ -718,7 +719,7 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_cta h3 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.3; letter-spacing: -.88px; font-weight: 700; margin: 0; }
 #dvmax.mx_v4 .mx_cta p { color: #62707e; font-size: 17px; margin: 14px 0 30px; }
 #dvmax.mx_v4 .mx_cta .mx_pill { position: relative; margin: 0; }
-#dvmax.mx_v4 .mx_cta .mx_pill::before { content: ''; position: absolute; inset: -6px; border-radius: 999px; border: 2px solid rgba(215,25,32,.5); animation: mxRing2 2.4s ease-out infinite; }
+/* 번지는 고리는 뺐다(2026-09-28) — 계속 도는 장식 움직임. */
 @keyframes mxRing2 { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 @media (max-width: 900px) {
   #dvmax.mx_v4 .mx_hero4 { padding-top: 56px; }
