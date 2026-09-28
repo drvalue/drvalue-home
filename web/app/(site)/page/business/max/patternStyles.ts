@@ -209,7 +209,7 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs_pts li .mx_hl { color: #191f28; }
 #dvmax.mx_v4 .mx_fs_callout { margin: 20px 0 0; padding: 18px 22px; border-radius: 14px; background: #152238; color: #fff; }
 #dvmax.mx_v4 .mx_fs_callout p { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.72); }
-#dvmax.mx_v4 .mx_fs_callout .mx_fs_res { margin-top: 6px; font-size: 20px; font-weight: 700; line-height: 1.35; color: #fff; word-break: keep-all; }
+#dvmax.mx_v4 .mx_fs_callout .mx_fs_res { margin-top: 6px; font-size: 15px; font-weight: 700; line-height: 1.35; color: #fff; word-break: keep-all; }
 #dvmax.mx_v4 .mx_fs_chips { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 #dvmax.mx_v4 .mx_fs_chips li { padding: 6px 12px; border-radius: 999px; background: rgba(21,34,56,.08); font-size: 13px; font-weight: 600; color: #4e5968; }
 #dvmax.mx_v4 .mx_fs_fig { position: relative; margin: 0; }
