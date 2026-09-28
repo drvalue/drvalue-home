@@ -29,9 +29,9 @@ export const HOME_DEFAULT: HomeContent = {
     background: null,
   },
   sections: [
-    { section: 'proof', visible: true },
-    { section: 'biz', visible: true },
     { section: 'news', visible: true },
+    { section: 'biz', visible: true },
+    { section: 'proof', visible: false },
     { section: 'cta', visible: true },
   ],
   proof: {
@@ -42,7 +42,7 @@ export const HOME_DEFAULT: HomeContent = {
   },
   biz: {
     kicker: 'BUSINESS',
-    title: '무엇을 만드는가',
+    title: '사업 분야',
     cards: [
       {
         href: '/page/business/max',
@@ -71,8 +71,8 @@ export const HOME_DEFAULT: HomeContent = {
     ],
   },
   news: {
-    kicker: 'NEWS',
-    title: '디알밸류의 최근 소식',
+    kicker: '',
+    title: '최근 소식',
     more: { label: '전체 보기', href: '/page/support/notice' },
   },
   cta: {

@@ -4,6 +4,8 @@ import { PostTranslationEntity } from '../../../common/entity/post-translation.e
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
 import { sanitizeBody } from '../../../common/html/sanitize-body';
+import { postChangePaths } from '../../../common/indexnow/indexnow-urls';
+import { IndexNowService } from '../../../common/indexnow/indexnow.service';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
@@ -56,6 +58,7 @@ export class AdminPostDefaultService {
     private readonly postFileDefaultRepository: PostFileDefaultRepository,
     private readonly fileDefaultRepository: FileDefaultRepository,
     private readonly revisionService: RevisionService,
+    private readonly indexNowService: IndexNowService,
   ) {}
 
   /** 이 범위가 이 게시판을 만질 수 있나. 못 만지면 403. */
@@ -163,6 +166,7 @@ export class AdminPostDefaultService {
       },
       ctx,
     );
+    this.indexNowService.submitAfterCommit(ctx, postChangePaths(null, after));
     return after;
   }
 
@@ -226,6 +230,8 @@ export class AdminPostDefaultService {
       },
       ctx,
     );
+    // 공개 글이 내려가거나 주소가 바뀌면 옛 주소도 알린다(postChangePaths).
+    this.indexNowService.submitAfterCommit(ctx, postChangePaths(before, after));
     return after;
   }
 
@@ -251,6 +257,8 @@ export class AdminPostDefaultService {
       },
       ctx,
     );
+    // 지운 공개 글의 주소 — 검색엔진이 404 를 보고 뺀다.
+    this.indexNowService.submitAfterCommit(ctx, postChangePaths(before, null));
   }
 
   /**
@@ -346,6 +354,11 @@ export class AdminPostDefaultService {
         after,
       },
       ctx,
+    );
+    // 변경 이력이 연 트랜잭션이 커밋된 뒤에 보낸다(onCommit 이 바깥 트랜잭션을 기다린다).
+    this.indexNowService.submitAfterCommit(
+      ctx,
+      postChangePaths(current, after),
     );
     return { data: after, warnings };
   }

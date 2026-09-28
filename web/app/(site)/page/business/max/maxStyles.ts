@@ -213,8 +213,8 @@ export const PAGE_CSS = `
 }
 #dvmax .dvshot_zoom {
   position: absolute; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(21,34,56,.82); color: #fff; font-size: 13px; font-weight: 700;
-  padding: 7px 13px; border-radius: 100px; opacity: 0; transition: opacity .18s; }
+  background: #fff; color: #191f28; font-size: 13px; font-weight: 600; border: 1px solid #d1d6db;
+  padding: 6px 10px; border-radius: 8px; opacity: 0; transition: opacity .18s; } /* 검은 알약 → 흰 네모(2026-09-28 검수) */
 #dvmax .dvshot_open:hover .dvshot_zoom,
 #dvmax .dvshot_open:focus-visible .dvshot_zoom { opacity: 1; }
 
@@ -541,20 +541,22 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_wrap { max-width: 1265px; padding: 0 28px; }
 #dvmax.mx_v4 .mx_v4_top { padding-top: 80px; }
 /* 단추 — 알약 */
-#dvmax.mx_v4 .mx_pill { display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 24px; border: 0; border-radius: 999px;
+/* 버튼 — 2026-09-28 사용자 「버튼 디테일」: 알약(999px) → 모서리 10px. 레퍼런스(업스테이지 8 · flex 10 · Tulip 4)에 알약 버튼이 드물다. */
+#dvmax.mx_v4 .mx_pill { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 10px;
   background: #191f28; color: #fff; font: inherit; font-weight: 600; font-size: 17px; cursor: pointer; text-decoration: none;
   transition: transform .16s cubic-bezier(.2,.7,.2,1), background-color .16s, color .16s; }
 #dvmax.mx_v4 .mx_pill::after { content: '\\203A'; font-size: 20px; line-height: 1; }
 #dvmax.mx_v4 .mx_pill.red { background: #d71920; }
-#dvmax.mx_v4 .mx_pill.o { background: transparent; color: #191f28; border: 1px solid #191f28; font-weight: 500; }
-#dvmax.mx_v4 .mx_pill:hover { transform: translateY(-1px); }
+#dvmax.mx_v4 .mx_pill.o { background: #fff; color: #191f28; border: 1px solid #d1d6db; font-weight: 600; }
+#dvmax.mx_v4 .mx_pill:hover { transform: none; }
 #dvmax.mx_v4 .mx_pill.red:hover { background: #b3141a; }
-#dvmax.mx_v4 .mx_pill.o:hover { background: #191f28; color: #fff; }
+#dvmax.mx_v4 .mx_pill.o:hover { background: #f2f4f6; border-color: #b0b8c1; }
 /* 머리말 — 가운데. 뒤에 빛 하나 */
 #dvmax.mx_v4 .mx_hero4 { position: relative; overflow: hidden; padding: 96px 0 0; text-align: center; }
 /* 판이 없는 장(화면 없는 제품)은 밑 여백을 판이 못 맡는다 — 단추가 인증 띠에 붙었다(사용자 지적). */
 #dvmax.mx_v4 .mx_hero4 { padding-bottom: 72px; }
-#dvmax.mx_v4 .mx_glow { position: absolute; left: 50%; top: -140px; width: 900px; height: 520px; transform: translateX(-50%); pointer-events: none; border-radius: 50%;
+/* 머리말 뒤 분홍·파랑 번짐 — 2026-09-28 사용자·블라인드 비평이 「AI 느낌」으로 짚어 끈다. */
+#dvmax.mx_v4 .mx_glow { display: none; position: absolute; left: 50%; top: -140px; width: 900px; height: 520px; transform: translateX(-50%); pointer-events: none; border-radius: 50%;
   background: radial-gradient(closest-side, rgba(62,120,200,.22), rgba(215,25,32,.10) 55%, transparent 75%); filter: blur(30px); animation: mxGlow 9s ease-in-out infinite alternate; }
 @keyframes mxGlow { from { transform: translateX(-56%) scale(1); } to { transform: translateX(-44%) scale(1.12); } }
 #dvmax.mx_v4 .mx_hero4 .mx_wrap { position: relative; }
@@ -605,22 +607,16 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 [data-rv="pop"].rv-wait > * { opacity: 0; transform: none; transition: none; animation: none; }
 #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > * { opacity: 1; transition: none; animation: mxPop .55s cubic-bezier(.22,.68,.24,1) both; animation-delay: calc(var(--i, 0) * .08s); }
 #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > .mx_ring, #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > * > .mx_ring { animation: mxPop .55s cubic-bezier(.22,.68,.24,1) both, mxRing .9s ease-out both; animation-delay: calc(var(--i, 0) * .08s), calc(var(--i, 0) * .08s + .25s); }
-/* 인증·선정 띠 */
-#dvmax.mx_v4 .mx_proof { position: relative; overflow: hidden; padding: 88px 0 96px; color: #fff; background: radial-gradient(120% 90% at 85% 0%, #24365a 0%, #152238 55%, #0f1a2c 100%); }
-#dvmax.mx_v4 .mx_proof .mx_blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; pointer-events: none; }
-#dvmax.mx_v4 .mx_proof .mx_b1 { width: 520px; height: 520px; left: -160px; top: -200px; background: #2a4a86; }
-#dvmax.mx_v4 .mx_proof .mx_b2 { width: 420px; height: 420px; right: -120px; bottom: -220px; background: #7a1d24; }
-#dvmax.mx_v4 .mx_proof .mx_wrap { position: relative; text-align: center; }
-#dvmax.mx_v4 .mx_proof_pill { display: inline-block; margin: 0 0 18px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); font-size: 13px; font-weight: 700; letter-spacing: .02em; }
-#dvmax.mx_v4 .mx_proof_h { margin: 0 0 44px; font-size: clamp(26px, 3vw, 40px); font-weight: 700; line-height: 1.3; letter-spacing: -.02em; }
-#dvmax.mx_v4 .mx_proof ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; text-align: left; }
-#dvmax.mx_v4 .mx_proof li { padding: 28px 26px 26px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); transition: background .25s, transform .25s; }
-#dvmax.mx_v4 .mx_proof li:hover { background: rgba(255,255,255,.12); transform: translateY(-3px); }
-#dvmax.mx_v4 .mx_proof_ic { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 22px; border-radius: 12px; background: rgba(255,255,255,.10); }
-#dvmax.mx_v4 .mx_proof_ic svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#dvmax.mx_v4 .mx_proof li b { display: block; font-size: clamp(22px, 2vw, 26px); font-weight: 800; line-height: 1.15; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
-#dvmax.mx_v4 .mx_proof li b i { font-style: normal; color: rgba(255,255,255,.45); margin: 0 4px; }
-#dvmax.mx_v4 .mx_proof li > span:last-child { display: block; margin-top: 10px; font-size: 14px; line-height: 1.55; color: rgba(255,255,255,.72); word-break: keep-all; }
+/* 인증·선정 띠 — 2026-09-28 사용자: 남색 그라데이션·빛 번짐·유리 카드는 「AI 느낌」. 옅은 회색 한 줄에 칸만 세로선으로 나눈다
+   (블라인드 비평 두 명이 같은 자리를 첫째로 짚었다). 9-22 의 어두운 판(channel.io/documents 참고)을 이것이 대신한다. */
+#dvmax.mx_v4 .mx_proof { padding: 44px 0 48px; background: #f7f8fa; border-top: 1px solid #eceef1; border-bottom: 1px solid #eceef1; color: #191f28; }
+#dvmax.mx_v4 .mx_proof_h { margin: 0 0 22px; font-size: 15px; font-weight: 600; line-height: 1.4; color: #6b7684; letter-spacing: 0; }
+#dvmax.mx_v4 .mx_proof ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+#dvmax.mx_v4 .mx_proof li { padding: 2px 28px; border-left: 1px solid #e1e5ea; }
+#dvmax.mx_v4 .mx_proof li:first-child { padding-left: 0; border-left: 0; }
+#dvmax.mx_v4 .mx_proof li b { display: block; font-size: clamp(20px, 1.8vw, 24px); font-weight: 700; line-height: 1.2; color: #191f28; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#dvmax.mx_v4 .mx_proof li b i { font-style: normal; color: #b0b8c1; margin: 0 4px; }
+#dvmax.mx_v4 .mx_proof li > span { display: block; margin-top: 8px; font-size: 14px; line-height: 1.55; color: #6b7684; word-break: keep-all; }
 /* 구역 · 큰 문장 · 3열 */
 #dvmax.mx_v4 .mx_sec_body { padding: 0; }
 #dvmax.mx_v4 .mx_sec4 { padding: 60px 0; }
@@ -628,9 +624,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
 #dvmax.mx_v4 .mx_state_p { text-align: center; max-width: 44em; margin: 18px auto 0; font-size: 17px; color: #333d4b; }
 #dvmax.mx_v4 .mx_cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin: 64px 0 0; padding: 0; list-style: none; }
+/* 3열 — 2026-09-28 사용자: 뜻 없는 아이콘(깃발·별·시계) 상자를 뺀다. 위 막대는 9-22 에 사용자가 거부했으니 선도 두지 않는다 — 제목과 한 줄만(c3 의 기능 3열). */
 #dvmax.mx_v4 .mx_cols > * { position: relative; display: block; text-decoration: none; color: inherit; }
-#dvmax.mx_v4 .mx_cols_ic { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 20px; border-radius: 14px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 4px 14px rgba(21,34,56,.06); font-style: normal; }
-#dvmax.mx_v4 .mx_cols_ic svg { width: 22px; height: 22px; fill: none; stroke: #191f28; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#dvmax.mx_v4 .mx_cols_ic { display: none; }
 #dvmax.mx_v4 .mx_cols > .dim { opacity: .55; }
 #dvmax.mx_v4 .mx_cols h3, #dvmax.mx_v4 .mx_cols b { position: relative; display: block; padding-right: 28px; font-size: 20px; font-weight: 700; line-height: 1.4; margin: 0; color: #191f28; word-break: keep-all; }
 #dvmax.mx_v4 .mx_cols .mx_cols_go { position: absolute; right: 0; top: 0; font-style: normal; font-weight: 400; color: #8b95a1; font-size: 22px; transition: transform .2s, color .2s; }
@@ -723,14 +719,14 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_cta h3 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.3; letter-spacing: -.88px; font-weight: 700; margin: 0; }
 #dvmax.mx_v4 .mx_cta p { color: #62707e; font-size: 17px; margin: 14px 0 30px; }
 #dvmax.mx_v4 .mx_cta .mx_pill { position: relative; margin: 0; }
-#dvmax.mx_v4 .mx_cta .mx_pill::before { content: ''; position: absolute; inset: -6px; border-radius: 999px; border: 2px solid rgba(215,25,32,.5); animation: mxRing2 2.4s ease-out infinite; }
+/* 번지는 고리는 뺐다(2026-09-28) — 계속 도는 장식 움직임. */
 @keyframes mxRing2 { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 @media (max-width: 900px) {
   #dvmax.mx_v4 .mx_hero4 { padding-top: 56px; }
   #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) { padding-bottom: 48px; }
   #dvmax.mx_v4 .mx_plate_in { padding: 60px 20px 0; min-height: 0; }
   #dvmax.mx_v4 .mx_plate_tag { left: 20px; top: 16px; }
-  #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr 1fr; } #dvmax.mx_v4 .mx_gal, #dvmax.mx_v4 .mx_road { grid-template-columns: 1fr; }
+  #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr 1fr; row-gap: 22px; } #dvmax.mx_v4 .mx_proof li:nth-child(odd) { padding-left: 0; border-left: 0; } #dvmax.mx_v4 .mx_gal, #dvmax.mx_v4 .mx_road { grid-template-columns: 1fr; }
   #dvmax.mx_v4 .mx_cols, #dvmax.mx_v4 .mx_ghead, #dvmax.mx_v4 .mx_case { grid-template-columns: 1fr; }
   #dvmax.mx_v4 .mx_cols { gap: 32px; margin-top: 40px; }
   #dvmax.mx_v4 .mx_case_k { min-height: 0; }
@@ -742,7 +738,7 @@ export const PAGE_CSS = `
   /* 탭 다섯이 한 줄에 다 보이게 — 잘리면 뒤에 더 있는지 모른다(390 실측: 셋만 보임). */
   #dvmax.mx_v4 .mx_tabs { display: flex; width: 100%; padding: 3px; gap: 0; }
   #dvmax.mx_v4 .mx_tabs button { flex: 1 1 0; padding: 8px 4px; font-size: 13px; min-height: 44px; white-space: nowrap; }
-  #dvmax.mx_v4 .mx_proof { padding: 56px 0 64px; } #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr; }
+  #dvmax.mx_v4 .mx_proof { padding: 32px 0 36px; } #dvmax.mx_v4 .mx_proof li { padding-right: 12px; } #dvmax.mx_v4 .mx_proof li:nth-child(even) { padding-left: 16px; } #dvmax.mx_v4 .mx_proof li b { font-size: 18px; }
   #dvmax.mx_v4 .mx_proof li b { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -758,7 +754,7 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .hk_sec .mx_state_p { margin-bottom: 40px; }
 /* 대화 시연 판 — 밝은 배경 그림(사용자 제공) 위에 창 하나 */
 #dvmax.mx_v4 .hk_plate { position: relative; border-radius: 25px; padding: 48px; overflow: hidden;
-  background: #e9eef7 url('/bg/hangeon-light.jpg') center / cover no-repeat; }
+  background: #f5f6f8; } /* 흐린 하늘 사진 → 단색(2026-09-28, 결정 0018) */
 #dvmax.mx_v4 .hk_demo { max-width: 900px; margin: 0 auto; }
 #dvmax.mx_v4 .hk_win { background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(21,34,56,.22); overflow: hidden; }
 #dvmax.mx_v4 .hk_bar { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; background: #f2f4f6; border-bottom: 1px solid #e5e8eb; }
@@ -788,8 +784,8 @@ export const PAGE_CSS = `
 /* 전/후 */
 #dvmax.mx_v4 .hk_pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 0; }
 #dvmax.mx_v4 .hk_card { margin: 0; border-radius: 20px; overflow: hidden; min-height: 460px; position: relative; }
-#dvmax.mx_v4 .hk_dark { background: #152238 url('/bg/hangeon-dark.jpg') center / cover no-repeat; display: flex; align-items: center; padding: 40px; }
-#dvmax.mx_v4 .hk_light { background: #f1efeb url('/bg/hangeon-light.jpg') center / cover no-repeat; padding: 40px 0 0 40px; }
+#dvmax.mx_v4 .hk_dark { background: #1b2433; display: flex; align-items: center; padding: 40px; }
+#dvmax.mx_v4 .hk_light { background: #f5f6f8; padding: 40px 0 0 40px; }
 /* 머리말 판과 같은 캡처지만 답 본문 쪽을 확대해 다른 부분을 보여 준다. */
 #dvmax.mx_v4 .hk_light img { display: block; width: 100%; height: 420px; object-fit: cover; object-position: 62% 38%; border-radius: 12px 0 0 0; box-shadow: 0 24px 60px rgba(21,34,56,.25); }
 #dvmax.mx_v4 .hk_bubbles { display: grid; gap: 14px; width: 100%; }
@@ -817,8 +813,8 @@ export const PAGE_CSS = `
 /* Biz 수치·예시 */
 #dvmax.mx_v4 .hk_show { margin: 40px 0 0; }
 #dvmax.mx_v4 .hk_show_plate { position: relative; border-radius: 28px; overflow: hidden; display: grid; grid-template-columns: 320px 72px minmax(0, 520px); justify-content: center; align-items: center; padding: 72px 48px; min-height: 480px;
-  background: #d9d3c6 url('/bg/hangeon-light.jpg') center/cover no-repeat; }
-#dvmax.mx_v4 .hk_show_plate::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(36,42,52,.08), rgba(36,42,52,.40)); backdrop-filter: blur(6px); }
+  background: #f5f6f8; }
+#dvmax.mx_v4 .hk_show_plate::before { content: ''; position: absolute; inset: 0; background: none; }
 #dvmax.mx_v4 .hk_show_plate > * { position: relative; }
 #dvmax.mx_v4 .hk_show_me { padding: 22px 24px; border-radius: 16px; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,.14); }
 #dvmax.mx_v4 .hk_show_me_t { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #62707e; }
@@ -838,11 +834,11 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .hk_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
 #dvmax.mx_v4 .mx_showtabs .hk_show_tabs { margin-top: 24px; }
 #dvmax.mx_v4 .mx_showtabs_plate { animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
-#dvmax.mx_v4 .hk_show_bar { display: block; height: 4px; border-radius: 999px; background: #e5e8eb; overflow: hidden; }
-#dvmax.mx_v4 .hk_show_bar b { display: block; height: 100%; width: 0; margin: 0; border-radius: 999px; background: #191f28; animation: hkBar linear forwards; }
+/* 탭 위 선 — 둥근 4px 게이지는 자동 넘김을 뺀 뒤 「멈춘 진행 막대」로 보였다(사용자 「고장」). 얇은 탭 표시선으로. */
+#dvmax.mx_v4 .hk_show_bar { display: block; height: 1px; border-radius: 0; background: #e5e8eb; overflow: visible; }
 @keyframes hkBar { from { width: 0 } to { width: 100% } }
-#dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { background: #d7dce2; }
-@media (hover: hover) { #dvmax.mx_v4 .hk_show:hover .hk_show_bar b { animation-play-state: paused; } }
+/* 자동으로 넘기지 않는다(2026-09-28 사용자: 「시간 지나야 다음 걸 보는 UI」 정리) — 막대는 고른 탭 표시만. */
+#dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { height: 2px; background: #191f28; }
 #dvmax.mx_v4 .hk_bid { position: relative; padding: 22px 24px 22px 28px; border-radius: 12px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 6px 24px rgba(21,34,56,.06); }
 #dvmax.mx_v4 .hk_bid::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 12px 0 0 12px; background: #1a9e5c; }
 #dvmax.mx_v4 .hk_bid.no::before { background: #d71920; }

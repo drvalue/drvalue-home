@@ -123,11 +123,10 @@ export const INDUSTRIES: IndustryTab[] = [
     id: 'pcb',
     label: 'PCB 업종',
     headLead: '소량 다품종 샘플 PCB, ',
-    headStrong: '제조 전 공정의 완벽 관리',
+    headStrong: '사양부터 원판 배치·정산까지',
     desc: '수십 항목의 사양(스펙), 수율 극대화를 위한 원판 배치, 수십 가지 내/외 공정 진척, 외주 단가 및 거래 명세 관리까지.',
     lead: {
-      title: '수주부터 출고·정산까지 한 흐름',
-      hero: { n: '90%', label: '납기 준수 — 생산 단계에서 지켜 냅니다' },
+      title: '사양 오류·원판 수율·정산을 한 시스템에서',
       items: [
         { t: '사양·작업지시 오류 차단', d: 'AI 가 수십 가지 사양의 상충 여부를 실시간 검증합니다.' },
         { t: '원판 수율 최적화', d: '원판 배치를 계산해 수율을 끌어올립니다.' },
@@ -138,7 +137,7 @@ export const INDUSTRIES: IndustryTab[] = [
       {
         no: 1,
         kicker: '전체 - 수주부터 출고까지',
-        title: '수주·사양·생산·출고를 **번호 하나로** 통합 관리',
+        title: '사양은 한 번 등록, 다음 공정은 **불러 쓰기**',
         points: [
           '사양·모델 한 번 등록 → **재입력 없이** 다음 공정에서 호출',
           '번호를 따라 이력 축적 → **불량·품질까지** 같은 흐름에서 확인',
@@ -152,7 +151,7 @@ export const INDUSTRIES: IndustryTab[] = [
       {
         no: 2,
         kicker: '사양·작업지시 오류 차단',
-        title: '사양 오류로 인한 **재투입 완전 차단**',
+        title: '사양 상충을 등록 단계에서 막아 **재투입 방지**',
         points: [
           '품목별 기본 공정 지정 → 공정별 **사양·작업내역·외주처** 자동 연결',
           '유사 품목 **AI 분석** → 누락 사양 자동 제안',
@@ -185,7 +184,7 @@ export const INDUSTRIES: IndustryTab[] = [
       },
       {
         no: 4,
-        kicker: '생산 - 납기 준수 90%',
+        kicker: '생산 - 납기 예측',
         title: '진척율·체류시간 실시간 파악과 **AI 납기 예측**',
         points: [
           '생산대기·진행 전 품목의 **진척율·체류시간·예상 소요일** 표시',
@@ -213,7 +212,7 @@ export const INDUSTRIES: IndustryTab[] = [
       {
         no: 6,
         kicker: '생산 이후 - 출고 한 건이 정산까지',
-        title: '출고·세금계산서·수금·재고를 **한 흐름으로** 연결',
+        title: '출고 한 건으로 **재고·세금계산서·수금** 갱신',
         points: [
           '출고 등록 → **제품 재고와 수금 현황**이 함께 갱신',
           '**세금계산서 API 연동** → 출고 건에서 바로 발행·대조',
@@ -245,11 +244,11 @@ export const INDUSTRIES: IndustryTab[] = [
   {
     id: 'cos',
     label: '화장품 업종',
-    headLead: '연구소부터 cGMP까지, ',
-    headStrong: '화장품 제조 전 과정',
-    desc: '연구노트·처방 관리에서 견적·수주·발주·생산·품질검사·규제 대응·출하·수금까지, 화장품 제조의 전 과정을 한 시스템에 담았습니다.',
+    headLead: '처방부터 출하·cGMP 대응까지, ',
+    headStrong: '화장품 제조 한 시스템',
+    desc: '연구노트·처방, 생산·품질검사, 규제 대응, 출하·수금을 한 시스템에서 관리합니다.',
     lead: {
-      title: '연구소부터 cGMP 까지 한 시스템',
+      title: '처방·cGMP 양식·클레임을 한 시스템에서',
       hero: { n: '연구소 → cGMP', label: '연구노트·처방에서 규제 대응 양식까지' },
       items: [
         { t: '연구노트', d: '처방(연구 BOM) 기준으로 원료 단가를 자동 산출하고 버전을 비교합니다.' },
@@ -281,7 +280,7 @@ export const INDUSTRIES: IndustryTab[] = [
       {
         no: 2,
         kicker: '영업 - 견적부터 수금까지',
-        title: '견적·수주·출하·세금계산서·수금이 **한 줄로** 이어집니다',
+        title: '출하 한 건으로 **명세서·계산서·수금·재고** 갱신',
         points: [
           '견적 → 수주(제품별) → 출하 → 거래명세서 → 세금계산서 → 수금, 단계마다 **현황 화면**',
           '출하 한 건이 **제품 재고**와 재고 이력을 같이 갱신',
@@ -316,7 +315,7 @@ export const INDUSTRIES: IndustryTab[] = [
       {
         no: 5,
         kicker: '품질검사 - 단계별',
-        title: '자체 검사부터 완료 검사까지 **단계별 품질검사**',
+        title: '원료부터 완제품까지 **7단계 검사**와 불합 처리',
         points: [
           '자체·반제품·공정 중·공정·외주·규제/포장·완료 **일곱 단계**의 검사',
           '검사기준서와 품질검사항목(원료·자재·제품·공정)을 기준으로 판정',
@@ -338,7 +337,7 @@ export const INDUSTRIES: IndustryTab[] = [
       },
       {
         no: 7,
-        kicker: '품질 강화 - 클레임/CAPA',
+        kicker: '품질 강화 - 클레임·시정조치(CAPA)',
         title: '클레임 **원인 추적**과 CAPA 이력 관리',
         points: [
           '클레임 접수 → **원인 LOT 역추적**까지 일원화',
@@ -353,7 +352,7 @@ export const INDUSTRIES: IndustryTab[] = [
         kicker: '규제 - 국가별·성분·MSDS',
         title: '국가별 규제와 성분 기준을 **한곳에서** 대조',
         points: [
-          '국가별 규제 기준 · 성분 규제 · **MSDS 목록**',
+          '국가별 규제 기준 · 성분 규제 · **MSDS(물질안전보건자료) 목록**',
           '처방 성분을 국가별 기준과 대조해 **저촉 여부 확인**',
         ],
         chips: ['국가별 규제', '성분 규제', 'MSDS'],
@@ -366,7 +365,7 @@ export const INDUSTRIES: IndustryTab[] = [
         points: [
           '공정별 진행·이상 상태 실시간 확인, 이상 발생 → **즉시 알림**',
           '설비 모니터링: **환경 데이터**와 정상 수치, 1시간 범위는 실시간 반영',
-          'SCADA(PLC 접속·정지 동작)·센서 관리·설비 점검/수리 이력',
+          '설비 원격 제어(SCADA — PLC 접속·정지)·센서 관리·설비 점검/수리 이력',
         ],
         chips: ['공정 모니터링', '환경 데이터', 'SCADA', '설비 유지보수', '이상 알림'],
       },
@@ -385,9 +384,9 @@ export type AiFeature = {
  * 이미 들어 있다.
  */
 export const AI_HEAD = {
-  headLead: '문서를 읽고, 규정을 대조하고, ',
-  headStrong: '묻는 말에 답합니다',
-  desc: '사람이 옮겨 적던 자리를 AI 가 대신합니다. 문서에서 값을 뽑아 MES 와 맞춰 보고, 국가별 규제를 대조하고, 흩어진 제조 지식을 대화로 꺼냅니다.',
+  headLead: 'M.AX MES 안에서 도는 ',
+  headStrong: '제조 AI 셋',
+  desc: '입고 문서를 읽어 MES 에 넣고, 성분을 국가별 규제와 대조하고, 쌓인 제조 지식을 대화로 찾습니다.',
 } as const
 
 export const AI_FEATURES: AiFeature[] = [
@@ -421,7 +420,7 @@ export const AI_FEATURES: AiFeature[] = [
   {
     id: 'a3',
     label: '③ 글로벌 규제 자동검증 AI',
-    title: '글로벌 규제 **자동검증** AI',
+    title: '성분을 국가별 규제와 **자동 대조**',
     steps: [
       '각국 규제 정보를 자동 크롤링',
       '레시피 성분을 **국가별 규제 기준으로 AI 검증**',
@@ -433,7 +432,7 @@ export const AI_FEATURES: AiFeature[] = [
   {
     id: 'a4',
     label: '④ 제조지식 대화형 AI 비서',
-    title: '제조지식 **대화형 AI 비서**',
+    title: '레시피·클레임 이력을 묻는 **AI 비서**',
     steps: [
       '유사 레시피 검색·비교',
       '원료 대체 이력 추적',
@@ -467,7 +466,7 @@ export const AI_FEATURES: AiFeature[] = [
  */
 /** mes-ai 장 요약. 큰 값 3 은 이 장에 실린 기능 수(AI_SHOWN)다. */
 export const AI_LEAD: Lead = {
-  title: '읽고, 대조하고, 물어봅니다',
+  title: '입고·규제·지식, 사람이 옮겨 적던 세 자리',
   hero: { n: '3가지', label: 'MES 안에서 도는 AI — 읽기·대조하기·물어보기' },
   items: [
     { t: '자재 입출고 AI 자동화', d: '거래명세서·성적서를 OCR 로 읽어 MES 에 자동 입고합니다.' },

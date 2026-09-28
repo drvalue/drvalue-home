@@ -90,7 +90,7 @@ export default function SeoPanel({
           onChange={(e) => setT({ seo_description: e.target.value })}
         />
         <small id="f-seo-desc-hint" className={(t.seo_description ?? '').length > DESC_MAX ? 'dva_counter is-over' : 'dva_counter'}>
-          {(t.seo_description ?? '').length}/{DESC_MAX}자 · 비워 두면 요약, 요약도 없으면 본문 앞부분이 쓰입니다.
+          {(t.seo_description ?? '').length}/{DESC_MAX}자 · 비워 두면 요약, 요약도 없으면 본문 앞부분이 쓰입니다. 첫 문장에 무엇인지 바로 답하고 제품명·숫자·날짜를 넣으면 검색과 AI 답변에 인용되기 좋습니다.
         </small>
       </div>
 

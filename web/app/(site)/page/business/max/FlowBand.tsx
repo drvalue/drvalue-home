@@ -1,94 +1,54 @@
-'use client'
-
-import { useEffect, useRef, useState } from 'react'
 import { KPI, STAGES } from './maxContent'
 
 /**
- * MES 공통 프로세스 흐름 — channel.io/kr/meet/call 의 IVR 구역(어두운 남색 판 · 가운데 제목 ·
- * 선으로 이어진 흰 카드 · 밑에 유리 카드 셋)으로 다시 그렸다. 2026-09-22 사용자가 옛 MaxFlow
- * (6칸 지그재그 + 「AI 자동화만 보기」 토글)를 「너무 별로」라 했다.
- *
- *  - 위: 단계 6개가 게이지 레일. 5초에 차면 다음 단계로 넘어간다(ShowTabs 와 같은 규칙 — 마우스 올리면 멈춤, 화면 밖이면 정지).
- *  - 가운데: 현재 단계의 주공정 카드와 보조공정 카드가 점선으로 이어진다. AI 가 대신하는 일엔 AI 표.
- *  - 아래: KPI 셋(납기·이익·품질 영향 분석) — 레퍼런스의 유리 카드 셋 자리.
- * 글은 전부 maxContent.ts 의 STAGES·KPI 그대로.
+ * MES 공통 프로세스 흐름 — 사용자가 처음 준 시안(max-page-draft.html 의 flow-sec) 그대로:
+ * 흰 바탕 · 왼쪽 정렬 제목 · KPI 띠 · 여섯 칸(위 메모 → 주공정 상자 → 이음선 → 같이 도는 공정 → 아래 메모).
+ * 2026-09-28 사용자: 어두운 그라데이션 판(channel.io IVR 구역)은 「AI 느낌」이라 뺐다.
+ * 누르는 것도 넘어가는 것도 없다 — 옛 MaxFlow 의 고르기·「AI 자동화만 보기」도 뺐다.
+ * CSS 는 maxStyles.ts 의 .mx_kpi · .mx_flow* 를 그대로 쓰고 patternStyles.ts 의 .mx_fb 가 바탕·폰 배치만 맡는다.
+ * 글은 전부 maxContent.ts 의 STAGES·KPI.
  */
-const STEP_MS = 5000
-
 export default function FlowBand() {
-  const [cur, setCur] = useState(0)
-  const [auto, setAuto] = useState(false)
-  const [tick, setTick] = useState(0)
-  const box = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = box.current
-    if (!el) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const io = new IntersectionObserver((es) => setAuto(es.some((e) => e.isIntersecting && e.boundingClientRect.height > 0)), { threshold: 0.2 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-
-  const go = (i: number) => { setCur(i % STAGES.length); setTick((t) => t + 1) }
-  const s = STAGES[cur]
-  const aiCount = STAGES.reduce((n, x) => n + x.top.filter((y) => y.ai).length + (x.bottom ?? []).filter((y) => y.ai).length, 0)
-
-  const notes = (list: { t: string; ai?: boolean }[]) => (
-    <ul className="mx_fb_notes">
-      {list.map((n) => <li key={n.t} className={n.ai ? 'ai' : undefined}>{n.ai && <em aria-label="AI 가 자동으로">AI</em>}{n.t}</li>)}
-    </ul>
-  )
+  const notes = (list: { t: string; ai?: boolean }[] | undefined) =>
+    list && (
+      <ul className="mx_note">
+        {list.map((n) => <li key={n.t} className={n.ai ? 'is-ai' : undefined}>{n.ai && <em>AI</em>}{n.t}</li>)}
+      </ul>
+    )
 
   return (
-    <section className="mx_fb" ref={box}>
-      <i className="mx_blob mx_b1" aria-hidden="true" /><i className="mx_blob mx_b2" aria-hidden="true" />
+    <section className="mx_fb">
       <div className="mx_wrap">
-        <div className="mx_fb_head" data-rv>
-          <p className="mx_bento_k">제조 흐름 · AI 가 대신하는 일 {aiCount}</p>
-          <h2 data-words>업종이 달라도 제조의 흐름은 같습니다</h2>
-          <p className="mx_bento_d">견적부터 출고까지 여섯 단계를 하나의 데이터 흐름으로 잇습니다. 단계를 누르면 그 구간에서 무엇이 기록되고 무엇을 AI 가 대신하는지 봅니다.</p>
+        {/* 제목은 다른 구역과 같은 규칙(빨간 머리 글 + mx_state) — 이 구역만 굵기·크기가 달랐다(2026-09-28 검수). */}
+        <p className="mx_kicker">공통 흐름</p>
+        <h2 className="mx_state">MES 공통 프로세스</h2>
+        <p className="mx_state_p">업종이 달라도 제조의 흐름은 같습니다. M.AX는 아래 전 과정을 하나의 데이터 흐름으로 연결합니다.</p>
+
+        <div className="mx_kpi" role="group" aria-label="KPI 분석">
+          <div className="mx_kpi_tag">KPI</div>
+          <div className="mx_kpi_items">
+            {KPI.map((k) => <div key={k.h}><h3>{k.h}</h3><p>{k.p}</p></div>)}
+          </div>
         </div>
 
-        <ol className="mx_fb_rail hk_show" role="tablist" aria-label="제조 단계">
-          {STAGES.map((x, i) => (
-            <li key={x.main}>
-              <button type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => go(i)}>
-                <i className="hk_show_bar" aria-hidden="true">
-                  {i === cur && auto && <b key={tick} style={{ animationDuration: `${STEP_MS}ms` }} onAnimationEnd={() => go(cur + 1)} />}
-                </i>
-                <b><small>{String(i + 1).padStart(2, '0')}</small>{x.main}</b>
-                {x.sub && <span>+ {x.sub}</span>}
-              </button>
+        <ol className="mx_flow" aria-label="MES 프로세스 흐름">
+          {STAGES.map((s, i) => (
+            <li key={s.main} className="mx_stage">
+              {notes(s.top)}
+              <div className="mx_pbox">
+                {s.main}
+                {i < STAGES.length - 1 && <span className="mx_arrow" aria-hidden="true" />}
+              </div>
+              {s.sub && (
+                <>
+                  <div className="mx_vlink" aria-hidden="true" />
+                  <div className="mx_pbox is-sub">{s.sub}</div>
+                </>
+              )}
+              {notes(s.bottom)}
             </li>
           ))}
         </ol>
-
-        <div key={s.main} className={`mx_fb_panel${s.sub ? '' : ' one'}`} role="tabpanel">
-          <article className="mx_fb_card">
-            <header><small>주공정</small><h3>{s.main}</h3></header>
-            {notes(s.top)}
-          </article>
-          {s.sub && (
-            <>
-              <i className="mx_fb_link" aria-hidden="true" />
-              <article className="mx_fb_card sub">
-                <header><small>같이 도는 공정</small><h3>{s.sub}</h3></header>
-                {s.bottom && notes(s.bottom)}
-              </article>
-            </>
-          )}
-        </div>
-
-        <ul className="mx_fb_kpi" data-rv="pop" aria-label="KPI 분석">
-          {KPI.map((k) => (
-            <li key={k.h}>
-              <i className="mx_proof_ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16" /><path d="M6 15l4-5 3 3 5-7" /></svg></i>
-              <b>{k.h}</b>
-              <span>{k.p}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   )

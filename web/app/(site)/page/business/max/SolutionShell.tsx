@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import ProofBand from './ProofBand'
 import { V3Provider } from './V3Context'
 import MotionFx from './MotionFx'
-import { Cols, Plate, Statement } from './V4'
+import { Plate, Statement } from './V4'
 import { HeroCycle } from './Patterns'
 
 /** 머리말 밑 판에 올리는 실제 제품 화면. 그 장의 기능 칸에 **안 나오는** 화면을 고른다 — 같은 그림이 두 번 보이면 화면이 하나뿐인 제품으로 읽힌다. */
@@ -84,6 +84,7 @@ export default function SolutionShell({
   ctaDesc = '업종과 현장 상황을 알려주시면 최적의 구축 방안을 제안해 드립니다.',
   look,
   heroShot,
+  heroArt,
   heroLink,
   heroHref,
   proof,
@@ -99,8 +100,8 @@ export default function SolutionShell({
   lead?: Lead
   ctaTitle?: string
   ctaDesc?: string
-  /** 「인증·선정」 남색 판. 허브 장에만(사용자 2026-09-22: 「AI 솔루션 개발 페이지에서만」). */
-  proof?: boolean
+  /** 「인증·선정」 띠. 허브 장에만(사용자 2026-09-22). true = 머리말 바로 밑, 'end' = 문의 띠 바로 앞(M.AX 허브, 2026-09-28). */
+  proof?: boolean | 'end'
   /**
    * 「v4」 — 2026-09-22 사용자가 지정한 레퍼런스(channel.io/kr/works·alf-customer)대로.
    * 가운데 큰 제목 + 판 위 제품 화면(움직이는 배경·패럴랙스) + 인증 띠 + 큰 문장·3열 +
@@ -110,6 +111,8 @@ export default function SolutionShell({
   look?: 'v4'
   /** 하나면 판 한 장, 여럿이면 몇 초마다 넘어간다(HeroCycle). */
   heroShot?: HeroShot | HeroShot[]
+  /** 화면 대신 머리말 글 밑에 두는 그림 한 장(꾸밈 — 읽는 이에게 새 정보가 없으면 alt 를 비운다). */
+  heroArt?: { src: string; w: number; h: number; alt: string }
   /** 머리말 둘째 단추 글. 기본 「기능 보기」. */
   heroLink?: string
   heroHref?: string
@@ -145,26 +148,33 @@ export default function SolutionShell({
                 <a className="mx_pill o" href={heroHref ?? '#mx_body'}>{heroLink ?? '기능 보기'}</a>
               </div>
               {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {!heroShot && heroArt && <figure className="mx_hero_art" aria-hidden={heroArt.alt ? undefined : true}><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
             </div>
           </section>
 
-          {proof && <ProofBand />}
+          {proof === true && <ProofBand />}
 
           <section className="mx_sec mx_sec_body" id="mx_body">
             <div className="mx_wrap">
               <div className="mx_main">
-                {/* 요약 상자는 없다(비평: 「요약 칸」). 안의 글은 내용이라 남긴다 —
-                    큰 문장 하나와 상단 바 3열로. */}
+                {/* 요약 = 큰 문장 + 낮은 테두리 카드(2026-09-28). 글만 있는 3열은 사용자가 싫다 했고, 문장만 두니 「덩그러니」였다.
+                    레퍼런스(업스테이지 제조 장)는 큰 문장 바로 밑에 테두리 1px 카드를 붙인다 — 그 짜임. */}
                 {lead?.items && (
                   <div className="mx_sec4 big mx_keys">
                     <Statement desc={lead.desc}>{lead.title}</Statement>
-                    <Cols items={lead.items} />
+                    <ul className="mx_keycards">
+                      {lead.items.map((it) => <li key={it.t}><b>{it.t}</b><span>{it.d}</span></li>)}
+                    </ul>
                   </div>
                 )}
                 <V3Provider>{children}</V3Provider>
               </div>
             </div>
           </section>
+
+          {/* 인증 띠를 문의 바로 앞에 — 믿을 근거를 본 뒤에 문의 단추(2026-09-28 사용자: 「어디에 배치할지」). */}
+          {proof === 'end' && <ProofBand />}
 
           <section className="mx_cta">
             <div className="mx_wrap">

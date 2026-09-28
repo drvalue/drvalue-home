@@ -14,9 +14,9 @@ import { GC_DEMO, GC_UI } from './growchatContent'
 type Phase = 0 | 1 | 2 | 3 | 4 | 5 // 0 대기 · 1 첫 문의 타이핑 · 2 둘째 타이핑 · 3 상담 시작 · 4 답 · 5 끝
 
 export default function GrowchatDemo() {
-  const box = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<Phase>(5)
   const [typed, setTyped] = useState(-1) // -1 = 타이핑 없음
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -39,6 +39,7 @@ export default function GrowchatDemo() {
     at(t, () => setPhase(5))
   }
 
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const el = box.current

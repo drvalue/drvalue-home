@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { isIndexNowKey } from '../indexnow/indexnow-urls';
 
 function list(raw: string | undefined): string[] {
   return (raw ?? '')
@@ -85,6 +86,16 @@ export const AppConfig = {
     return (
       process.env.UPLOADS_DIR || resolve(__dirname, '../../../../data/uploads')
     );
+  },
+
+  /**
+   * IndexNow 키(8~128자, 영문·숫자·-). 비었거나 모양이 틀리거나 미리보기(NOINDEX=1, compose 가 넘긴다)면
+   * null — 알림을 하나도 안 보낸다. web 은 같은 값으로 키 파일 `/<키>.txt` 를 낸다.
+   */
+  get indexNowKey(): string | null {
+    if (process.env.NOINDEX === '1') return null;
+    const raw = (process.env.INDEXNOW_KEY ?? '').trim();
+    return isIndexNowKey(raw) ? raw : null;
   },
 
   mail: {

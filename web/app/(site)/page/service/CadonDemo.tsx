@@ -16,10 +16,10 @@ const STEP_MS = 2600
 const LAST = CD_STEPS.length - 1
 
 export default function CadonDemo() {
-  const box = useRef<HTMLDivElement>(null)
   const [cur, setCur] = useState(LAST)     // 보이는 화면
   const [done, setDone] = useState(LAST)   // 이 번호까지 완료 표시
   const [playing, setPlaying] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -34,6 +34,7 @@ export default function CadonDemo() {
   }
   const jump = (i: number) => { clear(); setPlaying(false); setCur(i); setDone(i) }
 
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const el = box.current

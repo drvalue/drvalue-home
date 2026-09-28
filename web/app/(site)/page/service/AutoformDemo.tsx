@@ -14,11 +14,11 @@ import { AF_DEMO } from './autoformContent'
 const HOLD_MS = 2600
 
 export default function AutoformDemo() {
-  const box = useRef<HTMLDivElement>(null)
   const last = AF_DEMO.steps.length - 1
   const [cur, setCur] = useState(last)
   const [playing, setPlaying] = useState(false)
   const [tick, setTick] = useState(0)
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -33,6 +33,7 @@ export default function AutoformDemo() {
   }
   const pick = (i: number) => { clear(); setPlaying(false); setTick((t) => t + 1); setCur(i) }
 
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const el = box.current

@@ -52,9 +52,12 @@ const nextConfig = {
 
   async rewrites() {
     const origin = process.env.API_ORIGIN || 'http://localhost:3500'
-    return [
-      { source: '/api/:path*', destination: `${origin}/api/:path*` },
-    ]
+    return {
+      afterFiles: [{ source: '/api/:path*', destination: `${origin}/api/:path*` }],
+      // IndexNow 키 파일 /<키>.txt. 키는 실행 때 .env 에서 오므로 여기서는 모양만 보고 넘기고,
+      // 같은 키인지는 app/indexnow-key 가 본다. fallback 이라 있는 주소(/llms.txt · /robots.txt)는 안 건드린다.
+      fallback: [{ source: '/:key([A-Za-z0-9-]{8,128})\\.txt', destination: '/indexnow-key/:key' }],
+    }
   },
 }
 export default nextConfig

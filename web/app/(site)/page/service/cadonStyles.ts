@@ -36,8 +36,8 @@ export const CADON_CSS = `
 /* ── 판정 판 + 탭 (한건 .hk_show 와 같은 골격) ────────────── */
 #dvmax.mx_v4 .cd_show { margin: 40px 0 0; }
 #dvmax.mx_v4 .cd_show_plate { position: relative; border-radius: 28px; overflow: hidden; display: grid; grid-template-columns: 300px 72px minmax(0, 560px); justify-content: center; align-items: center; padding: 72px 48px; min-height: 480px;
-  background: #d9d3c6 url('/bg/hangeon-light.jpg') center/cover no-repeat; }
-#dvmax.mx_v4 .cd_show_plate::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(36,42,52,.08), rgba(36,42,52,.42)); backdrop-filter: blur(6px); }
+  background: #f5f6f8; }
+#dvmax.mx_v4 .cd_show_plate::before { content: ''; position: absolute; inset: 0; background: none; }
 #dvmax.mx_v4 .cd_show_plate > * { position: relative; }
 #dvmax.mx_v4 .cd_show_me { padding: 22px 24px; border-radius: 16px; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,.14); }
 #dvmax.mx_v4 .cd_show_me_t { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #62707e; }
@@ -71,10 +71,8 @@ export const CADON_CSS = `
 #dvmax.mx_v4 .cd_show_tabs button.on { color: #191f28; } #dvmax.mx_v4 .cd_show_tabs button.on span { color: #4e5968; }
 #dvmax.mx_v4 .cd_show_tabs button:hover { color: #4e5968; }
 #dvmax.mx_v4 .cd_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
-#dvmax.mx_v4 .cd_show_bar { display: block; height: 4px; border-radius: 999px; background: #e5e8eb; overflow: hidden; }
-#dvmax.mx_v4 .cd_show_bar b { display: block; height: 100%; width: 0; margin: 0; border-radius: 999px; background: #191f28; animation: cdBar linear forwards; }
-@keyframes cdBar { from { width: 0 } to { width: 100% } }
-#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { background: #d7dce2; }
+#dvmax.mx_v4 .cd_show_bar { display: block; height: 1px; border-radius: 0; background: #e5e8eb; }
+#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { height: 2px; background: #191f28; }
 
 @media (max-width: 900px) {
   #dvmax.mx_v4 .cd_demo { grid-template-columns: 1fr; gap: 16px; }
@@ -83,6 +81,26 @@ export const CADON_CSS = `
   #dvmax.mx_v4 .cd_panel_head span { max-width: 100%; white-space: normal; margin-left: 0; flex-basis: 100%; }
   #dvmax.mx_v4 .cd_panel_head { flex-wrap: wrap; }
   #dvmax.mx_v4 .cd_show_tabs { grid-template-columns: 1fr; gap: 18px; } #dvmax.mx_v4 .cd_show_tabs button > b { margin-top: 12px; font-size: 17px; }
+}
+/* CADON · 컷온 두 제품 나눔(2026-09-28) — 위 바로 가기 둘, 각 제품 앞 구분 머리. */
+/* 두 제품 바로 가기 — 회색 카드 둘(사용자 「마음에 안 든다」) → 다른 장과 같은 밑줄 탭. */
+#dvmax.mx_v4 .cd_parts { display: flex; gap: 28px; margin: 48px 0 0; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .cd_parts a { display: inline-flex; align-items: baseline; gap: 8px; min-height: 48px; padding: 12px 2px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: #4e5968; text-decoration: none; transition: color .2s, border-color .2s; }
+#dvmax.mx_v4 .cd_parts a:hover { color: #191f28; border-bottom-color: #191f28; }
+#dvmax.mx_v4 .cd_parts a:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
+#dvmax.mx_v4 .cd_parts small { display: none; }
+#dvmax.mx_v4 .cd_parts b { font-size: 17px; font-weight: 700; color: #191f28; }
+#dvmax.mx_v4 .cd_parts span { font-size: 14px; color: #8b95a1; }
+#dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 120px 0 0; padding: 0 0 16px; border-bottom: 1px solid #e5e8eb; font-size: clamp(26px, 2.6vw, 34px); font-weight: 700; letter-spacing: -.02em; color: #191f28; scroll-margin-top: 96px; }
+#dvmax.mx_v4 .cd_part small { display: none; }
+#dvmax.mx_v4 .cd_part span { margin-left: 4px; font-size: 17px; font-weight: 500; letter-spacing: 0; color: #8b95a1; }
+#dvmax.mx_v4 .cd_part { align-items: baseline; }
+@media (max-width: 900px) {
+  #dvmax.mx_v4 .cd_parts { gap: 20px; margin-top: 32px; }
+  #dvmax.mx_v4 .cd_parts a { padding: 10px 2px; }
+  #dvmax.mx_v4 .cd_parts b { font-size: 16px; }
+  #dvmax.mx_v4 .cd_parts span { font-size: 12px; }
+  #dvmax.mx_v4 .cd_part { margin-top: 64px; font-size: 20px; scroll-margin-top: 72px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #dvmax.mx_v4 .cd_facts li, #dvmax.mx_v4 .cd_panel { animation: none; }

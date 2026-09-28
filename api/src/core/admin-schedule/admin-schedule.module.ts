@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { IndexNowModule } from '../../common/indexnow/indexnow.module';
 import { RevisionModule } from '../../common/revision/revision.module';
 import { TransactionContextFactory } from '../../common/typeorm/transaction-context.factory';
 import { AdminPostModule } from '../admin-post/admin-post.module';
@@ -8,7 +9,12 @@ import { AdminScheduleDefaultService } from './service/admin-schedule-default.se
 
 /** 예약 게시(1분 틱). ScheduleModule.forRoot() 는 앱 전체에 한 번 — 여기서 건다. */
 @Module({
-  imports: [ScheduleModule.forRoot(), RevisionModule, AdminPostModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    RevisionModule,
+    AdminPostModule,
+    IndexNowModule,
+  ],
   providers: [
     AdminScheduleDefaultService,
     ScheduledPostDefaultRepository,

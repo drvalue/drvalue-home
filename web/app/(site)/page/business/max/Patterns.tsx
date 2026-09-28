@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { mark, plain } from './text'
 import type { Shot, Tone } from './V4'
 
@@ -30,7 +30,7 @@ export type ShowcaseItem = {
   url?: string
 }
 
-function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean }) {
+export function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean }) {
   return (
     <div className="mx_browser">
       <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span>{url ?? 'max.drvalue.co.kr'}</span></div>
@@ -40,54 +40,26 @@ function Frame({ shot, url, eager }: { shot: Shot; url?: string; eager?: boolean
   )
 }
 
+/**
+ * 제품군 판 셋 — 2026-09-28 사용자: 좌우 화살표로 넘기는 판(블라인드 비평: 「흔한 슬라이더」) 대신 셋을 고정해 차례로 편다.
+ * 판마다 글 왼쪽 · 화면 오른쪽, 구분선 한 줄(하위 장 기능 판과 같은 짜임). 주소의 #id 는 판의 id 라 그대로 그 자리로 간다.
+ */
 export function Showcase({ items, label = '제품군' }: { items: ShowcaseItem[]; label?: string }) {
-  const [cur, setCur] = useState(0)
-  const box = useRef<HTMLDivElement>(null)
-  const n = items.length
-  const go = (i: number) => setCur(((i % n) + n) % n)
-
-  useEffect(() => {
-    // 주소의 #id 로 오면 그 탭. 메뉴·바깥 링크가 특정 제품군을 가리킬 수 있게.
-    const byHash = () => {
-      const i = items.findIndex((x) => `#${x.id}` === window.location.hash)
-      if (i >= 0) setCur(i)
-    }
-    byHash()
-    window.addEventListener('hashchange', byHash)
-    return () => window.removeEventListener('hashchange', byHash)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const c = items[cur]
   return (
-    <div className="mx_show" ref={box}>
-      <div className="mx_show_tabs" role="tablist" aria-label={label}>
-        {items.map((x, i) => (
-          <button key={x.id} type="button" role="tab" id={`show-${x.id}`} aria-selected={i === cur} aria-controls={x.id} className={i === cur ? 'on' : undefined} onClick={() => go(i)}>
-            {x.tab}
-          </button>
-        ))}
-      </div>
-      <div className="mx_show_stage">
-        <button type="button" className="mx_show_arr prev" aria-label={`이전 ${label}`} onClick={() => go(cur - 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-        </button>
-        <article key={c.id} id={c.id} role="tabpanel" aria-labelledby={`show-${c.id}`} className="mx_show_card">
+    <div className="mx_show mx_show_rows" role="list" aria-label={label}>
+      {items.map((c, i) => (
+        <article key={c.id} id={c.id} role="listitem" className="mx_show_row">
           <div className="mx_show_txt">
-            <p className="mx_show_k">{c.kicker}</p>
+            <p className="mx_show_k">{c.tab}</p>
             <h3>{mark(c.headLead)}<b>{plain(c.headStrong)}</b></h3>
             <p>{c.desc}</p>
-            <a className="mx_show_more" href={c.href}>자세히 보기<i aria-hidden="true">›</i></a>
+            <a className="mx_show_more" href={c.href}>{c.tab} 자세히 보기<i aria-hidden="true">›</i></a>
           </div>
           <figure className="mx_show_fig">
-            <Frame shot={c.shot} url={c.url} eager={cur === 0} />
+            <Frame shot={c.shot} url={c.url} eager={i === 0} />
           </figure>
         </article>
-        <button type="button" className="mx_show_arr next" aria-label={`다음 ${label}`} onClick={() => go(cur + 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-        </button>
-      </div>
-      <p className="mx_show_dots" aria-hidden="true">{items.map((x, i) => <i key={x.id} className={i === cur ? 'on' : undefined} />)}</p>
+      ))}
     </div>
   )
 }
@@ -181,29 +153,12 @@ export function FlowCard({ title, desc, steps, tone = '', href, more, aside }: {
 export type HeroItem = Shot & { tag: string; url?: string }
 
 /**
- * 머리말 판의 화면이 몇 초마다 다음 장으로 건너간다(크로스페이드 + 살짝 확대). 2026-09-22 사용자:
- * 「사진 멈춰 있지 말고 초 지날 때마다 하나씩 — 모션그래픽 느낌」. 화면 밖이면 멈추고, 움직임을 줄인
- * 사람에겐 첫 장만 보인다. 첫 장은 eager 로 받아 LCP 를 안 늦춘다.
+ * 머리말 판의 화면 여럿 — 판 밑 탭(화면 이름)을 누르면 그 장으로 바뀐다(크로스페이드).
+ * 2026-09-22 에는 몇 초마다 스스로 넘어갔는데, 2026-09-28 사용자가 「시간이 지나야 다음 걸 보는 UI」를
+ * 정리하라 해서 자동 넘김을 뺐다. 첫 장은 eager 로 받아 LCP 를 안 늦추고, 스크립트가 없으면 첫 장만 보인다.
  */
-export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: number }) {
+export function HeroCycle({ shots }: { shots: HeroItem[] }) {
   const [cur, setCur] = useState(0)
-  const [on, setOn] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = box.current
-    if (!el || shots.length < 2) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const io = new IntersectionObserver((es) => setOn(es.some((e) => e.isIntersecting)), { threshold: 0.2 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [shots.length])
-
-  useEffect(() => {
-    if (!on) return
-    const id = window.setInterval(() => setCur((c) => (c + 1) % shots.length), every)
-    return () => window.clearInterval(id)
-  }, [on, every, shots.length])
 
   const c = shots[cur]
 
@@ -221,10 +176,8 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
   }, [shots])
 
   return (
-    <figure className="mx_plate" ref={box}>
+    <figure className="mx_plate flat">
       <div className="mx_plate_in">
-        <i className="mx_blob mx_b1" aria-hidden="true" /><i className="mx_blob mx_b2" aria-hidden="true" /><i className="mx_blob mx_b3" aria-hidden="true" />
-        <span key={c.tag} className="mx_plate_tag mx_cycle_tag">{c.tag}</span>
         <div className="mx_browser">
           <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span key={c.url ?? c.tag}>{c.url ?? 'max.drvalue.co.kr'}</span></div>
           <div className="mx_cycle" style={{ aspectRatio: ratio }}>
@@ -236,6 +189,13 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
           </div>
         </div>
       </div>
+      {shots.length > 1 && (
+        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
+          {shots.map((s, i) => (
+            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
+          ))}
+        </div>
+      )}
     </figure>
   )
 }

@@ -14,9 +14,9 @@ import { CT_DEMO } from './cutonContent'
 type Phase = 0 | 1 | 2 | 3 | 4 // 0 대기 · 1 도면 · 2 분석 · 3 가격 · 4 끝
 
 export default function CutonDemo() {
-  const box = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<Phase>(4)
   const [spec, setSpec] = useState(CT_DEMO.spec.length)
+  const box = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
 
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = [] }
@@ -34,6 +34,7 @@ export default function CutonDemo() {
     at(t, () => setPhase(4))
   }
 
+  // 화면에 들어오면 한 번 돈다(2026-09-28 되살림 — 시연 재생까지 끈 것은 해석 잘못이었다. 끈 것은 탭 자동 넘김뿐).
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const el = box.current

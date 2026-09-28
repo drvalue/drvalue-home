@@ -1,9 +1,13 @@
 import CadonDemo from '../CadonDemo'
 import CadonCases from './CadonCases'
 import { CADON_CSS } from '../cadonStyles'
+import CutonDemo from '../CutonDemo'
+import CutonShow from '../cuton/CutonShow'
+import { CUTON_CSS } from '../cutonStyles'
+import { CUTON_DEFAULT, CUTON_KEY } from '../cuton/content'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
-import { Statement } from '../../business/max/V4'
+import { Cols, Plate, Statement } from '../../business/max/V4'
 import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
@@ -22,23 +26,32 @@ import { CADON_DEFAULT, CADON_KEY } from './content'
  *
  * 화면·숫자는 전부 실제 실행 캡처에 찍힌 것(cadonContent.ts). 우리가 쓴 문장은 그 파일 머리말에
  * 적어 두었다 — 사용자 확인 대상. 맨 아래 기능 블록은 한건 장과 같이 뺐다(시연·전후·판정이 그 말을 한다).
+ *
+ * 2026-09-28 사용자: 컷온을 CADON 안으로 합친다 — CADON 구역 뒤에 옛 컷온 장의 구역(머리말 · 대표 화면 ·
+ * 요약 · 시연 · 전/후 · 화면 셋)을 빠짐없이 잇는다. 컷온 글은 여전히 관리 화면 「컷온」 페이지 글이다.
+ * 옛 주소 /page/service/cuton 은 여기 #cuton 으로 넘긴다.
  */
 const PATH = '/page/service/cadon'
 
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: 'CADON',
-  description: 'AutoCAD 안에서 판금 STEP 을 열어 전개하고, 절단선·절곡선을 레이어로 작도하고, 절곡 시뮬레이션과 3D 되접기로 검토합니다. 도면은 외부 서버로 나가지 않습니다.',
+  title: 'CADON · 컷온',
+  description: 'AutoCAD 안에서 판금을 전개·작도·검토하고(CADON), 도면을 올리면 AI 가 레이저 절단 견적을 즉시 산출합니다(컷온). 도면은 외부 서버로 나가지 않습니다.',
   path: PATH,
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent(CADON_KEY)) ?? CADON_DEFAULT
+  const [c, ct] = await Promise.all([
+    cmsPageContent(CADON_KEY).then((x) => x ?? CADON_DEFAULT),
+    cmsPageContent(CUTON_KEY).then((x) => x ?? CUTON_DEFAULT),
+  ])
   const { shell, demo, compareStatement, extra } = c
+  const ctLead = toLead(ct.lead)
+  const ctShot = [toHeroShots(ct.heroShots) ?? []].flat()[0]
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: PAGE_CSS + CADON_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: PAGE_CSS + CADON_CSS + CUTON_CSS }} />
       <SolutionShell
         path={PATH}
         look="v4"
@@ -52,6 +65,10 @@ export default async function Page() {
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
+        {/* 두 제품을 나눠 보여 준다(2026-09-28 사용자 「CADON 과 CUTON 을 나눠서 2개를 다」). 위에 따로 떠 있던 바로 가기 줄은
+            「뜬금없다」(사용자)라 뺐다 — 제품마다 구역 머리(cd_part)가 나눈다. */}
+
+        <p className="cd_part" id="cadon"><small>01</small>CADON<span>AutoCAD 판금 전개·검토</span></p>
         {/* 시연 — 실제 실행 화면 네 장을 순서대로 */}
         <section className="mx_sec4 hk_sec">
           {demo.kicker && <p className="mx_kicker hk_center">{demo.kicker}</p>}
@@ -79,6 +96,49 @@ export default async function Page() {
             {extra.title}
           </Statement>
           <CadonCases />
+        </section>
+
+        {/* 컷온 — 옛 컷온 장의 구역을 빠짐없이 잇는다 */}
+        <p className="cd_part" id="cuton"><small>02</small>컷온<span>도면 AI 자동 견적</span></p>
+        <section className="mx_sec4 hk_sec">
+          {ct.shell.kicker && <p className="mx_kicker hk_center">{ct.shell.kicker}</p>}
+          <Statement desc={orUndefined(ct.shell.desc)}>
+            {ct.shell.headLead + ct.shell.headStrong}
+          </Statement>
+          {ctShot && <Plate shot={ctShot} tag={ctShot.tag} url={ctShot.url} phone={ctShot.phone} />}
+        </section>
+
+        {ctLead.items && (
+          <section className="mx_sec4 big mx_keys">
+            <Statement desc={ctLead.desc}>{ctLead.title}</Statement>
+            <Cols items={ctLead.items} />
+          </section>
+        )}
+
+        <section className="mx_sec4 hk_sec">
+          {ct.demo.kicker && <p className="mx_kicker hk_center">{ct.demo.kicker}</p>}
+          <Statement desc={orUndefined(ct.demo.desc)}>
+            {ct.demo.title}
+          </Statement>
+          <div className="hk_plate">
+            <CutonDemo />
+          </div>
+        </section>
+
+        <section className="mx_sec4 hk_sec">
+          {ct.compareStatement.kicker && <p className="mx_kicker hk_center">{ct.compareStatement.kicker}</p>}
+          <Statement desc={orUndefined(ct.compareStatement.desc)}>
+            {ct.compareStatement.title}
+          </Statement>
+          <CompareBlock c={ct.compare} lightClass=" ct_light" />
+        </section>
+
+        <section className="mx_sec4 hk_sec">
+          {ct.extra.kicker && <p className="mx_kicker hk_center">{ct.extra.kicker}</p>}
+          <Statement desc={orUndefined(ct.extra.desc)}>
+            {ct.extra.title}
+          </Statement>
+          <CutonShow />
         </section>
 
       </SolutionShell>

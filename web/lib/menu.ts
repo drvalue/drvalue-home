@@ -41,9 +41,8 @@ export type MenuItem = { title: string; link: string; match: string[]; sub?: Sub
 
 export const MENU_ITEMS: MenuItem[] = [
   {
-    title: '회사소개', link: '/page/company/intro', match: ['/page/company/'],
+    title: '회사소개', link: '/page/company/vision', match: ['/page/company/'],
     sub: [
-      { t: '안내', l: '/page/company/intro', d: '제조 현장의 언어를 데이터로 통일' },
       { t: '비전', l: '/page/company/vision', d: '지능형 제조가 가는 방향과 전략' },
       { t: '연혁', l: '/page/company/history', d: '2024년 설립부터 인증·선정 기록' },
       { t: '찾아오시는 길', l: '/page/company/location', d: '한양대 ERICA 창업보육센터' },
@@ -69,15 +68,13 @@ export const MENU_ITEMS: MenuItem[] = [
     // 만들어 주는 것 하나(AI 솔루션 개발)와 이미 만들어 둔 제품들.
     // 탭을 누르면 첫 항목인 「AI 솔루션 개발」로 간다 — 그 장이 묶음의 첫 장이고
     // 나머지 제품으로 가는 카드를 들고 있다(사용자 결정으로 되살렸다).
-    title: 'AI솔루션', link: '/page/business/ai_sol',
+    title: 'AI솔루션', link: '/page/service/autoform',
     match: ['/page/business/ai_sol', '/page/service/'],
     sub: [
-      { t: 'AI 솔루션 개발', l: '/page/business/ai_sol', d: '사내 데이터로 답하는 RAG 구축' },
       { t: '오토폼', l: '/page/service/autoform', d: '쓰던 한글 양식 그대로 채운다', neu: true },
-      { t: '컷온', l: '/page/service/cuton', d: '도면을 올리면 견적이 초 단위로' },
-      { t: 'CADON', l: '/page/service/cadon', d: 'AutoCAD 안에서 판금 전개', neu: true },
+      { t: 'CADON · 컷온', l: '/page/service/cadon', d: 'AutoCAD 판금 전개부터 도면 견적까지', neu: true },
       { t: '채팅', l: '/page/service/chat', d: '고객과 상담원을 곧바로 잇는다', neu: true },
-      { t: '한건', l: '/page/service/hangeon', d: 'LLM·RAG 기반 건설 AI Chat', neu: true },
+      // 한건은 뺐다(2026-09-28 사용자, db/migrations/0017). 장은 남아 있다.
       { t: 'GrowTalk', l: '/page/service/growtok', d: '현장 상황을 나누는 협업 플랫폼', hidden: true },
       { t: 'GrowXD', l: '/page/service/growxd', d: 'AI 분석·예측을 더한 차세대 MES', hidden: true },
     ],

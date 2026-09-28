@@ -78,7 +78,8 @@ export function pageMeta({
   return {
     title: full,
     description,
-    alternates: { canonical: url },
+    // RSS 링크도 여기서 — 장의 alternates 가 레이아웃 것을 통째로 덮는다(얕은 합치기).
+    alternates: { canonical: url, types: { 'application/rss+xml': [{ url: '/rss.xml', title: '디알밸류 소식' }] } },
     openGraph: {
       title: full,
       description,

@@ -15,7 +15,13 @@
  * @type {Array<{ from: string, to: string, permanent?: boolean }>}
  */
 export const DV_ROUTE_MAP = [
-  { from: '/company/introduction', to: '/page/company/intro' },
+  { from: '/company/introduction', to: '/page/company/vision' },
+  // 회사소개 · 안내 장은 숨겼다(2026-09-28 사용자). 되살릴 수 있게 화면 코드는 두고 임시(307)로 넘긴다.
+  { from: '/page/company/intro', to: '/page/company/vision' },
+  // AI 솔루션 개발 장도 숨겼다(2026-09-28 사용자). 묶음의 다음 장(오토폼)으로 넘긴다.
+  { from: '/page/business/ai_sol', to: '/page/service/autoform' },
+  // 컷온을 CADON 장 안으로 합쳤다(2026-09-28 사용자). 컷온은 CADON 장의 컷온 구역으로.
+  { from: '/page/service/cuton', to: '/page/service/cadon#cuton' },
   { from: '/company/location', to: '/page/company/location' },
   { from: '/company/ip', to: '/page/tech/patent' },
   { from: '/platform/cuton', to: '/page/service/cuton' },

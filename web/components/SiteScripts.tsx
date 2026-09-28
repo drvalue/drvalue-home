@@ -30,7 +30,7 @@ export default function SiteScripts({ gtmId }: { gtmId: string | null }) {
     <>
       {gtmId && (
         <>
-          {/* 동의 모드 v2: 기본은 거부. 방문자가 「동의」하면 ConsentBanner 가 analytics 만 허용으로 바꾼다.
+          {/* 동의 모드 v2: 기본은 거부. 방문자가 「허용」하면 ConsentBanner 가 analytics 만 허용으로 바꾼다.
               이 줄이 GTM 보다 먼저 dataLayer 에 들어가야 한다. */}
           <Script id="consent-default" strategy="afterInteractive">{`
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}

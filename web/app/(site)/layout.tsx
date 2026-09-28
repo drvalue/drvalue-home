@@ -8,6 +8,7 @@ import '@/styles/tw.css'
 // 스크롤 등장 효과. 표시(data-rv·data-count)가 없는 장에는 아무 영향이 없다.
 import '@/styles/motion.css'
 import Reveal from '@/components/Reveal'
+import ScrollJump from '@/components/ScrollJump'
 import HomeCountUp from '@/app/home/HomeCountUp'
 import { SITE_DESCRIPTION, SITE_ORIGIN } from '@/lib/seo'
 import { JQUERY_SRC, tagsGtmId } from '@/lib/analytics'
@@ -31,7 +32,29 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export const metadata: Metadata = {
+/**
+ * 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). 값은 실행 환경(.env)에서 읽는다 —
+ * 비면 태그를 안 싣는다. 확인 코드는 공개 값이라 비밀이 아니다.
+ * generateMetadata 는 요청마다 그리는 장에서만 실행 환경값을 읽는다 — 빌드 때 굳는 정적 장(예: patent_old)에는 안 붙는다.
+ * 소유 확인은 첫 화면(/)으로 하므로 / 는 요청마다 그리는 장이어야 한다(지금 CMS 글을 no-store 로 읽어 그렇다).
+ */
+export function generateMetadata(): Metadata {
+  const env = (k: string) => (process.env[k] ?? '').trim() || undefined
+  const naver = env('NAVER_SITE_VERIFICATION')
+  const bing = env('BING_SITE_VERIFICATION')
+  const other: Record<string, string> = {}
+  if (naver) other['naver-site-verification'] = naver
+  if (bing) other['msvalidate.01'] = bing
+  const google = env('GOOGLE_SITE_VERIFICATION')
+  return {
+    ...SITE_METADATA,
+    ...(google || naver || bing ? { verification: { ...(google ? { google } : {}), ...(Object.keys(other).length ? { other } : {}) } } : {}),
+    alternates: { types: { 'application/rss+xml': [{ url: '/rss.xml', title: '디알밸류 소식' }] } },
+  }
+}
+
+/** 공개 레이아웃의 머리 정보. global-not-found 가 같은 값을 쓴다. */
+export const SITE_METADATA: Metadata = {
   // 페이지마다 제목을 따로 쓴다(lib/seo.ts). 여기 것은 그것이 없을 때만 쓰인다.
   title: '디알밸류 - AI 제조 솔루션',
   description: SITE_DESCRIPTION,
@@ -80,6 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <HomeCountUp />
         <Reveal />
+        <ScrollJump />
 
         {/* PHP 는 <head> 에서 동기 로드했다. beforeInteractive 로 순서를 맞춘다 —
             푸터 스크립트가 $ 와 Swiper 를 쓰기 때문이다. */}

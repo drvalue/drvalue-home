@@ -34,6 +34,8 @@ import { BOARDS, detailPath, isBoardKey } from './(site)/page/support/board/boar
 export const dynamic = 'force-dynamic'
 
 const SKIP = new Set([
+  '/page/company/intro',
+  '/page/service/cuton',
   '/page/support/notify_form',
   '/page/tech/patent_old',
   '/page/business/smart_fac',
