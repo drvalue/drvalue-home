@@ -123,6 +123,9 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_fb .mx_b1 { width: 560px; height: 560px; left: -200px; bottom: -220px; background: #2a4a86; opacity: .6; }
 #dvmax.mx_v4 .mx_fb .mx_b2 { width: 420px; height: 420px; right: -140px; top: -160px; background: #7a1d24; opacity: .35; }
 #dvmax.mx_v4 .mx_fb .mx_wrap { position: relative; }
+/* 장 위쪽 본문 칸 안에 들어오면(2026-09-28) 인증 띠에 붙지 않게 띄우고 판으로 둥글린다. */
+#dvmax.mx_v4 .mx_main > .mx_fb { margin-top: 72px; border-radius: 28px; }
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_main > .mx_fb { margin-top: 40px; border-radius: 20px; } }
 #dvmax.mx_v4 .mx_fb_head { text-align: center; margin: 0 0 44px; }
 #dvmax.mx_v4 .mx_fb_head h2 { margin: 0; font-size: clamp(32px, 3.8vw, 52px); line-height: 1.25; letter-spacing: -1.5px; font-weight: 600; color: #fff; }
 #dvmax.mx_v4 .mx_fb_rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; }
