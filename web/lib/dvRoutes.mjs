@@ -15,7 +15,9 @@
  * @type {Array<{ from: string, to: string, permanent?: boolean }>}
  */
 export const DV_ROUTE_MAP = [
-  { from: '/company/introduction', to: '/page/company/intro' },
+  { from: '/company/introduction', to: '/page/company/vision' },
+  // 회사소개 · 안내 장은 숨겼다(2026-09-28 사용자). 되살릴 수 있게 화면 코드는 두고 임시(307)로 넘긴다.
+  { from: '/page/company/intro', to: '/page/company/vision' },
   { from: '/company/location', to: '/page/company/location' },
   { from: '/company/ip', to: '/page/tech/patent' },
   { from: '/platform/cuton', to: '/page/service/cuton' },

@@ -41,9 +41,8 @@ export type MenuItem = { title: string; link: string; match: string[]; sub?: Sub
 
 export const MENU_ITEMS: MenuItem[] = [
   {
-    title: '회사소개', link: '/page/company/intro', match: ['/page/company/'],
+    title: '회사소개', link: '/page/company/vision', match: ['/page/company/'],
     sub: [
-      { t: '안내', l: '/page/company/intro', d: '제조 현장의 언어를 데이터로 통일' },
       { t: '비전', l: '/page/company/vision', d: '지능형 제조가 가는 방향과 전략' },
       { t: '연혁', l: '/page/company/history', d: '2024년 설립부터 인증·선정 기록' },
       { t: '찾아오시는 길', l: '/page/company/location', d: '한양대 ERICA 창업보육센터' },
