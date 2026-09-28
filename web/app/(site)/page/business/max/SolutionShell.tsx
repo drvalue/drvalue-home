@@ -84,6 +84,7 @@ export default function SolutionShell({
   ctaDesc = '업종과 현장 상황을 알려주시면 최적의 구축 방안을 제안해 드립니다.',
   look,
   heroShot,
+  heroArt,
   heroLink,
   heroHref,
   proof,
@@ -110,6 +111,8 @@ export default function SolutionShell({
   look?: 'v4'
   /** 하나면 판 한 장, 여럿이면 몇 초마다 넘어간다(HeroCycle). */
   heroShot?: HeroShot | HeroShot[]
+  /** 화면 대신 머리말 글 밑에 두는 그림 한 장(꾸밈 — 읽는 이에게 새 정보가 없으면 alt 를 비운다). */
+  heroArt?: { src: string; w: number; h: number; alt: string }
   /** 머리말 둘째 단추 글. 기본 「기능 보기」. */
   heroLink?: string
   heroHref?: string
@@ -145,6 +148,8 @@ export default function SolutionShell({
                 <a className="mx_pill o" href={heroHref ?? '#mx_body'}>{heroLink ?? '기능 보기'}</a>
               </div>
               {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {!heroShot && heroArt && <figure className="mx_hero_art"><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
             </div>
           </section>
 

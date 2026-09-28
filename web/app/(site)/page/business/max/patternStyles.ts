@@ -259,4 +259,8 @@ export const PATTERN_CSS4 = `
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_fs .mx_cols { grid-template-columns: 1fr; gap: 10px; } }
 /* 폰: 그림이 여러 장이면 창 아래 「화면 N장 크게 보기」가 있으니 그림 위 확대 버튼은 감춘다 — 같은 일을 하는 단추가 둘 겹쳤다. */
 @media (max-width: 700px) { #dvmax.mx_v4 .mx_fs_fig:has(.dvshot_more) .dvshot_zoom { display: none; } }
+/* 머리말 글 밑 그림(heroArt) — 판·틀 없이 흰 바탕에 그대로. */
+#dvmax.mx_v4 .mx_hero_art { margin: 48px 0 0; padding: 0; }
+#dvmax.mx_v4 .mx_hero_art img { display: block; width: 100%; height: auto; }
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_hero_art { margin-top: 32px; } }
 `

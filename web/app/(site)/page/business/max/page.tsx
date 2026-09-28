@@ -74,6 +74,9 @@ export default async function Page() {
         // 허브 머리말에는 화면을 싣지 않는다(2026-09-28 사용자): 한 제품의 대시보드는 하위 장(PCB MES)에서 또 나오고,
         // 넷을 섞으면 짜깁기 같다. 허브를 「총괄」하는 그림은 바로 밑 제조 흐름도(FlowBand)가 맡는다.
         // 관리 화면의 머리말 화면(heroShots) 칸과 제품군 카드의 kicker 칸은 이 장에서 쓰지 않는다(판 머리는 메뉴 이름).
+        // 글 밑 그림은 「문서가 기록이 되는」 선 그림(2026-09-28 사용자가 GPT 로 뽑아 C안을 골랐다 — 블라인드 비평은 불통과였고
+        // 실제 전체 현황 화면을 새로 찍으면 그것으로 바꾸기로 했다). 꾸밈이라 alt 는 비운다.
+        heroArt={{ src: '/art/max-hub-docs-to-records.webp', w: 1520, h: 300, alt: '' }}
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
