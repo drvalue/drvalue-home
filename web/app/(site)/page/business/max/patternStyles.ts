@@ -172,9 +172,10 @@ export const PATTERN_CSS3 = `
 #dvmax.mx_v4 .mx_hero4 :is(h1, h2) { font-size: clamp(23px, 3.07vw, 43px); font-weight: 600; letter-spacing: -1.3px; line-height: 1.22; max-width: 20em; }
 #dvmax.mx_v4 .mx_hero4 :is(h1, h2) b { font-weight: 600; }
 #dvmax.mx_v4 .mx_hero4 p { font-size: clamp(17px, 1.5vw, 21px); color: #4e5968; }
-#dvmax.mx_v4 .mx_state { font-size: clamp(30px, 3.8vw, 52px); font-weight: 600; letter-spacing: -1.5px; line-height: 1.25; }
+/* 구역 큰 문장·묶음 제목도 2/3 — 머리말 제목보다 커 보이던 것(2026-09-28 사용자: 「위쪽에 있는것들 글씨가 다 큰데」) */
+#dvmax.mx_v4 .mx_state { font-size: clamp(20px, 2.53vw, 35px); font-weight: 600; letter-spacing: -1px; line-height: 1.25; }
 #dvmax.mx_v4 .mx_state_p { font-size: clamp(16px, 1.4vw, 19px); }
-#dvmax.mx_v4 .mx_ghead h2 { font-size: clamp(28px, 3.2vw, 44px); font-weight: 600; letter-spacing: -1.2px; }
+#dvmax.mx_v4 .mx_ghead h2 { font-size: clamp(19px, 2.13vw, 29px); font-weight: 600; letter-spacing: -.8px; }
 #dvmax.mx_v4 .mx_kicker { display: table; padding: 7px 16px; border-radius: 999px; background: #3e78c8; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
 #dvmax.mx_v4 .mx_kicker span { color: rgba(255,255,255,.7); }
 #dvmax.mx_v4 .mx_hero4 .mx_kicker { color: #fff; }
