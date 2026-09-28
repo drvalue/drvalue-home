@@ -256,4 +256,6 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs .mx_cols > li { padding: 24px 24px 26px; border: 1px solid #e5e8eb; border-radius: 10px; background: #fff; }
 #dvmax.mx_v4 .mx_fs .mx_cols b { font-size: 18px; }
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_fs .mx_cols { grid-template-columns: 1fr; gap: 10px; } }
+/* 폰: 그림이 여러 장이면 창 아래 「화면 N장 크게 보기」가 있으니 그림 위 확대 버튼은 감춘다 — 같은 일을 하는 단추가 둘 겹쳤다. */
+@media (max-width: 700px) { #dvmax.mx_v4 .mx_fs_fig:has(.dvshot_more) .dvshot_zoom { display: none; } }
 `
