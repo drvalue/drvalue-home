@@ -221,6 +221,9 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs_fig .dvshot_frame { border-radius: 0; box-shadow: none; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot figcaption { display: none; }
 #dvmax.mx_v4 .mx_fs .mx_cols { margin-top: 24px; }
+/* 판을 넘기지 않고 전부 편다(2026-09-28) — 판 사이 간격, 넘길 때 쓰던 등장 효과는 끈다. */
+#dvmax.mx_v4 .mx_fs_panel + .mx_fs_panel { margin-top: 24px; }
+#dvmax.mx_v4 .mx_fs .mx_fs_panel { animation: none; }
 @media (hover: hover) { #dvmax.mx_v4 .mx_fs_rail:hover .hk_show_bar b { animation-play-state: paused; } }
 @media (max-width: 900px) {
   #dvmax.mx_v4 .mx_fs_rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
