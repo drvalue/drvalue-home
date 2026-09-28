@@ -754,7 +754,7 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .hk_sec .mx_state_p { margin-bottom: 40px; }
 /* 대화 시연 판 — 밝은 배경 그림(사용자 제공) 위에 창 하나 */
 #dvmax.mx_v4 .hk_plate { position: relative; border-radius: 25px; padding: 48px; overflow: hidden;
-  background: #e9eef7 url('/bg/hangeon-light.jpg') center / cover no-repeat; }
+  background: #f5f6f8; } /* 흐린 하늘 사진 → 단색(2026-09-28, 결정 0018) */
 #dvmax.mx_v4 .hk_demo { max-width: 900px; margin: 0 auto; }
 #dvmax.mx_v4 .hk_win { background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(21,34,56,.22); overflow: hidden; }
 #dvmax.mx_v4 .hk_bar { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; background: #f2f4f6; border-bottom: 1px solid #e5e8eb; }
@@ -784,8 +784,8 @@ export const PAGE_CSS = `
 /* 전/후 */
 #dvmax.mx_v4 .hk_pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 0; }
 #dvmax.mx_v4 .hk_card { margin: 0; border-radius: 20px; overflow: hidden; min-height: 460px; position: relative; }
-#dvmax.mx_v4 .hk_dark { background: #152238 url('/bg/hangeon-dark.jpg') center / cover no-repeat; display: flex; align-items: center; padding: 40px; }
-#dvmax.mx_v4 .hk_light { background: #f1efeb url('/bg/hangeon-light.jpg') center / cover no-repeat; padding: 40px 0 0 40px; }
+#dvmax.mx_v4 .hk_dark { background: #1b2433; display: flex; align-items: center; padding: 40px; }
+#dvmax.mx_v4 .hk_light { background: #f5f6f8; padding: 40px 0 0 40px; }
 /* 머리말 판과 같은 캡처지만 답 본문 쪽을 확대해 다른 부분을 보여 준다. */
 #dvmax.mx_v4 .hk_light img { display: block; width: 100%; height: 420px; object-fit: cover; object-position: 62% 38%; border-radius: 12px 0 0 0; box-shadow: 0 24px 60px rgba(21,34,56,.25); }
 #dvmax.mx_v4 .hk_bubbles { display: grid; gap: 14px; width: 100%; }
@@ -813,8 +813,8 @@ export const PAGE_CSS = `
 /* Biz 수치·예시 */
 #dvmax.mx_v4 .hk_show { margin: 40px 0 0; }
 #dvmax.mx_v4 .hk_show_plate { position: relative; border-radius: 28px; overflow: hidden; display: grid; grid-template-columns: 320px 72px minmax(0, 520px); justify-content: center; align-items: center; padding: 72px 48px; min-height: 480px;
-  background: #d9d3c6 url('/bg/hangeon-light.jpg') center/cover no-repeat; }
-#dvmax.mx_v4 .hk_show_plate::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(36,42,52,.08), rgba(36,42,52,.40)); backdrop-filter: blur(6px); }
+  background: #f5f6f8; }
+#dvmax.mx_v4 .hk_show_plate::before { content: ''; position: absolute; inset: 0; background: none; }
 #dvmax.mx_v4 .hk_show_plate > * { position: relative; }
 #dvmax.mx_v4 .hk_show_me { padding: 22px 24px; border-radius: 16px; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,.14); }
 #dvmax.mx_v4 .hk_show_me_t { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #62707e; }

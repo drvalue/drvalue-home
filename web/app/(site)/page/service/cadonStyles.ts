@@ -36,8 +36,8 @@ export const CADON_CSS = `
 /* ── 판정 판 + 탭 (한건 .hk_show 와 같은 골격) ────────────── */
 #dvmax.mx_v4 .cd_show { margin: 40px 0 0; }
 #dvmax.mx_v4 .cd_show_plate { position: relative; border-radius: 28px; overflow: hidden; display: grid; grid-template-columns: 300px 72px minmax(0, 560px); justify-content: center; align-items: center; padding: 72px 48px; min-height: 480px;
-  background: #d9d3c6 url('/bg/hangeon-light.jpg') center/cover no-repeat; }
-#dvmax.mx_v4 .cd_show_plate::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(36,42,52,.08), rgba(36,42,52,.42)); backdrop-filter: blur(6px); }
+  background: #f5f6f8; }
+#dvmax.mx_v4 .cd_show_plate::before { content: ''; position: absolute; inset: 0; background: none; }
 #dvmax.mx_v4 .cd_show_plate > * { position: relative; }
 #dvmax.mx_v4 .cd_show_me { padding: 22px 24px; border-radius: 16px; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,.14); }
 #dvmax.mx_v4 .cd_show_me_t { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #62707e; }
@@ -91,8 +91,10 @@ export const CADON_CSS = `
 #dvmax.mx_v4 .cd_parts small { display: none; }
 #dvmax.mx_v4 .cd_parts b { font-size: 17px; font-weight: 700; color: #191f28; }
 #dvmax.mx_v4 .cd_parts span { font-size: 14px; color: #8b95a1; }
-#dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 96px 0 0; padding: 0 0 14px; border-bottom: 1px solid #e5e8eb; font-size: 24px; font-weight: 700; color: #191f28; scroll-margin-top: 96px; }
+#dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 120px 0 0; padding: 0 0 16px; border-bottom: 1px solid #e5e8eb; font-size: clamp(26px, 2.6vw, 34px); font-weight: 700; letter-spacing: -.02em; color: #191f28; scroll-margin-top: 96px; }
 #dvmax.mx_v4 .cd_part small { display: none; }
+#dvmax.mx_v4 .cd_part span { margin-left: 4px; font-size: 17px; font-weight: 500; letter-spacing: 0; color: #8b95a1; }
+#dvmax.mx_v4 .cd_part { align-items: baseline; }
 @media (max-width: 900px) {
   #dvmax.mx_v4 .cd_parts { gap: 20px; margin-top: 32px; }
   #dvmax.mx_v4 .cd_parts a { padding: 10px 2px; }

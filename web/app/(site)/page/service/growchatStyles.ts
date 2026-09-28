@@ -19,7 +19,7 @@ export const GROWCHAT_CSS = `
   #dvmax.mx_v4 .gc_hero_agent { width: 100%; }
   #dvmax.mx_v4 .gc_hero_cust { position: relative; right: auto; bottom: auto; width: 82%; margin: -24px 0 0 auto; }
 }
-#dvmax.mx_v4 .gc_plate { background: #eaf0f8 url('/bg/hangeon-light.jpg') center / cover no-repeat; }
+#dvmax.mx_v4 .gc_plate { background: #f5f6f8; }
 /* 전/후 오른쪽 카드: 관리자센터 캡처는 왼쪽 위(방 목록 + 상태 탭)를 보여 준다 */
 #dvmax.mx_v4 .gc_pair .hk_light img { object-position: 0 0; }
 #dvmax.mx_v4 .gc_demo { max-width: 460px; margin: 0 auto; }

@@ -35,8 +35,8 @@ export const CUTON_CSS = `
 #dvmax.mx_v4 .ct_p3 .ct_groups li { animation: mxPop .45s cubic-bezier(.22,.68,.24,1) both; animation-delay: calc(var(--i, 0) * .14s); }
 #dvmax.mx_v4 .ct_p3 .ct_total { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; animation-delay: .9s; }
 /* 폭 전체 판 — 한건과 배경만 다르게(도면 격자) */
-#dvmax.mx_v4 .ct_show .hk_show_plate { background: #23324a; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px), radial-gradient(60% 80% at 20% 30%, rgba(62,111,216,.55), transparent 70%), radial-gradient(50% 70% at 85% 80%, rgba(215,25,32,.35), transparent 70%); background-size: 28px 28px, 28px 28px, 100% 100%, 100% 100%; }
-#dvmax.mx_v4 .ct_show .hk_show_plate::before { background: linear-gradient(180deg, rgba(10,16,28,.05), rgba(10,16,28,.35)); backdrop-filter: none; }
+#dvmax.mx_v4 .ct_show .hk_show_plate { background: #23324a; }
+#dvmax.mx_v4 .ct_show .hk_show_plate::before { background: none; backdrop-filter: none; }
 #dvmax.mx_v4 .ct_card::before { background: #2b5fd9; }
 #dvmax.mx_v4 .ct_card .hk_bid_src i { background: #2b5fd9; }
 #dvmax.mx_v4 .ct_rows { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
