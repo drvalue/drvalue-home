@@ -70,6 +70,7 @@ export default async function Page() {
         headStrong={shell.headStrong}
         desc={shell.desc}
         heroLink={orUndefined(shell.heroLink)}
+        heroHref="#mx_products"
         // 허브 머리말에는 화면을 싣지 않는다(2026-09-28 사용자): 한 제품의 대시보드는 하위 장(PCB MES)에서 또 나오고,
         // 넷을 섞으면 짜깁기 같다. 허브를 「총괄」하는 그림은 바로 밑 제조 흐름도(FlowBand)가 맡는다.
         // 관리 화면의 머리말 화면(heroShots) 칸과 제품군 카드의 kicker 칸은 이 장에서 쓰지 않는다(판 머리는 메뉴 이름).
@@ -79,7 +80,7 @@ export default async function Page() {
         {/* 업종 공통 흐름을 업종 카드보다 위에(2026-09-28 사용자). */}
         <FlowBand />
 
-        <section className="mx_sec4 big" id="mx_body">
+        <section className="mx_sec4 big" id="mx_products">
           {statement.kicker && <p className="mx_kicker hk_center">{statement.kicker}</p>}
           <Statement desc={orUndefined(statement.desc)}>
             {statement.title}

@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import ProofBand from './ProofBand'
 import { V3Provider } from './V3Context'
 import MotionFx from './MotionFx'
-import { Cols, Plate, Statement } from './V4'
+import { Plate, Statement } from './V4'
 import { HeroCycle } from './Patterns'
 
 /** 머리말 밑 판에 올리는 실제 제품 화면. 그 장의 기능 칸에 **안 나오는** 화면을 고른다 — 같은 그림이 두 번 보이면 화면이 하나뿐인 제품으로 읽힌다. */
@@ -153,12 +153,11 @@ export default function SolutionShell({
           <section className="mx_sec mx_sec_body" id="mx_body">
             <div className="mx_wrap">
               <div className="mx_main">
-                {/* 요약 상자는 없다(비평: 「요약 칸」). 안의 글은 내용이라 남긴다 —
-                    큰 문장 하나와 상단 바 3열로. */}
+                {/* 요약은 큰 문장 하나만. 밑의 제목·한 줄 3열은 뺐다(2026-09-28 사용자 「이 부분 마음에 안 든다」) —
+                    바로 밑 구역을 한 줄씩 미리 말하던 것이라 글만 늘었다. 관리 화면의 요약 항목(lead.items)은 이 틀에서 쓰지 않는다. */}
                 {lead?.items && (
                   <div className="mx_sec4 big mx_keys">
                     <Statement desc={lead.desc}>{lead.title}</Statement>
-                    <Cols items={lead.items} />
                   </div>
                 )}
                 <V3Provider>{children}</V3Provider>

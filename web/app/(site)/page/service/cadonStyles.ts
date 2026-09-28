@@ -83,18 +83,19 @@ export const CADON_CSS = `
   #dvmax.mx_v4 .cd_show_tabs { grid-template-columns: 1fr; gap: 18px; } #dvmax.mx_v4 .cd_show_tabs button > b { margin-top: 12px; font-size: 17px; }
 }
 /* CADON · 컷온 두 제품 나눔(2026-09-28) — 위 바로 가기 둘, 각 제품 앞 구분 머리. */
-#dvmax.mx_v4 .cd_parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 760px; margin: 56px auto 0; }
-#dvmax.mx_v4 .cd_parts a { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; padding: 20px 24px; border-radius: 18px; background: #f2f4f6; color: #191f28; text-decoration: none; transition: background .2s; }
-#dvmax.mx_v4 .cd_parts a:hover { background: #e8ebef; }
+/* 두 제품 바로 가기 — 회색 카드 둘(사용자 「마음에 안 든다」) → 다른 장과 같은 밑줄 탭. */
+#dvmax.mx_v4 .cd_parts { display: flex; gap: 28px; margin: 48px 0 0; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .cd_parts a { display: inline-flex; align-items: baseline; gap: 8px; min-height: 48px; padding: 12px 2px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: #4e5968; text-decoration: none; transition: color .2s, border-color .2s; }
+#dvmax.mx_v4 .cd_parts a:hover { color: #191f28; border-bottom-color: #191f28; }
 #dvmax.mx_v4 .cd_parts a:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
-#dvmax.mx_v4 .cd_parts small { grid-row: span 2; font-size: 13px; font-weight: 700; color: #3e78c8; font-variant-numeric: tabular-nums; }
-#dvmax.mx_v4 .cd_parts b { font-size: 20px; font-weight: 700; }
-#dvmax.mx_v4 .cd_parts span { font-size: 14px; color: #4e5968; }
+#dvmax.mx_v4 .cd_parts small { display: none; }
+#dvmax.mx_v4 .cd_parts b { font-size: 17px; font-weight: 700; color: #191f28; }
+#dvmax.mx_v4 .cd_parts span { font-size: 14px; color: #8b95a1; }
 #dvmax.mx_v4 .cd_part { display: flex; align-items: center; gap: 12px; margin: 96px 0 0; padding: 0 0 14px; border-bottom: 2px solid #191f28; font-size: 24px; font-weight: 700; color: #191f28; scroll-margin-top: 96px; }
-#dvmax.mx_v4 .cd_part small { font-size: 14px; font-weight: 700; color: #3e78c8; font-variant-numeric: tabular-nums; }
+#dvmax.mx_v4 .cd_part small { display: none; }
 @media (max-width: 900px) {
-  #dvmax.mx_v4 .cd_parts { gap: 10px; margin-top: 36px; }
-  #dvmax.mx_v4 .cd_parts a { padding: 14px 16px; border-radius: 14px; }
+  #dvmax.mx_v4 .cd_parts { gap: 20px; margin-top: 32px; }
+  #dvmax.mx_v4 .cd_parts a { padding: 10px 2px; }
   #dvmax.mx_v4 .cd_parts b { font-size: 16px; }
   #dvmax.mx_v4 .cd_parts span { font-size: 12px; }
   #dvmax.mx_v4 .cd_part { margin-top: 64px; font-size: 20px; scroll-margin-top: 72px; }
