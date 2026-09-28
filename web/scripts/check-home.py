@@ -135,8 +135,7 @@ def main() -> None:
     vis = set(exp["visible"])
     # 숨긴 구역은 「없다」가 맞다 — 관리 화면에서 끈 것이 화면에 남으면 그게 결함이다.
     check("사업영역 구역이 " + ("있다" if "biz" in vis else "없다(숨김)"), ('class="t_section dvbiz"' in html) == ("biz" in vis))
-    # 2026-09-28 카드 → 줄(dvbiz_row). 세는 것은 같다 — 사업영역 하나당 하나.
-    nbiz = len(re.findall(r'class="dvbiz_row[" ]', html))
+    nbiz = len(re.findall(r'class="dvbiz_card', html))
     check(f"사업영역 카드 {exp['biz_cards'] if 'biz' in vis else 0}장 ({nbiz}장)", nbiz == (exp["biz_cards"] if "biz" in vis else 0))
     # 메인 본문에서 새 M.AX 페이지로 가는 길. 이게 0이면 헤더 드롭다운으로만
     # 갈 수 있다 — 실제로 그렇게 비어 있었다(머리 그림 첫째 버튼이나 사업 카드).
