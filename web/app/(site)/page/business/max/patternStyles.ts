@@ -218,7 +218,8 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_state_p { text-align: left; margin: 16px 0 0; }
 #dvmax.mx_v4 .hk_center { text-align: left; }
 #dvmax.mx_v4 .mx_bento_head { text-align: left; }
-#dvmax.mx_v4 .mx_cycle_tabs { margin: 20px 0 0; justify-content: flex-start; }
+/* 화면 밑 탭은 가운데 — 글은 왼쪽 축이어도 탭은 위 화면에 딸린 것이라 화면 가운데에 둔다(2026-09-28 사용자 「왼쪽에 안 두면 좋겠다」). */
+#dvmax.mx_v4 .mx_cycle_tabs { margin: 20px auto 0; justify-content: center; }
 /* 화면 없는 머리말(M.AX 허브) — 오른쪽이 비어 보이지 않게 글 폭을 넓히고, 바로 밑 흐름도(허브의 대표 그림)로 곧장 잇는다. */
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) :is(h1, h2) { max-width: 28em; }
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) > .mx_wrap > p:not(.mx_kicker) { max-width: 46em; }
