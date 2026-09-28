@@ -1,6 +1,10 @@
 import CutonDemo from '../CutonDemo'
 import CutonShow from './CutonShow'
 import { CUTON_CSS } from '../cutonStyles'
+import CadonDemo from '../CadonDemo'
+import CadonCases from '../cadon/CadonCases'
+import { CADON_CSS } from '../cadonStyles'
+import { CADON_DEFAULT, CADON_KEY } from '../cadon/content'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Statement } from '../../business/max/V4'
@@ -21,24 +25,30 @@ import { CUTON_DEFAULT, CUTON_KEY } from './content'
  * 화면·값은 전부 cuton.co.kr 공개 체험 가이드에서 로그인 없이 받은 것(cutonContent.ts). 가이드 값은
  * 컷온이 만든 예시 값이라 장에도 그렇게 적는다. 우리가 쓴 문장은 cutonContent.ts 머리말에 적었다.
  * 옛 기능 블록(FeatureBlocks)은 뺐다 — 한건 장에서 사용자가 뺀 것과 같은 결정.
+ *
+ * 2026-09-28 사용자: 컷온과 CADON 을 합친다 — 컷온 구역 뒤에 CADON 장의 구역(머리말 · 시연 · 전/후 · 검토)을
+ * 그대로 잇는다. CADON 글은 여전히 관리 화면 「CADON」 페이지 글이다. 옛 주소 /page/service/cadon 은 여기 #cadon 으로 넘긴다.
  */
 const PATH = '/page/service/cuton'
 
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: '컷온(CutOn) AI 자동 견적',
-  description: '도면(DXF)을 올리면 AI 가 형상을 분석해 재질·두께·수량 기준 레이저 절단 견적을 즉시 산출합니다. 보관함에 저장하고 입찰마켓에 올려 파트너 업체의 제안을 받습니다. 디알밸류가 만들어 운영합니다.',
+  title: '컷온(CutOn) AI 자동 견적 · CADON',
+  description: '도면(DXF)을 올리면 AI 가 형상을 분석해 레이저 절단 견적을 즉시 산출하고, CADON 으로 AutoCAD 안에서 판금을 전개·검토합니다. 디알밸류가 만들어 운영합니다.',
   path: PATH,
 })
 
 export default async function Page() {
-  const c = (await cmsPageContent(CUTON_KEY)) ?? CUTON_DEFAULT
+  const [c, cd] = await Promise.all([
+    cmsPageContent(CUTON_KEY).then((x) => x ?? CUTON_DEFAULT),
+    cmsPageContent(CADON_KEY).then((x) => x ?? CADON_DEFAULT),
+  ])
   const { shell, demo, compareStatement, extra } = c
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
-      <style dangerouslySetInnerHTML={{ __html: CUTON_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: CUTON_CSS + CADON_CSS }} />
       <SolutionShell
         path={PATH}
         look="v4"
@@ -79,6 +89,36 @@ export default async function Page() {
           <CutonShow />
         </section>
 
+        {/* CADON — 옛 CADON 장의 구역을 그대로 잇는다 */}
+        <section className="mx_sec4 hk_sec" id="cadon">
+          {cd.shell.kicker && <p className="mx_kicker hk_center">{cd.shell.kicker}</p>}
+          <Statement desc={orUndefined(cd.shell.desc)}>
+            {cd.shell.headLead + cd.shell.headStrong}
+          </Statement>
+          {cd.demo.kicker && <p className="mx_kicker hk_center">{cd.demo.kicker}</p>}
+          <Statement desc={orUndefined(cd.demo.desc)}>
+            {cd.demo.title}
+          </Statement>
+          <div className="hk_plate">
+            <CadonDemo />
+          </div>
+        </section>
+
+        <section className="mx_sec4 hk_sec">
+          {cd.compareStatement.kicker && <p className="mx_kicker hk_center">{cd.compareStatement.kicker}</p>}
+          <Statement desc={orUndefined(cd.compareStatement.desc)}>
+            {cd.compareStatement.title}
+          </Statement>
+          <CompareBlock c={cd.compare} />
+        </section>
+
+        <section className="mx_sec4 hk_sec">
+          {cd.extra.kicker && <p className="mx_kicker hk_center">{cd.extra.kicker}</p>}
+          <Statement desc={orUndefined(cd.extra.desc)}>
+            {cd.extra.title}
+          </Statement>
+          <CadonCases />
+        </section>
       </SolutionShell>
     </>
   )

@@ -20,6 +20,8 @@ export const DV_ROUTE_MAP = [
   { from: '/page/company/intro', to: '/page/company/vision' },
   // AI 솔루션 개발 장도 숨겼다(2026-09-28 사용자). 묶음의 다음 장(오토폼)으로 넘긴다.
   { from: '/page/business/ai_sol', to: '/page/service/autoform' },
+  // 컷온과 CADON 을 한 장으로 합쳤다(2026-09-28 사용자). CADON 은 컷온 장의 CADON 구역으로.
+  { from: '/page/service/cadon', to: '/page/service/cuton#cadon' },
   { from: '/company/location', to: '/page/company/location' },
   { from: '/company/ip', to: '/page/tech/patent' },
   { from: '/platform/cuton', to: '/page/service/cuton' },

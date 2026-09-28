@@ -72,8 +72,7 @@ export const MENU_ITEMS: MenuItem[] = [
     match: ['/page/business/ai_sol', '/page/service/'],
     sub: [
       { t: '오토폼', l: '/page/service/autoform', d: '쓰던 한글 양식 그대로 채운다', neu: true },
-      { t: '컷온', l: '/page/service/cuton', d: '도면을 올리면 견적이 초 단위로' },
-      { t: 'CADON', l: '/page/service/cadon', d: 'AutoCAD 안에서 판금 전개', neu: true },
+      { t: '컷온 · CADON', l: '/page/service/cuton', d: '도면 견적부터 AutoCAD 판금 전개까지' },
       { t: '채팅', l: '/page/service/chat', d: '고객과 상담원을 곧바로 잇는다', neu: true },
       { t: '한건', l: '/page/service/hangeon', d: 'LLM·RAG 기반 건설 AI Chat', neu: true },
       { t: 'GrowTalk', l: '/page/service/growtok', d: '현장 상황을 나누는 협업 플랫폼', hidden: true },
