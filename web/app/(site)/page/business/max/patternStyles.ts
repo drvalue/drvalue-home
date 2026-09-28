@@ -251,4 +251,9 @@ export const PATTERN_CSS4 = `
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_state { font-size: 24px; } #dvmax.mx_v4 .mx_show_row .mx_show_txt h3 { font-size: 20px; } }
 /* 탭 패널을 전부 HTML 에 싣고 hidden 으로 숨긴다 — 클래스의 display 가 hidden 을 이기지 않게. */
 #dvmax.mx_v4 article[hidden] { display: none !important; }
+/* 기능 판 밑 3열(PCB KPI 셋 등) — 글만 있는 3열이 덩그러니였다. 요약과 같은 낮은 테두리 카드로(2026-09-28 검수). */
+#dvmax.mx_v4 .mx_fs .mx_cols { gap: 16px; margin-top: 28px; }
+#dvmax.mx_v4 .mx_fs .mx_cols > li { padding: 24px 24px 26px; border: 1px solid #e5e8eb; border-radius: 10px; background: #fff; }
+#dvmax.mx_v4 .mx_fs .mx_cols b { font-size: 18px; }
+@media (max-width: 900px) { #dvmax.mx_v4 .mx_fs .mx_cols { grid-template-columns: 1fr; gap: 10px; } }
 `

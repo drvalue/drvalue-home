@@ -213,8 +213,8 @@ export const PAGE_CSS = `
 }
 #dvmax .dvshot_zoom {
   position: absolute; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(21,34,56,.82); color: #fff; font-size: 13px; font-weight: 700;
-  padding: 7px 13px; border-radius: 100px; opacity: 0; transition: opacity .18s; }
+  background: #fff; color: #191f28; font-size: 13px; font-weight: 600; border: 1px solid #d1d6db;
+  padding: 6px 10px; border-radius: 8px; opacity: 0; transition: opacity .18s; } /* 검은 알약 → 흰 네모(2026-09-28 검수) */
 #dvmax .dvshot_open:hover .dvshot_zoom,
 #dvmax .dvshot_open:focus-visible .dvshot_zoom { opacity: 1; }
 

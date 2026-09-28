@@ -29,7 +29,8 @@ export default function FeatureShow({ items, extra, url, hideShot = [] }: {
         return (
           <article key={f.no} className={`mx_fs_panel${shot ? '' : ' one'}`}>
             <div className="mx_fs_txt">
-              <p className="mx_fs_k">{f.kicker}</p>
+              {/* 「생산 - 납기 예측」 → 「생산 · 납기 예측」(하이픈이 데이터 라벨처럼 보였다, 2026-09-28 검수). */}
+              <p className="mx_fs_k">{f.kicker.replace(' - ', ' · ')}</p>
               <h3>{mark(f.title)}</h3>
               <ul className="mx_fs_pts">
                 {f.points.map((p) => <li key={p}>{mark(p)}</li>)}
