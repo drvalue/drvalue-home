@@ -135,6 +135,9 @@
   제외). 정적 장은 「운영 › SEO」(`/admin/seo`, `?path=`) — 메뉴의 장 + 홈. 장을 고르면 지금 사이트가 내는
   제목·설명을 그 장 HTML 에서 읽어 보여 준다. 저장은 1분 안에 사이트에 반영된다(공개 장의 1분 캐시).
   api 가 전체 권한·마케팅만 받는다(인사 403).
+  같은 화면 아래 「검색엔진 설정」 구역(`seo/EngineSettings.tsx`, 저장이 따로 — 이탈 경고는 `LeaveGroup` 이 둘을 모은다): 소유 확인 코드 셋은
+  `app/(site)/layout.tsx` 의 확인 meta 로(비면 env 예비), AI 스위치 둘은 `app/robots.ts` 의 묶음으로(`lib/robots-rules.ts` —
+  검색엔진 Yeti·Daumoa·Bingbot·Applebot 은 스위치와 무관하게 늘 연다). 둘 다 `lib/search-settings.ts`(1분 캐시)로 읽는다.
 
 ## 이 덩어리의 방식
 
@@ -225,6 +228,7 @@ NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 98/98
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
 python3 scripts/check-types.py    # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버 없이)
+node --test lib/robots-rules.test.mjs   # 6 — robots.txt 묶음이 AI 스위치를 따르고 검색엔진은 안 막는다(서버 없이)
 node --test "app/(site)/page/support/board/text.test.mjs"   # 7 — 본문 링크화가 href 에 날 " 를 안 남긴다
                                   #     (.ts 를 그대로 읽는다 — node 22.6+ 의 형 지우기. 서버 없이)
 npx tsc --noEmit && npx next build

@@ -138,7 +138,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         { href: '/admin/home', label: '메인 화면' },
         { href: '/admin/pages', label: '페이지' },
         { href: '/admin/menu', label: '메뉴' },
-        // 정적 장의 검색 제목·설명·공유 그림.
+        // 정적 장의 검색 제목·설명·공유 그림 + 검색엔진 설정(소유 확인 코드 · AI 봇 허용 · IndexNow 상태).
         { href: '/admin/seo', label: 'SEO' },
       ],
     })
