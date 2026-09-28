@@ -35,7 +35,7 @@ export const dynamic = 'force-dynamic'
 
 const SKIP = new Set([
   '/page/company/intro',
-  '/page/service/cadon',
+  '/page/service/cuton',
   '/page/support/notify_form',
   '/page/tech/patent_old',
   '/page/business/smart_fac',
