@@ -68,10 +68,9 @@ export const MENU_ITEMS: MenuItem[] = [
     // 만들어 주는 것 하나(AI 솔루션 개발)와 이미 만들어 둔 제품들.
     // 탭을 누르면 첫 항목인 「AI 솔루션 개발」로 간다 — 그 장이 묶음의 첫 장이고
     // 나머지 제품으로 가는 카드를 들고 있다(사용자 결정으로 되살렸다).
-    title: 'AI솔루션', link: '/page/business/ai_sol',
+    title: 'AI솔루션', link: '/page/service/autoform',
     match: ['/page/business/ai_sol', '/page/service/'],
     sub: [
-      { t: 'AI 솔루션 개발', l: '/page/business/ai_sol', d: '사내 데이터로 답하는 RAG 구축' },
       { t: '오토폼', l: '/page/service/autoform', d: '쓰던 한글 양식 그대로 채운다', neu: true },
       { t: '컷온', l: '/page/service/cuton', d: '도면을 올리면 견적이 초 단위로' },
       { t: 'CADON', l: '/page/service/cadon', d: 'AutoCAD 안에서 판금 전개', neu: true },
