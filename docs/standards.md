@@ -24,7 +24,7 @@
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다.
 - **IAM 을 안 거치는 관리자 문을 만들지 않는다.** 토큰·헤더 우회 경로 금지. 검사는
   `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다.
-- 환경변수는 `.env.example` 에 있는 것뿐이다 — 운영 필수는 DB 연결 다섯 · 세션 키 · IAM 콜백 · NCP 메일 넷, 선택은 `NEXT_PUBLIC_GTM_ID` · `DB_SSL` · `WEB_PORT`. 새로 만들기 전에 코드 상수나 compose
+- 환경변수는 `.env.example` 에 있는 것뿐이다 — 운영 필수는 DB 연결 다섯 · 세션 키 · IAM 콜백 · NCP 메일 넷, 선택은 `NEXT_PUBLIC_GTM_ID` · `DB_SSL` · `WEB_PORT` · `INDEXNOW_KEY`. 새로 만들기 전에 코드 상수나 compose
   배선으로 되는지 먼저 본다. api 에서 읽는 곳은 `common/config/app-config.ts` 하나다.
 
 ## 검사 통과 기준
@@ -34,7 +34,7 @@
 | 검사 | 무엇을 본다 | 기준 |
 |---|---|---|
 | `api: npm run typecheck && npm run build` | 컴파일 | 종료코드 0 |
-| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) | 43/43 |
+| `api: node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/indexnow/indexnow.test.mjs` | IAM 관리자 판정 · 범위 · 역할별 게시판 · 마지막 전체 권한 · 페이지 글 검사(모르는 칸·길이·richtext 소독·링크·그림) · 커밋 뒤 할 일(onCommit) · IndexNow 주소·키·보내기 | 47/47 |
 | `api/scripts/verify.sh` | 공개 API(게시판·회사 자료·첨부 관문·문의·이메일·메뉴·페이지·SEO·메인 배너·팝업) + 관리 API 왕복 + 에러 본문·문구 + 닫힌 기본값. DB 직결, 서명 세션으로 | 331 통과 · 판정불가 1 |
 | `api/scripts/check-pattern.py` | 모듈마다 기준 모듈(`admin-post`)의 모양인가 — 서비스 공개 메서드의 `@ServiceException`·JSDoc, 서비스 안 질의 조립 0, 핸들러마다 `@ApiOperation`·응답 문서, 저장소 `BaseRepository` 상속, `app-config` 밖 `process.env` 0. `--table` 은 표만 | 문제 0 |
 | `web/scripts/check-home.py` | 홈의 뼈대(구역 차례·개수·뺀 구역이 안 돌아왔나) + 새 구역이 그려지나 | 23/23 (`NEXT_ORIGIN`) |

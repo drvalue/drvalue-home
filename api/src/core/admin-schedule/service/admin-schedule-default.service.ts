@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
+import { postChangePaths } from '../../../common/indexnow/indexnow-urls';
+import { IndexNowService } from '../../../common/indexnow/indexnow.service';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContextFactory } from '../../../common/typeorm/transaction-context.factory';
@@ -36,6 +38,7 @@ export class AdminScheduleDefaultService {
     private readonly adminPostDefaultService: AdminPostDefaultService,
     private readonly revisionService: RevisionService,
     private readonly transactionContextFactory: TransactionContextFactory,
+    private readonly indexNowService: IndexNowService,
   ) {}
 
   /** cron 입구. 요청 밖이라 문맥을 직접 만든다. 실패해도 다음 틱이 다시 한다 — 던지지 않고 로그만. */
@@ -98,6 +101,16 @@ export class AdminScheduleDefaultService {
         after,
       },
       ctx,
+    );
+    // 예약 공개로 새로 열린 주소 · 자동 내림으로 닫힌 주소. 내림은 지금 보면 전도 이미 내림 시각이
+    // 지나 색인 대상이 아니다 — 내림 시각 직전으로 판단한다(조건부 UPDATE 라 전은 공개였다).
+    const at =
+      kind === 'unpublish' && before?.unpublish_at
+        ? Date.parse(before.unpublish_at) - 1
+        : Date.now();
+    this.indexNowService.submitAfterCommit(
+      ctx,
+      postChangePaths(before, after, at),
     );
     return true;
   }

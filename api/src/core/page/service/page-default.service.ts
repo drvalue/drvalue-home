@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LANGUAGES } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
+import { IndexNowService } from '../../../common/indexnow/indexnow.service';
 import { RevisionService } from '../../../common/revision/revision.service';
 import type { SessionPayload } from '../../../common/session/session-token';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
@@ -41,6 +42,7 @@ export class PageDefaultService {
     private readonly pageDefaultRepository: PageDefaultRepository,
     private readonly pageFileDefaultRepository: PageFileDefaultRepository,
     private readonly revisionService: RevisionService,
+    private readonly indexNowService: IndexNowService,
   ) {}
 
   private schemaOrThrow(key: string): PageSchema {
@@ -179,6 +181,8 @@ export class PageDefaultService {
       },
       ctx,
     );
+    // 페이지 글은 초안이 없다 — 저장한 것이 곧 공개라 그 장 주소를 알린다.
+    this.indexNowService.submitAfterCommit(ctx, [schema.path]);
     return ControllerPageDefaultLangResponseDto.from(
       saved,
       emptyContent(schema.fields),

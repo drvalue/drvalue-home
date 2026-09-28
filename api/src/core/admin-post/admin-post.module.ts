@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { IndexNowModule } from '../../common/indexnow/indexnow.module';
 import { RevisionModule } from '../../common/revision/revision.module';
 import { AdminAuthModule } from '../admin-auth/admin-auth.module';
 import { AdminPostDefaultController } from './controller/admin-post-default.controller';
@@ -10,7 +11,7 @@ import { PostRevisionHandler } from './revision/post-revision.handler';
 import { AdminPostDefaultService } from './service/admin-post-default.service';
 
 @Module({
-  imports: [AdminAuthModule, RevisionModule],
+  imports: [AdminAuthModule, RevisionModule, IndexNowModule],
   controllers: [AdminPostDefaultController],
   providers: [
     PostDefaultRepository,

@@ -26,7 +26,7 @@ src/
 │   ├── response/                # IApiCommonResponse (응답 본문 모양) · 성공 응답 Swagger 데코레이터
 │   │                            #   (ApiDataResponse · ApiDataListResponse · ApiPageResponse · ApiOkFlagResponse …)
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
-│   │                            #   · TransactionContextFactory(요청 밖 — cron)
+│   │                            #   · TransactionContextFactory(요청 밖 — cron) · onCommit(커밋 뒤 할 일)
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
 │   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
@@ -242,6 +242,7 @@ src/
   링크는 모양만 본다(`/` 로 시작 · `//` 아님 · http(s)) — 사이트에 그 장이 있는지는 web 만 알아서 관리 화면이
   저장 전에 HEAD 로 확인한다. 표 이름이 `site_menu_*` 인 이유는 migrations/0006 머리말(옛 Directus 표와 겹친다).
   변경 이력은 collection `menu` · item `site` 한 줄. 되돌리기는 이력의 before 를 저장 DTO 로 검사해 같은 저장 길로 쓴다.
+- **IndexNow(`common/indexnow`)** — `INDEXNOW_KEY` 가 있으면(미리보기 NOINDEX=1 제외) 공개 글 저장·지우기·되돌리기·예약 전환 · 페이지 글 · 검색 정보 저장 뒤 그 주소를 `api.indexnow.org` 에 알린다. `onCommit`(커밋 뒤, 롤백이면 안 부른다)으로 2초 모아 5초 제한, 실패는 로그만. 게시판 → 주소 표는 `indexnow-urls.ts` 하나(정본은 web — 주소를 바꾸면 같이 고친다).
 - 상수: IAM 주소 `https://iam.drvalue.co.kr` · 기본 언어 `ko-KR` · NCP 메일 주소 ·
   문의 한도 분 5 / 시 30. 환경변수로 빼지 않는다.
 
@@ -249,7 +250,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs   # 43 (6 + 9 + 5 + 16 + 7)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs   # 54 (8 + 9 + 5 + 16 + 7 + 9)
 bash scripts/verify.sh          # 331 통과 · 판정불가 1 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

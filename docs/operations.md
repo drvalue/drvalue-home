@@ -91,6 +91,7 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 | `ADMIN_SESSION_SECRET` | 관리 화면 로그인 쿠키(`dv_admin`) 서명 키. SSE 와 무관하다 — 이 값을 아는 사람은 관리자 쿠키를 만들 수 있다 | api 가 **안 뜬다** |
 | `ADMIN_IAM_CALLBACK_URL` | IAM 이 로그인 뒤 돌려보낼 주소. IAM 화이트리스트와 같아야 한다. `https` 면 쿠키에 Secure | 로그인 버튼이 로그인 화면으로 돌아와 「로그인 설정이 끝나지 않았습니다.」(`ADMIN_AUTH_NOT_CONFIGURED`) |
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
+| `INDEXNOW_KEY` (선택) | IndexNow 키(8~128자, 영문·숫자·-, `openssl rand -hex 16`). 공개 글(만들기·고치기·지우기·되돌리기·예약 공개·자동 내림) · 페이지 글 · 검색 정보를 저장하면 커밋 뒤 api 가 그 주소를 `api.indexnow.org` 에 알린다(2초 모아 한 번, 5초 제한, 실패는 로그 한 줄 — 저장은 안 기다린다). web 은 실행 때 같은 값을 읽어 `/<키>.txt` 로 낸다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 보낸다 | 알림을 **안 보낸다**, 키 파일도 404(닫힌 쪽). 모양이 틀린 값도 같다 |
 | `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
 | `NAVER_SITE_VERIFICATION` · `GOOGLE_SITE_VERIFICATION` · `BING_SITE_VERIFICATION` (선택) | 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). web **실행 환경값** — 요청마다 그리는 장(첫 화면 `/` 포함)에만 붙는다. 빌드 때 굳는 정적 장에는 안 붙는다. 공개 값이라 비밀이 아니다 | 그 태그만 안 나간다. 소유 확인을 못 해 사이트맵·RSS(`/rss.xml`) 제출을 못 한다 |
 
@@ -98,7 +99,7 @@ compose 가 넣는 배선: `UPLOADS_DIR=/data/uploads` · `TRUST_PROXY=1` · `PO
 `API_ORIGIN=http://api:3500`(실행 환경 **과** 빌드 인자 — `/api` 프록시는 빌드 때 굳는다). 로컬 개발은
 dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_USER=drvalue` 를 넣는다.
 컨테이너 밖 기본값은 `localhost:3330` · 저장소 `data/uploads` · `http://localhost:3500`.
-`NOINDEX` 는 미리보기 빌드 인자로 compose 에만 있다.
+`NOINDEX` 는 미리보기 빌드 인자로 compose 에만 있다(api 에도 같은 값을 넘긴다 — IndexNow 알림을 끈다).
 
 `TRUST_PROXY` 는 홉 수(`1`)다. Nest 가 숫자로 바꿔 넘긴다 — 문자열 `"1"` 은 IP
 `0.0.0.1` 하나를 믿는 목록으로 읽힌다.
@@ -153,6 +154,7 @@ cp .env.example .env && chmod 600 .env
 #   ADMIN_IAM_CALLBACK_URL=https://drvalue.co.kr/api/admin/auth/callback   ← IAM 화이트리스트에도
 #   NCP_ACCESS_KEY · NCP_SECRET_KEY · NCP_MAIL_SENDER_ADDRESS · NCP_MAIL_TO   ← 비면 문의 메일이 안 간다
 #   NEXT_PUBLIC_GTM_ID=GTM-NLL3QGRF                        ← 비면 방문 통계가 꺼진다
+#   INDEXNOW_KEY=$(openssl rand -hex 16)                   ← 비면 IndexNow 알림이 꺼진다
 #   COMPOSE_FILE 은 넣지 않는다(개발용 포트·DB 컨테이너가 얹힌다)
 
 # 3. 업로드 폴더(api 컨테이너 사용자 uid 100 · gid 101 이 쓴다)

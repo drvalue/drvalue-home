@@ -58,6 +58,8 @@ services:
       # 앞에 서는 것이 web(Next) 하나라 홉 1. 앞단 nginx 가 X-Forwarded-For 를 접속 IP 로 덮어써야
       # 이 값이 맞다(docs/operations.md 「앞단 프록시」). 덧붙이기($proxy_add_x_forwarded_for)면 위조된다.
       TRUST_PROXY: 1
+      # 미리보기 배포(NOINDEX=1)에서는 IndexNow 알림을 안 보낸다. web 빌드 인자와 같은 값.
+      NOINDEX: ${NOINDEX:-}
     volumes:
       - ./data/uploads:/data/uploads
     # 무인증 · DB 를 읽는 가벼운 끝점. 이게 200 이면 api 와 DB 연결이 둘 다 산 것이다.

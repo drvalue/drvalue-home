@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LANGUAGES } from '../../../common/entity/post-translation.entity';
 import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
+import { IndexNowService } from '../../../common/indexnow/indexnow.service';
 import { RevisionService } from '../../../common/revision/revision.service';
 import { snapshotToDto } from '../../../common/revision/snapshot-dto';
 import type { SessionPayload } from '../../../common/session/session-token';
@@ -30,6 +31,7 @@ export class SeoDefaultService {
     private readonly pageMetaTranslationDefaultRepository: PageMetaTranslationDefaultRepository,
     private readonly seoFileDefaultRepository: SeoFileDefaultRepository,
     private readonly revisionService: RevisionService,
+    private readonly indexNowService: IndexNowService,
   ) {}
 
   /** 덮어쓴 장 전부(관리 화면). 덮어쓰지 않은 장은 목록에 없다 — 화면이 장 목록과 합친다. */
@@ -156,6 +158,9 @@ export class SeoDefaultService {
       },
       ctx,
     );
+    // 검색에서 제외한 장끼리의 저장은 알리지 않는다. 막 제외했으면 알린다 — noindex 를 봐야 뺀다.
+    if (!(before?.no_index ?? false) || !after.no_index)
+      this.indexNowService.submitAfterCommit(ctx, [dto.path]);
     return after;
   }
 
@@ -181,5 +186,7 @@ export class SeoDefaultService {
       },
       ctx,
     );
+    // 덮어쓰기를 지우면 코드의 제목·설명(검색 허용)으로 돌아간다.
+    this.indexNowService.submitAfterCommit(ctx, [path]);
   }
 }

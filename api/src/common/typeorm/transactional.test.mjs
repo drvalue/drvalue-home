@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { Transactional } = require('../../../dist/common/typeorm/transactional.decorator.js');
+const { onCommit } = require('../../../dist/common/typeorm/transaction-context.js');
 const { ServiceException } = require('../../../dist/common/error/service-exception.decorator.js');
 const { CommonError } = require('../../../dist/common/error/common-error.js');
 
@@ -61,6 +62,53 @@ test('Transactional: 첫 인자가 문맥이 아니면 거부한다', async () =
   }
   decorate(S, 'run', Transactional());
   await assert.rejects(() => new S().run('x'), /ITransactionContext/);
+});
+
+test('onCommit: 가장 바깥 트랜잭션이 커밋된 뒤에 돈다(안쪽 호출이 실어도)', async () => {
+  const seen = [];
+  const ds = {
+    async transaction(fn) {
+      const r = await fn({ tx: 1 });
+      seen.push('commit');
+      return r;
+    },
+  };
+  class S {
+    async outer(ctx) {
+      await this.inner(ctx);
+      seen.push('outer-end');
+    }
+    async inner(ctx) {
+      onCommit(ctx, () => seen.push('hook'));
+    }
+  }
+  decorate(S, 'outer', Transactional());
+  decorate(S, 'inner', Transactional());
+  await new S().outer({ dataSource: ds });
+  assert.deepEqual(seen, ['outer-end', 'commit', 'hook']);
+});
+
+test('onCommit: 롤백되면 안 돈다 · 트랜잭션 밖이면 바로 돈다 · 던져도 저장 결과는 그대로', async () => {
+  const seen = [];
+  class S {
+    async fail(ctx) {
+      onCommit(ctx, () => seen.push('hook'));
+      throw new Error('boom');
+    }
+    async ok(ctx) {
+      onCommit(ctx, () => {
+        throw new Error('hook boom');
+      });
+      return 'saved';
+    }
+  }
+  decorate(S, 'fail', Transactional());
+  decorate(S, 'ok', Transactional());
+  await assert.rejects(() => new S().fail({ dataSource: fakeDataSource() }), /boom/);
+  assert.deepEqual(seen, []);
+  assert.equal(await new S().ok({ dataSource: fakeDataSource() }), 'saved');
+  onCommit({ dataSource: fakeDataSource() }, () => seen.push('now'));
+  assert.deepEqual(seen, ['now']);
 });
 
 const CODE = { code: 'X_UNKNOWN', message: '저장하지 못했습니다.', status: 500 };
