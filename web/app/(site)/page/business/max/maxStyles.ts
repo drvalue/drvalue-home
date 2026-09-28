@@ -554,7 +554,8 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_hero4 { position: relative; overflow: hidden; padding: 96px 0 0; text-align: center; }
 /* 판이 없는 장(화면 없는 제품)은 밑 여백을 판이 못 맡는다 — 단추가 인증 띠에 붙었다(사용자 지적). */
 #dvmax.mx_v4 .mx_hero4 { padding-bottom: 72px; }
-#dvmax.mx_v4 .mx_glow { position: absolute; left: 50%; top: -140px; width: 900px; height: 520px; transform: translateX(-50%); pointer-events: none; border-radius: 50%;
+/* 머리말 뒤 분홍·파랑 번짐 — 2026-09-28 사용자·블라인드 비평이 「AI 느낌」으로 짚어 끈다. */
+#dvmax.mx_v4 .mx_glow { display: none; position: absolute; left: 50%; top: -140px; width: 900px; height: 520px; transform: translateX(-50%); pointer-events: none; border-radius: 50%;
   background: radial-gradient(closest-side, rgba(62,120,200,.22), rgba(215,25,32,.10) 55%, transparent 75%); filter: blur(30px); animation: mxGlow 9s ease-in-out infinite alternate; }
 @keyframes mxGlow { from { transform: translateX(-56%) scale(1); } to { transform: translateX(-44%) scale(1.12); } }
 #dvmax.mx_v4 .mx_hero4 .mx_wrap { position: relative; }
@@ -605,22 +606,16 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 [data-rv="pop"].rv-wait > * { opacity: 0; transform: none; transition: none; animation: none; }
 #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > * { opacity: 1; transition: none; animation: mxPop .55s cubic-bezier(.22,.68,.24,1) both; animation-delay: calc(var(--i, 0) * .08s); }
 #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > .mx_ring, #dvmax.mx_v4 [data-rv="pop"].rv-wait.rv-in > * > .mx_ring { animation: mxPop .55s cubic-bezier(.22,.68,.24,1) both, mxRing .9s ease-out both; animation-delay: calc(var(--i, 0) * .08s), calc(var(--i, 0) * .08s + .25s); }
-/* 인증·선정 띠 */
-#dvmax.mx_v4 .mx_proof { position: relative; overflow: hidden; padding: 88px 0 96px; color: #fff; background: radial-gradient(120% 90% at 85% 0%, #24365a 0%, #152238 55%, #0f1a2c 100%); }
-#dvmax.mx_v4 .mx_proof .mx_blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; pointer-events: none; }
-#dvmax.mx_v4 .mx_proof .mx_b1 { width: 520px; height: 520px; left: -160px; top: -200px; background: #2a4a86; }
-#dvmax.mx_v4 .mx_proof .mx_b2 { width: 420px; height: 420px; right: -120px; bottom: -220px; background: #7a1d24; }
-#dvmax.mx_v4 .mx_proof .mx_wrap { position: relative; text-align: center; }
-#dvmax.mx_v4 .mx_proof_pill { display: inline-block; margin: 0 0 18px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); font-size: 13px; font-weight: 700; letter-spacing: .02em; }
-#dvmax.mx_v4 .mx_proof_h { margin: 0 0 44px; font-size: clamp(26px, 3vw, 40px); font-weight: 700; line-height: 1.3; letter-spacing: -.02em; }
-#dvmax.mx_v4 .mx_proof ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; text-align: left; }
-#dvmax.mx_v4 .mx_proof li { padding: 28px 26px 26px; border-radius: 20px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(8px); transition: background .25s, transform .25s; }
-#dvmax.mx_v4 .mx_proof li:hover { background: rgba(255,255,255,.12); transform: translateY(-3px); }
-#dvmax.mx_v4 .mx_proof_ic { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 22px; border-radius: 12px; background: rgba(255,255,255,.10); }
-#dvmax.mx_v4 .mx_proof_ic svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#dvmax.mx_v4 .mx_proof li b { display: block; font-size: clamp(22px, 2vw, 26px); font-weight: 800; line-height: 1.15; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
-#dvmax.mx_v4 .mx_proof li b i { font-style: normal; color: rgba(255,255,255,.45); margin: 0 4px; }
-#dvmax.mx_v4 .mx_proof li > span:last-child { display: block; margin-top: 10px; font-size: 14px; line-height: 1.55; color: rgba(255,255,255,.72); word-break: keep-all; }
+/* 인증·선정 띠 — 2026-09-28 사용자: 남색 그라데이션·빛 번짐·유리 카드는 「AI 느낌」. 옅은 회색 한 줄에 칸만 세로선으로 나눈다
+   (블라인드 비평 두 명이 같은 자리를 첫째로 짚었다). 9-22 의 어두운 판(channel.io/documents 참고)을 이것이 대신한다. */
+#dvmax.mx_v4 .mx_proof { padding: 44px 0 48px; background: #f7f8fa; border-top: 1px solid #eceef1; border-bottom: 1px solid #eceef1; color: #191f28; }
+#dvmax.mx_v4 .mx_proof_h { margin: 0 0 22px; font-size: 15px; font-weight: 600; line-height: 1.4; color: #6b7684; letter-spacing: 0; }
+#dvmax.mx_v4 .mx_proof ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+#dvmax.mx_v4 .mx_proof li { padding: 2px 28px; border-left: 1px solid #e1e5ea; }
+#dvmax.mx_v4 .mx_proof li:first-child { padding-left: 0; border-left: 0; }
+#dvmax.mx_v4 .mx_proof li b { display: block; font-size: clamp(20px, 1.8vw, 24px); font-weight: 700; line-height: 1.2; color: #191f28; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#dvmax.mx_v4 .mx_proof li b i { font-style: normal; color: #b0b8c1; margin: 0 4px; }
+#dvmax.mx_v4 .mx_proof li > span { display: block; margin-top: 8px; font-size: 14px; line-height: 1.55; color: #6b7684; word-break: keep-all; }
 /* 구역 · 큰 문장 · 3열 */
 #dvmax.mx_v4 .mx_sec_body { padding: 0; }
 #dvmax.mx_v4 .mx_sec4 { padding: 60px 0; }
@@ -730,7 +725,7 @@ export const PAGE_CSS = `
   #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) { padding-bottom: 48px; }
   #dvmax.mx_v4 .mx_plate_in { padding: 60px 20px 0; min-height: 0; }
   #dvmax.mx_v4 .mx_plate_tag { left: 20px; top: 16px; }
-  #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr 1fr; } #dvmax.mx_v4 .mx_gal, #dvmax.mx_v4 .mx_road { grid-template-columns: 1fr; }
+  #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr 1fr; row-gap: 22px; } #dvmax.mx_v4 .mx_proof li:nth-child(odd) { padding-left: 0; border-left: 0; } #dvmax.mx_v4 .mx_gal, #dvmax.mx_v4 .mx_road { grid-template-columns: 1fr; }
   #dvmax.mx_v4 .mx_cols, #dvmax.mx_v4 .mx_ghead, #dvmax.mx_v4 .mx_case { grid-template-columns: 1fr; }
   #dvmax.mx_v4 .mx_cols { gap: 32px; margin-top: 40px; }
   #dvmax.mx_v4 .mx_case_k { min-height: 0; }
@@ -742,7 +737,7 @@ export const PAGE_CSS = `
   /* 탭 다섯이 한 줄에 다 보이게 — 잘리면 뒤에 더 있는지 모른다(390 실측: 셋만 보임). */
   #dvmax.mx_v4 .mx_tabs { display: flex; width: 100%; padding: 3px; gap: 0; }
   #dvmax.mx_v4 .mx_tabs button { flex: 1 1 0; padding: 8px 4px; font-size: 13px; min-height: 44px; white-space: nowrap; }
-  #dvmax.mx_v4 .mx_proof { padding: 56px 0 64px; } #dvmax.mx_v4 .mx_proof ul { grid-template-columns: 1fr; }
+  #dvmax.mx_v4 .mx_proof { padding: 32px 0 36px; }
   #dvmax.mx_v4 .mx_proof li b { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
