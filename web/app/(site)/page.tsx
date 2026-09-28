@@ -141,35 +141,34 @@ const PAGE_CSS = `
 
 .dvproof .dvproof_card[hidden] { display: none !important; }
 
-/* 사업영역 카드 — 메인에서 비즈니스로 가는 유일한 입구다 */
-.dvbiz { background: #f7f9fa; }
-.dvbiz .dvbiz_grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; list-style: none; padding: 0; margin: 0; }
-.dvbiz .dvbiz_card { animation: dvrise .42s ease both; }
-.dvbiz .dvbiz_card > a {
-  display: flex; flex-direction: column; height: 100%; background: #fff; border: 1px solid #eaeff3;
-  border-radius: 20px; padding: 32px 30px 26px; text-decoration: none; color: inherit;
-  transition: transform .22s, box-shadow .22s, border-color .22s; }
-.dvbiz .dvbiz_card.is-on > a {
-  transform: translateY(-10px); box-shadow: 0 26px 50px rgba(25,31,40,.12); border-color: #dde5ec; }
-.dvbiz .dvbiz_ico {
-  display: inline-flex; width: 54px; height: 54px; border-radius: 16px; align-items: center;
-  justify-content: center; font-size: 23px; background: #f2f6fa; color: #3d5a80;
-  transition: background .22s, color .22s; }
-.dvbiz .dvbiz_card.is-on .dvbiz_ico { background: #d71920; color: #fff; }
-.dvbiz .dvbiz_kicker {
-  display: block; margin-top: 20px; font-size: 12px; font-weight: 800; letter-spacing: .1em; color: #8b97a4; }
-.dvbiz .dvbiz_card h4 {
-  font-size: 23px; font-weight: 800; letter-spacing: -.6px; margin: 6px 0 0; color: #191f28; }
-.dvbiz .dvbiz_card > a > p {
-  margin: 10px 0 0; font-size: 15px; color: #6b7684; line-height: 1.65; word-break: keep-all; }
+/* 사업영역 — M.AX 허브 제품 줄과 같은 구도: 왼쪽 글, 오른쪽 틀을 꽉 채운 사진 */
+.dvbiz { background: #fff; padding: 90px 0; }
+.dvbiz .dvbiz_rows { list-style: none; padding: 0; margin: 0; }
+.dvbiz .dvbiz_row {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center;
+  padding: 48px 0; border-top: 1px solid #e5e8eb; }
+.dvbiz .dvbiz_row:last-child { border-bottom: 1px solid #e5e8eb; }
+.dvbiz .dvbiz_row.is-text { grid-template-columns: 1fr; }
+.dvbiz .dvbiz_kicker { display: block; font-size: 13px; font-weight: 800; letter-spacing: .1em; color: #d71920; }
+.dvbiz .dvbiz_txt h4 {
+  font-size: clamp(24px, 2.4vw, 32px); font-weight: 800; letter-spacing: -.8px; margin: 10px 0 0; color: #191f28; }
+.dvbiz .dvbiz_txt > p {
+  margin: 14px 0 0; font-size: 17px; color: #4e5968; line-height: 1.7; word-break: keep-all; }
 .dvbiz .dvbiz_points { margin: 18px 0 0; padding: 0; list-style: none; }
 .dvbiz .dvbiz_points li {
-  position: relative; padding-left: 15px; margin-bottom: 5px; font-size: 14.5px; color: #4e5968; }
+  position: relative; padding-left: 15px; margin-bottom: 6px; font-size: 15px; color: #4e5968; }
 .dvbiz .dvbiz_points li::before {
-  content: ''; position: absolute; left: 0; top: 10px; width: 7px; height: 2px; background: #3d5a80; }
+  content: ''; position: absolute; left: 0; top: 11px; width: 7px; height: 2px; background: #3d5a80; }
 .dvbiz .dvbiz_go {
-  margin-top: auto; padding-top: 20px; font-size: 14px; font-weight: 700; color: #d71920;
-  display: inline-flex; align-items: center; gap: 5px; }
+  margin-top: 26px; display: inline-flex; align-items: center; gap: 8px; padding: 13px 20px;
+  border: 1px solid #d1d6db; border-radius: 10px; background: #fff; color: #191f28;
+  font-size: 15px; font-weight: 700; text-decoration: none; transition: border-color .18s, background .18s; }
+.dvbiz .dvbiz_go:hover { border-color: #191f28; }
+.dvbiz .dvbiz_go:focus-visible { outline: 3px solid #191f28; outline-offset: 3px; }
+.dvbiz .dvbiz_photo {
+  display: block; aspect-ratio: 16 / 10; border-radius: 20px; overflow: hidden; background: #e5e8eb; }
+.dvbiz .dvbiz_photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.dvbiz .dvbiz_row:hover .dvbiz_photo img { transform: scale(1.03); }
 
 /* 문의 유도 띠 — 원본은 여기서 끝나고 아무 행동도 안 시켰다 */
 .dvcta { background: #191f28; color: #fff; padding: 72px 0; text-align: center; }
@@ -185,7 +184,11 @@ const PAGE_CSS = `
 @keyframes dvrise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: 1024px) {
-  .dvproof .dvproof_grid, .dvbiz .dvbiz_grid { grid-template-columns: repeat(2, 1fr); }
+  .dvproof .dvproof_grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .dvbiz .dvbiz_row { grid-template-columns: 1fr; gap: 24px; padding: 32px 0; }
+  .dvbiz .dvbiz_photo { order: -1; }
 }
 @media (max-width: 700px) {
   .dvnews, .dvproof, .dvbiz { padding: 60px 0; }
@@ -193,15 +196,15 @@ const PAGE_CSS = `
   .dvnews .dvnews_head, .dvproof .dvnews_head, .dvbiz .dvnews_head { flex-direction: column; align-items: flex-start; gap: 12px; }
   .dvnews .dvnews_head h3, .dvproof .dvnews_head h3, .dvbiz .dvnews_head h3 { font-size: 26px; }
   .dvcta h3 { font-size: 24px; }
-  .dvproof .dvproof_grid, .dvbiz .dvbiz_grid { grid-template-columns: 1fr; }
+  .dvproof .dvproof_grid { grid-template-columns: 1fr; }
   .dvnews .dvnews_row > a { grid-template-columns: minmax(0,1fr) 18px; grid-template-areas: "b a" "t a" "d a"; row-gap: 6px; }
   .dvnews .dvnews_badge { grid-area: b; } .dvnews .dvnews_row h4 { grid-area: t; white-space: normal; }
   .dvnews .dvnews_date { grid-area: d; } .dvnews .dvnews_arrow { grid-area: a; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dvnews .dvnews_row, .dvproof .dvproof_card, .dvbiz .dvbiz_card { animation: none; }
+  .dvnews .dvnews_row, .dvproof .dvproof_card { animation: none; }
   .dvnews .dvnews_row > a, .dvnews .dvnews_arrow, .dvproof .dvproof_card, .dvproof .dvproof_card::before,
-  .dvbiz .dvbiz_card > a, .dvbiz .dvbiz_ico, .dvcta .dvcta_btn { transition: none; }
+  .dvbiz .dvbiz_go, .dvbiz .dvbiz_photo img, .dvcta .dvcta_btn { transition: none; }
 }
 `
 
