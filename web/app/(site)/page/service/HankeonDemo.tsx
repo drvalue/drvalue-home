@@ -8,13 +8,12 @@ import { HK_DEMO } from './hankeonContent'
  * 진행 단계가 하나씩 켜지고, 답이 단락으로 떠오르고, 인용 조문이 튀어나온다.
  * 글은 전부 2026-09-22 실제 응답(hankeonContent.ts). 연출만 우리 것이다.
  *
- * 화면에 들어오면 한 번 돈다. 「다시 보기」로 되감는다. 움직임을 줄인 사람에게는
+ * 「다시 보기」를 누를 때만 처음부터 돈다. 움직임을 줄인 사람에게는
  * 끝난 상태를 바로 보여 준다. 스크립트가 없어도 끝난 상태가 그려진다(기본값 = 완료).
  */
 type Phase = 0 | 1 | 2 | 3 | 4 // 0 대기 · 1 타이핑 · 2 단계 · 3 답 · 4 끝
 
 export default function HankeonDemo() {
-  const box = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<Phase>(4)
   const [typed, setTyped] = useState(HK_DEMO.q.length)
   const [step, setStep] = useState(HK_DEMO.steps.length)
@@ -42,21 +41,13 @@ export default function HankeonDemo() {
     at(t, () => setPhase(4))
   }
 
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const el = box.current
-    if (!el) return
-    const io = new IntersectionObserver((es) => {
-      if (es.some((e) => e.isIntersecting)) { io.disconnect(); play() }
-    }, { threshold: 0.35 })
-    io.observe(el)
-    return () => { io.disconnect(); clear() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // 화면에 들어와도 스스로 돌지 않는다 — 끝난 화면을 지우고 기다리게 하던 것(2026-09-28 사용자). 나갈 때 남은 타이머만 치운다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => clear, [])
 
   const q = HK_DEMO.q.slice(0, typed)
   return (
-    <div className={`hk_demo hk_p${phase}`} ref={box}>
+    <div className={`hk_demo hk_p${phase}`}>
       <div className="hk_win">
         <div className="hk_bar"><i /><i /><i /><span>hankeon.com / Chat · 근거 기반 질의응답</span></div>
         <div className="hk_body">

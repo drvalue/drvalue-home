@@ -25,7 +25,8 @@ import urllib.request
 
 NEXT = os.environ.get("NEXT_ORIGIN", "http://localhost:3400")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SHELL = 853  # 헤더 메뉴 591 + 문의 모달 108 + 푸터 154. 2026-09-22 메뉴의 한건 설명 「한국건축」→「건설」로 2자 줄었다(09-18 실측 855).
+SHELL = 831  # 헤더 메뉴 569 + 문의 모달 108 + 푸터 154. 2026-09-22 메뉴의 한건 설명 「한국건축」→「건설」로 2자 줄었다(09-18 실측 855).
+# 2026-09-28 사용자 결정으로 메뉴에서 「안내」·「AI 솔루션 개발」을 숨기고 「컷온」·「CADON」 두 줄을 하나로 합쳐 22자 줄었다.
 
 # 주소: (본문 글자 바닥, 그림 바닥)
 # 낮춘 기록 — pcb-mes 2290→1874·19→9, cuton 767→733·5→4: 「기능마다 화면 한 장만」
@@ -42,7 +43,8 @@ SHELL = 853  # 헤더 메뉴 591 + 문의 모달 108 + 푸터 154. 2026-09-22 �
 # 오토폼 맨 밑 3열 요약은 머리말 요약과 겹쳐 뺐다(2089→1848) · CADON 되접기 화면은 시연에 이미 있어 판을 뺐다(그림 9→8),
 # 이어 「AutoCAD 명령 셋」 구역도 시연과 겹쳐 뺐다(2378→2071). 채팅 장은 머리말 요약 2열 대신 선언 구역(alf-customer).
 FLOORS: dict[str, tuple[int, int]] = {
-    "/": (1525, 2),
+    # 2026-09-28 사용자: 메인의 「CREDENTIALS · 말보다 먼저 쌓아 온 것들」 구역을 숨겼다(1525→901).
+    "/": (901, 2),
     # 2026-09-22 v4 허브(채널웍스 골격): 「무엇이 달라집니까」 고르개 여섯·하위 장 카드 셋을
     # 제품군 구역 셋(판 화면 1장씩)이 대신한다. 글자는 고르개 요점, 그림은 고르개 6장+카드 3장이 빠진 것.
     # 09-22 탭으로: 구역마다 있던 알약 탭 셋이 하나로 (2704→2664).
@@ -58,21 +60,21 @@ FLOORS: dict[str, tuple[int, int]] = {
     # 2026-09-22 밤: Bento(화면 3) + FlowCard 단계 + 머리말 넘김 3 → 1288/8.
     "/page/business/max/mes-ai": (1288, 8),
     "/page/business/smart_fac": (852, 2),
-    "/page/business/ai_sol": (1183, 2),
-    "/page/service/autoform": (1848, 5),
+    # 2026-09-28: 왼쪽 차례표에서 「AI 솔루션 개발」·「컷온」 줄이 빠져 AI솔루션 장마다 8자 줄었다(문장은 그대로).
+    "/page/service/autoform": (1840, 5),
     # 09-22 컷온: 기능 칸의 화면(머리말 판과 같은 그림)을 뺐다 — 화면 하나뿐인 장은 한 곳에만. 그림 3→2.
-    "/page/service/cuton": (1942, 4),
     "/page/service/cadon": (2071, 8),
     "/page/service/chat": (1070, 3),
     "/page/service/hangeon": (726, 1),
-    "/page/service/growtok": (700, 2),
-    "/page/service/growxd": (838, 3),
+    "/page/service/growtok": (692, 2),
+    "/page/service/growxd": (830, 3),
     # 2026-09-18 옛 꾸밈 8장을 새 틀로 옮긴 뒤 잰 값. 게시판 두 장은 글이 스크립트로
     # 들어오므로 본문 바닥이 낮다(껍데기만 센다).
-    "/page/company/intro": (611, 4),
-    "/page/company/vision": (870, 2),
-    "/page/company/history": (686, 2),
-    "/page/company/location": (481, 2),
+    # 2026-09-28 사용자: 회사소개 · 안내(intro)·AI 솔루션 개발(ai_sol)을 숨겨 비전·오토폼으로 넘기고, 컷온을 CADON 장에 합쳐
+    # CADON #cuton 으로 넘긴다 — 세 주소는 장이 아니라 넘김이라 여기서 뺐다. 회사소개 장은 차례표 「안내」 줄이 빠져 25자 줄었다.
+    "/page/company/vision": (845, 2),
+    "/page/company/history": (661, 2),
+    "/page/company/location": (456, 2),
     "/page/portfolio/portfolio": (904, 2),
     "/page/tech/patent": (745, 8),
     "/page/tech/copyright": (713, 7),

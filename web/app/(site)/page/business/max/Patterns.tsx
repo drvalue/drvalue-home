@@ -181,29 +181,12 @@ export function FlowCard({ title, desc, steps, tone = '', href, more, aside }: {
 export type HeroItem = Shot & { tag: string; url?: string }
 
 /**
- * 머리말 판의 화면이 몇 초마다 다음 장으로 건너간다(크로스페이드 + 살짝 확대). 2026-09-22 사용자:
- * 「사진 멈춰 있지 말고 초 지날 때마다 하나씩 — 모션그래픽 느낌」. 화면 밖이면 멈추고, 움직임을 줄인
- * 사람에겐 첫 장만 보인다. 첫 장은 eager 로 받아 LCP 를 안 늦춘다.
+ * 머리말 판의 화면 여럿 — 판 밑 탭(화면 이름)을 누르면 그 장으로 바뀐다(크로스페이드).
+ * 2026-09-22 에는 몇 초마다 스스로 넘어갔는데, 2026-09-28 사용자가 「시간이 지나야 다음 걸 보는 UI」를
+ * 정리하라 해서 자동 넘김을 뺐다. 첫 장은 eager 로 받아 LCP 를 안 늦추고, 스크립트가 없으면 첫 장만 보인다.
  */
-export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: number }) {
+export function HeroCycle({ shots }: { shots: HeroItem[] }) {
   const [cur, setCur] = useState(0)
-  const [on, setOn] = useState(false)
-  const box = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = box.current
-    if (!el || shots.length < 2) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const io = new IntersectionObserver((es) => setOn(es.some((e) => e.isIntersecting)), { threshold: 0.2 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [shots.length])
-
-  useEffect(() => {
-    if (!on) return
-    const id = window.setInterval(() => setCur((c) => (c + 1) % shots.length), every)
-    return () => window.clearInterval(id)
-  }, [on, every, shots.length])
 
   const c = shots[cur]
 
@@ -221,7 +204,7 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
   }, [shots])
 
   return (
-    <figure className="mx_plate" ref={box}>
+    <figure className="mx_plate">
       <div className="mx_plate_in">
         <i className="mx_blob mx_b1" aria-hidden="true" /><i className="mx_blob mx_b2" aria-hidden="true" /><i className="mx_blob mx_b3" aria-hidden="true" />
         <span key={c.tag} className="mx_plate_tag mx_cycle_tag">{c.tag}</span>
@@ -236,6 +219,13 @@ export function HeroCycle({ shots, every = 4200 }: { shots: HeroItem[]; every?: 
           </div>
         </div>
       </div>
+      {shots.length > 1 && (
+        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
+          {shots.map((s, i) => (
+            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
+          ))}
+        </div>
+      )}
     </figure>
   )
 }

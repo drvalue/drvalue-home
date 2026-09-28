@@ -839,10 +839,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_showtabs .hk_show_tabs { margin-top: 24px; }
 #dvmax.mx_v4 .mx_showtabs_plate { animation: hkSwap .45s cubic-bezier(.2,.75,.2,1); }
 #dvmax.mx_v4 .hk_show_bar { display: block; height: 4px; border-radius: 999px; background: #e5e8eb; overflow: hidden; }
-#dvmax.mx_v4 .hk_show_bar b { display: block; height: 100%; width: 0; margin: 0; border-radius: 999px; background: #191f28; animation: hkBar linear forwards; }
 @keyframes hkBar { from { width: 0 } to { width: 100% } }
-#dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { background: #d7dce2; }
-@media (hover: hover) { #dvmax.mx_v4 .hk_show:hover .hk_show_bar b { animation-play-state: paused; } }
+/* 자동으로 넘기지 않는다(2026-09-28 사용자: 「시간 지나야 다음 걸 보는 UI」 정리) — 막대는 고른 탭 표시만. */
+#dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { background: #191f28; }
 #dvmax.mx_v4 .hk_bid { position: relative; padding: 22px 24px 22px 28px; border-radius: 12px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 6px 24px rgba(21,34,56,.06); }
 #dvmax.mx_v4 .hk_bid::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 12px 0 0 12px; background: #1a9e5c; }
 #dvmax.mx_v4 .hk_bid.no::before { background: #d71920; }

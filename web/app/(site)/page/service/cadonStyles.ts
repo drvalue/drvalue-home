@@ -72,9 +72,7 @@ export const CADON_CSS = `
 #dvmax.mx_v4 .cd_show_tabs button:hover { color: #4e5968; }
 #dvmax.mx_v4 .cd_show_tabs button:focus-visible { outline: 2px solid #191f28; outline-offset: 4px; border-radius: 4px; }
 #dvmax.mx_v4 .cd_show_bar { display: block; height: 4px; border-radius: 999px; background: #e5e8eb; overflow: hidden; }
-#dvmax.mx_v4 .cd_show_bar b { display: block; height: 100%; width: 0; margin: 0; border-radius: 999px; background: #191f28; animation: cdBar linear forwards; }
-@keyframes cdBar { from { width: 0 } to { width: 100% } }
-#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { background: #d7dce2; }
+#dvmax.mx_v4 .cd_show_tabs button.on .cd_show_bar { background: #191f28; }
 
 @media (max-width: 900px) {
   #dvmax.mx_v4 .cd_demo { grid-template-columns: 1fr; gap: 16px; }
