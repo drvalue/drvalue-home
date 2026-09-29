@@ -52,8 +52,6 @@ export default async function Page() {
         heroShot={toHeroShots(c.heroShots)}
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
-        // 문의 띠 뒤 사진 — 노트북으로 문서를 만드는 손(opt/main_bg_04 에서 화면 글자가 안 보이게 잘라 흐림).
-        ctaBg="/bg/autoform-cta.webp"
       >
         {/* 시연 — 실제 화면 세 장을 단계대로 */}
         <section className="mx_sec4 hk_sec">
