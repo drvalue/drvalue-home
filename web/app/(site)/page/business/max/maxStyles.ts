@@ -645,6 +645,32 @@ export const PAGE_CSS = `
 #dvmax.mx_v4.mx_fam .mx_fs_txt h3 { font-size: clamp(22px, 2.1vw, 30px); }
 #dvmax.mx_v4.mx_fam .mx_fs_txt h3 .mx_hl { color: #d71920; }
 #dvmax.mx_v4.mx_fam .mx_state { font-size: clamp(30px, 3.4vw, 46px); }
+/* 2026-09-29 사용자 「빽빽하다 — 전체적으로 여유롭게」: 구역 줄 · 제목 · 첫 기능 줄 윗선이 붙어 제목이 두 선 사이에 끼었다.
+   제목 바로 밑 선을 빼고, 구역 · 기능 줄 · 요약 카드 · 목록의 간격을 한 단계씩 넓힌다(M.AX 네 장만). */
+#dvmax.mx_v4.mx_fam .mx_sec4 { padding: 104px 0; }
+#dvmax.mx_v4.mx_fam .mx_sec4.big { padding: 112px 0 96px; }
+#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_state + .mx_state_p { margin-top: 20px; }
+#dvmax.mx_v4.mx_fam .mx_fs { margin-top: 40px; }
+#dvmax.mx_v4.mx_fam .mx_fs_panel { gap: 72px; padding: 72px 0; }
+#dvmax.mx_v4.mx_fam .mx_fs > .mx_fs_panel:first-child { border-top: 0; padding-top: 16px; }
+#dvmax.mx_v4.mx_fam .mx_fs_pts { gap: 12px; margin-top: 22px; }
+#dvmax.mx_v4.mx_fam .mx_fs_pts li { line-height: 1.75; }
+#dvmax.mx_v4.mx_fam .mx_fs_callout { margin-top: 26px; }
+#dvmax.mx_v4.mx_fam .mx_fcard { gap: 72px; padding: 56px 0 16px; }
+/* MES AI 는 카드가 구역 안 mx_wrap 에 한 번 더 싸여 있다 — 그 안쪽 여백(28px)이 카드를 들여 놓았고, 첫 카드 윗선이 구역 줄과 두 줄이 됐다. */
+#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_wrap { padding: 0; }
+#dvmax.mx_v4.mx_fam .mx_sec4 :is(.mx_wrap > .mx_fcard, > .mx_fcard):first-of-type { border-top: 0; padding-top: 0; }
+#dvmax.mx_v4.mx_fam .mx_keycards { gap: 20px; margin-top: 44px; }
+#dvmax.mx_v4.mx_fam .mx_keycards li { padding: 30px 28px 32px; }
+#dvmax.mx_v4.mx_fam .mx_keycards span { margin-top: 10px; line-height: 1.75; }
+#dvmax.mx_v4.mx_fam .mx_show_row { gap: 72px; padding: 72px 0; }
+@media (max-width: 900px) {
+  #dvmax.mx_v4.mx_fam .mx_sec4 { padding: 64px 0; }
+  #dvmax.mx_v4.mx_fam .mx_sec4.big { padding: 72px 0 56px; }
+  #dvmax.mx_v4.mx_fam .mx_fs_panel, #dvmax.mx_v4.mx_fam .mx_show_row { gap: 28px; padding: 44px 0; }
+  #dvmax.mx_v4.mx_fam .mx_fcard { gap: 28px; padding: 40px 0 8px; }
+  #dvmax.mx_v4.mx_fam .mx_keycards { gap: 12px; margin-top: 28px; }
+}
 /* 공통 흐름 — 머리말 밑 전체 폭(차례표 위). 칸 사이를 벌리고 아래를 줄로 끊는다. */
 #dvmax.mx_fam > .mx_fb { padding: 80px 0 72px; border-bottom: 1px solid #e5e8eb; }
 #dvmax.mx_v4.mx_fam > .mx_fb .mx_wrap { padding: 0 28px; }
