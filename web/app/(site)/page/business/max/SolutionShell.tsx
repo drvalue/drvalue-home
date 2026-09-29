@@ -5,6 +5,7 @@ import SiteHeader from '@/components/SiteHeader'
 import SideNav from '@/components/SideNav'
 import type { ReactNode } from 'react'
 import ProofBand from './ProofBand'
+import FlowBand from './FlowBand'
 import { V3Provider } from './V3Context'
 import MotionFx from './MotionFx'
 import { Plate, Statement } from './V4'
@@ -157,6 +158,10 @@ export default function SolutionShell({
           </section>
 
           {proof === true && <ProofBand />}
+
+          {/* M.AX 네 장은 공통 흐름을 머리말 밑 전체 폭에 — 차례표 옆에 끼우면 6칸이 딱 붙었다(2026-09-29 사용자,
+              처음 시안 max-page-draft_v2 의 「위에 공통, 아래 업종」 짜임). 업종별 내용은 그 밑에서 왼쪽 차례표로 오간다. */}
+          {fam && <FlowBand />}
 
           {/* 왼쪽 차례표 — 2026-09-28 사용자: 「왼쪽에 사이더도 둬주고」. v4 로 넘어오며 빠졌던 것을 되살린다(옛 모양과 같은 SideNav). */}
           <section className="mx_sec mx_sec_body" id="mx_body">

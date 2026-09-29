@@ -21,7 +21,7 @@ export default function AiSteps({ a }: { a: AiFeature }) {
           <li key={s}><i>{i + 1}</i>{mark(s)}</li>
         ))}
       </ol>
-      {a.shots && <div data-rv="shot"><Shots shots={a.shots} label={plain(a.title)} /></div>}
+      {a.shots && <div data-rv="shot"><Shots shots={a.shots} /></div>}
     </div>
   )
 }

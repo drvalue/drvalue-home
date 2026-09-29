@@ -194,7 +194,7 @@ function Shot({ s, onOpen }: { s: Shot; onOpen: () => void }) {
  * 글보다 사진이 커서 과했다. 나머지는 눌러서 여는 창 안에서 화살표로 넘긴다.
  * 그림 밑 「화면 N장 크게 보기」 막대는 2026-09-29 뺐다(사용자: 「크게 보면 크게 보는 거지」) — 그림을 누르면 창이 열린다.
  */
-export function Shots({ shots }: { shots: Shot[]; label?: string }) {
+export function Shots({ shots }: { shots: Shot[] }) {
   const [open, setOpen] = useState<number | null>(null)
   const first = shots[0]
   if (!first) return null
