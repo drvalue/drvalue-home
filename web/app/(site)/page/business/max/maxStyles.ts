@@ -627,7 +627,7 @@ export const PAGE_CSS = `
 /* 다음 구역이 윗줄을 긋는다 — 앞 구역 마지막 줄의 밑줄과 겹쳐 두 줄이 되지 않게 지운다. */
 #dvmax.mx_fam .mx_main > :is(.mx_sec4, .mx_fb):not(:last-child) :is(.mx_fs_panel, .mx_show_row):last-child { border-bottom: 0; }
 /* 차례표 첫 줄을 첫 구역 제목 높이에 맞춘다. sticky 는 안쪽 칸이라 바깥 여백은 따라 올라가지 않는다. */
-#dvmax.mx_fam .mx_side { padding-top: 96px; }
+#dvmax.mx_fam .mx_side { padding-top: 138px; } /* 구역 윗여백 112px + 제목 줄 — 첫 제목과 높이를 맞춘다(실측 0px 차) */
 /* 머리 그림은 흰 바탕 파일이다 — 띠 위에서 흰 상자로 뜨지 않게 곱하기로 섞는다. */
 #dvmax.mx_fam .mx_hero_art img { mix-blend-mode: multiply; }
 /* M.AX 네 장 머리 화면 여럿: 가장 납작한 장 기준(16:9 상한) + cover·왼쪽 위 — 틀을 꽉 채운다. 높은 장은 아래가, 16:9 보다 납작한 장은 오른쪽 끝이 잘린다(MES AI 첫 장 2:1 → 약 11%). 좌측 라벨·앞 열은 남는다. */
@@ -645,6 +645,32 @@ export const PAGE_CSS = `
 #dvmax.mx_v4.mx_fam .mx_fs_txt h3 { font-size: clamp(22px, 2.1vw, 30px); }
 #dvmax.mx_v4.mx_fam .mx_fs_txt h3 .mx_hl { color: #d71920; }
 #dvmax.mx_v4.mx_fam .mx_state { font-size: clamp(30px, 3.4vw, 46px); }
+/* 2026-09-29 사용자 「빽빽하다 — 전체적으로 여유롭게」: 구역 줄 · 제목 · 첫 기능 줄 윗선이 붙어 제목이 두 선 사이에 끼었다.
+   제목 바로 밑 선을 빼고, 구역 · 기능 줄 · 요약 카드 · 목록의 간격을 한 단계씩 넓힌다(M.AX 네 장만). */
+#dvmax.mx_v4.mx_fam .mx_sec4 { padding: 104px 0; }
+#dvmax.mx_v4.mx_fam .mx_sec4.big { padding: 112px 0 96px; }
+#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_state + .mx_state_p { margin-top: 20px; }
+#dvmax.mx_v4.mx_fam .mx_fs { margin-top: 40px; }
+#dvmax.mx_v4.mx_fam .mx_fs_panel { gap: 72px; padding: 72px 0; }
+#dvmax.mx_v4.mx_fam .mx_fs > .mx_fs_panel:first-child { border-top: 0; padding-top: 16px; }
+#dvmax.mx_v4.mx_fam .mx_fs_pts { gap: 12px; margin-top: 22px; }
+#dvmax.mx_v4.mx_fam .mx_fs_pts li { line-height: 1.75; }
+#dvmax.mx_v4.mx_fam .mx_fs_callout { margin-top: 26px; }
+#dvmax.mx_v4.mx_fam .mx_fcard { gap: 72px; padding: 56px 0 16px; }
+/* MES AI 는 카드가 구역 안 mx_wrap 에 한 번 더 싸여 있다 — 그 안쪽 여백(28px)이 카드를 들여 놓았고, 첫 카드 윗선이 구역 줄과 두 줄이 됐다. */
+#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_wrap { padding: 0; } /* 지금은 MES AI 만 이 짜임 — 구역 안에 mx_wrap 을 새로 두면 옆 여백이 0 이 된다 */
+#dvmax.mx_v4.mx_fam .mx_sec4 .mx_wrap > .mx_fcard:first-of-type { border-top: 0; padding-top: 0; }
+#dvmax.mx_v4.mx_fam .mx_keycards { gap: 20px; margin-top: 44px; }
+#dvmax.mx_v4.mx_fam .mx_keycards li { padding: 30px 28px 32px; }
+#dvmax.mx_v4.mx_fam .mx_keycards span { margin-top: 10px; line-height: 1.75; }
+#dvmax.mx_v4.mx_fam .mx_show_row { gap: 72px; padding: 72px 0; }
+@media (max-width: 900px) {
+  #dvmax.mx_v4.mx_fam .mx_sec4 { padding: 64px 0; }
+  #dvmax.mx_v4.mx_fam .mx_sec4.big { padding: 72px 0 56px; }
+  #dvmax.mx_v4.mx_fam .mx_fs_panel, #dvmax.mx_v4.mx_fam .mx_show_row { gap: 28px; padding: 44px 0; }
+  #dvmax.mx_v4.mx_fam .mx_fcard { gap: 28px; padding: 40px 0 8px; }
+  #dvmax.mx_v4.mx_fam .mx_keycards { gap: 12px; margin-top: 28px; }
+}
 /* 공통 흐름 — 머리말 밑 전체 폭(차례표 위). 칸 사이를 벌리고 아래를 줄로 끊는다. */
 #dvmax.mx_fam > .mx_fb { padding: 80px 0 72px; border-bottom: 1px solid #e5e8eb; }
 #dvmax.mx_v4.mx_fam > .mx_fb .mx_wrap { padding: 0 28px; }
@@ -756,8 +782,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_cta h3 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.3; letter-spacing: -.88px; font-weight: 700; margin: 0; }
 #dvmax.mx_v4 .mx_cta p { color: #62707e; font-size: 17px; margin: 14px 0 30px; }
 #dvmax.mx_v4 .mx_cta .mx_pill { position: relative; margin: 0; }
-/* 사진을 깐 문의 띠(ctaBg) — 사진 위를 한 색으로 어둡게 덮고 글을 흰색으로. 2026-09-29 사용자 「뒤에 적절한 히어로」. */
-#dvmax.mx_v4 .mx_cta.has-bg { color: #fff; background: linear-gradient(rgba(14, 19, 26, .74), rgba(14, 19, 26, .74)), var(--cta-bg) center / cover no-repeat; }
+/* 그림을 깐 문의 띠(ctaBg) — 어두운 남색 바탕의 선 그림(가운데 비움)이라 덮개 없이 흰 글. 2026-09-29 사용자가 GPT 로 뽑은 그림. */
+/* 그림 가운데 빈 곳이 긴 제목보다 좁다(1440px 에서 양 끝이 표·문서에 겹쳤다) — 같은 남색 45% 한 겹으로 선을 눌러 글을 앞에 세운다(단색, 그라데이션 아님). */
+#dvmax.mx_v4 .mx_cta.has-bg { color: #fff; background: linear-gradient(rgba(19, 27, 38, .45), rgba(19, 27, 38, .45)), #131b26 var(--cta-bg) center / cover no-repeat; }
 #dvmax.mx_v4 .mx_cta.has-bg p { color: rgba(255, 255, 255, .8); }
 /* 번지는 고리는 뺐다(2026-09-28) — 계속 도는 장식 움직임. */
 @keyframes mxRing2 { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }

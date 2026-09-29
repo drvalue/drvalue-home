@@ -84,7 +84,7 @@ export default function SolutionShell({
   ctaTitle = '우리 공장에 맞는 구성이 궁금하신가요?',
   ctaDesc = '업종과 현장 상황을 알려주시면 최적의 구축 방안을 제안해 드립니다.',
   look,
-  ctaBg,
+  ctaBg: ctaBgProp,
   heroShot,
   heroArt,
   heroLink,
@@ -111,8 +111,8 @@ export default function SolutionShell({
    * M.AX·AI솔루션 장만 켠다(사용자 결정). 안 켜면 옛 모양 그대로다.
    */
   look?: 'v4'
-  /** 문의 띠 뒤에 까는 사진(어둡게 덮는다). 없으면 흰 띠 그대로. */
-  ctaBg?: string
+  /** 문의 띠 뒤에 까는 그림. v4 장(M.AX · AI솔루션)은 기본이 데이터→양식 선 그림(bg/cta-art.webp). null 이면 흰 띠. */
+  ctaBg?: string | null
   /** 하나면 판 한 장, 여럿이면 몇 초마다 넘어간다(HeroCycle). */
   heroShot?: HeroShot | HeroShot[]
   /** 화면 대신 머리말 글 밑에 두는 그림 한 장(꾸밈 — 읽는 이에게 새 정보가 없으면 alt 를 비운다). */
@@ -128,6 +128,8 @@ export default function SolutionShell({
   children: ReactNode
 }) {
   const HeroTitle = heroTag
+  // M.AX · AI솔루션(v4) 장의 문의 띠는 같은 선 그림을 깐다(2026-09-29 사용자: 「max 쪽하고 AI 솔루션 쪽」).
+  const ctaBg = ctaBgProp === undefined ? (look === 'v4' ? '/bg/cta-art.webp' : null) : ctaBgProp
   // M.AX 네 장만(2026-09-28 사용자 「이거 4페이지」): 머리말 띠 · 구역 줄 · 왼쪽 차례표 · 머리 화면 꽉 채움.
   // 같은 껍데기를 쓰는 AI솔루션 장들은 그대로 둔다.
   const fam = path === '/page/business/max' || path.startsWith('/page/business/max/')
