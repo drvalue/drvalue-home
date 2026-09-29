@@ -3,7 +3,7 @@ import ClientAction from '@/components/ClientAction'
 import SiteFooter from '@/components/SiteFooter'
 import SiteHeader from '@/components/SiteHeader'
 import SideNav from '@/components/SideNav'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import ProofBand from './ProofBand'
 import FlowBand from './FlowBand'
 import { V3Provider } from './V3Context'
@@ -84,6 +84,7 @@ export default function SolutionShell({
   ctaTitle = '우리 공장에 맞는 구성이 궁금하신가요?',
   ctaDesc = '업종과 현장 상황을 알려주시면 최적의 구축 방안을 제안해 드립니다.',
   look,
+  ctaBg,
   heroShot,
   heroArt,
   heroLink,
@@ -110,6 +111,8 @@ export default function SolutionShell({
    * M.AX·AI솔루션 장만 켠다(사용자 결정). 안 켜면 옛 모양 그대로다.
    */
   look?: 'v4'
+  /** 문의 띠 뒤에 까는 사진(어둡게 덮는다). 없으면 흰 띠 그대로. */
+  ctaBg?: string
   /** 하나면 판 한 장, 여럿이면 몇 초마다 넘어간다(HeroCycle). */
   heroShot?: HeroShot | HeroShot[]
   /** 화면 대신 머리말 글 밑에 두는 그림 한 장(꾸밈 — 읽는 이에게 새 정보가 없으면 alt 를 비운다). */
@@ -186,7 +189,10 @@ export default function SolutionShell({
           {/* 인증 띠를 문의 바로 앞에 — 믿을 근거를 본 뒤에 문의 단추(2026-09-28 사용자: 「어디에 배치할지」). */}
           {proof === 'end' && <ProofBand />}
 
-          <section className="mx_cta">
+          <section
+            className={ctaBg ? 'mx_cta has-bg' : 'mx_cta'}
+            style={ctaBg ? ({ ['--cta-bg' as string]: `url(${ctaBg})` } as CSSProperties) : undefined}
+          >
             <div className="mx_wrap">
               <h3 data-rv="pop" data-words>{ctaTitle}</h3>
               <p>{ctaDesc}</p>

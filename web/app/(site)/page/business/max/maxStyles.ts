@@ -756,6 +756,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_cta h3 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.3; letter-spacing: -.88px; font-weight: 700; margin: 0; }
 #dvmax.mx_v4 .mx_cta p { color: #62707e; font-size: 17px; margin: 14px 0 30px; }
 #dvmax.mx_v4 .mx_cta .mx_pill { position: relative; margin: 0; }
+/* 사진을 깐 문의 띠(ctaBg) — 사진 위를 한 색으로 어둡게 덮고 글을 흰색으로. 2026-09-29 사용자 「뒤에 적절한 히어로」. */
+#dvmax.mx_v4 .mx_cta.has-bg { color: #fff; background: linear-gradient(rgba(14, 19, 26, .74), rgba(14, 19, 26, .74)), var(--cta-bg) center / cover no-repeat; }
+#dvmax.mx_v4 .mx_cta.has-bg p { color: rgba(255, 255, 255, .8); }
 /* 번지는 고리는 뺐다(2026-09-28) — 계속 도는 장식 움직임. */
 @keyframes mxRing2 { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 @media (max-width: 900px) {
