@@ -6,10 +6,17 @@
 .dva .dvp_name {
   font-weight: 700;
 }
+.dva .dvp_layout {
+  display: grid;
+  gap: 16px;
+}
 .dva .dvp_card {
   display: grid;
   gap: 14px;
-  max-width: 880px;
+  min-width: 0;
+}
+.dva .dvp_aside {
+  order: -1;
 }
 .dva .dvp_stamp {
   margin: 0;
@@ -318,5 +325,43 @@
   }
   .dva .dvp_item_toggle {
     min-height: 44px;
+  }
+}
+
+/* 넓은 화면: 구역 바로 가기를 폼 오른쪽 칸에 세로로(PageEditorView 의 .dvp_layout). 위 .dvp_toc 규칙보다 뒤에 둔다. */
+@media (min-width: 1200px) {
+  .dva .dvp_layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    align-items: start;
+  }
+  .dva .dvp_aside {
+    order: 0;
+    position: sticky;
+    top: 88px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    background: var(--dva-panel);
+    border: 1px solid var(--dva-line);
+    border-radius: 12px;
+  }
+  .dva .dvp_aside ul {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dva .dvp_aside .dvp_toc_link {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-radius: 8px;
+  }
+  .dva .dvp_aside .dvp_toc_link:hover {
+    background: var(--dva-bg);
+  }
+  .dva .dvp_aside .dvp_toc_all {
+    display: flex;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--dva-line);
   }
 }

@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { BOARD_LABEL, BOARD_PAGE, type NewsItem } from './news'
 
 /**
  * 메인의 소식 목록. 카드였다가 목록으로 바꿨다 — 사용자 결정. 한 줄에 분류·제목·날짜.
+ * 2026-09-28 사용자 「고도몰 보면서 최근 소식 큼직하게」: 왼쪽에 큰 제목·밑줄 탭·전체 보기,
+ * 오른쪽에 큰 글줄(제목 + 요약 한 줄 + 날짜). 고도몰 「성장 스토리」 구역의 짜임이다.
  *
  * 글은 서버에서 읽어 넘겨준다 — 여기서 부르면 화면이 한 번 비었다가 채워져서
  * 메인에 빈 칸이 번쩍인다. 이 컴포넌트가 하는 일은 고르기와 움직임뿐이다.
@@ -22,12 +24,14 @@ function fmt(d: string | null): string {
   return `${y}.${m}.${day}`
 }
 
-export default function HomeNews({ items }: { items: NewsItem[] }) {
+export default function HomeNews({ items, head, more }: { items: NewsItem[]; head: ReactNode; more?: ReactNode }) {
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('all')
   const shown = tab === 'all' ? items : items.filter((i) => i.board === tab)
 
   return (
     <>
+      <div className="dvnews_side">
+      {head}
       <div className="dvnews_tabs" role="tablist" aria-label="소식 분류">
         {TABS.map((t) => {
           const n = t.key === 'all' ? items.length : items.filter((i) => i.board === t.key).length
@@ -45,7 +49,10 @@ export default function HomeNews({ items }: { items: NewsItem[] }) {
           )
         })}
       </div>
+      {more}
+      </div>
 
+      <div className="dvnews_main">
       {shown.length === 0 ? (
         <p className="dvnews_empty">아직 등록된 소식이 없습니다.</p>
       ) : (
@@ -60,6 +67,7 @@ export default function HomeNews({ items }: { items: NewsItem[] }) {
               <a href={`${BOARD_PAGE[it.board]}/${encodeURIComponent(it.slug)}`}>
                 <span className={`dvnews_badge is-${it.board}`}>{BOARD_LABEL[it.board]}</span>
                 <h4>{it.title}</h4>
+                {it.summary && <p className="dvnews_sum">{it.summary}</p>}
                 <time className="dvnews_date" dateTime={it.published_date ?? undefined}>
                   {fmt(it.published_date)}
                 </time>
@@ -69,6 +77,7 @@ export default function HomeNews({ items }: { items: NewsItem[] }) {
           ))}
         </ul>
       )}
+      </div>
     </>
   )
 }

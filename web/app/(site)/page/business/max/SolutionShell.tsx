@@ -3,8 +3,9 @@ import ClientAction from '@/components/ClientAction'
 import SiteFooter from '@/components/SiteFooter'
 import SiteHeader from '@/components/SiteHeader'
 import SideNav from '@/components/SideNav'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import ProofBand from './ProofBand'
+import FlowBand from './FlowBand'
 import { V3Provider } from './V3Context'
 import MotionFx from './MotionFx'
 import { Plate, Statement } from './V4'
@@ -83,6 +84,7 @@ export default function SolutionShell({
   ctaTitle = '우리 공장에 맞는 구성이 궁금하신가요?',
   ctaDesc = '업종과 현장 상황을 알려주시면 최적의 구축 방안을 제안해 드립니다.',
   look,
+  ctaBg,
   heroShot,
   heroArt,
   heroLink,
@@ -109,6 +111,8 @@ export default function SolutionShell({
    * M.AX·AI솔루션 장만 켠다(사용자 결정). 안 켜면 옛 모양 그대로다.
    */
   look?: 'v4'
+  /** 문의 띠 뒤에 까는 사진(어둡게 덮는다). 없으면 흰 띠 그대로. */
+  ctaBg?: string
   /** 하나면 판 한 장, 여럿이면 몇 초마다 넘어간다(HeroCycle). */
   heroShot?: HeroShot | HeroShot[]
   /** 화면 대신 머리말 글 밑에 두는 그림 한 장(꾸밈 — 읽는 이에게 새 정보가 없으면 alt 를 비운다). */
@@ -124,6 +128,9 @@ export default function SolutionShell({
   children: ReactNode
 }) {
   const HeroTitle = heroTag
+  // M.AX 네 장만(2026-09-28 사용자 「이거 4페이지」): 머리말 띠 · 구역 줄 · 왼쪽 차례표 · 머리 화면 꽉 채움.
+  // 같은 껍데기를 쓰는 AI솔루션 장들은 그대로 둔다.
+  const fam = path === '/page/business/max' || path.startsWith('/page/business/max/')
   if (look === 'v4') {
     return (
       <>
@@ -131,7 +138,7 @@ export default function SolutionShell({
 
         {/* 이름을 mx_hero 로 두지 않는다 — header.css 가 html:has(.mx_hero) 를 보고
             헤더를 투명(흰 글씨)으로 만든다. 여기는 바탕이 밝아서 흰 글씨가 사라진다. */}
-        <div id="dvmax" className="mx_v4">
+        <div id="dvmax" className={fam ? 'mx_v4 mx_fam' : 'mx_v4'}>
           <MotionFx />
           <div className="mx_v4_top"><Breadcrumb currentPath={path} /></div>
 
@@ -147,7 +154,7 @@ export default function SolutionShell({
                 </ClientAction>
                 <a className="mx_pill o" href={heroHref ?? '#mx_body'}>{heroLink ?? '기능 보기'}</a>
               </div>
-              {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
+              {Array.isArray(heroShot) ? <HeroCycle shots={heroShot} fill={fam} /> : heroShot && <Plate shot={heroShot} tag={heroShot.tag} url={heroShot.url} phone={heroShot.phone} eager />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {!heroShot && heroArt && <figure className="mx_hero_art" aria-hidden={heroArt.alt ? undefined : true}><img src={heroArt.src} alt={heroArt.alt} width={heroArt.w} height={heroArt.h} fetchPriority="high" /></figure>}
             </div>
@@ -155,8 +162,14 @@ export default function SolutionShell({
 
           {proof === true && <ProofBand />}
 
+          {/* 공통 흐름은 **허브(M.AX 소개)에만**, 머리말 밑 전체 폭에 — 차례표 옆에 끼우면 6칸이 딱 붙었다.
+              하위 장(PCB·화장품·MES AI)에는 넣지 않는다(2026-09-29 사용자: 「모든 곳에 넣으란 말이 아니다」). */}
+          {path === '/page/business/max' && <FlowBand />}
+
+          {/* 왼쪽 차례표 — 2026-09-28 사용자: 「왼쪽에 사이더도 둬주고」. v4 로 넘어오며 빠졌던 것을 되살린다(옛 모양과 같은 SideNav). */}
           <section className="mx_sec mx_sec_body" id="mx_body">
-            <div className="mx_wrap">
+            <div className={fam ? 'mx_wrap mx_split' : 'mx_wrap'}>
+              {fam && <SideNav currentPath={path} />}
               <div className="mx_main">
                 {/* 요약 = 큰 문장 + 낮은 테두리 카드(2026-09-28). 글만 있는 3열은 사용자가 싫다 했고, 문장만 두니 「덩그러니」였다.
                     레퍼런스(업스테이지 제조 장)는 큰 문장 바로 밑에 테두리 1px 카드를 붙인다 — 그 짜임. */}
@@ -176,7 +189,10 @@ export default function SolutionShell({
           {/* 인증 띠를 문의 바로 앞에 — 믿을 근거를 본 뒤에 문의 단추(2026-09-28 사용자: 「어디에 배치할지」). */}
           {proof === 'end' && <ProofBand />}
 
-          <section className="mx_cta">
+          <section
+            className={ctaBg ? 'mx_cta has-bg' : 'mx_cta'}
+            style={ctaBg ? ({ ['--cta-bg' as string]: `url(${ctaBg})` } as CSSProperties) : undefined}
+          >
             <div className="mx_wrap">
               <h3 data-rv="pop" data-words>{ctaTitle}</h3>
               <p>{ctaDesc}</p>

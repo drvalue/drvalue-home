@@ -157,7 +157,7 @@ export type HeroItem = Shot & { tag: string; url?: string }
  * 2026-09-22 에는 몇 초마다 스스로 넘어갔는데, 2026-09-28 사용자가 「시간이 지나야 다음 걸 보는 UI」를
  * 정리하라 해서 자동 넘김을 뺐다. 첫 장은 eager 로 받아 LCP 를 안 늦추고, 스크립트가 없으면 첫 장만 보인다.
  */
-export function HeroCycle({ shots }: { shots: HeroItem[] }) {
+export function HeroCycle({ shots, fill = false }: { shots: HeroItem[]; fill?: boolean }) {
   const [cur, setCur] = useState(0)
 
   const c = shots[cur]
@@ -170,13 +170,29 @@ export function HeroCycle({ shots }: { shots: HeroItem[] }) {
   // MES 화면에서 좌측 라벨·앞 열이 날아가 뭘 보는 화면인지 알 수 없다.
   // 높은 장에 맞춰 두면 납작한 장은 툴바 바로 밑에 붙고 아래가 흰 여백으로 남는데,
   // 브라우저 창 안이라 「짧은 페이지」처럼 읽혀 어색하지 않다.
+  // 2026-09-28 사용자 「이미지 꽉 채워」: 높은 장 기준이면 납작한 장 밑이 하얗게 비었다(MES AI 첫 장).
+  // 이제 **가장 납작한 장**에 맞추고(단 16:9 보다 납작하게는 안 한다 — 얇은 띠 방지) 잘라 채운다(cover, 왼쪽 위 고정).
+  // 높은 장은 아래만 잘린다 — 좌측 라벨·앞 열·툴바는 남는다.
+  // fill 은 M.AX 네 장만 켠다. 나머지 장은 예전대로 가장 높은 장 기준 + contain.
   const ratio = useMemo(() => {
+    if (fill) {
+      const flattest = Math.min(16 / 9, Math.max(...shots.map((s) => s.w / s.h)))
+      return `${flattest.toFixed(4)} / 1`
+    }
     const tallest = shots.reduce((a, s) => (s.w / s.h < a.w / a.h ? s : a), shots[0])
     return `${tallest.w} / ${tallest.h}`
-  }, [shots])
+  }, [shots, fill])
 
   return (
     <figure className="mx_plate flat">
+      {/* 탭은 화면 위에 — 무엇을 고를 수 있는지 먼저 보이게(2026-09-29 사용자 「위쪽으로 옮기자」). */}
+      {shots.length > 1 && (
+        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
+          {shots.map((s, i) => (
+            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
+          ))}
+        </div>
+      )}
       <div className="mx_plate_in">
         <div className="mx_browser">
           <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span key={c.url ?? c.tag}>{c.url ?? 'max.drvalue.co.kr'}</span></div>
@@ -189,13 +205,6 @@ export function HeroCycle({ shots }: { shots: HeroItem[] }) {
           </div>
         </div>
       </div>
-      {shots.length > 1 && (
-        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
-          {shots.map((s, i) => (
-            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
-          ))}
-        </div>
-      )}
     </figure>
   )
 }

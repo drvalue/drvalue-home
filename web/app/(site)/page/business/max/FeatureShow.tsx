@@ -53,7 +53,7 @@ export default function FeatureShow({ items, extra, url, hideShot = [] }: {
                 <div className="mx_browser">
                   <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span>{url ?? 'max.drvalue.co.kr'} / {short(f)}</span></div>
                   {/* 화면이 여럿이면 둘째 장부터 여는 단추가 붙는다(ShotViewer) — 내용은 다 들어가야 한다. */}
-                  <Shots shots={f.shots!} label={plain(f.title)} />
+                  <Shots shots={f.shots!} />
                 </div>
               </figure>
             )}

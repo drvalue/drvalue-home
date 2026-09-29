@@ -242,7 +242,7 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
       const scheduled = post.publish_at && new Date(post.publish_at) > new Date()
       toast(
         scheduled
-          ? '저장했습니다. 예약한 시각에 사이트에 나옵니다.'
+          ? '저장했습니다. 게시 시작 일시에 사이트에 나옵니다.'
           : post.status === 'published'
             ? '저장했습니다. 사이트에 반영됐습니다.'
             : '초안으로 저장했습니다. 사이트에는 아직 보이지 않습니다.',
@@ -297,14 +297,14 @@ export default function PostForm({ boardKey, id }: { boardKey: string; id?: numb
   const scheduleFields = (
     <>
       <div className="dva_field">
-        <label htmlFor="f-pub">예약 공개</label>
+        <label htmlFor="f-pub">게시 시작 일시 (KST)</label>
         <input id="f-pub" type="datetime-local" value={toLocal(post.publish_at)} onChange={(e) => set({ publish_at: fromLocal(e.target.value) })} />
-        <small>비워 두면 바로 반영됩니다. 시각을 정하면 상태와 관계없이 그 시각에 사이트에 나옵니다.</small>
+        <small>비워 두면 저장하는 즉시 게시됩니다. 시각을 정하면 초안이어도 그 시각에 게시됩니다.</small>
       </div>
       <div className="dva_field">
-        <label htmlFor="f-unpub">자동 내림</label>
+        <label htmlFor="f-unpub">게시 종료 일시 (KST)</label>
         <input id="f-unpub" type="datetime-local" value={toLocal(post.unpublish_at)} onChange={(e) => set({ unpublish_at: fromLocal(e.target.value) })} />
-        <small>비워 두면 계속 보입니다. 시각을 정하면 그 시각에 초안으로 돌아갑니다.</small>
+        <small>비워 두면 계속 게시됩니다. 시각이 지나면 사이트에서 숨겨지고 초안으로 돌아갑니다. 글은 삭제되지 않습니다.</small>
       </div>
     </>
   )

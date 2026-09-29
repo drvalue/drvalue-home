@@ -14,14 +14,14 @@ import type { ApiResponse } from '@/lib/api-types.gen'
 /** 목록에 대표 그림 칸이 있는 게시판. 나머지는 빈 칸을 두지 않는다. */
 const WITH_THUMB = ['notice', 'press', 'news', 'patent', 'copyright']
 
-/** 상태 거름 한 칸에 공개/초안과 예약/내림 예정을 같이 둔다. 앞 둘은 ?status=, 뒤 둘은 ?schedule=. */
+/** 상태 거름 한 칸에 공개/초안과 게시 예정/종료 예정을 같이 둔다. 앞 둘은 ?status=, 뒤 둘은 ?schedule=. */
 const SCHEDULES = ['scheduled', 'unpublishing']
 const FILTERS: { value: string; label: string }[] = [
   { value: '', label: '전체 상태' },
   { value: 'published', label: '공개' },
   { value: 'draft', label: '초안' },
-  { value: 'scheduled', label: '예약' },
-  { value: 'unpublishing', label: '내림 예정' },
+  { value: 'scheduled', label: '게시 예정' },
+  { value: 'unpublishing', label: '종료 예정' },
 ]
 
 /**
@@ -255,12 +255,12 @@ export default function PostListPage() {
                       <span className={`dva_pill is-${r.status}`}>{r.status === 'published' ? '공개' : '초안'}</span>
                       {isFuture(r.publish_at) && (
                         <span className="dva_pill is-scheduled" title={`${shortWhen(r.publish_at)}에 사이트에 나옵니다.`}>
-                          예약 {shortWhen(r.publish_at)}
+                          게시 예정 {shortWhen(r.publish_at)}
                         </span>
                       )}
                       {isFuture(r.unpublish_at) && (
-                        <span className="dva_pill is-unpublishing" title={`${shortWhen(r.unpublish_at)}에 초안으로 돌아갑니다.`}>
-                          내림 예정 {shortDate(r.unpublish_at)}
+                        <span className="dva_pill is-unpublishing" title={`${shortWhen(r.unpublish_at)}에 게시가 끝나고 초안으로 돌아갑니다.`}>
+                          종료 예정 {shortDate(r.unpublish_at)}
                         </span>
                       )}
                     </td>

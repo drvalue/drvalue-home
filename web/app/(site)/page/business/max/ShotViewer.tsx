@@ -192,8 +192,9 @@ function Shot({ s, onOpen }: { s: Shot; onOpen: () => void }) {
 /**
  * 화면 캡처 묶음. **한 장만 보인다** — 사용자 결정. 여러 장을 격자로 깔았더니
  * 글보다 사진이 커서 과했다. 나머지는 눌러서 여는 창 안에서 화살표로 넘긴다.
+ * 그림 밑 「화면 N장 크게 보기」 막대는 2026-09-29 뺐다(사용자: 「크게 보면 크게 보는 거지」) — 그림을 누르면 창이 열린다.
  */
-export function Shots({ shots, label }: { shots: Shot[]; label?: string }) {
+export function Shots({ shots }: { shots: Shot[] }) {
   const [open, setOpen] = useState<number | null>(null)
   const first = shots[0]
   if (!first) return null
@@ -202,18 +203,6 @@ export function Shots({ shots, label }: { shots: Shot[]; label?: string }) {
       <div className="dvshot_grid">
         <Shot s={first} onOpen={() => setOpen(0)} />
       </div>
-      {shots.length > 1 && (
-        // 둘째 장부터 연다 — 첫 장은 이미 보인다. 스크립트가 없으면 이 단추는 아무 일도
-        // 못 한다(글은 다 보이니 고장은 아니다). 이름에 어느 기능의 화면인지를 넣는다.
-        <button
-          type="button"
-          className="dvshot_more"
-          aria-label={`${label ? label + ' ' : ''}화면 ${shots.length}장 크게 보기`}
-          onClick={() => setOpen(1)}
-        >
-          화면 {shots.length}장 크게 보기<i className="fa fa-angle-right" aria-hidden="true" />
-        </button>
-      )}
       {open !== null && (
         <ShotViewer shots={shots} index={open} onClose={() => setOpen(null)} onMove={setOpen} />
       )}

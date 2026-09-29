@@ -1,49 +1,108 @@
-/* 관리 화면 첫 장(홈). 카드 몇 장 — 새 문의 · 초안 · 바로 쓰기 · 최근 변경. */
-.dva .dvd_grid {
+/* 관리 화면 첫 장(홈). 숫자 칸(새 문의 · 내 담당 · 초안 · 예약) + 최근 변경 · 게시판별 초안·예약 · 바로 쓰기. */
+/* 2026-09-29 「UI 가 제각각」: 윗줄 = 같은 크기 숫자 칸(전체 폭), 아랫줄 = 넓은 칸 + 옆 칸. 카드는 전부 같은 테두리·모서리·안쪽 여백. */
+.dva .dvd {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+.dva .dvd_stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 16px;
+}
+.dva .dvd_stat {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 6px;
+  min-height: 150px;
+  padding: 20px;
+  background: var(--dva-panel);
+  border: 1px solid var(--dva-line);
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.16s;
+}
+.dva .dvd_stat:hover {
+  border-color: #c3cad4;
+}
+.dva .dvd_stat:focus-visible {
+  outline: 3px solid var(--dva-accent);
+  outline-offset: 2px;
+}
+.dva .dvd_stat_k {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dva-muted);
+}
+.dva .dvd_stat_n {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.dva .dvd_stat_n small {
+  margin-left: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dva-muted);
+}
+.dva .dvd_stat_sub {
+  font-size: 13px;
+  color: var(--dva-muted);
+}
+.dva .dvd_stat_go {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dva-accent);
+}
+.dva .dvd_cols {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+}
+.dva .dvd_side {
+  display: grid;
+  gap: 16px;
 }
 .dva .dvd_card {
   background: var(--dva-panel);
   border: 1px solid var(--dva-line);
   border-radius: 12px;
-  padding: 18px;
+  padding: 20px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
-.dva .dvd_card.is-wide {
-  grid-column: 1 / -1;
+.dva .dvd_card_head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
-.dva .dvd_card.is-inquiry {
-  border-color: #d8d0ff;
-  box-shadow: inset 4px 0 0 var(--dva-accent);
+.dva .dvd_more {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dva-accent);
+  text-decoration: none;
+}
+.dva .dvd_more:hover {
+  text-decoration: underline;
+}
+@media (max-width: 1100px) {
+  .dva .dvd_cols {
+    grid-template-columns: 1fr;
+  }
 }
 .dva .dvd_card h2 {
-  font-size: 13px;
-  color: var(--dva-muted);
-  letter-spacing: 0.02em;
-}
-.dva .dvd_big {
-  margin: 0;
-  font-size: 36px;
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.dva .dvd_big small {
   font-size: 15px;
   font-weight: 700;
-  margin-left: 4px;
-  color: var(--dva-muted);
+  color: var(--dva-ink);
 }
 .dva .dvd_sub {
   margin: 0;
   color: var(--dva-muted);
 }
-.dva .dvd_actions,
 .dva .dvd_quick {
   display: flex;
   flex-wrap: wrap;
@@ -97,5 +156,17 @@
   .dva .dvd_who {
     grid-column: 2;
     white-space: normal;
+  }
+}
+@media (max-width: 640px) {
+  .dva .dvd_stats {
+    gap: 10px;
+  }
+  .dva .dvd_stat {
+    min-height: 0;
+    padding: 16px;
+  }
+  .dva .dvd_stat_n {
+    font-size: 28px;
   }
 }

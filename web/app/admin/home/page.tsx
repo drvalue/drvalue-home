@@ -221,14 +221,14 @@ function Period({ id, item, onChange }: { id: string; item: { starts_at: string 
   return (
     <div className="dva_row2">
       <div className="dva_field">
-        <label htmlFor={`${id}-start`}>시작</label>
+        <label htmlFor={`${id}-start`}>노출 시작 일시 (KST)</label>
         <input id={`${id}-start`} type="datetime-local" value={toLocal(item.starts_at)} onChange={(e) => onChange({ starts_at: fromLocal(e.target.value) })} />
-        <small>비워 두면 저장하자마자 나옵니다.</small>
+        <small>비워 두면 저장하는 즉시 노출됩니다.</small>
       </div>
       <div className="dva_field">
-        <label htmlFor={`${id}-end`}>끝</label>
+        <label htmlFor={`${id}-end`}>노출 종료 일시 (KST)</label>
         <input id={`${id}-end`} type="datetime-local" value={toLocal(item.ends_at)} onChange={(e) => onChange({ ends_at: fromLocal(e.target.value) })} />
-        <small>비워 두면 끌 때까지 나옵니다.</small>
+        <small>비워 두면 끌 때까지 계속 노출됩니다.</small>
       </div>
     </div>
   )
@@ -304,7 +304,7 @@ function BannersPanel() {
       return `배너 ${i + 1}에 그림을 넣어 주세요.`
     }
     const k = xs.findIndex((x) => x.starts_at && x.ends_at && new Date(x.ends_at) <= new Date(x.starts_at))
-    return k >= 0 ? `배너 ${k + 1}의 끝나는 때는 시작하는 때보다 뒤여야 합니다.` : ''
+    return k >= 0 ? `배너 ${k + 1}의 노출 종료 일시는 시작 일시보다 뒤여야 합니다.` : ''
   }
 
   return (
@@ -325,7 +325,7 @@ function BannersPanel() {
       )}
       <div className="dva_card">
         <p className="dvhm_note">
-          배너는 메인 머리 그림의 사진을 기간 동안 바꿉니다. 진행 중인 배너 가운데 <b>맨 위 하나</b>만 나옵니다(돌아가는 슬라이드는 없습니다).
+          배너는 메인 머리 그림의 사진을 기간 동안 바꿉니다. 노출 중인 배너 가운데 <b>맨 위 하나</b>만 나옵니다(돌아가는 슬라이드는 없습니다).
           제목·설명·링크를 비워 두면 「문구」 탭의 머리 그림 글이 그대로 나옵니다.
         </p>
         <LangTabs lang={lang} onChange={setLang} />
@@ -408,7 +408,7 @@ function PopupsPanel() {
     })
     if (i >= 0) return `팝업 ${i + 1}에 그림이나 한국어 제목·내용 중 하나는 넣어 주세요.`
     const k = xs.findIndex((x) => x.starts_at && x.ends_at && new Date(x.ends_at) <= new Date(x.starts_at))
-    return k >= 0 ? `팝업 ${k + 1}의 끝나는 때는 시작하는 때보다 뒤여야 합니다.` : ''
+    return k >= 0 ? `팝업 ${k + 1}의 노출 종료 일시는 시작 일시보다 뒤여야 합니다.` : ''
   }
 
   return (
@@ -429,7 +429,7 @@ function PopupsPanel() {
       )}
       <div className="dva_card">
         <p className="dvhm_note">
-          팝업은 메인에서만 뜹니다. 진행 중인 팝업을 위에서부터 <b>하나씩</b> 띄우고, 닫으면 다음 것이 뜹니다.
+          팝업은 메인에서만 뜹니다. 노출 중인 팝업을 위에서부터 <b>하나씩</b> 띄우고, 닫으면 다음 것이 뜹니다.
           「N일 동안 보지 않기」를 누른 방문자에게는 그 기간 동안 다시 뜨지 않습니다. 자바스크립트가 꺼진 화면에는 뜨지 않습니다.
         </p>
         <LangTabs lang={lang} onChange={setLang} />

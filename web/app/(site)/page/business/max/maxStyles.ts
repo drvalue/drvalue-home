@@ -179,9 +179,6 @@ export const PAGE_CSS = `
 
 /* 실제 제품 화면 */
 #dvmax .dvshot_grid { display: grid; gap: 14px; }
-.dvshot_more { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 8px 2px; min-height: 44px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #d71920; cursor: pointer; }
-.dvshot_more:hover { text-decoration: underline; }
-.dvshot_more:focus-visible { outline: 3px solid #d71920; outline-offset: 2px; }
 /* 첫 장이 대표다. 나머지는 아래에 두 칸으로 깔린다. */
 /* 두 장뿐이면 둘째도 한 줄을 다 쓴다. 반 칸짜리 하나만 남으면 어색하다. */
 #dvmax .dvshot { margin: 0; }
@@ -621,6 +618,46 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_sec_body { padding: 0; }
 #dvmax.mx_v4 .mx_sec4 { padding: 60px 0; }
 #dvmax.mx_v4 .mx_sec4.big { padding: 96px 0 60px; }
+/* 2026-09-28 사용자: 「히어로로 구분 · 위아래 구분 · 왼쪽 사이더」.
+   머리말을 옅은 바탕 띠로 두르고 밑줄로 끊는다 — 장이 바뀌면 띠부터 다르게 읽힌다.
+   본문 구역끼리는 1px 줄로 끊는다(카드로 감싸지 않는다 — 겹카드는 9-28 에 뺐다). */
+#dvmax.mx_fam .mx_hero4 { background: #f5f7f9; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_fam .mx_main > .mx_sec4 + .mx_sec4 { border-top: 1px solid #e5e8eb; }
+#dvmax.mx_fam .mx_split { gap: 56px; }
+/* 다음 구역이 윗줄을 긋는다 — 앞 구역 마지막 줄의 밑줄과 겹쳐 두 줄이 되지 않게 지운다. */
+#dvmax.mx_fam .mx_main > :is(.mx_sec4, .mx_fb):not(:last-child) :is(.mx_fs_panel, .mx_show_row):last-child { border-bottom: 0; }
+/* 차례표 첫 줄을 첫 구역 제목 높이에 맞춘다. sticky 는 안쪽 칸이라 바깥 여백은 따라 올라가지 않는다. */
+#dvmax.mx_fam .mx_side { padding-top: 96px; }
+/* 머리 그림은 흰 바탕 파일이다 — 띠 위에서 흰 상자로 뜨지 않게 곱하기로 섞는다. */
+#dvmax.mx_fam .mx_hero_art img { mix-blend-mode: multiply; }
+/* M.AX 네 장 머리 화면 여럿: 가장 납작한 장 기준(16:9 상한) + cover·왼쪽 위 — 틀을 꽉 채운다. 높은 장은 아래가, 16:9 보다 납작한 장은 오른쪽 끝이 잘린다(MES AI 첫 장 2:1 → 약 11%). 좌측 라벨·앞 열은 남는다. */
+#dvmax.mx_v4.mx_fam .mx_cycle img { object-fit: cover; object-position: left top; }
+/* 차례표(212px)가 본문을 좁힌다 — 1200px 아래는 숨긴다(흐름 6칸이 비좁아진다). 그 자리는 현재 위치 줄이 맡는다. */
+@media (max-width: 1200px) { #dvmax.mx_fam .mx_split { display: block; } #dvmax.mx_fam .mx_side { display: none; } }
+/* 2026-09-28 사용자: 「작은 빨간 글씨 빼고 강조할 걸 더 키워서 빨갛게」.
+   제목 위 15px 빨간 머리글(머리말·구역·제품 줄·기능)을 뺀다 — 제목과 같은 말을 한 번 더 하거나 위치 줄이 이미 말한다.
+   대신 제목 안의 강조(머리말 b · 제품 줄 b · 기능 제목 mx_hl)를 빨갛게, 제목을 한 단계 크게. */
+#dvmax.mx_v4.mx_fam :is(.mx_kicker, .mx_show_k, .mx_fs_k) { display: none; }
+#dvmax.mx_v4.mx_fam .mx_hero4 :is(h1, h2) { font-size: clamp(32px, 3.8vw, 52px); font-weight: 700; letter-spacing: -1.6px; line-height: 1.22; }
+#dvmax.mx_v4.mx_fam .mx_hero4 :is(h1, h2) b { color: #d71920; font-weight: 800; }
+#dvmax.mx_v4.mx_fam .mx_show_txt h3 { font-size: clamp(26px, 2.6vw, 36px); }
+#dvmax.mx_v4.mx_fam .mx_show_txt h3 b, #dvmax.mx_v4.mx_fam .mx_show_txt h3 .mx_hl { color: #d71920; }
+#dvmax.mx_v4.mx_fam .mx_fs_txt h3 { font-size: clamp(22px, 2.1vw, 30px); }
+#dvmax.mx_v4.mx_fam .mx_fs_txt h3 .mx_hl { color: #d71920; }
+#dvmax.mx_v4.mx_fam .mx_state { font-size: clamp(30px, 3.4vw, 46px); }
+/* 공통 흐름 — 머리말 밑 전체 폭(차례표 위). 칸 사이를 벌리고 아래를 줄로 끊는다. */
+#dvmax.mx_fam > .mx_fb { padding: 80px 0 72px; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4.mx_fam > .mx_fb .mx_wrap { padding: 0 28px; }
+@media (min-width: 1025px) { #dvmax.mx_v4.mx_fam > .mx_fb .mx_flow { gap: 24px; min-width: 0; } }
+/* 메모 글을 14px 로 올리니 다섯 줄짜리(생산) 위 칸이 118px 을 넘어 상자가 아래로 밀렸다 — 칸을 늘려 여섯 상자를 한 줄에. */
+#dvmax.mx_v4.mx_fam > .mx_fb .mx_stage > .mx_note:first-child { min-height: 132px; }
+/* 1025~1200px 은 차례표가 숨어도 6칸이 비좁다 — 3칸으로 접는다(기존 규칙은 1024px 이하). */
+@media (max-width: 1200px) and (min-width: 1025px) {
+  #dvmax.mx_v4.mx_fam > .mx_fb .mx_flow { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 32px; }
+  #dvmax.mx_v4.mx_fam > .mx_fb .mx_stage:nth-child(3n) .mx_arrow { display: none; }
+}
+#dvmax.mx_v4.mx_fam > .mx_fb .mx_kpi { margin-bottom: 40px; }
+#dvmax.mx_v4.mx_fam > .mx_fb .mx_note { font-size: 14px; line-height: 1.6; }
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
 #dvmax.mx_v4 .mx_state_p { text-align: center; max-width: 44em; margin: 18px auto 0; font-size: 17px; color: #333d4b; }
 #dvmax.mx_v4 .mx_cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin: 64px 0 0; padding: 0; list-style: none; }
@@ -719,6 +756,9 @@ export const PAGE_CSS = `
 #dvmax.mx_v4 .mx_cta h3 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.3; letter-spacing: -.88px; font-weight: 700; margin: 0; }
 #dvmax.mx_v4 .mx_cta p { color: #62707e; font-size: 17px; margin: 14px 0 30px; }
 #dvmax.mx_v4 .mx_cta .mx_pill { position: relative; margin: 0; }
+/* 사진을 깐 문의 띠(ctaBg) — 사진 위를 한 색으로 어둡게 덮고 글을 흰색으로. 2026-09-29 사용자 「뒤에 적절한 히어로」. */
+#dvmax.mx_v4 .mx_cta.has-bg { color: #fff; background: linear-gradient(rgba(14, 19, 26, .74), rgba(14, 19, 26, .74)), var(--cta-bg) center / cover no-repeat; }
+#dvmax.mx_v4 .mx_cta.has-bg p { color: rgba(255, 255, 255, .8); }
 /* 번지는 고리는 뺐다(2026-09-28) — 계속 도는 장식 움직임. */
 @keyframes mxRing2 { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 @media (max-width: 900px) {
@@ -839,6 +879,11 @@ export const PAGE_CSS = `
 @keyframes hkBar { from { width: 0 } to { width: 100% } }
 /* 자동으로 넘기지 않는다(2026-09-28 사용자: 「시간 지나야 다음 걸 보는 UI」 정리) — 막대는 고른 탭 표시만. */
 #dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { height: 2px; background: #191f28; }
+/* 자동 넘김(service/useAutoTabs) — 켜진 탭 막대가 옅은 바탕 위로 차오르고, 다 차면 다음 탭. cadon 탭(cd_show)도 같다. */
+#dvmax.mx_v4 :is(.hk_show_bar, .cd_show_bar) { position: relative; overflow: hidden; }
+#dvmax.mx_v4 :is(.hk_show_tabs, .cd_show_tabs) button.on :is(.hk_show_bar, .cd_show_bar) { height: 2px; background: #e5e8eb; }
+#dvmax.mx_v4 .tab_fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #191f28; animation-name: hkBar; animation-timing-function: linear; animation-fill-mode: forwards; }
+@media (prefers-reduced-motion: reduce) { #dvmax.mx_v4 .tab_fill { animation: none; width: 100%; } }
 #dvmax.mx_v4 .hk_bid { position: relative; padding: 22px 24px 22px 28px; border-radius: 12px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 6px 24px rgba(21,34,56,.06); }
 #dvmax.mx_v4 .hk_bid::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 12px 0 0 12px; background: #1a9e5c; }
 #dvmax.mx_v4 .hk_bid.no::before { background: #d71920; }

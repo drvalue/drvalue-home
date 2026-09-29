@@ -484,7 +484,7 @@ li {
   color: #3d5a80;
   margin-left: 4px;
 }
-/* 예약 공개 대기 · 자동 내림 대기. 상태(공개/초안) 옆에 붙는다. */
+/* 게시 예정 · 종료 예정. 상태(공개/초안) 옆에 붙는다. */
 .dva_pill.is-scheduled,
 .dva_pill.is-unpublishing {
   background: #eef3f8;

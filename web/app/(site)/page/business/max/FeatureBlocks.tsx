@@ -56,10 +56,10 @@ export function FeatureBlock({ f, flip, tone = 0 }: { f: Feature; flip: boolean;
           {/* v4: 판(움직이는 배경 + 브라우저 프레임)에 담는다. 화면 여럿이면 여는 창은 그대로. */}
           {v3 ? (
             <Plate tone={TONES[tone % TONES.length]} url={f.kicker}>
-              <Shots shots={f.shots} label={plain(f.title)} />
+              <Shots shots={f.shots} />
             </Plate>
           ) : (
-            <Shots shots={f.shots} label={plain(f.title)} />
+            <Shots shots={f.shots} />
           )}
         </aside>
       )}

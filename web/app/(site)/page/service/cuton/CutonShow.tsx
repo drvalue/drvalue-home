@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useAutoTabs } from '../useAutoTabs'
 import { CT_SHOW } from '../cutonContent'
 
 /**
@@ -11,13 +11,10 @@ import { CT_SHOW } from '../cutonContent'
  */
 
 export default function CutonShow() {
-  const [cur, setCur] = useState(0)
-  const [tick, setTick] = useState(0)
-
-  const go = (i: number) => { setCur(i % CT_SHOW.cases.length); setTick((t) => t + 1) }
+  const { cur, tick, go, boxProps, fillProps } = useAutoTabs(CT_SHOW.cases.length)
 
   return (
-    <div className="hk_show ct_show" data-rv>
+    <div className="hk_show ct_show" data-rv {...boxProps}>
       <div className="hk_show_plate">
         <div className="hk_show_me">
           <p className="hk_show_me_t">프로젝트</p>
@@ -43,7 +40,7 @@ export default function CutonShow() {
       <div className="hk_show_tabs" role="tablist" aria-label="컷온 화면 셋">
         {CT_SHOW.cases.map((x, i) => (
           <button key={x.k} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => go(i)}>
-            <i className="hk_show_bar" aria-hidden="true" />
+            <i className="hk_show_bar" aria-hidden="true">{i === cur && <b key={tick} {...fillProps} />}</i>
             <b>{x.v}</b>
             <span>{x.d}</span>
           </button>

@@ -125,7 +125,7 @@ export const PATTERN_CSS2 = `
 #dvmax.mx_v4 .mx_plate.flat .mx_plate_in { margin: 0; padding: 0; min-height: 0; border-radius: 0; overflow: visible; }
 #dvmax.mx_v4 .mx_plate.flat .mx_plate_in::before, #dvmax.mx_v4 .mx_plate.flat .mx_plate_in::after { content: none; }
 #dvmax.mx_v4 .mx_plate.flat .mx_browser { border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); }
-#dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 24px; margin: 20px auto 0; width: max-content; max-width: 100%; border-bottom: 1px solid #e5e8eb; }
+#dvmax.mx_v4 .mx_cycle_tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 24px; margin: 0 auto 20px; width: max-content; max-width: 100%; border-bottom: 1px solid #e5e8eb; }
 #dvmax.mx_v4 .mx_cycle_tabs button { min-height: 44px; margin-bottom: -1px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: #8b95a1; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: color .2s, border-color .2s; }
 #dvmax.mx_v4 .mx_cycle_tabs button:hover { color: #4e5968; }
 #dvmax.mx_v4 .mx_cycle_tabs button.on { color: #191f28; border-bottom-color: #191f28; }
@@ -197,9 +197,6 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs_chips li { font-size: 14px; font-weight: 500; color: #8b95a1; }
 #dvmax.mx_v4 .mx_fs_fig { position: relative; margin: 0; }
 #dvmax.mx_v4 .mx_fs_fig .mx_browser { position: relative; width: 100%; border: 1px solid #e5e8eb; border-radius: 12px; box-shadow: 0 12px 32px rgba(21,34,56,.08); will-change: auto; }
-/* 화면 여럿일 때 ShotViewer 의 「N장 크게 보기」 — 창 위에 떠 있던 흰 알약 → 창 밑 글자 단추. */
-#dvmax.mx_v4 .mx_fs_fig .dvshot_more { position: static; display: flex; width: 100%; margin: 0; padding: 12px 16px; border: 0; border-top: 1px solid #eef0f2; border-radius: 0; background: #fafbfc; box-shadow: none; font-size: 14px; font-weight: 600; color: #4e5968; }
-#dvmax.mx_v4 .mx_fs_fig .dvshot_more:hover { color: #191f28; background: #f2f4f6; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_grid { display: block; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot img { border: 0; border-radius: 0; }
 #dvmax.mx_v4 .mx_fs_fig .dvshot_frame { border-radius: 0; box-shadow: none; }
@@ -219,12 +216,11 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .hk_center { text-align: left; }
 #dvmax.mx_v4 .mx_bento_head { text-align: left; }
 /* 화면 밑 탭은 가운데 — 글은 왼쪽 축이어도 탭은 위 화면에 딸린 것이라 화면 가운데에 둔다(2026-09-28 사용자 「왼쪽에 안 두면 좋겠다」). */
-#dvmax.mx_v4 .mx_cycle_tabs { margin: 20px auto 0; justify-content: center; }
+#dvmax.mx_v4 .mx_cycle_tabs { margin: 0 auto 20px; justify-content: center; }
 /* 화면 없는 머리말(M.AX 허브) — 오른쪽이 비어 보이지 않게 글 폭을 넓히고, 바로 밑 흐름도(허브의 대표 그림)로 곧장 잇는다. */
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) :is(h1, h2) { max-width: 28em; }
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) > .mx_wrap > p:not(.mx_kicker) { max-width: 46em; }
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) { padding-bottom: 24px; }
-#dvmax.mx_v4 .mx_main > .mx_fb:first-child { padding-top: 40px; }
 /* ── 제품군 판 셋(고정) ── */
 #dvmax.mx_v4 .mx_show_rows { margin: 36px 0 0; }
 #dvmax.mx_v4 .mx_show_row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; padding: 48px 0; border-top: 1px solid #e5e8eb; }
@@ -257,8 +253,6 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_fs .mx_cols > li { padding: 24px 24px 26px; border: 1px solid #e5e8eb; border-radius: 10px; background: #fff; }
 #dvmax.mx_v4 .mx_fs .mx_cols b { font-size: 18px; }
 @media (max-width: 900px) { #dvmax.mx_v4 .mx_fs .mx_cols { grid-template-columns: 1fr; gap: 10px; } }
-/* 폰: 그림이 여러 장이면 창 아래 「화면 N장 크게 보기」가 있으니 그림 위 확대 버튼은 감춘다 — 같은 일을 하는 단추가 둘 겹쳤다. */
-@media (max-width: 700px) { #dvmax.mx_v4 .mx_fs_fig:has(.dvshot_more) .dvshot_zoom { display: none; } }
 /* 머리말 글 밑 그림(heroArt) — 판·틀 없이 흰 바탕에 그대로. */
 #dvmax.mx_v4 .mx_hero_art { margin: 48px 0 0; padding: 0; }
 #dvmax.mx_v4 .mx_hero_art img { display: block; width: 100%; height: auto; }
