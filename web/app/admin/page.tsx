@@ -37,6 +37,9 @@ export default function AdminHome() {
   const draftTotal = summary ? summary.drafts.reduce((n, d) => n + d.count, 0) : null
   const schedTotal = summary ? summary.scheduled.reduce((n, d) => n + d.count, 0) : null
   const seeInquiries = me.role !== 'hr'
+  // 수는 모든 게시판을 합친 값이다 — 한 게시판뿐일 때만 그 목록으로, 둘 이상이면 옆의 「게시판별 초안 · 예약」 칸으로.
+  const pendingHref = (rows: { board: string }[] | undefined, q: string) =>
+    rows && rows.length === 1 ? `/admin/posts/${rows[0].board}?${q}` : '#dvd-pending'
 
   // 2026-09-29 사용자 「UI 가 제각각」: 높이·폭이 다른 카드 넷 + 끝까지 뻗은 한 장 → 같은 크기 숫자 칸 한 줄 + 아래 두 칸.
   // 숫자 칸은 전부 「이름 · 큰 수 · 한 줄 · 바로 가기」 같은 모양이다.
@@ -66,8 +69,8 @@ export default function AdminHome() {
       <section className="dvd_stats" aria-label="지금 할 일">
         {seeInquiries && stat('새 문의', inq ? inq.new : null, '접수 상태로 남은 문의', '/admin/inquiries?status=new', '새 문의 보기')}
         {seeInquiries && stat('내 담당', inq ? inq.mine_open : null, '내가 맡아 아직 끝나지 않은 문의', '/admin/inquiries?assignee=me', '내 담당 보기')}
-        {stat('초안', draftTotal, '사이트에 올리지 않은 글', boards[0] ? `/admin/posts/${summary?.drafts[0]?.board ?? boards[0].key}?status=draft` : '/admin', '초안 보기')}
-        {stat('예약 게시', schedTotal, '올라갈 날을 정해 둔 글', boards[0] ? `/admin/posts/${summary?.scheduled[0]?.board ?? boards[0].key}?schedule=scheduled` : '/admin', '예약 보기')}
+        {stat('초안', draftTotal, '사이트에 올리지 않은 글', pendingHref(summary?.drafts, 'status=draft'), '초안 보기')}
+        {stat('예약 게시', schedTotal, '올라갈 날을 정해 둔 글', pendingHref(summary?.scheduled, 'schedule=scheduled'), '예약 보기')}
       </section>
 
       <div className="dvd_cols">
