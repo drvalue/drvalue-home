@@ -876,6 +876,11 @@ export const PAGE_CSS = `
 @keyframes hkBar { from { width: 0 } to { width: 100% } }
 /* 자동으로 넘기지 않는다(2026-09-28 사용자: 「시간 지나야 다음 걸 보는 UI」 정리) — 막대는 고른 탭 표시만. */
 #dvmax.mx_v4 .hk_show_tabs button.on .hk_show_bar { height: 2px; background: #191f28; }
+/* 자동 넘김(service/useAutoTabs) — 켜진 탭 막대가 옅은 바탕 위로 차오르고, 다 차면 다음 탭. cadon 탭(cd_show)도 같다. */
+#dvmax.mx_v4 :is(.hk_show_bar, .cd_show_bar) { position: relative; overflow: hidden; }
+#dvmax.mx_v4 :is(.hk_show_tabs, .cd_show_tabs) button.on :is(.hk_show_bar, .cd_show_bar) { height: 2px; background: #e5e8eb; }
+#dvmax.mx_v4 .tab_fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #191f28; animation-name: hkBar; animation-timing-function: linear; animation-fill-mode: forwards; }
+@media (prefers-reduced-motion: reduce) { #dvmax.mx_v4 .tab_fill { animation: none; width: 100%; } }
 #dvmax.mx_v4 .hk_bid { position: relative; padding: 22px 24px 22px 28px; border-radius: 12px; background: #fff; border: 1px solid #e5e8eb; box-shadow: 0 6px 24px rgba(21,34,56,.06); }
 #dvmax.mx_v4 .hk_bid::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 12px 0 0 12px; background: #1a9e5c; }
 #dvmax.mx_v4 .hk_bid.no::before { background: #d71920; }
