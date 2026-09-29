@@ -185,6 +185,14 @@ export function HeroCycle({ shots, fill = false }: { shots: HeroItem[]; fill?: b
 
   return (
     <figure className="mx_plate flat">
+      {/* 탭은 화면 위에 — 무엇을 고를 수 있는지 먼저 보이게(2026-09-29 사용자 「위쪽으로 옮기자」). */}
+      {shots.length > 1 && (
+        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
+          {shots.map((s, i) => (
+            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
+          ))}
+        </div>
+      )}
       <div className="mx_plate_in">
         <div className="mx_browser">
           <div className="mx_browser_bar" aria-hidden="true"><i /><i /><i /><span key={c.url ?? c.tag}>{c.url ?? 'max.drvalue.co.kr'}</span></div>
@@ -197,13 +205,6 @@ export function HeroCycle({ shots, fill = false }: { shots: HeroItem[]; fill?: b
           </div>
         </div>
       </div>
-      {shots.length > 1 && (
-        <div className="mx_cycle_tabs" role="tablist" aria-label="화면">
-          {shots.map((s, i) => (
-            <button key={s.src} type="button" role="tab" aria-selected={i === cur} className={i === cur ? 'on' : undefined} onClick={() => setCur(i)}>{s.tag}</button>
-          ))}
-        </div>
-      )}
     </figure>
   )
 }

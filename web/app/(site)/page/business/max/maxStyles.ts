@@ -179,9 +179,6 @@ export const PAGE_CSS = `
 
 /* 실제 제품 화면 */
 #dvmax .dvshot_grid { display: grid; gap: 14px; }
-.dvshot_more { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 8px 2px; min-height: 44px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #d71920; cursor: pointer; }
-.dvshot_more:hover { text-decoration: underline; }
-.dvshot_more:focus-visible { outline: 3px solid #d71920; outline-offset: 2px; }
 /* 첫 장이 대표다. 나머지는 아래에 두 칸으로 깔린다. */
 /* 두 장뿐이면 둘째도 한 줄을 다 쓴다. 반 칸짜리 하나만 남으면 어색하다. */
 #dvmax .dvshot { margin: 0; }
