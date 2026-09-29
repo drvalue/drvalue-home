@@ -100,6 +100,7 @@ export default function InquiriesPage() {
     return p?.name || email
   }
 
+  const noneAtAll = !!rows && rows.data.length === 0 && !selId
   return (
     <div className="dvi">
       <div className="dva_head">
@@ -129,7 +130,8 @@ export default function InquiriesPage() {
         </div>
       )}
 
-      <div className="dvi_split">
+      {/* 목록이 비었고 고른 문의도 없으면 한 칸 — 빈 목록 옆에 「고르면 여기에」 칸을 두면 안내가 둘로 갈렸다(2026-09-29). */}
+      <div className={`dvi_split${noneAtAll ? ' is-empty' : ''}`}>
         <div className="dvi_listwrap">
           {rows && rows.data.length === 0 && (
             <div className="dva_empty">
@@ -167,6 +169,7 @@ export default function InquiriesPage() {
               </li>
             ))}
           </ul>
+          {!noneAtAll && (
           <div className="dva_pager">
             <button type="button" className="dva_btn is-small" disabled={page <= 1} onClick={() => query.set({ page: page - 1, id: null })}>
               이전
@@ -178,8 +181,10 @@ export default function InquiriesPage() {
               다음
             </button>
           </div>
+          )}
         </div>
 
+        {!noneAtAll && (
         <aside ref={detail} className="dvi_detail" aria-label="문의 상세">
           {sel ? (
             <>
@@ -194,6 +199,7 @@ export default function InquiriesPage() {
             <div className="dva_empty">목록에서 문의를 고르면 내용이 여기에 나옵니다.</div>
           )}
         </aside>
+        )}
       </div>
     </div>
   )

@@ -124,6 +124,9 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
         </div>
       )}
 
+      {/* 넓은 화면: 폼(880px 안팎) + 오른쪽에 붙어 따라오는 구역 바로 가기 — 머리 막대와 폭이 맞는다(2026-09-29 「UI 가 제각각」).
+          좁은 화면: 바로 가기가 폼 위로. */}
+      <div className="dvp_layout">
       <div className="dva_card dvp_card">
         <div className="dva_tabs" role="tablist" aria-label="언어">
           {LANGS.map((l) => (
@@ -156,8 +159,18 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
             한국어 글을 복사해서 시작하기
           </button>
         )}
+        <CollapseProvider value={collapse}>
+          <Fields
+            fields={schema.fields}
+            value={drafts[lang] ?? {}}
+            onChange={(v) => setDrafts((d) => ({ ...d, [lang]: v }))}
+            id={`pg-${lang}`}
+            onError={setError}
+          />
+        </CollapseProvider>
+      </div>
         {sections.length > 1 && (
-          <nav className="dvp_toc" aria-label="구역 바로 가기">
+          <nav className="dvp_toc dvp_aside" aria-label="구역 바로 가기">
             <ul>
               {sections.map((s) => (
                 <li key={s.key}>
@@ -181,15 +194,6 @@ export default function PageEditorView({ pageKey: key, embedded = false }: { pag
             </div>
           </nav>
         )}
-        <CollapseProvider value={collapse}>
-          <Fields
-            fields={schema.fields}
-            value={drafts[lang] ?? {}}
-            onChange={(v) => setDrafts((d) => ({ ...d, [lang]: v }))}
-            id={`pg-${lang}`}
-            onError={setError}
-          />
-        </CollapseProvider>
       </div>
     </>
   )
