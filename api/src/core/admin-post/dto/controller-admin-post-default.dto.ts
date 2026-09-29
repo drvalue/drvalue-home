@@ -43,9 +43,9 @@ export class ControllerAdminPostDefaultListQueryDto {
   status?: string;
 
   @IsIn({
-    propertyName: '예약',
+    propertyName: '게시 예정·종료 예정 거름',
     description:
-      'scheduled = 예약 공개 시각이 아직 안 온 글 · unpublishing = 자동 내림 시각이 정해진 글',
+      'scheduled = 게시 시작 일시가 아직 안 온 글 · unpublishing = 게시 종료 일시가 정해진 글',
     values: POST_SCHEDULES,
     optional: true,
   })
@@ -301,20 +301,20 @@ export class ControllerAdminPostDefaultSaveDto {
   deadline?: string | null;
 
   /**
-   * 예약 공개 · 자동 내림. 비우면(null) 없음.
+   * 게시 시작 일시 · 게시 종료 일시. 비우면(null) 없음.
    * 공개 API 는 이 둘을 보고 거른다 — 상태를 1분마다 바꾸는 일은 admin-schedule 이 한다.
    */
   @IsDateTimeString({
-    propertyName: '예약 공개',
-    description: '이 시각에 사이트에 나온다',
+    propertyName: '게시 시작 일시',
+    description: '이 시각부터 사이트에 게시된다(초안이어도)',
     optional: true,
     nullable: true,
   })
   publish_at?: string | null;
 
   @IsDateTimeString({
-    propertyName: '자동 내림',
-    description: '이 시각에 초안으로 돌아간다',
+    propertyName: '게시 종료 일시',
+    description: '이 시각이 지나면 사이트에서 숨겨지고 초안으로 돌아간다(삭제 아님)',
     optional: true,
     nullable: true,
   })

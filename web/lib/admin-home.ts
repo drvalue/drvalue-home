@@ -2,7 +2,7 @@
  * 관리 화면의 메인 배너·팝업(/api/admin/home/*). 저장은 목록 전체를 한 번에 — 순서는 배열 순서.
  * 모양은 api 의 core/home/dto 와 같다(응답 `*-response.dto.ts`, 요청 `controller-home-default.dto.ts`).
  */
-import { adminFetch, adminJson } from './admin'
+import { adminFetch, adminJson, fromKstInput, toKstInput } from './admin'
 import type * as Api from './api-types.gen'
 import type { ApiBody, ApiResponse } from './api-types.gen'
 
@@ -101,11 +101,6 @@ export const newPopup = (): Popup => ({
   translations: [emptyPopupText('ko-KR')],
 })
 
-/** ISO ↔ datetime-local 값('2026-09-30T10:00'). 화면은 이 컴퓨터 시간대로 보여 준다. */
-export function toLocal(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
-}
-export const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null)
+/** ISO ↔ datetime-local 값('2026-09-30T10:00'). 한국 시간(KST)으로 — lib/admin.ts 의 변환을 그대로 쓴다. */
+export const toLocal = toKstInput
+export const fromLocal = fromKstInput

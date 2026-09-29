@@ -120,19 +120,37 @@ export const EMPLOYMENT_LABEL: Record<string, string> = {
   intern: '인턴',
 }
 
-/** ISO → '9/30 10:00'. 목록의 예약 배지용. */
+/**
+ * 게시·노출 시각은 **한국 시간(KST, +09:00)** 으로 보여 주고 받는다 — 칸 이름에 「(KST)」를 적는다.
+ * 예전에는 이 컴퓨터 시간대였다(해외에서 열면 적힌 것과 다른 시각이 들어갔다). 한국은 서머타임이 없어 +9 시간 고정.
+ */
+const KST_MS = 9 * 60 * 60 * 1000
+const pad2 = (n: number) => String(n).padStart(2, '0')
+/** ISO → 한국 시간의 달력 값(getUTC* 로 읽는다). */
+function kst(iso: string): Date {
+  return new Date(Date.parse(iso) + KST_MS)
+}
+/** ISO → datetime-local 값('2026-09-30T10:00', KST). */
+export function toKstInput(iso: string | null): string {
+  if (!iso) return ''
+  const d = kst(iso)
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`
+}
+/** datetime-local 값(KST) → ISO. 빈 값은 null. */
+export const fromKstInput = (v: string) => (v ? new Date(`${v}:00+09:00`).toISOString() : null)
+
+/** ISO → '9/30 10:00'(KST). 목록의 「게시 예정」 배지용. */
 export function shortWhen(iso: string | null | undefined): string {
   if (!iso) return ''
-  const d = new Date(iso)
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
+  const d = kst(iso)
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`
 }
 
-/** ISO → '10/1'. 날짜만(이 컴퓨터 시간대) — 「종료 예정」 배지. */
+/** ISO → '10/1'(KST 날짜) — 「종료 예정」 배지. */
 export function shortDate(iso: string | null | undefined): string {
   if (!iso) return ''
-  const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  const d = kst(iso)
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`
 }
 
 /** 아직 오지 않은 시각인가. 목록의 예약·내림 배지가 쓴다. */

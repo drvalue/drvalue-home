@@ -837,7 +837,7 @@
             "type": "string"
           },
           "publish_at": {
-            "description": "이 시각에 사이트에 나온다",
+            "description": "이 시각부터 사이트에 게시된다(초안이어도)",
             "example": "2026-09-30T01:00:00.000Z",
             "format": "date-time",
             "nullable": true,
@@ -880,7 +880,7 @@
             "type": "array"
           },
           "unpublish_at": {
-            "description": "이 시각에 초안으로 돌아간다",
+            "description": "이 시각이 지나면 사이트에서 숨겨지고 초안으로 돌아간다(삭제 아님)",
             "example": "2026-09-30T01:00:00.000Z",
             "format": "date-time",
             "nullable": true,
@@ -4427,7 +4427,7 @@
             }
           },
           {
-            "description": "scheduled = 예약 공개 시각이 아직 안 온 글 · unpublishing = 자동 내림 시각이 정해진 글",
+            "description": "scheduled = 게시 시작 일시가 아직 안 온 글 · unpublishing = 게시 종료 일시가 정해진 글",
             "in": "query",
             "name": "schedule",
             "required": false,

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { AdminError, adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, PostFull, today, Translation, uploadFile } from '@/lib/admin'
+import { AdminError, adminFetch, adminJson, boardOf, EMPLOYMENT_LABEL, fromKstInput, PostFull, today, toKstInput, Translation, uploadFile } from '@/lib/admin'
 import FileDrop from '../../ui/FileDrop'
 import { useLeaveGuard } from '../../ui/leave'
 import { useToast } from '../../ui/toast'
@@ -25,14 +25,9 @@ function blankTranslation(code: Lang): Translation {
 const toMonth = (d: string | null) => (d ? d.slice(0, 7) : '')
 const fromMonth = (m: string) => (m ? `${m}-01` : null)
 
-/** ISO ↔ datetime-local 값('2026-09-30T10:00'). 화면은 이 컴퓨터 시간대로 보여 준다. */
-function toLocal(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
-}
-const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null)
+/** ISO ↔ datetime-local 값. 한국 시간(KST) — 칸 이름에 「(KST)」가 붙는다(lib/admin.ts). */
+const toLocal = toKstInput
+const fromLocal = fromKstInput
 
 /** 본문 편집기를 쓰는 게시판. 증서·수행실적·연혁은 칸만 있다. */
 const WITH_BODY = ['notice', 'press', 'news', 'recruit', 'faq']
