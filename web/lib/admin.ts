@@ -128,7 +128,7 @@ export function shortWhen(iso: string | null | undefined): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-/** ISO → '10/1'. 날짜만(이 컴퓨터 시간대) — 「내림 예정」 배지. */
+/** ISO → '10/1'. 날짜만(이 컴퓨터 시간대) — 「종료 예정」 배지. */
 export function shortDate(iso: string | null | undefined): string {
   if (!iso) return ''
   const d = new Date(iso)

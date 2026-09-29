@@ -11,9 +11,9 @@ import type { ApiBody, ApiResponse } from './api-types.gen'
 export type LiveState = Api.ControllerHomeDefaultBannerResponseDto['state']
 
 export const LIVE_LABEL: Record<LiveState, string> = {
-  live: '진행 중',
-  scheduled: '예약',
-  ended: '끝남',
+  live: '노출 중',
+  scheduled: '노출 예정',
+  ended: '노출 종료',
   off: '꺼짐',
 }
 
