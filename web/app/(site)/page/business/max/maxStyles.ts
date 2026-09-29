@@ -627,7 +627,7 @@ export const PAGE_CSS = `
 /* 다음 구역이 윗줄을 긋는다 — 앞 구역 마지막 줄의 밑줄과 겹쳐 두 줄이 되지 않게 지운다. */
 #dvmax.mx_fam .mx_main > :is(.mx_sec4, .mx_fb):not(:last-child) :is(.mx_fs_panel, .mx_show_row):last-child { border-bottom: 0; }
 /* 차례표 첫 줄을 첫 구역 제목 높이에 맞춘다. sticky 는 안쪽 칸이라 바깥 여백은 따라 올라가지 않는다. */
-#dvmax.mx_fam .mx_side { padding-top: 96px; }
+#dvmax.mx_fam .mx_side { padding-top: 138px; } /* 구역 윗여백 112px + 제목 줄 — 첫 제목과 높이를 맞춘다(실측 0px 차) */
 /* 머리 그림은 흰 바탕 파일이다 — 띠 위에서 흰 상자로 뜨지 않게 곱하기로 섞는다. */
 #dvmax.mx_fam .mx_hero_art img { mix-blend-mode: multiply; }
 /* M.AX 네 장 머리 화면 여럿: 가장 납작한 장 기준(16:9 상한) + cover·왼쪽 위 — 틀을 꽉 채운다. 높은 장은 아래가, 16:9 보다 납작한 장은 오른쪽 끝이 잘린다(MES AI 첫 장 2:1 → 약 11%). 좌측 라벨·앞 열은 남는다. */
@@ -658,8 +658,8 @@ export const PAGE_CSS = `
 #dvmax.mx_v4.mx_fam .mx_fs_callout { margin-top: 26px; }
 #dvmax.mx_v4.mx_fam .mx_fcard { gap: 72px; padding: 56px 0 16px; }
 /* MES AI 는 카드가 구역 안 mx_wrap 에 한 번 더 싸여 있다 — 그 안쪽 여백(28px)이 카드를 들여 놓았고, 첫 카드 윗선이 구역 줄과 두 줄이 됐다. */
-#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_wrap { padding: 0; }
-#dvmax.mx_v4.mx_fam .mx_sec4 :is(.mx_wrap > .mx_fcard, > .mx_fcard):first-of-type { border-top: 0; padding-top: 0; }
+#dvmax.mx_v4.mx_fam .mx_sec4 > .mx_wrap { padding: 0; } /* 지금은 MES AI 만 이 짜임 — 구역 안에 mx_wrap 을 새로 두면 옆 여백이 0 이 된다 */
+#dvmax.mx_v4.mx_fam .mx_sec4 .mx_wrap > .mx_fcard:first-of-type { border-top: 0; padding-top: 0; }
 #dvmax.mx_v4.mx_fam .mx_keycards { gap: 20px; margin-top: 44px; }
 #dvmax.mx_v4.mx_fam .mx_keycards li { padding: 30px 28px 32px; }
 #dvmax.mx_v4.mx_fam .mx_keycards span { margin-top: 10px; line-height: 1.75; }
