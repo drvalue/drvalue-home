@@ -221,7 +221,6 @@ export const PATTERN_CSS4 = `
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) :is(h1, h2) { max-width: 28em; }
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) > .mx_wrap > p:not(.mx_kicker) { max-width: 46em; }
 #dvmax.mx_v4 .mx_hero4:not(:has(.mx_plate)) { padding-bottom: 24px; }
-#dvmax.mx_v4 .mx_main > .mx_fb:first-child { padding-top: 40px; }
 /* ── 제품군 판 셋(고정) ── */
 #dvmax.mx_v4 .mx_show_rows { margin: 36px 0 0; }
 #dvmax.mx_v4 .mx_show_row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; padding: 48px 0; border-top: 1px solid #e5e8eb; }

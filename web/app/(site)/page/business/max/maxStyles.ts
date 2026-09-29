@@ -622,7 +622,7 @@ export const PAGE_CSS = `
    머리말을 옅은 바탕 띠로 두르고 밑줄로 끊는다 — 장이 바뀌면 띠부터 다르게 읽힌다.
    본문 구역끼리는 1px 줄로 끊는다(카드로 감싸지 않는다 — 겹카드는 9-28 에 뺐다). */
 #dvmax.mx_fam .mx_hero4 { background: #f5f7f9; border-bottom: 1px solid #e5e8eb; }
-#dvmax.mx_fam .mx_main > .mx_sec4 + .mx_sec4, #dvmax.mx_fam .mx_main > .mx_fb + .mx_sec4 { border-top: 1px solid #e5e8eb; }
+#dvmax.mx_fam .mx_main > .mx_sec4 + .mx_sec4 { border-top: 1px solid #e5e8eb; }
 #dvmax.mx_fam .mx_split { gap: 56px; }
 /* 다음 구역이 윗줄을 긋는다 — 앞 구역 마지막 줄의 밑줄과 겹쳐 두 줄이 되지 않게 지운다. */
 #dvmax.mx_fam .mx_main > :is(.mx_sec4, .mx_fb):not(:last-child) :is(.mx_fs_panel, .mx_show_row):last-child { border-bottom: 0; }
@@ -648,7 +648,14 @@ export const PAGE_CSS = `
 /* 공통 흐름 — 머리말 밑 전체 폭(차례표 위). 칸 사이를 벌리고 아래를 줄로 끊는다. */
 #dvmax.mx_fam > .mx_fb { padding: 80px 0 72px; border-bottom: 1px solid #e5e8eb; }
 #dvmax.mx_v4.mx_fam > .mx_fb .mx_wrap { padding: 0 28px; }
-#dvmax.mx_v4.mx_fam > .mx_fb .mx_flow { gap: 24px; min-width: 0; }
+@media (min-width: 1025px) { #dvmax.mx_v4.mx_fam > .mx_fb .mx_flow { gap: 24px; min-width: 0; } }
+/* 메모 글을 14px 로 올리니 다섯 줄짜리(생산) 위 칸이 118px 을 넘어 상자가 아래로 밀렸다 — 칸을 늘려 여섯 상자를 한 줄에. */
+#dvmax.mx_v4.mx_fam > .mx_fb .mx_stage > .mx_note:first-child { min-height: 132px; }
+/* 1025~1200px 은 차례표가 숨어도 6칸이 비좁다 — 3칸으로 접는다(기존 규칙은 1024px 이하). */
+@media (max-width: 1200px) and (min-width: 1025px) {
+  #dvmax.mx_v4.mx_fam > .mx_fb .mx_flow { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 32px; }
+  #dvmax.mx_v4.mx_fam > .mx_fb .mx_stage:nth-child(3n) .mx_arrow { display: none; }
+}
 #dvmax.mx_v4.mx_fam > .mx_fb .mx_kpi { margin-bottom: 40px; }
 #dvmax.mx_v4.mx_fam > .mx_fb .mx_note { font-size: 14px; line-height: 1.6; }
 #dvmax.mx_v4 .mx_state { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -.88px; text-align: center; font-weight: 700; max-width: 20em; margin: 0 auto; color: #191f28; }
