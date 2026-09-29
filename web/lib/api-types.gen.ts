@@ -212,7 +212,7 @@ export interface ControllerAdminPostDefaultSaveDto {
   period_start?: string | null
   /** 보도·뉴스의 매체 */
   press_media?: string | null
-  /** 이 시각에 사이트에 나온다 */
+  /** 이 시각부터 사이트에 게시된다(초안이어도) */
   publish_at?: string | null
   /** 목록에 보이는 날짜 */
   published_date: string
@@ -224,7 +224,7 @@ export interface ControllerAdminPostDefaultSaveDto {
   thumbnail?: string | null
   /** 언어별 제목·본문. 한국어는 꼭 */
   translations: ControllerAdminPostTranslationDto[]
-  /** 이 시각에 초안으로 돌아간다 */
+  /** 이 시각이 지나면 사이트에서 숨겨지고 초안으로 돌아간다(삭제 아님) */
   unpublish_at?: string | null
 }
 

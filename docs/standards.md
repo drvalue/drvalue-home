@@ -46,7 +46,7 @@
 | `web/scripts/check-src.py` | 페이지 CSS 문자열에 역따옴표가 섞였나 | 0건 |
 | `web: node --test "app/(site)/page/support/board/text.test.mjs"` | 게시판 본문의 맨 주소를 링크로 바꿀 때 `href` 에 날 `"` 가 남는가 — 남으면 속성이 하나 더 붙어 스크립트가 돈다(2026-09-23 실측). `.ts` 를 그대로 읽는다(node 22.6+ 형 지우기). 서버 없이 | 7/7 |
 | `web: node --test lib/robots-rules.test.mjs` | robots.txt 묶음이 관리 화면 AI 스위치를 따르나 — 검색엔진(Yeti·Bingbot 등)은 안 막힌다 · 막은 묶음에 allow 가 없다 · api 를 못 읽으면 둘 다 연다. 서버 없이 | 6/6 |
-| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (858곳) |
+| `web/scripts/check-copy.py` | 화면으로 가는 문구(api 에러·DTO 검증 message · 되돌리기 경고 · 관리 화면 문자열)가 합니다체인가. 서버 없이 돈다 | 문제 0 (861곳) |
 | `web/scripts/check-types.py` | web 의 생성 형(`lib/api-types.gen.ts` · `lib/page-types.gen.ts`)과 그 재료(`api/openapi.json` · `api/page-schemas.json`)가 지금 api 와 같은가. api 를 빌드하고 임시 폴더에 새로 만들어 비교한다(서버·DB 없이) | 낡은 것 0 (4개) |
 | `npx tsc --noEmit` · `npx next build` | 운영 빌드가 되는가 | 종료코드 0 |
 
