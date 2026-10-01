@@ -9,6 +9,10 @@ export const INQUIRY_TYPES = [
   '지원사업',
   'CutON(레이저 견적)',
   'growchat(채팅 솔루션)',
+  'M.AX(MES·스마트 팩토리)',
+  '오토폼(한글 양식 자동 작성)',
+  'GrowTalk(협업 플랫폼)',
+  'GrowXD(AI 분석 MES)',
   '솔루션 도입 문의',
   '기타',
 ] as const;
