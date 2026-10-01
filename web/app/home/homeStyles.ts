@@ -115,7 +115,8 @@ export const HOME_ADD_CSS = `
 .dv_hero_ghost { visibility: hidden; pointer-events: none; }
 .dv_hero_stack .dv_hero_proof { align-content: flex-start; }
 .dv_hero_bg_img { width: 100%; height: 100%; object-fit: cover; object-position: center; background: none; }
-.dv_hero_ctl { position: absolute; right: 32px; bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 10px; }
+/* 넘김 조절은 머리글 바로 아래 오른쪽 — 아래쪽은 쿠키 띠(폰에서 전폭)·채팅 위젯·맨 위/아래 단추가 차지한다(운영에서 겹쳤다). */
+.dv_hero_ctl { position: absolute; right: 32px; top: 96px; z-index: 5; display: flex; align-items: center; gap: 10px; }
 .dv_hero_pp {
   display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%;
   border: 1px solid rgba(255,255,255,.4); background: rgba(8,11,16,.35); color: #fff; cursor: pointer;
@@ -157,7 +158,7 @@ export const HOME_ADD_CSS = `
   .dv_hero_cue { display: none; }
 }
 @media (max-width: 560px) {
-  .dv_hero_ctl { right: 12px; bottom: 12px; }
+  .dv_hero_ctl { right: 8px; top: 84px; }
   .dv_hero { padding: 116px 0 74px; }
   .dv_hero :is(h1, .dv_hero_h) { font-size: 33px; letter-spacing: -1px; }
   .dv_hero p { font-size: 15.5px; }
