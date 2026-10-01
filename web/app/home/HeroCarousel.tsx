@@ -10,6 +10,7 @@ import { Children, useEffect, useState, type ReactNode } from 'react'
  * - 자동 넘김은 7초. 마우스를 올리거나 안에 포커스가 있거나 탭이 가려졌거나 사용자가 멈췄으면 쉰다.
  *   움직임을 줄인 사람에게는 자동으로 안 넘기고 점으로만 옮긴다.
  * - 마우스일 때만 「올리면 쉰다」 — 손가락은 떼도 leave 가 안 와서 한 번 누르면 영영 멈춘다(iOS).
+ *   포커스로 쉬는 것도 키보드(:focus-visible)일 때만 — 안드로이드는 탭하면 단추에 포커스가 남는다.
  * - 안 보이는 장은 `inert` — 숨은 링크에 탭이 가지 않는다.
  */
 const INTERVAL = 7000
@@ -21,7 +22,8 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [hold, setHold] = useState(false)
+  const [hover, setHover] = useState(false)
+  const [focus, setFocus] = useState(false)
   const [away, setAway] = useState(false)
   const [reduced, setReduced] = useState(false)
 
@@ -45,7 +47,7 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const playing = rot && n > 1 && !reduced && !paused && !hold && !away
+  const playing = rot && n > 1 && !reduced && !paused && !hover && !focus && !away
   useEffect(() => {
     if (!playing) return
     const t = window.setTimeout(() => setI((k) => (k + 1) % n), INTERVAL)
@@ -58,10 +60,10 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
       role="region"
       aria-roledescription="carousel"
       aria-label="주요 소식"
-      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHold(true) }}
-      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setHold(false) }}
-      onFocus={() => setHold(true)}
-      onBlur={() => setHold(false)}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHover(true) }}
+      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setHover(false) }}
+      onFocus={(e) => setFocus(e.target.matches(':focus-visible'))}
+      onBlur={() => setFocus(false)}
     >
       <div className="dv_hero_slides" aria-live={playing ? 'off' : 'polite'}>
         {slides.map((s, k) => {
