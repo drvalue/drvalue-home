@@ -1,3 +1,4 @@
+import ClientAction from '@/components/ClientAction'
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import type { Metadata } from 'next'
@@ -90,7 +91,7 @@ export default async function Page() {
             <p className="fq_state">질문 목록을 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</p>
           ) : rows.length === 0 ? (
             <p className="fq_state">
-              아직 등록된 질문이 없습니다. 궁금한 점은 <a href="/page/support/notify_form">문의</a>로 남겨 주세요.
+              아직 등록된 질문이 없습니다. 궁금한 점은 <ClientAction as="a" calls={[{ fn: 'openContactModal' }]}>문의</ClientAction>로 남겨 주세요.
             </p>
           ) : (
             group(rows).map((g) => (

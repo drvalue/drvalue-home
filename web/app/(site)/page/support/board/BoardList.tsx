@@ -1,3 +1,4 @@
+import ClientAction from '@/components/ClientAction'
 import { PAGE_CSS as MAX_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { cmsBoardPage, type CmsPost } from '@/lib/cms'
@@ -146,7 +147,7 @@ export default async function BoardList({ conf, query }: { conf: BoardConf; quer
                   icon="doc"
                   title={conf.emptyTitle}
                   desc={conf.emptyDesc}
-                  action={<a className="dv_state_act" href="/page/support/notify_form">문의 남기기</a>}
+                  action={<ClientAction as="a" className="dv_state_act" calls={[{ fn: 'openContactModal' }]}>문의 남기기</ClientAction>}
                 />
               )}
             </div>

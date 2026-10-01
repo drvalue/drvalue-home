@@ -43,7 +43,7 @@ export async function GET(): Promise<Response> {
     lines.push('')
   }
 
-  lines.push('## 문의', '', `- [문의하기](${SITE_ORIGIN}/page/support/notify_form): 도입 상담·견적 문의`, `- 이메일 ${ORG.email} · 전화 ${ORG.tel}`, '')
+  lines.push('## 문의', '', `- 도입 상담·견적 문의: 사이트 머리의 「문의하기」`, `- 이메일 ${ORG.email} · 전화 ${ORG.tel}`, '')
 
   return new Response(lines.join('\n'), {
     headers: { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
