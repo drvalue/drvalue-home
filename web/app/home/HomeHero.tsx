@@ -17,7 +17,7 @@ export type HeroCounts = { patent: number; copyright: number; cases: number }
  *
  * 2026-10-01: 장이 둘이다 — 첫 장(위 글)과 보도자료 한 장(heroSlides.ts). 자동으로 넘어간다(HeroCarousel).
  * 슬라이드를 뺀 이전 결정을 사용자가 되돌렸다(docs/tracking/decisions/0019). 기간 배너는 **첫 장**의 글·사진을 바꾼다.
- * 단추 줄은 두 장 공통이고 셋이다 — 첫 단추(`hero.primary`·배너 링크, 기본 「M.AX 살펴보기」) · 화장품 특화 AI 보기(heroSlides.ts, 새 탭) ·
+ * 단추 줄은 두 장 공통이고 셋이다 — 첫 단추(`hero.primary`·배너 링크, 기본 「M.AX 살펴보기」) · CosmoGMP.AI 데모하기(heroSlides.ts, 새 탭) ·
  * 문의하기. 첫 단추는 두 장 어디서나 같다(장마다 다르면 넘길 때 단추가 움직여 보인다).
  *
  * 기본 사진은 `/opt/main_bg_01.jpg`(homeStyles 의 CSS). 아래 장들이 쓰는 `main_bg_03` 과 일부러

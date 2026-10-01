@@ -68,7 +68,7 @@ export const HOME_ADD_CSS = `
 .dv_hero_prim:hover { background: #b9141a; transform: translateY(-2px); }
 .dv_hero_sec { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.34); }
 .dv_hero_sec:hover { background: rgba(255,255,255,.16); transform: translateY(-2px); }
-/* 화장품 특화 AI 보기 — 문의하기와 같은 급으로 보이지 않게 밝은 그라데이션 알약으로 띄운다(빨강은 M.AX 첫 단추). */
+/* CosmoGMP.AI 데모하기 — 문의하기와 같은 급으로 보이지 않게 밝은 그라데이션 알약으로 띄운다(빨강은 M.AX 첫 단추). */
 .dv_hero_btns .dv_hero_ai {
   background: linear-gradient(100deg, #b7eac9 0%, #9fd8ff 55%, #cdbcff 100%); color: #0b0f14; font-weight: 800;
   box-shadow: 0 0 0 1px rgba(255,255,255,.28), 0 10px 30px rgba(143,211,255,.32);
