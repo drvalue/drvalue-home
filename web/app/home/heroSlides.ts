@@ -12,6 +12,6 @@ export const PRESS_SLIDE = {
   // 공통 단추 줄의 둘째 단추 — 동방비앤에이치 시스템(GrowXD) 로그인 주소로 새 탭에서 연다.
   action: { label: '화장품 특화 AI 보기', href: 'https://workspace.growxd.com/kr3/_tdongbang/sign/in' },
   facts: ['총 사업비 4억 원', '제조 리드타임 31.5% 단축 목표', '납기준수율 66.7% → 90% 목표'],
-  // 둘째 장 배경 그림 — 아직 없다(ChatGPT 에서 뽑은 그림을 받는 중). 생기면 { src: '/opt/main_bg_05.jpg', width, height }.
-  image: null as null | { src: string; width: number; height: number },
+  // 둘째 장 배경 — ChatGPT 로 만든 화장품·생활용품 스마트공장 그림(2026-10-01). 글자·로고·사람 없음, 왼쪽이 어둡다.
+  image: { src: '/opt/main_bg_05.jpg', width: 1672, height: 941 } as null | { src: string; width: number; height: number },
 } as const
