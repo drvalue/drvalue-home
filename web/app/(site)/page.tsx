@@ -337,8 +337,8 @@ export default async function Page() {
 
       <div id="toss_container">
         {/* 원본 홈의 머리 그림은 swiper 두 장짜리로 들어 있다가 주석으로 꺼져
-            있었다. 글은 그대로 살리고 슬라이드만 뺐다 — 자세한 이유는
-            home/HomeHero.tsx 주석에 적었다. 기간 배너도 슬라이드가 아니라 한 장이다. */}
+            있었다. 한때 슬라이드를 뺐으나 2026-10-01 사용자 요청으로 장 넘김을 되살렸다(첫 장 + 보도자료 한 장,
+            home/HomeHero.tsx · decisions/0019). 기간 배너는 첫 장의 글·사진을 바꾼다. */}
         <HomeHero hero={c.hero} banner={home.banner} counts={counts} />
         {/* 구역 차례·보이기는 관리 화면 「메인 화면 › 문구 · 구역 차례」. */}
         {sectionOrder(c)
