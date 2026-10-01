@@ -50,6 +50,7 @@ export const HOME_ADD_CSS = `
   color: #fff; margin: 0 0 22px;
 }
 .dv_hero :is(h1, h2.dv_hero_h) span { display: inline-block; }
+.dv_hero h2.dv_hero_h { word-break: keep-all; }
 .dv_hero :is(h1, h2.dv_hero_h) strong { font-weight: 800; color: #fff; }
 .dv_hero p {
   font-size: 19.5px; line-height: 1.62; color: rgba(255,255,255,.82);
@@ -92,9 +93,11 @@ export const HOME_ADD_CSS = `
 /* 장 묶음. 스크립트가 없으면 장이 그냥 쌓인다(둘 다 보인다). 마운트 뒤 .is-rot 이 되면 한 칸에 겹치고 하나만 보인다. */
 .dv_hero_set { position: relative; }
 .dv_hero_set.is-rot .dv_hero_slides { display: grid; }
-.dv_hero_set.is-rot .dv_hero_slide { grid-area: 1 / 1; min-width: 0; transition: opacity .8s ease, visibility 0s linear .8s; }
+.dv_hero_set.is-rot .dv_hero_slide { grid-area: 1 / 1; min-width: 0; }
 .dv_hero_set.is-rot .dv_hero_slide:not([data-active]) { opacity: 0; visibility: hidden; pointer-events: none; }
-.dv_hero_set.is-rot .dv_hero_slide[data-active] { transition: opacity .8s ease, visibility 0s; }
+/* 전환은 겹친 다음 틀부터(.is-ready) — 겹치는 순간에 걸면 보도자료 장이 첫 장 위에서 서서히 사라진다. */
+.dv_hero_set.is-ready .dv_hero_slide { transition: opacity .8s ease, visibility 0s linear .8s; }
+.dv_hero_set.is-ready .dv_hero_slide[data-active] { transition: opacity .8s ease, visibility 0s; }
 .dv_hero_bg_img { width: 100%; height: 100%; object-fit: cover; object-position: center; background: none; }
 .dv_hero_ctl { position: absolute; right: 32px; bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 10px; }
 .dv_hero_pp {
@@ -151,7 +154,7 @@ export const HOME_ADD_CSS = `
   .dv_hero_bg { transform: none; }
   .dv_hero_btns > * { transition: none; }
   .dv_hero_btns > *:hover { transform: none; }
-  .dv_hero_set.is-rot .dv_hero_slide { transition: none; }
+  .dv_hero_set.is-ready .dv_hero_slide, .dv_hero_set.is-ready .dv_hero_slide[data-active] { transition: none; }
 }
 `
 

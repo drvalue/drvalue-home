@@ -9,6 +9,7 @@ import { Children, useEffect, useState, type ReactNode } from 'react'
  *   `is-rot` 을 달아 한 칸에 겹치고 하나만 보인다 — 숨기는 일은 스크립트가 한다.
  * - 자동 넘김은 7초. 마우스를 올리거나 안에 포커스가 있거나 탭이 가려졌거나 사용자가 멈췄으면 쉰다.
  *   움직임을 줄인 사람에게는 자동으로 안 넘기고 점으로만 옮긴다.
+ * - 마우스일 때만 「올리면 쉰다」 — 손가락은 떼도 leave 가 안 와서 한 번 누르면 영영 멈춘다(iOS).
  * - 안 보이는 장은 `inert` — 숨은 링크에 탭이 가지 않는다.
  */
 const INTERVAL = 7000
@@ -17,6 +18,7 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
   const slides = Children.toArray(children)
   const n = slides.length
   const [rot, setRot] = useState(false)
+  const [ready, setReady] = useState(false)
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const [hold, setHold] = useState(false)
@@ -25,6 +27,9 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setRot(true)
+    // 겹치는 첫 틀에는 전환을 안 건다 — 건 채로 겹치면 보도자료 장이 첫 장 위에서 1초쯤 서서히 사라진다.
+    let r2 = 0
+    const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => setReady(true)) })
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     const readMq = () => setReduced(mq.matches)
     const readVis = () => setAway(document.hidden)
@@ -33,6 +38,8 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
     mq.addEventListener('change', readMq)
     document.addEventListener('visibilitychange', readVis)
     return () => {
+      cancelAnimationFrame(r1)
+      cancelAnimationFrame(r2)
       mq.removeEventListener('change', readMq)
       document.removeEventListener('visibilitychange', readVis)
     }
@@ -47,12 +54,12 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={rot ? 'dv_hero_set is-rot' : 'dv_hero_set'}
+      className={'dv_hero_set' + (rot ? ' is-rot' : '') + (ready ? ' is-ready' : '')}
       role="region"
       aria-roledescription="carousel"
       aria-label="주요 소식"
-      onMouseEnter={() => setHold(true)}
-      onMouseLeave={() => setHold(false)}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHold(true) }}
+      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setHold(false) }}
       onFocus={() => setHold(true)}
       onBlur={() => setHold(false)}
     >
