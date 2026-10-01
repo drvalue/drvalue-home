@@ -147,8 +147,16 @@ $(document).ready(function() {
         if ($('#mobile_menu_layer').hasClass('active')) toggleMobileMenu(false);
     });
 
-    // 실제 이동 링크 클릭 시에만 메뉴 닫기 (서브메뉴 펼치기 토글은 제외)
-    $('#mobile_menu_layer a:not([onclick])').on('click', function() {
+    // 현재 위치 줄 펼침: 눌러서 열고 닫는다(터치에는 hover 가 없다). 바깥을 누르면 닫는다.
+    $(document).on('click', function(e) {
+        var $item = $(e.target).closest('.dv_bc_item');
+        $('.dv_bc_item.open').not($item).removeClass('open');
+        if ($item.length && $(e.target).closest('.dv_bc_cur').length) $item.toggleClass('open');
+    });
+
+    // 실제 이동 링크 클릭 시에만 메뉴 닫기 (서브메뉴 펼치기 토글은 제외).
+    // 토글은 React 핸들러라 onclick 속성이 없다 — href="#" 로 가린다. 안 가리면 펼치자마자 메뉴가 닫힌다.
+    $('#mobile_menu_layer a[href]:not([href="#"]):not([onclick])').on('click', function() {
         if ($('#mobile_menu_layer').hasClass('active')) toggleMobileMenu(false);
     });
 
