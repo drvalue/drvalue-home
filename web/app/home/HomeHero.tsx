@@ -118,8 +118,12 @@ export default function HomeHero({
           <i aria-hidden="true">→</i>
         </a>
       )}
-      <a className="dv_hero_sec" href={p.action.href} target="_blank" rel="noopener noreferrer">
+      <a className="dv_hero_ai" href={p.action.href} target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.5l2.2 6.1 6.1 2.2-6.1 2.2L12 19.1l-2.2-6.1-6.1-2.2 6.1-2.2zM19 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" />
+        </svg>
         {p.action.label}
+        <i aria-hidden="true">↗</i>
       </a>
       <ClientAction type="button" className="dv_hero_sec" calls={[{ fn: 'openContactModal' }]}>
         {hero.secondaryLabel}
