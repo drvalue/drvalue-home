@@ -94,10 +94,18 @@ export const HOME_ADD_CSS = `
 .dv_hero_set { position: relative; }
 .dv_hero_set.is-rot .dv_hero_slides { display: grid; }
 .dv_hero_set.is-rot .dv_hero_slide { grid-area: 1 / 1; min-width: 0; }
-.dv_hero_set.is-rot .dv_hero_slide:not([data-active]) { opacity: 0; visibility: hidden; pointer-events: none; }
-/* 전환은 겹친 다음 틀부터(.is-ready) — 겹치는 순간에 걸면 보도자료 장이 첫 장 위에서 서서히 사라진다. */
-.dv_hero_set.is-ready .dv_hero_slide { transition: opacity .8s ease, visibility 0s linear .8s; }
-.dv_hero_set.is-ready .dv_hero_slide[data-active] { transition: opacity .8s ease, visibility 0s; }
+.dv_hero_set.is-rot .dv_hero_slide:not([data-active]) { visibility: hidden; pointer-events: none; z-index: 0; }
+.dv_hero_set.is-rot .dv_hero_slide[data-active] { z-index: 1; }
+/* 넘김: 나가는 장은 그대로 두고 들어오는 장만 위에서 흐리게 나타난다 — 두 장이 같이 흐려지면 같은 자리의 단추가 반투명으로 겹쳐 깜빡인다.
+   나가는 장은 .8초 뒤에 감춘다. 처음 틀(.is-moved 전)에는 아무 것도 안 한다. */
+.dv_hero_set.is-ready .dv_hero_slide:not([data-active]) { transition: visibility 0s linear .8s; }
+.dv_hero_set.is-moved .dv_hero_slide[data-active] { animation: dvSlideIn .8s ease both; }
+@keyframes dvSlideIn { from { opacity: 0; } to { opacity: 1; } }
+/* 장마다 글 덩어리·숫자 줄 높이를 같게(HeroCarousel 이 잰다) — 단추 줄이 같은 자리에 온다. */
+/* flow-root: 글 끝 여백이 상자 밖으로 새면(min-height 가 0 일 때만 샌다) 잰 높이와 맞춘 높이가 어긋난다. */
+.dv_hero_text { display: flow-root; }
+.dv_hero_set.is-rot .dv_hero_text { min-height: var(--hero-text-h, 0); }
+.dv_hero_set.is-rot .dv_hero_proof { min-height: var(--hero-proof-h, 0); align-content: flex-start; }
 .dv_hero_bg_img { width: 100%; height: 100%; object-fit: cover; object-position: center; background: none; }
 .dv_hero_ctl { position: absolute; right: 32px; bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 10px; }
 .dv_hero_pp {
@@ -154,7 +162,8 @@ export const HOME_ADD_CSS = `
   .dv_hero_bg { transform: none; }
   .dv_hero_btns > * { transition: none; }
   .dv_hero_btns > *:hover { transform: none; }
-  .dv_hero_set.is-ready .dv_hero_slide, .dv_hero_set.is-ready .dv_hero_slide[data-active] { transition: none; }
+  .dv_hero_set.is-moved .dv_hero_slide[data-active] { animation: none; }
+  .dv_hero_set.is-ready .dv_hero_slide:not([data-active]) { transition: none; }
 }
 `
 

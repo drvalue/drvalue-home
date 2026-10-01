@@ -30,14 +30,32 @@ export default function HomeHero({
   counts: HeroCounts
 }) {
   const bgUrl = banner?.image.url ?? (hero.background?.id ? `/api/content/assets/${hero.background.id}` : null)
-  const primary = banner?.link ?? hero.primary
   const desc = banner?.description || hero.desc
   const p = PRESS_SLIDE
+  // 두 장이 같은 단추 줄을 쓴다 — 장이 넘어가도 단추가 움직여 보이지 않게(2026-10-01 사용자).
+  const actions = (
+    <div className="dv_hero_btns">
+      <a className="dv_hero_prim" href={p.primary.href}>
+        {p.primary.label}
+        <i aria-hidden="true">→</i>
+      </a>
+      <a className="dv_hero_sec" href={p.secondary.href}>
+        {p.secondary.label}
+      </a>
+      <a className="dv_hero_sec" href={p.system.href} target="_blank" rel="noopener noreferrer">
+        {p.system.label}
+      </a>
+      <ClientAction type="button" className="dv_hero_sec" calls={[{ fn: 'openContactModal' }]}>
+        {hero.secondaryLabel}
+      </ClientAction>
+    </div>
+  )
   return (
     <HeroCarousel>
     <section className="dv_hero">
       <div className="dv_hero_bg" aria-hidden="true" style={bgUrl ? { backgroundImage: `url(${JSON.stringify(bgUrl)})` } : undefined} />
       <div className="t_inner">
+        <div className="dv_hero_text">
         {hero.kicker && <span className="dv_hero_kicker">{hero.kicker}</span>}
         <h1>
           {banner?.title ? (
@@ -57,17 +75,8 @@ export default function HomeHero({
           )}
         </h1>
         {desc && <p>{desc}</p>}
-        <div className="dv_hero_btns">
-          {primary.href && (
-            <a className="dv_hero_prim" href={primary.href}>
-              {primary.label}
-              <i aria-hidden="true">→</i>
-            </a>
-          )}
-          <ClientAction type="button" className="dv_hero_sec" calls={[{ fn: 'openContactModal' }]}>
-            {hero.secondaryLabel}
-          </ClientAction>
         </div>
+        {actions}
         <div className="dv_hero_proof">
           <span>
             특허·출원 <b>{`${counts.patent}개`}</b>
@@ -98,24 +107,18 @@ export default function HomeHero({
         decoding="async"
       />
       <div className="t_inner">
-        <span className="dv_hero_kicker">{p.kicker}</span>
-        <h2 className="dv_hero_h">
-          <span>{p.titleLead}</span>
-          <br />
-          <span>
-            <strong>{p.titleStrong}</strong>
-          </span>
-        </h2>
-        <p>{p.desc}</p>
-        <div className="dv_hero_btns">
-          <a className="dv_hero_prim" href={p.primary.href}>
-            {p.primary.label}
-            <i aria-hidden="true">→</i>
-          </a>
-          <a className="dv_hero_sec" href={p.secondary.href}>
-            {p.secondary.label}
-          </a>
+        <div className="dv_hero_text">
+          <span className="dv_hero_kicker">{p.kicker}</span>
+          <h2 className="dv_hero_h">
+            <span>{p.titleLead}</span>
+            <br />
+            <span>
+              <strong>{p.titleStrong}</strong>
+            </span>
+          </h2>
+          <p>{p.desc}</p>
         </div>
+        {actions}
         <div className="dv_hero_proof">
           {p.facts.map((f) => (
             <span key={f}>{f}</span>

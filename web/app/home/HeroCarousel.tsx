@@ -1,6 +1,6 @@
 'use client'
 
-import { Children, useEffect, useState, type ReactNode } from 'react'
+import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 /**
  * 홈 머리 그림의 장 넘김(2026-10-01 사용자 요청 — 슬라이드를 뺀 결정을 되돌렸다, decisions/0019).
@@ -20,12 +20,38 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
   const n = slides.length
   const [rot, setRot] = useState(false)
   const [ready, setReady] = useState(false)
+  const [moved, setMoved] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const [hover, setHover] = useState(false)
   const [focus, setFocus] = useState(false)
   const [away, setAway] = useState(false)
   const [reduced, setReduced] = useState(false)
+
+  // 단추 줄이 장마다 같은 자리에 오게 — 글 덩어리와 숫자 줄의 높이를 가장 큰 장에 맞춘다.
+  // 맞추지 않으면 글이 짧은 장은 가운데 맞춤 때문에 단추가 위아래로 움직여 보인다.
+  const sync = useCallback(() => {
+    const el = box.current
+    if (!el) return
+    el.style.removeProperty('--hero-text-h')
+    el.style.removeProperty('--hero-proof-h')
+    const max = (sel: string) => Math.max(0, ...Array.from(el.querySelectorAll(sel), (x) => x.getBoundingClientRect().height))
+    el.style.setProperty('--hero-text-h', `${max('.dv_hero_text')}px`)
+    el.style.setProperty('--hero-proof-h', `${max('.dv_hero_proof')}px`)
+  }, [])
+  useEffect(() => {
+    if (!rot) return
+    sync()
+    window.addEventListener('resize', sync)
+    document.fonts?.ready.then(sync)
+    return () => window.removeEventListener('resize', sync)
+  }, [rot, sync])
+
+  const go = useCallback((k: number) => {
+    setMoved(true)
+    setI(k)
+  }, [])
 
   useEffect(() => {
     setRot(true)
@@ -50,13 +76,14 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
   const playing = rot && n > 1 && !reduced && !paused && !hover && !focus && !away
   useEffect(() => {
     if (!playing) return
-    const t = window.setTimeout(() => setI((k) => (k + 1) % n), INTERVAL)
+    const t = window.setTimeout(() => { setMoved(true); setI((k) => (k + 1) % n) }, INTERVAL)
     return () => window.clearTimeout(t)
   }, [playing, i, n])
 
   return (
     <div
-      className={'dv_hero_set' + (rot ? ' is-rot' : '') + (ready ? ' is-ready' : '')}
+      ref={box}
+      className={'dv_hero_set' + (rot ? ' is-rot' : '') + (ready ? ' is-ready' : '') + (moved ? ' is-moved' : '')}
       role="region"
       aria-roledescription="carousel"
       aria-label="주요 소식"
@@ -107,7 +134,7 @@ export default function HeroCarousel({ children }: { children: ReactNode }) {
                 type="button"
                 aria-label={`${k + 1}번째 장 보기`}
                 aria-current={k === i ? 'true' : undefined}
-                onClick={() => setI(k)}
+                onClick={() => go(k)}
               />
             ))}
           </div>
