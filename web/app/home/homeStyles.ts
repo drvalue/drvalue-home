@@ -72,6 +72,7 @@ export const HOME_ADD_CSS = `
 .dv_hero_btns .dv_hero_ai {
   background: linear-gradient(100deg, #b7eac9 0%, #9fd8ff 55%, #cdbcff 100%); color: #0b0f14; font-weight: 800;
   box-shadow: 0 0 0 1px rgba(255,255,255,.28), 0 10px 30px rgba(143,211,255,.32);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 .dv_hero_btns .dv_hero_ai:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 14px 36px rgba(143,211,255,.45); }
 .dv_hero_ai svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
@@ -169,6 +170,7 @@ export const HOME_ADD_CSS = `
   .dv_hero_bg { transform: none; }
   .dv_hero_btns > * { transition: none; }
   .dv_hero_btns > *:hover { transform: none; }
+  .dv_hero_btns .dv_hero_ai:hover { transform: none; }
   .dv_hero_set.is-moved .dv_hero_slide[data-active] { animation: none; }
   .dv_hero_set.is-ready .dv_hero_slide:not([data-active]) { transition: none; }
 }
