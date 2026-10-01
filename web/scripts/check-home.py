@@ -118,7 +118,8 @@ def main() -> None:
     label = " → ".join(["머리"] + [SECTION_NAME[k] for k in exp["visible"]])
     check(f"구역 차례 {label}", all(p >= 0 for p in pos) and pos == sorted(pos), f"위치 {pos}")
     secs = len(re.findall(r"<section\b", body))
-    want = 1 + len(exp["visible"])
+    # 머리 그림은 장이 둘이다(첫 장 + 보도자료 한 장, 2026-10-01 decisions/0019).
+    want = 2 + len(exp["visible"])
     check(f"본문 구역이 {want}개 ({secs}개)", secs == want)
     # 뺀 구역이 되살아나지 않았나. CSS 만 남아도 죽은 코드다.
     for gone in ["dvcap_visual", "t_service", "dvscr", "dvpf"]:

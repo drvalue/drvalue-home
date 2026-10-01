@@ -13,8 +13,8 @@ export const HOME_ADD_CSS = `
 
 /* ── 머리 그림 ──────────────────────────────────────────────────
    원본 홈에는 머리 그림이 있다가 주석으로 꺼져 있었다(swiper 두 장).
-   슬라이드는 되살리지 않는다 — 두 장을 번갈아 보여 주는 것은 읽는 사람의
-   눈을 뺏기만 하고 말하는 것이 없다. 한 장을 크게 두고 천천히 당긴다.
+   2026-10-01 사용자 요청으로 장 넘김을 되살렸다(첫 장 + 보도자료 한 장, decisions/0019).
+   각 장은 한 장짜리일 때와 같은 모양이다 — 천천히 당기는 것도 그대로.
    2026-09-28 첫 화면을 꽉 채운다(86vh·최대 820px → 화면 높이 그대로). 아래 구역은 스크롤로 만난다. */
 .dv_hero {
   position: relative; min-height: 640px; height: 100vh; height: 100svh;
@@ -45,12 +45,13 @@ export const HOME_ADD_CSS = `
   margin-bottom: 22px;
 }
 .dv_hero_kicker::before { content: ''; width: 26px; height: 2px; background: #d71920; }
-.dv_hero h1 {
+.dv_hero :is(h1, .dv_hero_h) {
   font-size: 60px; line-height: 1.16; font-weight: 800; letter-spacing: -2px;
   color: #fff; margin: 0 0 22px;
 }
-.dv_hero h1 span { display: inline-block; }
-.dv_hero h1 strong { font-weight: 800; color: #fff; }
+.dv_hero :is(h1, .dv_hero_h) span { display: inline-block; }
+.dv_hero .dv_hero_h2 { word-break: keep-all; }
+.dv_hero :is(h1, .dv_hero_h) strong { font-weight: 800; color: #fff; }
 .dv_hero p {
   font-size: 19.5px; line-height: 1.62; color: rgba(255,255,255,.82);
   max-width: 620px; margin: 0 0 34px; word-break: keep-all;
@@ -67,6 +68,14 @@ export const HOME_ADD_CSS = `
 .dv_hero_prim:hover { background: #b9141a; transform: translateY(-2px); }
 .dv_hero_sec { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.34); }
 .dv_hero_sec:hover { background: rgba(255,255,255,.16); transform: translateY(-2px); }
+/* 화장품 특화 AI 보기 — 문의하기와 같은 급으로 보이지 않게 밝은 그라데이션 알약으로 띄운다(빨강은 M.AX 첫 단추). */
+.dv_hero_btns .dv_hero_ai {
+  background: linear-gradient(100deg, #b7eac9 0%, #9fd8ff 55%, #cdbcff 100%); color: #0b0f14; font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.28), 0 10px 30px rgba(143,211,255,.32);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.dv_hero_btns .dv_hero_ai:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 14px 36px rgba(143,211,255,.45); }
+.dv_hero_ai svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
 .dv_hero_btns i { font-style: normal; transition: transform .2s ease; }
 .dv_hero_btns > *:hover i { transform: translateX(3px); }
 /* 숫자는 아래 「검증된 구축 역량」 칸에서 세는 것과 같은 것이다. */
@@ -89,14 +98,54 @@ export const HOME_ADD_CSS = `
   background: linear-gradient(to bottom, rgba(255,255,255,.7), rgba(255,255,255,0));
   animation: dvCue 1.9s ease-in-out infinite;
 }
+/* 장 묶음. 스크립트가 없으면 장이 그냥 쌓인다(둘 다 보인다). 마운트 뒤 .is-rot 이 되면 한 칸에 겹치고 하나만 보인다. */
+.dv_hero_set { position: relative; }
+.dv_hero_set.is-rot .dv_hero_slides { display: grid; }
+.dv_hero_set.is-rot .dv_hero_slide { grid-area: 1 / 1; min-width: 0; }
+.dv_hero_set.is-rot .dv_hero_slide:not([data-active]) { visibility: hidden; pointer-events: none; z-index: 0; }
+.dv_hero_set.is-rot .dv_hero_slide[data-active] { z-index: 1; }
+/* 넘김: 나가는 장은 그대로 두고 들어오는 장만 위에서 흐리게 나타난다 — 두 장이 같이 흐려지면 같은 자리의 단추가 반투명으로 겹쳐 깜빡인다.
+   나가는 장은 .8초 뒤에 감춘다. 처음 틀(.is-moved 전)에는 아무 것도 안 한다. */
+.dv_hero_set.is-ready .dv_hero_slide:not([data-active]) { transition: visibility 0s linear .8s; }
+.dv_hero_set.is-moved .dv_hero_slide[data-active] { animation: dvSlideIn .8s ease both; }
+@keyframes dvSlideIn { from { opacity: 0; } to { opacity: 1; } }
+/* 글 덩어리·숫자 줄: 다른 장의 글을 보이지 않게 같은 칸에 겹쳐(ghost) 칸 높이를 둘 중 큰 쪽으로 — 단추 줄이 장마다 같은 자리다. */
+.dv_hero_text, .dv_hero_stack { display: grid; }
+.dv_hero_own, .dv_hero_ghost { grid-area: 1 / 1; min-width: 0; }
+.dv_hero_ghost { visibility: hidden; pointer-events: none; }
+.dv_hero_stack .dv_hero_proof { align-content: flex-start; }
+.dv_hero_bg_img { width: 100%; height: 100%; object-fit: cover; object-position: center; background: none; }
+/* 넘김 조절은 머리글 바로 아래 오른쪽 — 아래쪽은 쿠키 띠(폰에서 전폭)·채팅 위젯·맨 위/아래 단추가 차지한다(운영에서 겹쳤다). */
+.dv_hero_ctl { position: absolute; right: 32px; top: 96px; z-index: 5; display: flex; align-items: center; gap: 10px; }
+.dv_hero_pp {
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.4); background: rgba(8,11,16,.35); color: #fff; cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.dv_hero_pp:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.7); }
+.dv_hero_pp svg { width: 14px; height: 14px; fill: currentColor; }
+.dv_hero_dots { display: flex; gap: 2px; }
+.dv_hero_dots button { position: relative; width: 32px; height: 36px; padding: 0; border: 0; background: none; cursor: pointer; }
+.dv_hero_dots button::before {
+  content: ''; position: absolute; left: 4px; right: 4px; top: 16px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,.4); transition: background-color .2s ease;
+}
+.dv_hero_dots button[aria-current='true']::before { background: #fff; }
+.dv_hero_dots button:hover::before { background: rgba(255,255,255,.75); }
+.dv_hero_pp:focus-visible, .dv_hero_dots button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (pointer: coarse) {
+  .dv_hero_pp { width: 44px; height: 44px; }
+  .dv_hero_dots button { width: 44px; height: 44px; }
+  .dv_hero_dots button::before { left: 8px; right: 8px; top: 20px; }
+}
 @keyframes dvCue { 0%,100% { transform: translateY(-4px); opacity: .45; } 50% { transform: translateY(4px); opacity: 1; } }
 
 /* 첫 화면 글자는 스크롤을 기다리지 않는다 — 뜨자마자 차례로 올라온다. */
 .dv_hero .dv_hero_rise { animation: dvHeroRise .85s cubic-bezier(.22,.68,.24,1) both; }
 .dv_hero .dv_hero_rise:nth-of-type(1) { animation-delay: .05s; }
 @keyframes dvHeroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-.dv_hero h1 span:nth-child(1) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .12s both; }
-.dv_hero h1 span:nth-child(2) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .24s both; }
+.dv_hero :is(h1, .dv_hero_h) span:nth-child(1) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .12s both; }
+.dv_hero :is(h1, .dv_hero_h) span:nth-child(2) { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .24s both; }
 .dv_hero p { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .38s both; }
 .dv_hero_btns { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .48s both; }
 .dv_hero_proof { animation: dvHeroRise .9s cubic-bezier(.22,.68,.24,1) .58s both; }
@@ -104,23 +153,27 @@ export const HOME_ADD_CSS = `
 
 @media (max-width: 1024px) {
   .dv_hero { min-height: 100vh; min-height: 100svh; height: auto; padding: 130px 0 90px; }
-  .dv_hero h1 { font-size: 42px; letter-spacing: -1.4px; }
+  .dv_hero :is(h1, .dv_hero_h) { font-size: 42px; letter-spacing: -1.4px; }
   .dv_hero p { font-size: 17px; }
   .dv_hero_cue { display: none; }
 }
 @media (max-width: 560px) {
+  .dv_hero_ctl { right: 8px; top: 84px; }
   .dv_hero { padding: 116px 0 74px; }
-  .dv_hero h1 { font-size: 33px; letter-spacing: -1px; }
+  .dv_hero :is(h1, .dv_hero_h) { font-size: 33px; letter-spacing: -1px; }
   .dv_hero p { font-size: 15.5px; }
   .dv_hero_btns > * { height: 50px; padding: 0 22px; font-size: 15px; flex: 1 1 auto; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dv_hero_bg, .dv_hero_cue i, .dv_hero .dv_hero_rise,
-  .dv_hero h1 span, .dv_hero p, .dv_hero_btns, .dv_hero_proof, .dv_hero_cue { animation: none; }
+  .dv_hero :is(h1, .dv_hero_h) span, .dv_hero p, .dv_hero_btns, .dv_hero_proof, .dv_hero_cue { animation: none; }
   .dv_hero_bg { transform: none; }
   .dv_hero_btns > * { transition: none; }
   .dv_hero_btns > *:hover { transform: none; }
+  .dv_hero_btns .dv_hero_ai:hover { transform: none; }
+  .dv_hero_set.is-moved .dv_hero_slide[data-active] { animation: none; }
+  .dv_hero_set.is-ready .dv_hero_slide:not([data-active]) { transition: none; }
 }
 `
 
