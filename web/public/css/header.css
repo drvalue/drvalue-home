@@ -541,8 +541,13 @@ html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_
     transform: translateY(-8px);
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
 }
-.dv_bc_item:hover .dv_bc_drop { visibility: visible; opacity: 1; transform: translateY(0); }
-.dv_bc_item:hover .dv_bc_cur .fa { transform: rotate(180deg); }
+.dv_bc_item.open .dv_bc_drop { visibility: visible; opacity: 1; transform: translateY(0); }
+.dv_bc_item.open .dv_bc_cur .fa { transform: rotate(180deg); }
+/* 마우스가 있는 기기에서만 hover 로 연다. 터치는 누른 뒤 hover 가 남아 닫히지 않는다 — 대신 .open(JS). */
+@media (hover: hover) {
+    .dv_bc_item:hover .dv_bc_drop { visibility: visible; opacity: 1; transform: translateY(0); }
+    .dv_bc_item:hover .dv_bc_cur .fa { transform: rotate(180deg); }
+}
 .dv_bc_drop li a {
     display: block;
     padding: 11px 22px;
@@ -555,7 +560,11 @@ html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_
 .dv_bc_drop li.on a { color: #d71920; font-weight: 700; }
 
 @media (max-width: 768px) {
-    .dv_bc_inner { overflow-x: auto; }
+    /* overflow 를 주면 아래로 펼친 목록이 줄 높이에서 잘린다(overflow-y 도 auto 가 된다). 목록은 줄 전체 폭으로 편다. */
+    .dv_bc_inner { position: static; }
+    .dv_bc_item { position: static; min-width: 0; flex: 0 1 auto; }
+    .dv_bc_drop { left: 0; right: 0; }
+    .dv_bc_drop li a { white-space: normal; }
     .dv_bc_cur { min-width: 0; gap: 18px; padding: 14px 16px; font-size: 14px; }
     .dv_bc_home { padding: 0 16px; }
 }
