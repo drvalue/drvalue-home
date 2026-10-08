@@ -10,10 +10,13 @@ import { CONSENT_KEY } from '@/lib/analytics'
  */
 // 2026-09-28 사용자: 가운데 아래 검은 띠가 글을 가려 불편하다 — 왼쪽 아래 작은 흰 카드로 옮긴다
 // (오른쪽 아래는 채팅 위젯과 맨 위·아래 단추 자리). 폰에서는 아래 한 줄로 붙인다.
+// z-index: growchat 위젯(2147483646)이 폰에서 오른쪽 「허용·거부」 단추를 덮어 못 끄던 것 — 위젯보다 위(최댓값)에 둔다.
 const CSS = `
-.dv_consent { position: fixed; left: 24px; bottom: 24px; z-index: 9000; width: 340px; max-width: calc(100vw - 48px);
+.dv_consent { position: fixed; left: 24px; bottom: 24px; z-index: 2147483647; width: 340px; max-width: calc(100vw - 48px);
   padding: 16px 16px 14px; border: 1px solid #e5e8eb; border-radius: 12px; background: #fff; color: #333d4b;
   box-shadow: 0 8px 24px rgba(21,34,56,.12); font-size: 13.5px; line-height: 1.6; word-break: keep-all; }
+/* 문의 모달·모바일 메뉴가 열려 있으면(body.no-scroll) 띠는 그 뒤로 — 모달의 제출 단추를 가리면 문의가 막힌다. */
+body.no-scroll .dv_consent { z-index: 9000; }
 .dv_consent p { margin: 0 0 12px; }
 .dv_consent_act { display: flex; justify-content: flex-end; gap: 8px; }
 .dv_consent button { min-height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #d1d6db; background: #fff;
