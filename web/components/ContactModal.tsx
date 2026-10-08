@@ -42,6 +42,10 @@ export default function ContactModal() {
                           <option value="지원사업">지원사업</option>
                           <option value="CutON(레이저 견적)">CutON (레이저 견적)</option>
                           <option value="growchat(채팅 솔루션)">growchat (채팅 솔루션)</option>
+                          <option value="M.AX(MES·스마트 팩토리)">M.AX(MES·스마트 팩토리)</option>
+                          <option value="오토폼(한글 양식 자동 작성)">오토폼(한글 양식 자동 작성)</option>
+                          <option value="GrowTalk(협업 플랫폼)">GrowTalk(협업 플랫폼)</option>
+                          <option value="GrowXD(AI 분석 MES)">GrowXD(AI 분석 MES)</option>
                           <option value="솔루션 도입 문의">솔루션 도입 문의</option>
                           <option value="기타">기타</option>
                       </select>
