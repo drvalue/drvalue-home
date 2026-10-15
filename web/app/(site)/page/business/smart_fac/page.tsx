@@ -16,8 +16,8 @@ const PATH = '/page/business/smart_fac'
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: '스마트 팩토리 사업',
-  description: '설비와 공정을 디지털로 연결해 실시간 최적화를 실현합니다. AI 자동 견적, IoT 통합 모니터링, MES/ERP 실시간 연계를 제공합니다.',
+  title: '스마트공장 구축 — MES·ERP·IoT 연계',
+  description: '스마트공장 구축: 설비와 공정을 디지털로 연결해 실시간 최적화를 실현합니다. AI 자동 견적, IoT 통합 모니터링, MES/ERP 실시간 연계를 제공합니다.',
   path: PATH,
 })
 

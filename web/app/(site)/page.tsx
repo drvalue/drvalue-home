@@ -49,8 +49,8 @@ async function heroCounts(): Promise<HeroCounts> {
 export async function generateMetadata() {
   const c = await heroCounts()
   return seoMeta({
-    title: '제조 AI·DX 구축',
-    description: `MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat, 상담 솔루션. 특허·출원 ${c.patent}건·저작권 ${c.copyright}건·수행실적 ${c.cases}건으로 검증된 제조 AI·DX 파트너, 디알밸류.`,
+    title: '제조AI(M.AX)·스마트공장 MES 구축',
+    description: `PCB·화장품 특화 MES 와 제조AI(M.AX), 스마트공장 구축. MES/ERP 구축, 제조 AI 자동화, LLM/RAG 기반 AI Chat. 특허·출원 ${c.patent}건·저작권 ${c.copyright}건·수행실적 ${c.cases}건으로 검증된 제조 AI·DX 파트너, 디알밸류.`,
     path: PATH,
   })()
 }

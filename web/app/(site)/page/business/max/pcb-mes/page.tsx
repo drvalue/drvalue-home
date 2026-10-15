@@ -12,9 +12,9 @@ const PATH = '/page/business/max/pcb-mes'
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: 'PCB MES',
+  title: 'PCB MES — 샘플 PCB 생산관리시스템',
   description:
-    '소량 다품종 샘플 PCB 를 위한 MES. 수십 항목의 사양 검증, 수율을 높이는 원판 배치, 내·외주 공정 진척과 거래 명세를 하나의 흐름으로 관리합니다.',
+    'PCB MES(제조AI M.AX): 소량 다품종 샘플 PCB 를 위한 MES. 수십 항목의 사양 검증, 수율을 높이는 원판 배치, 내·외주 공정 진척과 거래 명세를 하나의 흐름으로 관리합니다.',
   path: PATH,
 })
 

@@ -34,9 +34,9 @@ const SUB = (MENU_ITEMS.find((m) => m.title === 'M.AX')?.sub ?? []).filter((s) =
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: '제조AI(M.AX)',
+  title: '제조AI(M.AX) — PCB·화장품 특화 MES',
   description:
-    '견적부터 출고까지 하나의 흐름으로 연결된 업종 특화 MES 와 제조 AI. PCB·화장품 업종 특화 기능과 5대 제조 AI 를 제공합니다.',
+    '제조AI(M.AX): 견적부터 출고까지 하나의 흐름으로 연결된 업종 특화 MES 와 제조 AI. PCB MES·화장품 MES 와 5대 제조 AI 를 제공합니다.',
   path: PATH,
 })
 
