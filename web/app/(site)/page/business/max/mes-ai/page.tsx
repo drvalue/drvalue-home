@@ -23,9 +23,9 @@ const PATH = '/page/business/max/mes-ai'
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = seoMeta({
-  title: 'MES AI',
+  title: 'MES AI — 제조AI(M.AX)',
   description:
-    '거래명세서·성적서를 OCR 로 읽어 MES 에 자동 입고하고, 국가별 규제를 자동 대조해 검증하며, 쌓인 제조 지식을 대화로 꺼내 씁니다.',
+    'MES AI(제조AI M.AX): 거래명세서·성적서를 OCR 로 읽어 MES 에 자동 입고하고, 국가별 규제를 자동 대조해 검증하며, 쌓인 제조 지식을 대화로 꺼내 씁니다.',
   path: PATH,
 })
 
