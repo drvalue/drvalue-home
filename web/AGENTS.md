@@ -129,8 +129,9 @@
   `ui/leave.tsx` 의 `LeaveGroup`·`LeaveScope` 가 탭마다 모은다(한 탭이 「저장함」을 알려도 다른 탭의 입력이 지켜진다).
   배너·팝업 목록은 ↑↓ 로 차례를 바꾸고 한 번에 저장한다. 상태 배지(노출 중 · 노출 예정 · 노출 종료 · 꺼짐)는 api 의 `state` 와
   같은 규칙으로 저장 전에도 그린다.
-- 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · growchat 위젯)는 `components/SiteScripts.tsx`
+- 공개 화면 스크립트(GTM · 헤더 동작 · 등장 · 챗봇 위젯)는 `components/SiteScripts.tsx`
   가 싣고 `/admin` 아래에서는 아무것도 싣지 않는다. `robots.ts` 가 `/admin` 을 막는다.
+  챗봇은 LAG Studio 공개 채팅 위젯(`lib/chatbot.ts`의 상수 3개)이고, `LAG_CHATBOT_ON` 을 false 로 하면 growchat 위젯으로 돌아간다.
 - **검색 노출**: 글마다 주소가 있는 게시판(공지·보도·뉴스·채용)의 폼 오른쪽에 「검색 노출」 카드
   (`posts/[board]/SeoPanel.tsx` — 검색 제목·설명 글자 수·검색 결과 미리 보기·공유 그림 고르기·검색에서
   제외). 정적 장은 「운영 › SEO」(`/admin/seo`, `?path=`) — 메뉴의 장 + 홈. 장을 고르면 지금 사이트가 내는
