@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react'
 import { HEADER_JS } from '@/components/headerAssets'
 import ConsentBanner from '@/components/ConsentBanner'
 import { JQUERY_SRC } from '@/lib/analytics'
+import { LAG_CHATBOT_ID, LAG_CHATBOT_ON, LAG_CHATBOT_SRC } from '@/lib/chatbot'
 
 /**
- * 공개 화면에만 싣는 스크립트 — GTM(+동의) · 헤더 동작 · 등장/슬라이더 · growchat 위젯.
+ * 공개 화면에만 싣는 스크립트 — GTM(+동의) · 헤더 동작 · 등장/슬라이더 · 챗봇 위젯(LAG Studio, 끄면 growchat).
  * /admin 아래에서는 아무것도 싣지 않는다. 관리 화면에 방문자 통계와 채팅 위젯이
  * 붙으면 안 되고, 헤더 스크립트는 거기 없는 마크업을 찾는다.
  *
@@ -75,11 +76,15 @@ $(document).ready(function() {
           `}</Script>
         </>
       )}
-      <Script
-        src="https://workspace.growchat.co.kr/widget.js"
-        data-tenant="drvalue"
-        strategy="afterInteractive"
-      />
+      {LAG_CHATBOT_ON ? (
+        <Script src={LAG_CHATBOT_SRC} data-bot={LAG_CHATBOT_ID} strategy="afterInteractive" />
+      ) : (
+        <Script
+          src="https://workspace.growchat.co.kr/widget.js"
+          data-tenant="drvalue"
+          strategy="afterInteractive"
+        />
+      )}
     </>
   )
 }
