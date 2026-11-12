@@ -110,12 +110,14 @@ dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_U
 ```bash
 cd api && npm run build
 npm run autopost -- --preview   # 한 편을 만들어 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다
-npm run autopost -- --draft     # 같은 일을 하고 뉴스 게시판에 초안으로 저장한다(공개 안 함)
+npm run autopost -- --draft     # 같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 초안으로 저장한다(공개 안 함)
 ```
 
 켜기 값·요일·주 단위 기록을 보지 않고 `ANTHROPIC_API_KEY` 만 본다. 한 번에 Claude 호출이 대여섯 번 나간다(돈이 든다).
 운영에서 켜려면 서버 `.env` 에 두 값을 넣고 배포한다. 끄려면 `AUTOPOST_ENABLED` 를 비우고 다시 띄운다.
-한 주를 다시 만들게 하려면 `autopost_runs` 에서 그 주의 행을 지운다(다음 정시 틱이 다시 잡는다).
+한 주를 다시 만들게 하려면 `autopost_runs` 에서 그 주의 행을 지운다(다음 정시 틱이 다시 잡는다). 그 주의 글이 이미
+올라가 있으면 글(주소 `mfg-ai-<주 키>`)도 관리 화면에서 지워야 한다 — 주소가 겹치면 새 글 저장이 거부된다.
+이 명령은 cron 을 멈추고 돈다(명령 프로세스 안에서 자동 발행·예약 게시 틱이 돌지 않는다).
 DB 가 있어야 도는 검사: `node --test src/core/autopost/repository/autopost-run.dbtest.mjs src/core/autopost/service/autopost-flow.dbtest.mjs`
 (Claude 는 부르지 않는다. 테스트가 `2026-W46`·`W47` 기록과 `mfg-ai-2026-w4…` 글을 지우므로 **운영 DB 에 돌리지 않는다**).
 
