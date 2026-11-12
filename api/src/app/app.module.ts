@@ -8,6 +8,7 @@ import { AdminPostModule } from '../core/admin-post/admin-post.module';
 import { AdminFileModule } from '../core/admin-file/admin-file.module';
 import { AdminInquiryModule } from '../core/admin-inquiry/admin-inquiry.module';
 import { AdminScheduleModule } from '../core/admin-schedule/admin-schedule.module';
+import { AutopostModule } from '../core/autopost/autopost.module';
 import { AdminRevisionModule } from '../core/admin-revision/admin-revision.module';
 import { AdminUserModule } from '../core/admin-user/admin-user.module';
 import { AdminDashboardModule } from '../core/admin-dashboard/admin-dashboard.module';
@@ -28,6 +29,7 @@ import { SearchSettingsModule } from '../core/search-settings/search-settings.mo
     AdminFileModule,
     AdminInquiryModule,
     AdminScheduleModule,
+    AutopostModule,
     AdminRevisionModule,
     AdminUserModule,
     AdminDashboardModule,

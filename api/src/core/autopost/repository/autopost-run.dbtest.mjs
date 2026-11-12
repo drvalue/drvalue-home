@@ -7,8 +7,12 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { DataSource } = require('typeorm');
-const { AutopostRunEntity } = require('../../../../dist/common/entity/autopost-run.entity.js');
-const { AutopostRunDefaultRepository } = require('../../../../dist/core/autopost/repository/autopost-run-default.repository.js');
+const {
+  AutopostRunEntity,
+} = require('../../../../dist/common/entity/autopost-run.entity.js');
+const {
+  AutopostRunDefaultRepository,
+} = require('../../../../dist/core/autopost/repository/autopost-run-default.repository.js');
 
 const dataSource = await new DataSource({
   type: 'postgres',
@@ -22,7 +26,8 @@ const dataSource = await new DataSource({
 const ctx = { dataSource };
 const repo = new AutopostRunDefaultRepository();
 const WEEK = '1999-W01';
-const clean = () => dataSource.query('DELETE FROM autopost_runs WHERE week_key = $1', [WEEK]);
+const clean = () =>
+  dataSource.query('DELETE FROM autopost_runs WHERE week_key = $1', [WEEK]);
 await clean();
 after(async () => {
   await clean();
@@ -30,12 +35,16 @@ after(async () => {
 });
 
 test('한 주는 한 번만 잡힌다', async () => {
-  const both = await Promise.all([repo.claim(ctx, WEEK), repo.claim(ctx, WEEK)]);
+  const both = await Promise.all([
+    repo.claim(ctx, WEEK),
+    repo.claim(ctx, WEEK),
+  ]);
   assert.deepEqual(both.sort(), [false, true]);
   assert.equal((await repo.findByWeek(ctx, WEEK)).status, 'running');
 });
 
-test('진행 중인 주는 다시 잡히지 않는다', async () => assert.equal(await repo.claimRetry(ctx, WEEK), false));
+test('진행 중인 주는 다시 잡히지 않는다', async () =>
+  assert.equal(await repo.claimRetry(ctx, WEEK), false));
 
 test('오류로 닫으면 한 번 더 잡히고, 그 뒤로는 안 잡힌다', async () => {
   await repo.finish(ctx, WEEK, { status: 'error', reason: 'x' });
@@ -56,7 +65,13 @@ test('닫힌 주는 덮어쓰지 않는다 · 죽은 진행 중만 닫는다', a
 test('공개한 글의 구조를 최근 순으로 준다', async () => {
   await clean();
   await repo.claim(ctx, WEEK);
-  await repo.finish(ctx, WEEK, { status: 'published', postId: 7, article: { title: 't', sources: [{ url: 'https://a.example/x' }] }, inputTokens: 10, outputTokens: 2 });
+  await repo.finish(ctx, WEEK, {
+    status: 'published',
+    postId: 7,
+    article: { title: 't', sources: [{ url: 'https://a.example/x' }] },
+    inputTokens: 10,
+    outputTokens: 2,
+  });
   const row = await repo.findByWeek(ctx, WEEK);
   assert.equal(row.postId, 7);
   assert.ok(row.finishedOn);
