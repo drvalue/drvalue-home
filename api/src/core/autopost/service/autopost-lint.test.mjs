@@ -18,7 +18,7 @@ const {
   lintStructure,
   lintClaims,
   numbersIn,
-  numericUnits,
+  judgedUnits,
 } = require('../../../../dist/core/autopost/service/autopost-lint.js');
 
 const pass = (a, c = {}) => [
@@ -138,17 +138,117 @@ test('짧은 구절 하나가 두 문단을 덮어도, 문단마다 판정을 �
   assert.match(lintClaims(a, j).join(), /출처로 뒷받침되지 않는 문단/);
 });
 
-test('숫자가 든 덩어리만 문단 판정을 요구한다', () => {
-  assert.deepEqual(numericUnits(good), [
-    good.summary,
-    good.hook[1],
-    good.sections[1].paragraphs[0],
-  ]);
+test('덩어리마다 판정을 요구한다 — 숫자가 없어도(인용·발표·계약)', () => {
+  assert.equal(
+    judgedUnits(good).length,
+    new Set([
+      good.title,
+      good.summary,
+      good.seo_description,
+      ...good.hook,
+      ...good.sections.flatMap((x) => [x.heading, ...x.paragraphs]),
+    ]).size,
+  );
+  const a = withHook(
+    good,
+    '롤란트 부시 회장은 "한국 공장 열 곳에 먼저 깔겠다"고 말했습니다.',
+  );
+  const j = allTrue(a);
+  assert.deepEqual(lintClaims(a, j), []);
+  delete j.units[a.hook[2]];
+  assert.match(lintClaims(a, j).join(), /출처로 뒷받침되지 않는 문단/);
+});
+
+test('한글로 푼 수량은 떨어진다', () => {
+  for (const t of [
+    '불량률을 절반으로 줄였습니다.',
+    '생산성이 두 배로 늘었습니다.',
+    '불량이 삼십 퍼센트 줄었습니다.',
+    '수백억 원을 투자했습니다.',
+    '수십 곳이 도입했습니다.',
+    '세 배 빨라졌습니다.',
+  ])
+    assert.match(pass(withHook(good, t)).join(), /한글로 쓴 수량/, t);
+  for (const t of [
+    '두 회사가 손을 잡았습니다.',
+    '두 배터리 업체가 조건을 맞췄습니다.',
+    '조명 설비와 이 프로젝트를 봅니다.',
+  ])
+    assert.deepEqual(pass(withHook(good, t)), [], t);
+  for (const t of ['삼천 명이 일합니다.', '백만 원을 아꼈습니다.'])
+    assert.match(pass(withHook(good, t)).join(), /한글로 쓴 수량/, t);
+});
+
+test('「개월」「개국」은 개수 예외가 아니다', () => {
+  for (const t of [
+    '투자금을 3개월 만에 회수했습니다.',
+    '8개국에 법인을 냈습니다.',
+  ])
+    assert.match(pass(withHook(good, t)).join(), /주장 목록에 없는 숫자/, t);
+  assert.deepEqual(pass(withHook(good, '기능은 3개입니다.')), []);
+});
+
+test('금지 이름은 띄어쓰기·음차·전각·폭 없는 문자로 비켜 가지 못한다', () => {
+  for (const t of [
+    '디알 밸류',
+    '디알벨류',
+    'drvalue.co.kr',
+    'DRVALUE',
+    '그로우엑스디',
+    'Grow XD',
+    '코스모GMP',
+    'M-AX',
+    'M. AX',
+    'MAX 플랫폼',
+    'Ｍ.ＡＸ',
+    'M.\u200bAX',
+    '저희 회사 솔루션',
+    '당사 제품',
+    '자사 플랫폼',
+  ])
+    assert.match(
+      pass(withHook(good, t + ' 이야기입니다.')).join(),
+      /쓰면 안 되는/,
+      t,
+    );
+});
+
+test('출처 칸: 발행처도 검사하고, 주장 없는 출처·겹친 주소·계정 든 주소·긴 제목은 떨어진다', () => {
+  const src = (patch) => ({
+    ...good,
+    sources: [{ ...good.sources[0], ...patch }, good.sources[1]],
+  });
+  assert.ok(pass(src({ publisher: '디알밸류 GrowXD 고객사' })).length);
+  assert.ok(pass(src({ publisher: 'Siemens 🚀' })).length);
+  assert.ok(pass(src({ title: 'x'.repeat(201) })).length);
+  assert.ok(pass(src({ publisher: 'x'.repeat(81) })).length);
+  assert.match(
+    pass(withSourceUrl(good, 'https://evil.example/login')).join(),
+    /주장이 없는 출처/,
+  );
+  assert.match(
+    pass({ ...good, sources: [...good.sources, good.sources[0]] }).join(),
+    /같은 출처/,
+  );
+  const u = 'https://drvalue.co.kr@evil.example/x';
+  assert.ok(
+    pass({
+      ...good,
+      sources: [{ ...good.sources[0], url: u }, good.sources[1]],
+      claims: good.claims.map((c) =>
+        c.source_url === good.sources[0].url ? { ...c, source_url: u } : c,
+      ),
+    }).length,
+  );
+});
+
+test('출처 주소는 조사가 찾은 주소 안에 있어야 한다', () => {
+  assert.match(
+    pass(good, { researchUrls: [good.sources[0].url] }).join(),
+    /조사에 없는 출처/,
+  );
   assert.deepEqual(
-    lintClaims(good, {
-      ...allTrue(good),
-      units: Object.fromEntries(numericUnits(good).map((u) => [u, true])),
-    }),
+    pass(good, { researchUrls: good.sources.map((x) => x.url + '/') }),
     [],
   );
 });

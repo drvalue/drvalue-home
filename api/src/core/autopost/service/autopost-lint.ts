@@ -6,13 +6,15 @@ import { bodyText, bodyUnits, renderArticle } from './autopost-render';
  * 자동 글의 코드 검사. 사람이 검수하지 않으므로 이것과 판정 호출이 공개 전의 전부다.
  * 돌려주는 것은 떨어진 사유(사람이 읽는 문장) — 비면 통과. 애매하면 떨어지는 쪽으로 기운다.
  *
- * 못 막는 것: 출처 자체가 틀린 경우, 수치는 맞는데 해석이 과한 문장, 소재의 질.
+ * 못 막는 것: 출처 자체가 틀린 경우, 수치는 맞는데 해석이 과한 문장, 판정 호출의 오판, 소재의 질.
  */
 export interface LintContext {
   /** 한국 날짜 `YYYY-MM-DD`. */
   today: string;
   /** 이미 낸 자동 글의 출처 주소. */
   usedSourceUrls: string[];
+  /** 조사가 찾은 출처 주소. 주면 글의 출처가 전부 이 안에 있어야 한다(집필이 주소를 지어내거나 끼워 넣지 못하게). */
+  researchUrls?: string[];
 }
 
 const SOURCE_MAX_AGE_DAYS = 14;
@@ -25,13 +27,70 @@ const LIMITS = {
   sections: [4, 6],
   paragraphs: [1, 5],
   sources: [1, 6],
+  sourceTitle: [1, 200],
+  publisher: [1, 80],
 } as const;
 
-/** 모델이 쓴 칸에 나오면 안 되는 이름 — 회사·제품에 대한 문장을 모델이 지어내지 않게. */
-const BANNED = ['디알밸류', 'growxd', 'cosmogmp', 'm.ax'];
+/**
+ * 모델이 쓴 칸에 나오면 안 되는 이름 — 회사·제품에 대한 문장을 모델이 지어내지 않게.
+ * 띄어쓰기·구두점을 떼고 소문자로 맞춘 글자(`compact`)에서 찾는다. 음차와 흔한 오타도 넣는다.
+ */
+const BANNED = [
+  '디알밸류',
+  '디알벨류',
+  '디알밸루',
+  'drvalue',
+  'growxd',
+  '그로우엑스디',
+  'cosmogmp',
+  '코스모gmp',
+  '코스모지엠피',
+];
+/** `M.AX` 와 그 변형(M-AX · M. AX · MAX). 낱말 안의 max(maximum)는 안 잡는다. */
+const MAX_RE = /(?<![a-z])m[\s.\-·]{0,3}ax(?![a-z])/i;
+/** 회사를 가리키는 말. 글은 바깥 소식을 풀 뿐 회사 이야기를 하지 않는다. */
+const SELF_RE = /저희|당사|자사|우리\s?회사/;
 /** 정부의 제조 AX 얼라이언스. 자사 제품과 이름이 같지만 다른 것이라 통과시킨다. */
 const ALLIANCE_RE = /m\.ax\s?얼라이언스/gi;
 const EMOJI_RE = /\p{Extended_Pictographic}/u;
+/**
+ * 한글로 푼 수량. 숫자 검사를 비켜 간다(「47%」가 떨어지면 「절반 가까이」로 바꿔 쓸 수 있다) — 쓰지 못하게 한다.
+ * 수사는 단위가 붙을 때만 본다(「두 회사」는 수량 주장이 아니다).
+ */
+const WORD_QUANTITY_RE = new RegExp(
+  [
+    '절반|갑절|곱절',
+    // 「두 배로」「세 배 빨라」— 「두 배터리」는 아니다
+    '(?:두|세|네|다섯|여섯|일곱|여덟|아홉|열|수|몇)\\s?배(?=로|가|를|의|에|나|도|쯤|씩|까지|이상|가량|\\s|[.,)]|$)',
+    '수(?:십|백|천|만|억|조)',
+    '[일이삼사오육칠팔구십백천]+\\s?(?:퍼센트|%)',
+    // 「삼천 명」「이만 원」「백만 원」— 숫자 뒤의 단위(「1,200억 원」)와 「조건」「조명」은 아니다
+    '(?<!\\d\\s?)(?:[일이삼사오육칠팔구][십백천만억조]+|[십백천][만억조]+)\\s?(?:원|달러|명|대|건|곳)',
+  ].join('|'),
+);
+
+/** 전각·호환 글자를 풀고(NFKC) 폭 없는 문자를 뗀다. */
+const plain = (text: string) =>
+  text.normalize('NFKC').replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g, '');
+/** 이름 비교용: 띄어쓰기·구두점까지 떼고 소문자로. */
+const compact = (text: string) =>
+  plain(text)
+    .toLowerCase()
+    .replace(/[\s.\-·_]/g, '');
+
+/** 쓰면 안 되는 이름이 있으면 그 사유들. */
+function bannedIn(text: string): string[] {
+  const out: string[] = [];
+  const flat = compact(text);
+  for (const word of BANNED)
+    if (flat.includes(word)) out.push(`쓰면 안 되는 이름이 있습니다: ${word}`);
+  const loose = plain(text);
+  if (MAX_RE.test(loose.replace(ALLIANCE_RE, ' ')))
+    out.push('쓰면 안 되는 이름이 있습니다: M.AX');
+  if (SELF_RE.test(loose))
+    out.push('쓰면 안 되는 말이 있습니다: 회사를 가리키는 말(저희·당사·자사)');
+  return out;
+}
 
 const isText = (v: unknown): v is string => typeof v === 'string';
 const isTexts = (v: unknown): v is string[] =>
@@ -70,13 +129,9 @@ function hasShape(a: unknown): a is Article {
   );
 }
 
-/** 전각 숫자·기호를 반각으로, 숫자 사이 쉼표를 뗀다. */
+/** 전각 숫자·기호를 반각으로(NFKC), 숫자 사이 쉼표를 뗀다. */
 function normalizeDigits(text: string): string {
-  return text
-    .replace(/[０-９％．，]/g, (c) =>
-      String.fromCharCode(c.charCodeAt(0) - 0xfee0),
-    )
-    .replace(/(\d),(?=\d)/g, '$1');
+  return plain(text).replace(/(\d),(?=\d)/g, '$1');
 }
 
 /** 글자에서 숫자를 뽑는다. 단위는 붙이지 않는다 — `30%` · `30 %` · `30퍼센트` 가 모두 `30`. */
@@ -93,7 +148,7 @@ export interface Judgement {
   claims: Record<string, boolean>;
   /** 출처의 `url` → 적힌 발행일이 원문에서 확인된다. */
   sources: Record<string, boolean>;
-  /** 숫자가 든 덩어리(`numericUnits`)의 글자 → 그 덩어리의 숫자가 전부 출처로 뒷받침된다. */
+  /** 덩어리(`judgedUnits`)의 글자 → 그 덩어리가 말하는 사실(수치·인용·발표)이 전부 출처로 뒷받침된다. */
   units: Record<string, boolean>;
   /** 본문에 쓴 날짜(발표일 등)가 출처와 맞다. */
   datesOk: boolean;
@@ -102,7 +157,8 @@ export interface Judgement {
 const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 /**
- * 본문의 숫자. 연도, 「N월」·「N월 N일」 날짜, 한 자리 개수(「3가지」)는 주장이 아니라서 뺀다.
+ * 본문의 숫자. 연도, 「N월」·「N월 N일」 날짜, 한 자리 개수(「3가지」·「3개」)는 주장이 아니라서 뺀다.
+ * 「3개월」·「8개국」은 개수가 아니다 — 「개」 뒤에 월·국·년·소·점이 붙으면 예외로 보지 않는다.
  * 날짜는 판정 호출이 따로 본다(`datesOk`). 홀로 쓴 「N일」은 기간일 수 있어 빼지 않는다(「90일에서 30일로」).
  */
 function bodyNumbers(text: string): string[] {
@@ -110,16 +166,17 @@ function bodyNumbers(text: string): string[] {
     normalizeDigits(text)
       .replace(/(?<![\d.])(?:19|20)\d{2}\s?년/g, ' ')
       .replace(/(?<![\d.])\d{1,2}\s?월(?:\s?\d{1,2}\s?일)?(?!\d)/g, ' ')
-      .replace(/(?<![\d.])\d\s?(?:가지|개|번째|단계)/g, ' '),
+      .replace(/(?<![\d.])\d\s?(?:가지|번째|단계|개(?!월|국|년|소|점))/g, ' '),
   );
 }
 
 /**
- * 숫자(예외 빼고)가 든 덩어리. 판정 호출이 이 덩어리마다 「숫자가 전부 출처로 뒷받침되는가」를 따로 답한다 —
- * 짧은 구절의 주장 하나(「30% 줄었습니다.」)가 여러 문단에 들어 있어도 문단마다 확인을 받게.
+ * 판정 호출이 하나씩 답하는 덩어리 — 모델이 쓴 글자 전부(제목·요약·설명·문단·단락 제목, 겹치는 것은 한 번).
+ * 숫자가 없는 덩어리도 넣는다: 인용·발표·계약 같은 주장은 숫자 검사에 안 잡힌다.
+ * 짧은 구절의 주장 하나(「30% 줄었습니다.」)가 여러 문단에 들어 있어도 문단마다 확인을 받는다.
  */
-export function numericUnits(a: Article): string[] {
-  return [...new Set(bodyUnits(a))].filter((u) => bodyNumbers(u).length > 0);
+export function judgedUnits(a: Article): string[] {
+  return [...new Set(bodyUnits(a))].filter((u) => u.trim() !== '');
 }
 
 /**
@@ -139,8 +196,8 @@ function uncovered(a: Article, claims: Article['claims']): string[] {
   return [...out];
 }
 
-/** 출처 주소를 비교할 모양으로: 조각(#)·utm 쿼리·끝 빗금을 뗀다. 읽을 수 없으면 null. */
-function normalizeUrl(raw: string): string | null {
+/** 출처 주소를 비교할 모양으로: 조각(#)·utm 쿼리·끝 빗금을 뗀다. 읽을 수 없거나 http(s) 가 아니거나 계정이 든 주소면 null. */
+export function normalizeUrl(raw: string): string | null {
   let url: URL;
   try {
     url = new URL(raw);
@@ -148,6 +205,7 @@ function normalizeUrl(raw: string): string | null {
     return null;
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  if (url.username || url.password) return null; // `https://믿을만한곳@다른곳/` 꼴
   url.hash = '';
   for (const key of [...url.searchParams.keys()])
     if (key.toLowerCase().startsWith('utm_')) url.searchParams.delete(key);
@@ -212,6 +270,11 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
   const used = new Set(
     ctx.usedSourceUrls.map(normalizeUrl).filter((u): u is string => !!u),
   );
+  const research = ctx.researchUrls
+    ? new Set(
+        ctx.researchUrls.map(normalizeUrl).filter((u): u is string => !!u),
+      )
+    : null;
   const sourceUrls = new Set<string>();
   for (const s of a.sources) {
     const url = normalizeUrl(s.url);
@@ -219,10 +282,21 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
       out.push(`출처 주소가 http(s) 주소가 아닙니다: ${s.url.slice(0, 80)}`);
       continue;
     }
+    if (sourceUrls.has(url)) out.push(`같은 출처를 두 번 적었습니다: ${url}`);
     sourceUrls.add(url);
     if (used.has(url)) out.push(`이미 낸 글의 출처입니다: ${url}`);
-    if (!s.title.trim() || !s.publisher.trim())
-      out.push(`출처의 제목·발행처가 비었습니다: ${url}`);
+    if (research && !research.has(url))
+      out.push(`조사에 없는 출처입니다: ${url}`);
+    out.push(
+      ...between('출처 제목', s.title.trim().length, LIMITS.sourceTitle, '자'),
+      ...between('발행처', s.publisher.trim().length, LIMITS.publisher, '자'),
+    );
+    // 발행처는 모델이 쓰는 칸이다(출처 제목은 바깥 글의 제목이라 이름 검사만 뺀다).
+    out.push(...bannedIn(s.publisher));
+    if (EMOJI_RE.test(s.publisher) || EMOJI_RE.test(s.title))
+      out.push(`출처 칸에 이모지가 있습니다: ${url}`);
+    if (!a.claims.some((c) => normalizeUrl(c.source_url) === url))
+      out.push(`주장이 없는 출처입니다: ${url}`);
     const published = dayMs(s.published);
     const age =
       published === null || today === null
@@ -258,11 +332,11 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
   }
 
   const text = bodyText(a);
-  const lowered = text.toLowerCase().replace(ALLIANCE_RE, ' ');
-  for (const word of BANNED)
-    if (lowered.includes(word))
-      out.push(`쓰면 안 되는 이름이 있습니다: ${word}`);
+  out.push(...bannedIn(text));
   if (EMOJI_RE.test(text)) out.push('이모지가 있습니다');
+  const worded = WORD_QUANTITY_RE.exec(plain(text));
+  if (worded)
+    out.push(`한글로 쓴 수량이 있습니다(출처의 숫자로 쓴다): ${worded[0]}`);
 
   for (const n of uncovered(a, a.claims))
     out.push(`주장 목록에 없는 숫자: ${n}`);
@@ -291,7 +365,7 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
         (s) =>
           `출처의 발행일이 원문에서 확인되지 않습니다: ${s.url.slice(0, 80)}`,
       ),
-    ...numericUnits(a)
+    ...judgedUnits(a)
       .filter((u) => judged.units?.[u] !== true)
       .map((u) => `출처로 뒷받침되지 않는 문단: ${u.slice(0, 80)}`),
     ...(judged.datesOk === true

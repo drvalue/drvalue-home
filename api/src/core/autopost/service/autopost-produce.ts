@@ -14,6 +14,9 @@ export interface Produced {
   usage: Usage;
 }
 
+/** 한 편을 만드는 전체 시간의 상한. SDK 의 시간 제한은 응답이 시작될 때까지만 재고, 도구 호출은 여러 번 이어 간다. */
+const DEADLINE_MS = 45 * 60 * 1000;
+
 const add = (a: Usage, b: Usage): Usage => ({
   input: a.input + b.input,
   output: a.output + b.output,
@@ -26,6 +29,25 @@ const add = (a: Usage, b: Usage): Usage => ({
  * 하지 않는다 — 돈이 드는 호출이다. 호출이 던지면 그대로 던진다(부른 쪽이 「오류」로 닫는다).
  */
 export async function produce(
+  client: AutopostClient,
+  input: ResearchInput,
+  opts: { deadlineMs?: number } = {},
+): Promise<Produced> {
+  let timer: NodeJS.Timeout | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error('만드는 데 정해진 시간을 넘겼습니다')),
+      opts.deadlineMs ?? DEADLINE_MS,
+    );
+  });
+  try {
+    return await Promise.race([steps(client, input), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function steps(
   client: AutopostClient,
   input: ResearchInput,
 ): Promise<Produced> {
@@ -45,6 +67,7 @@ export async function produce(
     let reasons = lintStructure(article, {
       today: input.today,
       usedSourceUrls: input.avoidUrls,
+      researchUrls: found.research.sourceUrls,
     });
     if (!reasons.length) {
       const judged = await client.verify(article);

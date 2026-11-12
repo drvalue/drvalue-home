@@ -5,6 +5,7 @@ import { CommonError } from '../../../common/error/common-error';
 import { ServiceException } from '../../../common/error/service-exception.decorator';
 import type { ITransactionContext } from '../../../common/typeorm/transaction-context';
 import { TransactionContextFactory } from '../../../common/typeorm/transaction-context.factory';
+import { Transactional } from '../../../common/typeorm/transactional.decorator';
 import { AdminPostDefaultService } from '../../admin-post/service/admin-post-default.service';
 import {
   AUTOPOST_CLIENT,
@@ -23,7 +24,7 @@ const ACTOR = 'autopost@system';
 const BOARD = 'news';
 const LANGUAGE = 'ko-KR';
 
-/** auto: cron(주 1회, 통과하면 공개) · preview: 보기만(저장 없음) · draft: 초안으로 저장(공개 안 함). */
+/** auto: cron(주 1회, 통과하면 공개) · preview: 보기만(저장 없음) · draft: 통과한 글만 초안으로 저장(공개 안 함). */
 export type AutopostMode = 'auto' | 'preview' | 'draft';
 
 export interface AutopostResult {
@@ -134,11 +135,14 @@ export class AutopostDefaultService {
     }
     let postId: number;
     try {
-      postId = await this.save(ctx, made.article, base.html, today, {
-        status: 'published',
-        // 주소는 주 키로 짓는다 — 저장은 됐는데 기록을 못 닫은 주를 다시 해도 주소가 겹쳐 두 번째 글이 안 생긴다.
-        slug: `mfg-ai-${week.toLowerCase()}`,
-      });
+      postId = await this.publish(
+        ctx,
+        week,
+        made.article,
+        base.html,
+        today,
+        tokens,
+      );
     } catch (e) {
       await this.autopostRunDefaultRepository.finish(ctx, week, {
         status: 'error',
@@ -150,13 +154,35 @@ export class AutopostDefaultService {
       );
       return null;
     }
-    await this.autopostRunDefaultRepository.finish(ctx, week, {
+    this.logger.log(`자동 글 ${week}: 공개했습니다 (글 ${postId})`);
+    return { outcome: 'published', postId, ...base };
+  }
+
+  /**
+   * 글 저장과 기록 닫기를 한 트랜잭션으로. 기록을 못 닫으면(그사이 멈춘 실행으로 닫혀 다른 실행이 잡았다) 글도 되돌린다 —
+   * 글은 나갔는데 기록은 「공개」가 아닌 주가 생기면 다음 실행이 같은 주에 또 만든다.
+   */
+  @Transactional()
+  private async publish(
+    ctx: ITransactionContext,
+    week: string,
+    article: Article,
+    html: string,
+    today: string,
+    tokens: { article: Article; inputTokens: number; outputTokens: number },
+  ): Promise<number> {
+    const postId = await this.save(ctx, article, html, today, {
+      status: 'published',
+      // 주소는 주 키로 짓는다 — 같은 주에 두 번째 글이 생기려 하면 주소가 겹쳐 막힌다.
+      slug: `mfg-ai-${week.toLowerCase()}`,
+    });
+    const closed = await this.autopostRunDefaultRepository.finish(ctx, week, {
       status: 'published',
       postId,
       ...tokens,
     });
-    this.logger.log(`자동 글 ${week}: 공개했습니다 (글 ${postId})`);
-    return { outcome: 'published', postId, ...base };
+    if (!closed) throw new Error('닫을 기록이 없습니다 — 글 저장을 되돌립니다');
+    return postId;
   }
 
   private async runManual(
@@ -176,7 +202,9 @@ export class AutopostDefaultService {
       html,
       usage: made.usage,
     };
-    if (mode === 'preview' || !html) return { outcome: 'preview', ...base };
+    // 검사에 떨어진 글은 초안으로도 저장하지 않는다 — 관리 화면에 일반 초안처럼 놓이면 한 번 눌러 공개된다.
+    if (mode === 'preview' || !html || !made.ok)
+      return { outcome: 'preview', ...base };
     const postId = await this.save(ctx, made.article, html, today, {
       status: 'draft',
       slug: `mfg-ai-${weekKey(now).toLowerCase()}-draft-${now.getTime().toString(36)}`,

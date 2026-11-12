@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { AppModule } from './app/app.module';
 import { AppConfig } from './common/config/app-config';
 import { TransactionContextFactory } from './common/typeorm/transaction-context.factory';
@@ -11,7 +12,7 @@ import {
  * 제조 AI 주간 글을 손으로 한 번 만든다(빌드 뒤 `npm run autopost -- --preview`).
  *
  *   --preview  만들어서 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다.
- *   --draft    같은 일을 하고 뉴스 게시판에 **초안**으로 저장한다. 공개하지 않는다.
+ *   --draft    같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 **초안**으로 저장한다. 공개하지 않는다.
  *
  * 켜기 값·요일·주 단위 기록을 보지 않는다. Claude API 키만 있으면 돈다(돈이 든다 — 한 번에 호출 대여섯 번).
  * 키 값은 찍지 않는다.
@@ -30,6 +31,9 @@ async function main(): Promise<number> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn'],
   });
+  // 이 프로세스에서는 cron 을 돌리지 않는다 — 명령이 정시를 걸치면 자동 발행 틱이 여기서 돌아 글을 공개할 수 있다.
+  for (const job of app.get(SchedulerRegistry).getCronJobs().values())
+    void job.stop();
   try {
     // 설정은 앱이 뜬 뒤에 본다 — `.env` 는 ConfigModule 이 채운다.
     if (!AppConfig.autopost.hasKey) {

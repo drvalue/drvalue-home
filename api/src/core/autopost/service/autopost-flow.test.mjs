@@ -101,3 +101,20 @@ test('형이 깨진 글은 던지지 않고 탈락', async () => {
   const r = await produce(fake({ articles: [{}, { title: 1 }] }), input);
   assert.equal(r.ok, false);
 });
+
+test('전체 마감을 넘기면 던진다', async () => {
+  const c = fake({ articles: [good] });
+  c.research = () => new Promise(() => {}); // 끝나지 않는 호출
+  await assert.rejects(produce(c, input, { deadlineMs: 20 }), /시간/);
+});
+
+test('조사가 찾은 주소 밖의 출처는 떨어진다', async () => {
+  const c = fake({ articles: [good, good] });
+  c.research = async () => ({
+    research: { topic: 't', notes: 'n', sourceUrls: [good.sources[0].url] },
+    usage: { input: 0, output: 0 },
+  });
+  const r = await produce(c, input);
+  assert.equal(r.ok, false);
+  assert.match(r.reasons.join(), /조사에 없는 출처/);
+});

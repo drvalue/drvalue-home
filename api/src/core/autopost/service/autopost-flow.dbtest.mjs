@@ -9,6 +9,7 @@ import { good, allTrue, withHook } from './autopost-fixture.mjs';
 const require = createRequire(import.meta.url);
 const { NestFactory } = require('@nestjs/core');
 const { DataSource } = require('typeorm');
+const { SchedulerRegistry } = require('@nestjs/schedule');
 const { AppModule } = require('../../../../dist/app/app.module.js');
 const {
   AutopostDefaultService,
@@ -22,6 +23,7 @@ delete process.env.ANTHROPIC_API_KEY;
 const app = await NestFactory.createApplicationContext(AppModule, {
   logger: false,
 });
+for (const job of app.get(SchedulerRegistry).getCronJobs().values()) job.stop(); // 테스트 동안 cron 을 돌리지 않는다
 const service = app.get(AutopostDefaultService);
 const posts = app.get(AdminPostDefaultService);
 const dataSource = app.get(DataSource);
@@ -34,7 +36,7 @@ service.client = {
     calls.research++;
     if (next.fail) throw new Error('가짜 API 실패');
     return {
-      research: { topic: 't', notes: 'n', sourceUrls: [] },
+      research: { topic: 't', notes: 'n', sourceUrls: good.sources.map((x) => x.url) },
       usage: { input: 1, output: 1 },
     };
   },
@@ -176,6 +178,36 @@ test('보기만: 저장이 없다 · 떨어진 글도 사유와 함께 보여 �
   assert.ok(r.html.includes('47%'));
   const afterN = await dataSource.query(`SELECT count(*)::int AS n FROM posts`);
   assert.equal(afterN[0].n, before[0].n);
+});
+
+test('초안으로: 검사에 떨어진 글은 저장하지 않는다', async () => {
+  const before = await dataSource.query(`SELECT count(*)::int AS n FROM posts`);
+  const r = await service.run(ctx, 'draft', TUE); // next 는 위에서 떨어지는 글이다
+  assert.equal(r.outcome, 'preview');
+  assert.ok(r.reasons.length);
+  const afterN = await dataSource.query(`SELECT count(*)::int AS n FROM posts`);
+  assert.equal(afterN[0].n, before[0].n);
+});
+
+test('기록을 못 닫으면 글 저장도 되돌린다', async () => {
+  await clean();
+  process.env.AUTOPOST_ENABLED = '1';
+  next = { article: good, fail: false };
+  const verify = service.client.verify;
+  // 만드는 도중에 그 주의 행이 사라졌다(멈춘 실행으로 닫히고 다른 실행이 잡은 것과 같은 결과 — 닫을 행이 없다).
+  service.client.verify = async (a) => {
+    await dataSource.query(
+      `DELETE FROM autopost_runs WHERE week_key = '2026-W46'`,
+    );
+    return verify(a);
+  };
+  assert.equal(await service.run(ctx, 'auto', TUE), null);
+  service.client.verify = verify;
+  const n = await dataSource.query(
+    `SELECT count(*)::int AS n FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`,
+  );
+  assert.equal(n[0].n, 0);
+  delete process.env.AUTOPOST_ENABLED;
 });
 
 test('키가 없으면 손으로 돌리는 것도 막힌다', async () => {

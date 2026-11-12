@@ -83,13 +83,16 @@ export class AutopostRunDefaultRepository extends BaseRepository<AutopostRunEnti
     return (result.affected ?? 0) > 0;
   }
 
-  /** 잡은 주를 닫는다. 「진행 중」일 때만 — 닫힌 주를 덮어쓰지 않는다. */
+  /**
+   * 잡은 주를 닫는다. 「진행 중」일 때만 — 닫힌 주를 덮어쓰지 않는다.
+   * 닫았으면 true. false 면 닫을 행이 없었다(멈춘 실행으로 이미 닫혔거나 행이 지워졌다).
+   */
   async finish(
     ctx: ITransactionContext,
     weekKey: string,
     patch: AutopostRunFinish,
-  ): Promise<void> {
-    await this.repository(ctx)
+  ): Promise<boolean> {
+    const result = await this.repository(ctx)
       .createQueryBuilder()
       .update()
       .set({ ...patch, finishedOn: () => 'now()' })
@@ -98,6 +101,7 @@ export class AutopostRunDefaultRepository extends BaseRepository<AutopostRunEnti
         status: 'running',
       })
       .execute();
+    return (result.affected ?? 0) > 0;
   }
 
   /** 이미 공개한 자동 글들(최근 순) — 제목과 출처 주소를 다음 글이 피한다. */
