@@ -136,7 +136,8 @@ export class AutopostDefaultService {
     try {
       postId = await this.save(ctx, made.article, base.html, today, {
         status: 'published',
-        slug: `mfg-ai-${today.replaceAll('-', '')}`,
+        // 주소는 주 키로 짓는다 — 저장은 됐는데 기록을 못 닫은 주를 다시 해도 주소가 겹쳐 두 번째 글이 안 생긴다.
+        slug: `mfg-ai-${week.toLowerCase()}`,
       });
     } catch (e) {
       await this.autopostRunDefaultRepository.finish(ctx, week, {
@@ -178,7 +179,7 @@ export class AutopostDefaultService {
     if (mode === 'preview' || !html) return { outcome: 'preview', ...base };
     const postId = await this.save(ctx, made.article, html, today, {
       status: 'draft',
-      slug: `mfg-ai-${today.replaceAll('-', '')}-draft-${now.getTime().toString(36)}`,
+      slug: `mfg-ai-${weekKey(now).toLowerCase()}-draft-${now.getTime().toString(36)}`,
     });
     return { outcome: 'drafted', postId, ...base };
   }

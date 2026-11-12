@@ -4,18 +4,24 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { good, withHook } from './autopost-fixture.mjs';
+import { good, allTrue, withHook } from './autopost-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const { NestFactory } = require('@nestjs/core');
 const { DataSource } = require('typeorm');
 const { AppModule } = require('../../../../dist/app/app.module.js');
-const { AutopostDefaultService } = require('../../../../dist/core/autopost/service/autopost-default.service.js');
-const { AdminPostDefaultService } = require('../../../../dist/core/admin-post/service/admin-post-default.service.js');
+const {
+  AutopostDefaultService,
+} = require('../../../../dist/core/autopost/service/autopost-default.service.js');
+const {
+  AdminPostDefaultService,
+} = require('../../../../dist/core/admin-post/service/admin-post-default.service.js');
 
 delete process.env.AUTOPOST_ENABLED;
 delete process.env.ANTHROPIC_API_KEY;
-const app = await NestFactory.createApplicationContext(AppModule, { logger: false });
+const app = await NestFactory.createApplicationContext(AppModule, {
+  logger: false,
+});
 const service = app.get(AutopostDefaultService);
 const posts = app.get(AdminPostDefaultService);
 const dataSource = app.get(DataSource);
@@ -27,7 +33,10 @@ service.client = {
   async research() {
     calls.research++;
     if (next.fail) throw new Error('가짜 API 실패');
-    return { research: { topic: 't', notes: 'n', sourceUrls: [] }, usage: { input: 1, output: 1 } };
+    return {
+      research: { topic: 't', notes: 'n', sourceUrls: [] },
+      usage: { input: 1, output: 1 },
+    };
   },
   async write() {
     calls.write++;
@@ -35,7 +44,7 @@ service.client = {
   },
   async verify(a) {
     calls.verify++;
-    return { verified: Object.fromEntries(a.claims.map((c) => [c.value, true])), usage: { input: 1, output: 1 } };
+    return { judged: allTrue(a), usage: { input: 1, output: 1 } };
   },
 };
 
@@ -43,10 +52,17 @@ service.client = {
 const TUE = new Date('2026-11-10T03:00:00Z'); // KST 화 12:00, 2026-W46
 const MON = new Date('2026-11-09T03:00:00Z'); // KST 월 12:00, 2026-W46
 const NEXT = new Date('2026-11-17T03:00:00Z'); // 2026-W47
-const row = async (week) => (await dataSource.query('SELECT * FROM autopost_runs WHERE week_key = $1', [week]))[0];
+const row = async (week) =>
+  (
+    await dataSource.query('SELECT * FROM autopost_runs WHERE week_key = $1', [
+      week,
+    ])
+  )[0];
 const clean = async () => {
-  await dataSource.query(`DELETE FROM autopost_runs WHERE week_key IN ('2026-W46','2026-W47')`);
-  await dataSource.query(`DELETE FROM posts WHERE slug LIKE 'mfg-ai-202611%'`);
+  await dataSource.query(
+    `DELETE FROM autopost_runs WHERE week_key IN ('2026-W46','2026-W47')`,
+  );
+  await dataSource.query(`DELETE FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`);
 };
 await clean();
 after(async () => {
@@ -74,7 +90,7 @@ test('통과하면 뉴스 게시판에 공개로 저장한다', async () => {
   const post = await posts.get(ctx, r.postId);
   assert.equal(post.board, 'news');
   assert.equal(post.status, 'published');
-  assert.equal(post.slug, 'mfg-ai-20261110');
+  assert.equal(post.slug, 'mfg-ai-2026-w46');
   assert.equal(post.published_date, '2026-11-10');
   const ko = post.translations.find((t) => t.languages_code === 'ko-KR');
   assert.equal(ko.title, good.title);
@@ -92,9 +108,14 @@ test('통과하면 뉴스 게시판에 공개로 저장한다', async () => {
 
 test('같은 주에 다시 불러도 글은 한 편', async () => {
   const before = calls.research;
-  assert.equal(await service.run(ctx, 'auto', new Date(TUE.getTime() + 3600e3)), null);
+  assert.equal(
+    await service.run(ctx, 'auto', new Date(TUE.getTime() + 3600e3)),
+    null,
+  );
   assert.equal(calls.research, before);
-  const n = await dataSource.query(`SELECT count(*)::int AS n FROM posts WHERE slug LIKE 'mfg-ai-202611%'`);
+  const n = await dataSource.query(
+    `SELECT count(*)::int AS n FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`,
+  );
   assert.equal(n[0].n, 1);
 });
 
@@ -108,10 +129,15 @@ test('검사에 떨어지면 글을 만들지 않고 기록만 남기며, 그 �
   assert.equal(run.post_id, null);
   assert.ok(run.article);
   assert.ok(run.reason);
-  const n = await dataSource.query(`SELECT count(*)::int AS n FROM posts WHERE slug LIKE 'mfg-ai-202611%'`);
+  const n = await dataSource.query(
+    `SELECT count(*)::int AS n FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`,
+  );
   assert.equal(n[0].n, 1);
   const before = calls.research;
-  assert.equal(await service.run(ctx, 'auto', new Date(NEXT.getTime() + 3600e3)), null);
+  assert.equal(
+    await service.run(ctx, 'auto', new Date(NEXT.getTime() + 3600e3)),
+    null,
+  );
   assert.equal(calls.research, before);
 });
 
@@ -137,7 +163,7 @@ test('초안으로: 공개하지 않고 기록 표도 건드리지 않는다', a
   assert.equal(r.outcome, 'drafted');
   const post = await posts.get(ctx, r.postId);
   assert.equal(post.status, 'draft');
-  assert.match(post.slug, /^mfg-ai-20261110-draft-/);
+  assert.match(post.slug, /^mfg-ai-2026-w46-draft-/);
   assert.equal(await row('2026-W46'), undefined);
 });
 

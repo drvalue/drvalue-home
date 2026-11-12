@@ -222,7 +222,8 @@ src/
 - **제조 AI 주간 글(`core/autopost`)** — 한 주(ISO 주, 한국 시간)에 한 편. 화요일 09:00 이후 한 시간마다 `autopost_runs`
   (기본 키가 주 키)에 이번 주 행이 있나 보고, 없으면 잡아서 만든다. 순서는 `service/autopost-produce.ts` 의 `produce` —
   조사(웹 검색) → 집필(구조화 출력, HTML 은 모델이 안 쓰고 `autopost-render.ts` 가 만든다) → 구조 검사 → 판정(다른 호출이
-  웹 fetch 로 출처를 다시 읽는다) → 주장 검사. 떨어지면 한 번만 다시 쓴다. 통과하면 `AdminPostDefaultService.createAsSystem`
+  웹 fetch 로 출처를 다시 읽고 주장·출처 발행일·본문 날짜를 본다) → 주장 검사. 숫자는 **문단마다** 맞춘다 — 그 문단에 문장이
+  그대로 있는 주장만 그 문단의 숫자를 덮는다(같은 숫자의 다른 주장으로 못 덮는다). 떨어지면 한 번만 다시 쓴다. 통과하면 `AdminPostDefaultService.createAsSystem`
   (행위자 `autopost@system`, 뉴스에만)으로 **공개** 저장하고, 떨어지면 글을 만들지 않고 기록 표에만 남긴다.
   - 사람 검수가 없다(결정 0020). 검사 규칙(`autopost-lint.ts`)을 느슨하게 고치면 그대로 회사 이름으로 나간다.
   - Claude 호출은 `client/autopost-claude.client.ts` 하나에만 있다. 웹 검색·fetch 는 Anthropic 쪽에서 돈다 — 이 서버가
@@ -263,7 +264,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 45 (주 4 · HTML 4 · 검사 18 · 할 일 5 · 설정 6 · 순서 8)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 51 (주 4 · HTML 4 · 검사 24 · 할 일 5 · 설정 6 · 순서 8)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

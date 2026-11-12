@@ -1,4 +1,8 @@
 // 자동 글 테스트의 고정 자료. today = 2026-11-12 기준으로 통과하는 글 한 편과, 한 군데씩 바꾸는 도우미.
+const SIEMENS =
+  'https://press.siemens.com/global/en/pressrelease/predictive-ai';
+const PILOT = 'https://example.org/reports/factory-pilot';
+
 export const good = {
   title: '지멘스, 공장 설비 고장을 미리 잡는 AI 를 내놨습니다',
   summary:
@@ -32,36 +36,56 @@ export const good = {
   sources: [
     {
       title: 'Siemens launches predictive AI',
-      url: 'https://press.siemens.com/global/en/pressrelease/predictive-ai',
+      url: SIEMENS,
       publisher: 'Siemens',
       published: '2026-11-10',
     },
     {
       title: 'Factory pilot results',
-      url: 'https://example.org/reports/factory-pilot',
+      url: PILOT,
       publisher: 'Example Research',
       published: '2026-11-05',
     },
   ],
+  // 주장의 문장은 본문에 그대로 있는 구절이다. 숫자가 든 문단마다 그 숫자의 주장이 있다.
   claims: [
     {
-      sentence: '시범 공장에서 설비 멈춤 시간이 30% 줄었습니다.',
+      sentence: '시범 공장에서 설비 멈춤 시간이 30% 줄었고',
       value: '30%',
-      source_url:
-        'https://press.siemens.com/global/en/pressrelease/predictive-ai',
+      source_url: SIEMENS,
       quote: 'reduced downtime by 30%',
     },
     {
       sentence: '투자 규모는 1,200억 원입니다.',
       value: '1,200억 원',
-      source_url: 'https://example.org/reports/factory-pilot',
+      source_url: PILOT,
       quote: 'KRW 120 billion',
+    },
+    {
+      sentence: '시범 공장에서 멈춤 시간이 30% 줄었습니다.',
+      value: '30%',
+      source_url: SIEMENS,
+      quote: 'reduced downtime by 30%',
     },
   ],
 };
-export const allTrue = (a) =>
-  Object.fromEntries(a.claims.map((c) => [c.value, true]));
+
+/** 전부 확인된 판정. 주장은 문장으로, 출처는 주소로 찾는다. */
+export const allTrue = (a) => ({
+  claims: Object.fromEntries((a.claims ?? []).map((c) => [c.sentence, true])),
+  sources: Object.fromEntries((a.sources ?? []).map((s) => [s.url, true])),
+  datesOk: true,
+});
 export const withHook = (a, text) => ({ ...a, hook: [...a.hook, text] });
+/** 본문 문단 하나와 그 문단의 주장을 같이 더한다. */
+export const withClaim = (a, text, value) => ({
+  ...a,
+  hook: [...a.hook, text],
+  claims: [
+    ...a.claims,
+    { sentence: text, value, source_url: SIEMENS, quote: 'q' },
+  ],
+});
 export const withSourceDate = (a, d) => ({
   ...a,
   sources: a.sources.map((s) => ({ ...s, published: d })),

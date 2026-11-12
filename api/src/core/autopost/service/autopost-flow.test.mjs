@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { good, withHook } from './autopost-fixture.mjs';
+import { good, allTrue, withHook } from './autopost-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const {
@@ -37,12 +37,9 @@ function fake({ articles, verified = () => true }) {
     },
     async verify(a) {
       calls.verify++;
-      return {
-        verified: Object.fromEntries(
-          a.claims.map((c) => [c.value, verified(c)]),
-        ),
-        usage: { input: 30, output: 3 },
-      };
+      const judged = allTrue(a);
+      for (const c of a.claims) judged.claims[c.sentence] = verified(c);
+      return { judged, usage: { input: 30, output: 3 } };
     },
   };
   return client;

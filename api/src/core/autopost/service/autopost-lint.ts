@@ -1,6 +1,6 @@
 import { sanitizeBody } from '../../../common/html/sanitize-body';
 import type { Article } from '../model/article';
-import { bodyText, renderArticle } from './autopost-render';
+import { bodyText, bodyUnits, renderArticle } from './autopost-render';
 
 /**
  * 자동 글의 코드 검사. 사람이 검수하지 않으므로 이것과 판정 호출이 공개 전의 전부다.
@@ -84,19 +84,49 @@ export function numbersIn(text: string): string[] {
   return normalizeDigits(text).match(/\d+(?:\.\d+)?/g) ?? [];
 }
 
-/** 본문의 숫자. 연도·월·일과 한 자리 개수(「3가지」)는 주장이 아니라서 뺀다. */
+/**
+ * 판정 호출이 돌려준 것. 판정에 없는 것은 확인 안 된 것으로 본다.
+ * 주장은 문장으로 찾는다(값으로 찾으면 같은 숫자의 다른 주장이 섞인다).
+ */
+export interface Judgement {
+  /** 주장의 `sentence` → 출처 원문에 그 값이 그 뜻으로 있다. */
+  claims: Record<string, boolean>;
+  /** 출처의 `url` → 적힌 발행일이 원문에서 확인된다. */
+  sources: Record<string, boolean>;
+  /** 본문에 쓴 날짜(발표일 등)가 출처와 맞다. */
+  datesOk: boolean;
+}
+
+const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+/**
+ * 본문의 숫자. 연도, 「N월」·「N월 N일」 날짜, 한 자리 개수(「3가지」)는 주장이 아니라서 뺀다.
+ * 날짜는 판정 호출이 따로 본다(`datesOk`). 홀로 쓴 「N일」은 기간일 수 있어 빼지 않는다(「90일에서 30일로」).
+ */
 function bodyNumbers(text: string): string[] {
   return numbersIn(
     normalizeDigits(text)
       .replace(/(?<![\d.])(?:19|20)\d{2}\s?년/g, ' ')
-      .replace(/(?<![\d.])\d{1,2}\s?[월일](?!\d)/g, ' ')
+      .replace(/(?<![\d.])\d{1,2}\s?월(?:\s?\d{1,2}\s?일)?(?!\d)/g, ' ')
       .replace(/(?<![\d.])\d\s?(?:가지|개|번째|단계)/g, ' '),
   );
 }
 
-function uncovered(a: Article, values: string[]): string[] {
-  const known = new Set(values.flatMap(numbersIn));
-  return [...new Set(bodyNumbers(bodyText(a)))].filter((n) => !known.has(n));
+/**
+ * 주장으로 덮이지 않은 본문 숫자. 덩어리(문단)마다 본다 — 그 덩어리 안에 문장이 그대로 있는 주장의 값만
+ * 그 덩어리의 숫자를 덮는다. 다른 문단의 주장이 같은 숫자를 가졌다고 덮이지 않는다.
+ */
+function uncovered(a: Article, claims: Article['claims']): string[] {
+  const out = new Set<string>();
+  for (const unit of bodyUnits(a).map(squash)) {
+    const known = new Set(
+      claims
+        .filter((c) => squash(c.sentence) && unit.includes(squash(c.sentence)))
+        .flatMap((c) => numbersIn(c.value)),
+    );
+    for (const n of bodyNumbers(unit)) if (!known.has(n)) out.add(n);
+  }
+  return [...out];
 }
 
 /** 출처 주소를 비교할 모양으로: 조각(#)·utm 쿼리·끝 빗금을 뗀다. 읽을 수 없으면 null. */
@@ -196,6 +226,8 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
         `출처가 ${SOURCE_MAX_AGE_DAYS}일보다 오래됐습니다: ${s.published}`,
       );
   }
+  const units = bodyUnits(a).map(squash);
+  const sentences = new Set<string>();
   for (const c of a.claims) {
     const url = normalizeUrl(c.source_url);
     if (!url || !sourceUrls.has(url))
@@ -203,6 +235,16 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
         `주장의 출처가 출처 목록에 없습니다: ${c.sentence.slice(0, 60)}`,
       );
     if (!c.value.trim()) out.push('값이 빈 주장이 있습니다');
+    const sentence = squash(c.sentence);
+    if (!sentence || !units.some((u) => u.includes(sentence)))
+      out.push(`본문에 없는 주장입니다: ${c.sentence.slice(0, 60)}`);
+    // 값의 숫자가 그 문장 안에 있어야 한다 — 문장과 상관없는 값으로 다른 숫자를 덮지 못하게.
+    const inSentence = new Set(numbersIn(sentence));
+    if (numbersIn(c.value).some((n) => !inSentence.has(n)))
+      out.push(`주장의 값이 그 문장에 없습니다: ${c.value.slice(0, 40)}`);
+    if (sentences.has(sentence))
+      out.push(`같은 문장의 주장이 둘입니다: ${c.sentence.slice(0, 60)}`);
+    sentences.add(sentence);
   }
 
   const text = bodyText(a);
@@ -212,10 +254,7 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
       out.push(`쓰면 안 되는 이름이 있습니다: ${word}`);
   if (EMOJI_RE.test(text)) out.push('이모지가 있습니다');
 
-  for (const n of uncovered(
-    a,
-    a.claims.map((c) => c.value),
-  ))
+  for (const n of uncovered(a, a.claims))
     out.push(`주장 목록에 없는 숫자: ${n}`);
 
   const html = renderArticle(a);
@@ -224,23 +263,26 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
   return out;
 }
 
-/**
- * 판정 뒤에 도는 검사. `verified` 는 주장의 `value` → 「출처 원문에 그 뜻으로 있다」.
- * 판정에 없는 주장은 확인 안 된 것으로 본다.
- */
-export function lintClaims(
-  a: Article,
-  verified: Record<string, boolean>,
-): string[] {
+/** 판정 뒤에 도는 검사. 확인된 주장만으로 본문 숫자가 전부 덮여야 하고, 출처 발행일과 본문 날짜도 확인돼야 한다. */
+export function lintClaims(a: Article, judged: Judgement): string[] {
   if (!hasShape(a)) return ['글의 형이 맞지 않습니다'];
-  const ok = a.claims.filter((c) => verified[c.value] === true);
+  const confirmed = (c: Article['claims'][number]) =>
+    judged.claims?.[c.sentence] === true;
   return [
     ...a.claims
-      .filter((c) => verified[c.value] !== true)
+      .filter((c) => !confirmed(c))
       .map((c) => `출처에서 확인되지 않은 주장: ${c.sentence.slice(0, 80)}`),
-    ...uncovered(
-      a,
-      ok.map((c) => c.value),
-    ).map((n) => `확인된 주장에 없는 숫자: ${n}`),
+    ...uncovered(a, a.claims.filter(confirmed)).map(
+      (n) => `확인된 주장에 없는 숫자: ${n}`,
+    ),
+    ...a.sources
+      .filter((s) => judged.sources?.[s.url] !== true)
+      .map(
+        (s) =>
+          `출처의 발행일이 원문에서 확인되지 않습니다: ${s.url.slice(0, 80)}`,
+      ),
+    ...(judged.datesOk === true
+      ? []
+      : ['본문의 날짜가 출처와 맞는지 확인되지 않습니다']),
   ];
 }

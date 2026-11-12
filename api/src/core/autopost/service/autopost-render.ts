@@ -43,13 +43,21 @@ export function renderArticle(a: Article): string {
   ].join('');
 }
 
-/** 모델이 쓴 글자만(검사 대상). 출처 제목은 바깥 글의 제목이라 빼고, 고정 문구도 뺀다. */
-export function bodyText(a: Article): string {
+/**
+ * 모델이 쓴 글자를 덩어리(제목·요약·설명·문단·단락 제목)로 나눈 것 — 검사가 덩어리마다 숫자와 주장을 맞춘다.
+ * 출처 제목은 바깥 글의 제목이라 빼고, 고정 문구도 뺀다.
+ */
+export function bodyUnits(a: Article): string[] {
   return [
     a.title,
     a.summary,
     a.seo_description,
     ...a.hook,
     ...a.sections.flatMap((s) => [s.heading, ...s.paragraphs]),
-  ].join('\n');
+  ];
+}
+
+/** 모델이 쓴 글자 전부(검사 대상). */
+export function bodyText(a: Article): string {
+  return bodyUnits(a).join('\n');
 }

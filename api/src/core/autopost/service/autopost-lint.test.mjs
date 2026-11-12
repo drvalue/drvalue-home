@@ -10,6 +10,7 @@ import {
   withSourceDate,
   withSourceTitle,
   withSourceUrl,
+  withClaim,
 } from './autopost-fixture.mjs';
 
 const require = createRequire(import.meta.url);
@@ -34,7 +35,11 @@ test('주장에 없는 숫자', () =>
 
 test('표기 차이는 같은 값', () => {
   assert.deepEqual(
-    pass(withHook(good, '투자 규모는 １２００억 원, 감소 폭은 30 %입니다.')),
+    pass(withClaim(good, '감소 폭은 ３０ ％입니다.', '30%')),
+    [],
+  );
+  assert.deepEqual(
+    pass(withClaim(good, '투자 규모는 １，２００억 원입니다.', '1200억 원')),
     [],
   );
   assert.deepEqual(numbersIn('1,200억 원과 ３０％, 0.76'), [
@@ -44,17 +49,73 @@ test('표기 차이는 같은 값', () => {
   ]);
 });
 
-test('확인 안 된 주장', () =>
+test('확인 안 된 주장', () => {
+  const j = allTrue(good);
+  j.claims[good.claims[0].sentence] = false;
+  assert.match(lintClaims(good, j).join(), /확인되지 않은 주장/);
+});
+
+test('판정에 없는 주장·출처는 확인 안 된 것', () => {
+  assert.ok(
+    lintClaims(good, { claims: {}, sources: {}, datesOk: true }).length,
+  );
   assert.match(
-    lintClaims(good, {
-      ...allTrue(good),
-      [good.claims[0].value]: false,
-    }).join(),
-    /확인되지 않은 주장/,
+    lintClaims(good, { ...allTrue(good), sources: {} }).join(),
+    /발행일/,
+  );
+});
+
+test('본문의 날짜가 출처와 안 맞으면 떨어진다', () =>
+  assert.match(
+    lintClaims(good, { ...allTrue(good), datesOk: false }).join(),
+    /날짜/,
   ));
 
-test('판정에 없는 주장은 확인 안 된 것', () =>
-  assert.ok(lintClaims(good, {}).length));
+test('주장 문장이 본문에 없으면 떨어진다', () => {
+  // 본문은 「불량률 30%」라고 쓰고 주장은 「멈춤 시간 30%」— 같은 숫자지만 다른 말이다.
+  const a = {
+    ...withHook(good, '불량률이 30% 줄었습니다.'),
+    claims: good.claims,
+  };
+  assert.match(pass(a).join(), /주장 목록에 없는 숫자: 30/);
+  const b = {
+    ...good,
+    claims: [
+      ...good.claims,
+      { ...good.claims[0], sentence: '본문에 없는 문장 30%' },
+    ],
+  };
+  assert.match(pass(b).join(), /본문에 없는 주장/);
+});
+
+test('같은 숫자라도 그 문단의 주장이 있어야 한다', () =>
+  assert.deepEqual(
+    pass(withClaim(good, '불량률이 30% 줄었습니다.', '30%')),
+    [],
+  ));
+
+test('주장의 값은 그 문장 안에 있어야 한다', () => {
+  const a = {
+    ...good,
+    claims: [{ ...good.claims[0], value: '45%' }, ...good.claims.slice(1)],
+  };
+  assert.ok(pass(a).length);
+});
+
+test('같은 문장의 주장이 둘이면 값이 달라야 한다', () => {
+  assert.ok(pass({ ...good, claims: [...good.claims, good.claims[0]] }).length);
+});
+
+test('기간으로 쓴 「일」은 숫자 검사를 받는다', () => {
+  assert.match(
+    pass(withHook(good, '납기가 90일에서 30일로 줄었습니다.')).join(),
+    /주장 목록에 없는 숫자: 90/,
+  );
+  assert.deepEqual(
+    pass(withHook(good, '2026년 11월 10일에 발표했습니다.')),
+    [],
+  );
+});
 
 test('오래된 출처', () =>
   assert.ok(pass(withSourceDate(good, '2026-10-28')).length)); // 15일 전

@@ -49,7 +49,7 @@ export async function produce(
     if (!reasons.length) {
       const judged = await client.verify(article);
       usage = add(usage, judged.usage);
-      reasons = lintClaims(article, judged.verified);
+      reasons = lintClaims(article, judged.judged);
     }
     if (!reasons.length || errors)
       return { ok: !reasons.length, article, reasons, usage };
