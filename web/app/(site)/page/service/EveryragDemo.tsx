@@ -50,7 +50,7 @@ export default function EveryragDemo() {
   return (
     <div className="hk_demo er_demo" ref={box}>
       <div className="hk_win">
-        <div className="hk_bar"><i /><i /><i /><span>studio.everyrag.com / Assistant · 예시 대화</span></div>
+        <div className="hk_bar"><i /><i /><i /><span>studio.everyrag.com · 예시 대화</span></div>
         <div className="hk_body">
           <ol className="er_chat" aria-live="polite">
             {ER_CHAT.flatMap((turn, i) => [

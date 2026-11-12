@@ -74,7 +74,7 @@ export const MENU_ITEMS: MenuItem[] = [
       { t: '오토폼', l: '/page/service/autoform', d: '쓰던 한글 양식 그대로 채운다', neu: true },
       { t: 'CADON · 컷온', l: '/page/service/cadon', d: 'AutoCAD 판금 전개부터 도면 견적까지', neu: true },
       { t: '채팅', l: '/page/service/chat', d: '고객과 상담원을 곧바로 잇는다', neu: true },
-      { t: 'everyrag', l: '/page/service/everyrag', d: '자료에 근거를 붙여 답하는 RAG', neu: true },
+      { t: 'everyrag', l: '/page/service/everyrag', d: '사내 문서에 근거를 붙여 답하는 AI', neu: true },
       // 한건은 뺐다(2026-09-28 사용자, db/migrations/0017). 장은 남아 있다.
       { t: 'GrowTalk', l: '/page/service/growtok', d: '현장 상황을 나누는 협업 플랫폼', hidden: true },
       { t: 'GrowXD', l: '/page/service/growxd', d: 'AI 분석·예측을 더한 차세대 MES', hidden: true },
