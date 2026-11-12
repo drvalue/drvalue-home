@@ -204,7 +204,6 @@ test('금지 이름은 띄어쓰기·음차·전각·폭 없는 문자로 비켜
     'M.\u200bAX',
     '저희 회사 솔루션',
     '당사 제품',
-    '자사 플랫폼',
   ])
     assert.match(
       pass(withHook(good, t + ' 이야기입니다.')).join(),
@@ -251,6 +250,35 @@ test('출처 주소는 조사가 찾은 주소 안에 있어야 한다', () => {
     pass(good, { researchUrls: good.sources.map((x) => x.url + '/') }),
     [],
   );
+});
+
+test('멀쩡한 문장을 떨어뜨리지 않는다 (규칙의 경계)', () => {
+  for (const t of [
+    '투자사와 담당사가 함께 발표했습니다.', // 「자사」「당사」가 낱말 안에 들어 있다
+    '지멘스는 자사 공장에 먼저 적용했습니다.', // 기사 주체의 「자사」
+    '불량 개수만 세던 방식에서 벗어났습니다.', // 「수만」
+    '검사 횟수조차 줄였습니다.', // 「수조」
+    '냉각 수조의 온도를 읽습니다.',
+    '기존 구조 대비 부품이 줄었습니다.', // 「구조 대」
+    '구조 원리와 구조 건전성을 함께 봅니다.',
+    'Boeing MAX 생산 라인에도 쓰입니다.', // 앞이 영문인 MAX 는 다른 말이다
+    '출력은 최대(max) 값으로 맞춥니다.',
+    'Xcelerator™ 와 Teamcenter® 를 묶었습니다.',
+  ])
+    assert.deepEqual(pass(withHook(good, t)), [], t);
+  assert.deepEqual(
+    pass(withSourceTitle(good, 'Siemens Xcelerator™ update 🚀')),
+    [],
+  ); // 출처 제목은 바깥 글 그대로
+});
+
+test('열지 못한 출처는 발행일 미확인과 다른 사유로 나온다', () => {
+  const j = allTrue(good);
+  j.sources[good.sources[1].url] = false;
+  j.unopened = [good.sources[1].url];
+  const r = lintClaims(good, j).join();
+  assert.match(r, /출처를 열지 못했습니다/);
+  assert.doesNotMatch(r, /발행일이 원문에서 확인되지/);
 });
 
 test('오래된 출처', () =>

@@ -63,3 +63,18 @@ test('답의 형이 깨져도 던지지 않고 전부 미확인', () => {
   ])
     assert.equal(allOk(judgementFrom(good, r, urls)), false);
 });
+
+test('열린 주소는 scheme·www·쿼리가 달라도 같은 글로 본다 (리다이렉트)', () => {
+  const j = judgementFrom(good, all(good), [
+    urls[0].replace('https://', 'http://www.') + '?ref=rss',
+    urls[1] + '/',
+  ]);
+  assert.equal(allOk(j), true);
+  assert.deepEqual(j.unopened, []);
+});
+
+test('열지 못한 출처 목록을 준다', () => {
+  assert.deepEqual(judgementFrom(good, all(good), [urls[0]]).unopened, [
+    urls[1],
+  ]);
+});

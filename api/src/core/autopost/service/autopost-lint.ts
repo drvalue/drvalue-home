@@ -46,26 +46,37 @@ const BANNED = [
   '코스모gmp',
   '코스모지엠피',
 ];
-/** `M.AX` 와 그 변형(M-AX · M. AX · MAX). 낱말 안의 max(maximum)는 안 잡는다. */
-const MAX_RE = /(?<![a-z])m[\s.\-·]{0,3}ax(?![a-z])/i;
-/** 회사를 가리키는 말. 글은 바깥 소식을 풀 뿐 회사 이야기를 하지 않는다. */
-const SELF_RE = /저희|당사|자사|우리\s?회사/;
+/**
+ * `M.AX` 와 그 변형. 사이에 구두점·공백이 낀 것(M-AX · M. AX · M AX)은 전부, 붙여 쓴 것은 대문자 `MAX` 가
+ * 홀로 나올 때만 잡는다 — 「최대(max)」와 「737 MAX」(앞이 숫자·영문)는 다른 말이다.
+ */
+const MAX_SPACED_RE = /(?<![A-Za-z])[Mm][\s.\-·]{1,3}[Aa][Xx](?![A-Za-z])/;
+const MAX_BARE_RE = /(?<![A-Za-z\d]\s?)MAX(?![A-Za-z])/;
+/**
+ * 이 글을 싣는 회사를 가리키는 말. 글은 바깥 소식을 풀 뿐 회사 이야기를 하지 않는다.
+ * 「자사」는 넣지 않는다 — 기사 주체를 가리키는 말이다(「지멘스는 자사 공장에」). 낱말 안쪽(투자사·담당사)은 안 잡는다.
+ */
+const SELF_RE = /(?<![가-힣])(?:저희|당사)|우리\s?회사/;
 /** 정부의 제조 AX 얼라이언스. 자사 제품과 이름이 같지만 다른 것이라 통과시킨다. */
 const ALLIANCE_RE = /m\.ax\s?얼라이언스/gi;
-const EMOJI_RE = /\p{Extended_Pictographic}/u;
+/** 이모지. 상표 기호(™ ® ©)는 제품 이름에 붙는 글자라 뺀다. */
+const EMOJI_RE = /(?![™®©])\p{Extended_Pictographic}/u;
 /**
  * 한글로 푼 수량. 숫자 검사를 비켜 간다(「47%」가 떨어지면 「절반 가까이」로 바꿔 쓸 수 있다) — 쓰지 못하게 한다.
  * 수사는 단위가 붙을 때만 본다(「두 회사」는 수량 주장이 아니다).
  */
+const UNIT_END = '(?=이|을|를|의|은|는|에|가|과|와|도|만|으로|\\s|[.,)]|$)';
 const WORD_QUANTITY_RE = new RegExp(
   [
     '절반|갑절|곱절',
     // 「두 배로」「세 배 빨라」— 「두 배터리」는 아니다
     '(?:두|세|네|다섯|여섯|일곱|여덟|아홉|열|수|몇)\\s?배(?=로|가|를|의|에|나|도|쯤|씩|까지|이상|가량|\\s|[.,)]|$)',
-    '수(?:십|백|천|만|억|조)',
-    '[일이삼사오육칠팔구십백천]+\\s?(?:퍼센트|%)',
-    // 「삼천 명」「이만 원」「백만 원」— 숫자 뒤의 단위(「1,200억 원」)와 「조건」「조명」은 아니다
-    '(?<!\\d\\s?)(?:[일이삼사오육칠팔구][십백천만억조]+|[십백천][만억조]+)\\s?(?:원|달러|명|대|건|곳)',
+    // 「수백억 원」「수십 곳」— 단위가 따라올 때만. 「개수만」「횟수조차」「냉각 수조」는 아니다
+    '(?<![가-힣])수(?:십|백|천|만|억|조)+\\s?(?:여\\s?)?(?:원|달러|명|대|건|곳|개|종|가지|%|퍼센트|년|시간|차례|번)',
+    '(?<![가-힣])[일이삼사오육칠팔구십백천]+\\s?(?:퍼센트|%)',
+    // 「삼천 명이」「백만 원을」— 숫자 뒤의 단위(「1,200억 원」)와 「구조 대비」「구조 원리」「조건」은 아니다
+    '(?<![가-힣\\d]|\\d\\s)(?:[일이삼사오육칠팔구][십백천만억조]+|[십백천][만억조]+)\\s?(?:원|달러|명|대|건|곳)' +
+      UNIT_END,
   ].join('|'),
 );
 
@@ -85,10 +96,11 @@ function bannedIn(text: string): string[] {
   for (const word of BANNED)
     if (flat.includes(word)) out.push(`쓰면 안 되는 이름이 있습니다: ${word}`);
   const loose = plain(text);
-  if (MAX_RE.test(loose.replace(ALLIANCE_RE, ' ')))
+  const noAlliance = loose.replace(ALLIANCE_RE, ' ');
+  if (MAX_SPACED_RE.test(noAlliance) || MAX_BARE_RE.test(noAlliance))
     out.push('쓰면 안 되는 이름이 있습니다: M.AX');
   if (SELF_RE.test(loose))
-    out.push('쓰면 안 되는 말이 있습니다: 회사를 가리키는 말(저희·당사·자사)');
+    out.push('쓰면 안 되는 말이 있습니다: 회사를 가리키는 말(저희·당사)');
   return out;
 }
 
@@ -150,6 +162,8 @@ export interface Judgement {
   sources: Record<string, boolean>;
   /** 덩어리(`judgedUnits`)의 글자 → 그 덩어리가 말하는 사실(수치·인용·발표)이 전부 출처로 뒷받침된다. */
   units: Record<string, boolean>;
+  /** 판정이 실제로 열지 못한 출처의 `url`. 사유를 「발행일 미확인」과 가르려고 따로 둔다. */
+  unopened?: string[];
   /** 본문에 쓴 날짜(발표일 등)가 출처와 맞다. */
   datesOk: boolean;
 }
@@ -293,8 +307,9 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
     );
     // 발행처는 모델이 쓰는 칸이다(출처 제목은 바깥 글의 제목이라 이름 검사만 뺀다).
     out.push(...bannedIn(s.publisher));
-    if (EMOJI_RE.test(s.publisher) || EMOJI_RE.test(s.title))
-      out.push(`출처 칸에 이모지가 있습니다: ${url}`);
+    // 출처 제목은 바깥 글의 제목을 그대로 옮기는 칸이다 — 길이만 본다.
+    if (EMOJI_RE.test(s.publisher))
+      out.push(`발행처 칸에 이모지가 있습니다: ${url}`);
     if (!a.claims.some((c) => normalizeUrl(c.source_url) === url))
       out.push(`주장이 없는 출처입니다: ${url}`);
     const published = dayMs(s.published);
@@ -361,9 +376,10 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
     ),
     ...a.sources
       .filter((s) => judged.sources?.[s.url] !== true)
-      .map(
-        (s) =>
-          `출처의 발행일이 원문에서 확인되지 않습니다: ${s.url.slice(0, 80)}`,
+      .map((s) =>
+        judged.unopened?.includes(s.url)
+          ? `출처를 열지 못했습니다: ${s.url.slice(0, 80)}`
+          : `출처의 발행일이 원문에서 확인되지 않습니다: ${s.url.slice(0, 80)}`,
       ),
     ...judgedUnits(a)
       .filter((u) => judged.units?.[u] !== true)

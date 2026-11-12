@@ -85,6 +85,7 @@ export const allTrue = (a) => ({
   claims: Object.fromEntries((a.claims ?? []).map((c) => [c.sentence, true])),
   sources: Object.fromEntries((a.sources ?? []).map((s) => [s.url, true])),
   units: Object.fromEntries(units(a).map((u) => [u, true])),
+  unopened: [],
   datesOk: true,
 });
 export const withHook = (a, text) => ({ ...a, hook: [...a.hook, text] });

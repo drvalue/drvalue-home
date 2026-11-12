@@ -36,7 +36,11 @@ service.client = {
     calls.research++;
     if (next.fail) throw new Error('가짜 API 실패');
     return {
-      research: { topic: 't', notes: 'n', sourceUrls: good.sources.map((x) => x.url) },
+      research: {
+        topic: 't',
+        notes: 'n',
+        sourceUrls: good.sources.map((x) => x.url),
+      },
       usage: { input: 1, output: 1 },
     };
   },

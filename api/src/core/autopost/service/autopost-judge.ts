@@ -21,6 +21,17 @@ function pick<T extends { n: number }>(
 }
 
 /**
+ * 「같은 글인가」를 볼 열쇠 — 호스트(www. 뗌)와 경로만. 열린 주소는 리다이렉트로 scheme·www·쿼리가
+ * 출처에 적힌 것과 달라질 수 있다.
+ */
+function pageKey(raw: string): string | null {
+  const normal = normalizeUrl(raw);
+  if (!normal) return null;
+  const url = new URL(normal);
+  return `${url.hostname.replace(/^www\./, '')}${url.pathname.replace(/\/$/, '')}`.toLowerCase();
+}
+
+/**
  * 판정 호출의 답을 판정 결과로 묶는다. 닫힌 쪽으로 기운다:
  *
  *   답에 없는 번호 · 형이 깨진 답                → 확인 안 됨
@@ -35,10 +46,10 @@ export function judgementFrom(
   fetchedUrls: string[],
 ): Judgement {
   const fetched = new Set(
-    fetchedUrls.map(normalizeUrl).filter((u): u is string => !!u),
+    fetchedUrls.map(pageKey).filter((u): u is string => !!u),
   );
   const opened = (url: string) => {
-    const u = normalizeUrl(url);
+    const u = pageKey(url);
     return !!u && fetched.has(u);
   };
   return {
@@ -74,6 +85,7 @@ export function judgementFrom(
         ),
       ]),
     ),
+    unopened: article.sources.map((s) => s.url).filter((u) => !opened(u)),
     datesOk: answer?.dates_ok === true,
   };
 }
