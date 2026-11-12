@@ -325,7 +325,7 @@ export const CHAT_SCHEMA: PageSchema = {
 
 /* ── everyrag ─────────────────────────────────────────────── */
 
-/** 서비스 시연 장과 같은 짜임(머리말 · 요약 · 화면 판 · 시연 · 전/후 · 셋째 구역) + 머리말 둘째 단추 글 + 시작 단계 카드. 바깥 링크 주소와 시연 대화·코드는 web 의 코드다. */
+/** 서비스 시연 장과 같은 짜임(머리말 · 요약 · 화면 판 · 시연 · 전/후 · 셋째 구역) + 머리말 둘째 단추 글 + 시작 단계 카드. 바깥 링크 주소와 시연 대화는 web 의 코드다. */
 export const EVERYRAG_SCHEMA: PageSchema = {
   key: 'service-everyrag',
   label: 'everyrag',

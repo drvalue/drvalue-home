@@ -18,7 +18,7 @@ import { EVERYRAG_DEFAULT, EVERYRAG_KEY, EVERYRAG_URL } from './content'
  *  2) 전/후 — 직접 만들던 대화(어두운 카드) / 서비스 화면(밝은 카드) + ✕ 셋 · ✓ 셋
  *  3) 시작하기 — 단계 카드 셋(올리기 · 자동 요약 · 묻고 확인하기)
  * 같은 날 사용자: 「너무 개발자용 같다」 — API 키 · 임베딩 · curl 코드를 빼고, 문서를 찾는 사람의 말로 다시 썼다
- * (서비스 사이트의 Business 쪽 문장). 개발팀용 연동은 맨 끝 한 줄로만 남겼다.
+ * (서비스 사이트의 Business 쪽 문장). 개발팀용 연동 얘기는 싣지 않는다 — 「everyrag 바로가기」로 넘어가면 문서가 있다.
  * 머리말 둘째 단추는 서비스로 가는 바깥 링크다. 글은 관리 화면의 페이지 글, 못 읽으면 content.ts 기본 글.
  * 고객 사례 · 성능 수치는 없다 — 서비스 사이트가 「공개할 고객은 아직 없다」고 적어 둔 그대로라 싣지 않았다.
  */
@@ -81,7 +81,6 @@ export default async function Page() {
             {extra.title}
           </Statement>
           {c.steps.length > 0 && <Cols items={c.steps} />}
-          <p className="er_note" data-rv>개발팀이 있다면 API 와 MCP 주소로 사내 시스템이나 AI 에이전트에 바로 붙일 수 있습니다.</p>
         </section>
       </SolutionShell>
     </>

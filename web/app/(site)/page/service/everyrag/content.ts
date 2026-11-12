@@ -5,7 +5,8 @@
  *
  * 출처: 운영 중인 서비스 사이트 studio.everyrag.com(2026-11-12 확인)의 첫 장(Business 쪽 문장) · Assistant · Enterprise 장.
  * 거기 있는 글을 이 사이트의 합니다체로 옮겼다. 요금 숫자와 「준비 중」으로 적힌 것(Plugin · CLI · 온라인 결제)은
- * 싣지 않았다. 화면 둘은 그 사이트의 공개 장을 1440 폭으로 찍은 것. 우리가 쓴 문장은 everyragContent.ts 머리말에.
+ * 싣지 않았다. 화면 둘은 그 사이트의 공개 장을 2배 해상도로 찍은 것(머리말 화면은 폭 1600 으로 줄였다). 사진·스캔 이미지 올리기는
+ * 그 사이트가 「글자 인식을 켠 서버에서」라는 단서를 달아 둔 것이라 싣지 않았다. 우리가 쓴 문장은 everyragContent.ts 머리말에.
  */
 import { ER_AFTER, ER_BEFORE } from '../everyragContent'
 import { compareOf, imageOf, type EveryragContent } from '../../pageContentParts'
@@ -42,8 +43,8 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
       image: imageOf({
         src: '/screens/everyrag-home.jpg',
         alt: 'everyrag 서비스 첫 화면 — 「우리 팀의 기록을 믿고 쓸 수 있는 답으로」 제목과 무료로 시작 단추, 문서와 표가 조각으로 나뉘어 정리되고 인용이 붙은 답으로 이어지는 그림',
-        w: 1424,
-        h: 536,
+        w: 1600,
+        h: 602,
       }),
       tag: 'everyrag · 사내 문서 AI',
       url: 'studio.everyrag.com',
@@ -68,7 +69,7 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
   extra: {
     kicker: '시작하기',
     title: '올리고, 정리되고, 물어봅니다',
-    desc: '문서(docx · pdf · txt)와 표(csv), 대화 기록, 사진과 스캔 이미지까지 올릴 수 있습니다.',
+    desc: '문서(docx · pdf · txt)와 표(csv), 대화 기록을 올릴 수 있습니다.',
   },
   steps: [
     { t: '자료 올리기', d: '파일을 끌어다 놓으면 됩니다. 나누고 정리하는 일은 everyrag 가 합니다.' },

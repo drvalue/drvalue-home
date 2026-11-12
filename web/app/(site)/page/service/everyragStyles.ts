@@ -19,7 +19,6 @@ export const EVERYRAG_CSS = `
 #dvmax.mx_v4 .er_chat li.er_in { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }
 /* 전/후의 밝은 카드 — 채팅 예시 화면의 왼쪽 위부터 보인다. 좁은 화면에서는 잘리지 않게 높이를 푼다 */
 #dvmax.mx_v4 .er_light img { object-position: 0 0; }
-#dvmax.mx_v4 .er_note { margin: 40px 0 0; font-size: 15px; color: #4e5968; }
 @media (max-width: 720px) {
   #dvmax.mx_v4 .er_light { min-height: 0; padding: 20px 0 0 20px; }
   #dvmax.mx_v4 .er_light img { height: auto; }
