@@ -5,7 +5,11 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { weekKey, isDue, kstDate } = require('../../../../dist/core/autopost/service/autopost-week.js');
+const {
+  weekKey,
+  isDue,
+  kstDate,
+} = require('../../../../dist/core/autopost/service/autopost-week.js');
 
 test('주 키는 KST 로 센다', () => {
   assert.equal(weekKey(new Date('2026-11-09T14:59:00Z')), '2026-W46'); // KST 월 23:59
