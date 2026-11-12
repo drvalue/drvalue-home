@@ -28,7 +28,7 @@ src/
 │   ├── typeorm/                 # ITransactionContext · @TransactionContext() · @Transactional() · BaseRepository
 │   │                            #   · TransactionContextFactory(요청 밖 — cron) · onCommit(커밋 뒤 할 일)
 │   ├── dto/                     # 검증 + Swagger 를 한 번에: IsString({ propertyName, … }) 등
-│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations · site_search_settings)
+│   ├── entity/                  # TypeORM 엔티티 (posts · posts_translations · posts_files · directus_files · inquiries · admin_users · admin_revisions · site_menu_items · site_menu_item_translations · page_contents · home_banners · home_banner_translations · home_popups · home_popup_translations · site_search_settings · autopost_runs)
 │   ├── database/                # TypeOrmModule.forRootAsync — synchronize 절대 끔 · 문맥 미들웨어
 │   ├── session/                 # HMAC 세션 토큰 · 쿠키 파서 · 세션 쿠키 옵션(session-cookie.ts)
 │   ├── revision/                # 변경 이력 기록기 (admin_revisions) · 되돌리기 핸들러 모음(RevisionRestoreRegistry)
@@ -54,6 +54,7 @@ src/
 `page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
 `seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`) ·
 `home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`) ·
+`autopost`(제조 AI 주간 글 — 1시간 cron, 컨트롤러 없음. 아래 「방식」) ·
 `search-settings`(검색엔진 설정 한 행 `site_search_settings` — 공개 `content/search-settings`(확인 코드·AI 스위치 둘·IndexNow 켜짐, 키 없음) + 관리 `admin/search-settings`(+ IndexNow 최근 보내기 20건, 프로세스 메모리). 저장은 IndexNow 로 안 알린다).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 같은 날 R1 로 모듈 14개가 전부 이 모양이다 —
@@ -218,6 +219,17 @@ src/
   - 그림은 살아 있는 동안만 공개 관문을 통과한다(`fileIsPublic`) — 예약 배너 그림이 시작 전에 새지 않는다.
     미디어 「쓰이는 곳」은 꺼진 것·기간 밖도 센다. 파일을 지우면 FK(`ON DELETE SET NULL`)가 그림 칸을 비운다.
   - 표 이름이 `home_*` 인 이유는 migrations/0005 머리말(옛 Directus `popups` · `home_settings` 와 겹친다).
+- **제조 AI 주간 글(`core/autopost`)** — 한 주(ISO 주, 한국 시간)에 한 편. 화요일 09:00 이후 한 시간마다 `autopost_runs`
+  (기본 키가 주 키)에 이번 주 행이 있나 보고, 없으면 잡아서 만든다. 순서는 `service/autopost-produce.ts` 의 `produce` —
+  조사(웹 검색) → 집필(구조화 출력, HTML 은 모델이 안 쓰고 `autopost-render.ts` 가 만든다) → 구조 검사 → 판정(다른 호출이
+  웹 fetch 로 출처를 다시 읽는다) → 주장 검사. 떨어지면 한 번만 다시 쓴다. 통과하면 `AdminPostDefaultService.createAsSystem`
+  (행위자 `autopost@system`, 뉴스에만)으로 **공개** 저장하고, 떨어지면 글을 만들지 않고 기록 표에만 남긴다.
+  - 사람 검수가 없다(결정 0020). 검사 규칙(`autopost-lint.ts`)을 느슨하게 고치면 그대로 회사 이름으로 나간다.
+  - Claude 호출은 `client/autopost-claude.client.ts` 하나에만 있다. 웹 검색·fetch 는 Anthropic 쪽에서 돈다 — 이 서버가
+    모델이 고른 주소를 직접 열지 않는다. 호출 동안 트랜잭션을 열지 않는다.
+  - 오류(API 실패)로 끝난 주만 한 번 더 한다(주당 2번까지). 2시간 넘게 「진행 중」이면 죽은 것으로 닫는다.
+  - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 `ANTHROPIC_API_KEY` 둘 다 있어야 Claude 를 부른다.
+  - 손으로 돌리기: `npm run autopost -- --preview | --draft`(`src/autopost-cli.ts`).
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
   프로세스당 한도가 된다 — 그때 공유 저장소로 바꾼다.
 - 칸 이름을 그대로 내보낸다(`is_pinned` · `published_date`). 예외 하나: `thumbnail`
@@ -251,7 +263,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs   # 61 (8 + 9 + 5 + 16 + 7 + 11 + 5)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 45 (주 4 · HTML 4 · 검사 18 · 할 일 5 · 설정 6 · 순서 8)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

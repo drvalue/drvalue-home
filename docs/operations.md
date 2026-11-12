@@ -92,6 +92,7 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 | `ADMIN_IAM_CALLBACK_URL` | IAM 이 로그인 뒤 돌려보낼 주소. IAM 화이트리스트와 같아야 한다. `https` 면 쿠키에 Secure | 로그인 버튼이 로그인 화면으로 돌아와 「로그인 설정이 끝나지 않았습니다.」(`ADMIN_AUTH_NOT_CONFIGURED`) |
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
 | `INDEXNOW_KEY` (선택) | IndexNow 키(8~128자, 영문·숫자·-, `openssl rand -hex 16`). 공개 글(만들기·고치기·지우기·되돌리기·예약 공개·자동 내림) · 페이지 글 · 검색 정보를 저장하면 커밋 뒤 api 가 그 주소를 `api.indexnow.org` 에 알린다(2초 모아 한 번, 5초 제한, 실패는 로그 한 줄 — 저장은 안 기다린다). web 은 실행 때 같은 값을 읽어 `/<키>.txt` 로 낸다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 보낸다 | 알림을 **안 보낸다**, 키 파일도 404(닫힌 쪽). 모양이 틀린 값도 같다 |
+| `AUTOPOST_ENABLED` · `ANTHROPIC_API_KEY` (선택) | 제조 AI 주간 글(자동 발행). 켜기 값이 **정확히 `1`** 이고 Claude API 키가 있으면 api 가 화요일 09:00(KST) 이후 한 시간마다 「이번 주 글이 있나」를 보고, 없으면 만들어 뉴스 게시판에 공개한다. 키는 비밀이다 — 로그·기록 표에 싣지 않는다. 한 주의 결과는 `autopost_runs` 표(공개·건너뜀·오류와 사유·토큰 수)에 남는다. **실패 알림은 없다** — 글이 안 올라오면 이 표와 api 로그를 본다 | 둘 중 하나라도 비면(켜기 값이 `1` 이 아니어도) **아무것도 안 한다** — Claude 를 부르지 않는다(닫힌 쪽). 뜰 때 `자동 글: 꺼져 있습니다` 한 줄 |
 | `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
 | `NAVER_SITE_VERIFICATION` · `GOOGLE_SITE_VERIFICATION` · `BING_SITE_VERIFICATION` (선택) | 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). **관리 화면 「사이트 › SEO › 검색엔진 설정」이 우선, env 는 예비** — 그 칸이 비었거나 api 가 안 닿을 때만 이 값을 쓴다. web **실행 환경값** — 그리는 때에 읽어서 요청마다 그리는 장(첫 화면 `/` 포함)에 붙는다. 빌드 때 굳는 정적 장에는 빌드 직후에는 안 붙는다. 공개 값이라 비밀이 아니다 | 관리 화면 칸도 비었으면 그 태그만 안 나간다. 소유 확인을 못 해 사이트맵·RSS(`/rss.xml`) 제출을 못 한다 |
 
@@ -103,6 +104,20 @@ dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_U
 
 `TRUST_PROXY` 는 홉 수(`1`)다. Nest 가 숫자로 바꿔 넘긴다 — 문자열 `"1"` 은 IP
 `0.0.0.1` 하나를 믿는 목록으로 읽힌다.
+
+### 제조 AI 주간 글을 손으로 돌리기
+
+```bash
+cd api && npm run build
+npm run autopost -- --preview   # 한 편을 만들어 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다
+npm run autopost -- --draft     # 같은 일을 하고 뉴스 게시판에 초안으로 저장한다(공개 안 함)
+```
+
+켜기 값·요일·주 단위 기록을 보지 않고 `ANTHROPIC_API_KEY` 만 본다. 한 번에 Claude 호출이 대여섯 번 나간다(돈이 든다).
+운영에서 켜려면 서버 `.env` 에 두 값을 넣고 배포한다. 끄려면 `AUTOPOST_ENABLED` 를 비우고 다시 띄운다.
+한 주를 다시 만들게 하려면 `autopost_runs` 에서 그 주의 행을 지운다(다음 정시 틱이 다시 잡는다).
+DB 가 있어야 도는 검사: `node --test src/core/autopost/repository/autopost-run.dbtest.mjs src/core/autopost/service/autopost-flow.dbtest.mjs`
+(Claude 는 부르지 않는다. 테스트가 `2026-W46`·`W47` 기록과 `mfg-ai-202611…` 글을 지우므로 **운영 DB 에 돌리지 않는다**).
 
 ### 2026-09-22 에 없앤 키
 
