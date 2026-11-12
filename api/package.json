@@ -5,6 +5,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
+    "autopost": "node dist/autopost-cli.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
