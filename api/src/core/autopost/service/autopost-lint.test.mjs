@@ -19,6 +19,7 @@ const {
   lintClaims,
   numbersIn,
   judgedUnits,
+  pruneSources,
 } = require('../../../../dist/core/autopost/service/autopost-lint.js');
 
 const pass = (a, c = {}) => [
@@ -279,6 +280,40 @@ test('열지 못한 출처는 발행일 미확인과 다른 사유로 나온다'
   const r = lintClaims(good, j).join();
   assert.match(r, /출처를 열지 못했습니다/);
   assert.doesNotMatch(r, /발행일이 원문에서 확인되지/);
+});
+
+test('이름에 든 숫자: 정해 둔 이름만 숫자 검사에서 빠진다', () => {
+  for (const t of [
+    '뉴스1에 따르면 산업부가 발표했습니다.',
+    '3D 검사와 5G 망, 4차 산업혁명 이야기입니다.',
+  ])
+    assert.deepEqual(pass(withHook(good, t)), [], t);
+  // 발행처는 모델이 쓰는 칸이다 — 거기 적은 숫자가 본문 숫자를 덮으면 안 된다.
+  const a = {
+    ...withHook(good, '불량률이 47% 줄었습니다.'),
+    sources: [{ ...good.sources[0], publisher: '불량률 47%' }, good.sources[1]],
+  };
+  assert.match(pass(a).join(), /주장 목록에 없는 숫자: 47/);
+  assert.match(
+    pass(withHook(good, '뉴스2에 따르면 30곳이 도입했습니다.')).join(),
+    /주장 목록에 없는 숫자/,
+  );
+});
+
+test('숫자 사유는 어느 문단인지 같이 알려 준다', () =>
+  assert.match(
+    pass(withHook(good, '불량률이 47% 줄었습니다.')).join('|'),
+    /주장 목록에 없는 숫자: 47 — 「불량률이 47% 줄었습니다/,
+  ));
+
+test('주장이 걸리지 않은 출처는 떼어 낸다', () => {
+  const extra = withSourceUrl(good, 'https://evil.example/login');
+  assert.equal(extra.sources.length, 3);
+  const pruned = pruneSources(extra);
+  assert.deepEqual(pruned.sources, good.sources);
+  assert.deepEqual(pass(pruned), []);
+  assert.equal(pruneSources(good), good); // 뗄 것이 없으면 그대로
+  assert.deepEqual(pruneSources({}), {}); // 형이 깨진 글은 건드리지 않는다
 });
 
 test('오래된 출처', () =>

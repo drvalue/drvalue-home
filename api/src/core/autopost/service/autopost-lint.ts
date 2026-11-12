@@ -168,6 +168,13 @@ export interface Judgement {
   datesOk: boolean;
 }
 
+/**
+ * 이름에 숫자가 든 낱말 — 수치가 아니라서 숫자 검사에서 뺀다. **코드에 적힌 목록만**이다.
+ * 모델이 쓰는 칸(발행처 등)에서 가져오지 않는다 — 그러면 그 칸에 숫자를 적어 검사를 열 수 있다.
+ */
+const NAMED_NUMBER_RE =
+  /뉴스1|news1|(?<![A-Za-z\d])(?:[23]D|[456]G|CO2|B2B|B2C)(?![A-Za-z\d])|4차\s?산업혁명/gi;
+
 const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 /**
@@ -178,6 +185,7 @@ const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 function bodyNumbers(text: string): string[] {
   return numbersIn(
     normalizeDigits(text)
+      .replace(NAMED_NUMBER_RE, ' ')
       .replace(/(?<![\d.])(?:19|20)\d{2}\s?년/g, ' ')
       .replace(/(?<![\d.])\d{1,2}\s?월(?:\s?\d{1,2}\s?일)?(?!\d)/g, ' ')
       .replace(/(?<![\d.])\d\s?(?:가지|번째|단계|개(?!월|국|년|소|점))/g, ' '),
@@ -198,16 +206,17 @@ export function judgedUnits(a: Article): string[] {
  * 그 덩어리의 숫자를 덮는다. 다른 문단의 주장이 같은 숫자를 가졌다고 덮이지 않는다.
  */
 function uncovered(a: Article, claims: Article['claims']): string[] {
-  const out = new Set<string>();
+  const out = new Map<string, string>(); // 숫자 → 처음 나온 덩어리(다시 쓰는 호출이 자리를 찾게)
   for (const unit of bodyUnits(a).map(squash)) {
     const known = new Set(
       claims
         .filter((c) => squash(c.sentence) && unit.includes(squash(c.sentence)))
         .flatMap((c) => numbersIn(c.value)),
     );
-    for (const n of bodyNumbers(unit)) if (!known.has(n)) out.add(n);
+    for (const n of bodyNumbers(unit))
+      if (!known.has(n) && !out.has(n)) out.set(n, unit);
   }
-  return [...out];
+  return [...out].map(([n, unit]) => `${n} — 「${unit.slice(0, 50)}」`);
 }
 
 /** 출처 주소를 비교할 모양으로: 조각(#)·utm 쿼리·끝 빗금을 뗀다. 읽을 수 없거나 http(s) 가 아니거나 계정이 든 주소면 null. */
@@ -388,4 +397,21 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
       ? []
       : ['본문의 날짜가 출처와 맞는지 확인되지 않습니다']),
   ];
+}
+
+/**
+ * 주장이 하나도 걸리지 않은 출처를 떼어 낸다. 인용하지 않은 링크는 글에 싣지 않는다 —
+ * 모델이 「참고로」 끼워 넣은 출처 때문에 한 주를 건너뛰지 않게, 떨어뜨리는 대신 뗀다.
+ * 그 출처에만 기댄 문단이 있으면 판정이 떨어뜨린다. 뗄 것이 없거나 형이 깨진 글은 그대로 돌려준다.
+ */
+export function pruneSources<T>(a: T): T {
+  if (!hasShape(a)) return a;
+  const claimed = new Set(
+    a.claims.map((c) => normalizeUrl(c.source_url)).filter((u) => !!u),
+  );
+  const sources = a.sources.filter((s) => {
+    const url = normalizeUrl(s.url);
+    return !url || claimed.has(url); // 읽을 수 없는 주소는 남겨 검사가 떨어뜨리게 한다
+  });
+  return sources.length === a.sources.length ? a : { ...a, sources };
 }

@@ -279,7 +279,7 @@ ${input.avoidUrls.map((u) => `- ${u}`).join('\n') || '(없음)'}
   async write(input: WriteInput): Promise<{ article: Article; usage: Usage }> {
     const again =
       input.errors?.length && input.previous
-        ? `\n\n이전에 쓴 글은 검사에서 떨어졌습니다. 떨어진 사유를 전부 고쳐 다시 쓰세요. 출처에서 확인되지 않은 수치는 빼세요.\n\n<떨어진_사유>\n${input.errors.map((e) => `- ${e}`).join('\n')}\n</떨어진_사유>\n\n<이전_글>\n${JSON.stringify(input.previous)}\n</이전_글>`
+        ? `\n\n이전에 쓴 글은 검사에서 떨어졌습니다. 떨어진 사유를 전부 고쳐 다시 쓰세요. 사유에 적힌 숫자와 「」 안의 구절로 자리를 찾아, 그 구절을 주장 목록에 넣거나(출처에서 확인되는 수치일 때) 그 숫자를 본문에서 빼세요. 고치면서 새 숫자나 새 문장을 더하지 말고, 사유와 상관없는 부분은 그대로 두세요. 출처에서 확인되지 않은 수치는 빼세요.\n\n<떨어진_사유>\n${input.errors.map((e) => `- ${e}`).join('\n')}\n</떨어진_사유>\n\n<이전_글>\n${JSON.stringify(input.previous)}\n</이전_글>`
         : '';
     const result = await this.structured<Article>(
       '집필',

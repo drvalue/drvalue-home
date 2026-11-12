@@ -118,3 +118,33 @@ test('조사가 찾은 주소 밖의 출처는 떨어진다', async () => {
   assert.equal(r.ok, false);
   assert.match(r.reasons.join(), /조사에 없는 출처/);
 });
+
+test('주장 없는 출처가 낀 글은 그 출처를 떼고 통과한다', async () => {
+  const extra = {
+    ...good,
+    sources: [
+      ...good.sources,
+      { ...good.sources[0], url: good.sources[0].url + '/extra' },
+    ],
+  };
+  const c = fake({ articles: [extra] });
+  c.research = async () => ({
+    research: {
+      topic: 't',
+      notes: 'n',
+      sourceUrls: extra.sources.map((x) => x.url),
+    },
+    usage: { input: 0, output: 0 },
+  });
+  const r = await produce(c, input);
+  assert.equal(r.ok, true);
+  assert.equal(r.article.sources.length, 2);
+  assert.equal(c.calls.write, 1);
+});
+
+test('시도마다의 사유를 남긴다', async () => {
+  const r = await produce(fake({ articles: [bad, good] }), input);
+  assert.equal(r.attempts.length, 2);
+  assert.ok(r.attempts[0].length);
+  assert.deepEqual(r.attempts[1], []);
+});

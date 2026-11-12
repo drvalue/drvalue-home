@@ -31,6 +31,8 @@ export interface AutopostResult {
   outcome: 'published' | 'drafted' | 'skipped' | 'preview';
   /** 검사에서 떨어진 사유. 통과했으면 빈 배열. */
   reasons: string[];
+  /** 시도마다의 사유(첫 번째 · 다시 쓴 것). */
+  attempts: string[][];
   article: Article;
   html: string;
   postId?: number;
@@ -113,6 +115,7 @@ export class AutopostDefaultService {
     }
     const base = {
       reasons: made.reasons,
+      attempts: made.attempts,
       article: made.article,
       html: made.ok ? renderArticle(made.article) : '',
       usage: made.usage,
@@ -198,6 +201,7 @@ export class AutopostDefaultService {
     const html = safeRender(made.article);
     const base = {
       reasons: made.reasons,
+      attempts: made.attempts,
       article: made.article,
       html,
       usage: made.usage,

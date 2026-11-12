@@ -4,13 +4,15 @@ import type {
   Usage,
 } from '../client/autopost-claude.client';
 import type { Article } from '../model/article';
-import { lintClaims, lintStructure } from './autopost-lint';
+import { lintClaims, lintStructure, pruneSources } from './autopost-lint';
 
 export interface Produced {
   /** 검사를 전부 통과했나. false 면 `reasons` 가 떨어진 사유다. */
   ok: boolean;
   article: Article;
   reasons: string[];
+  /** 시도마다의 사유(첫 번째 · 다시 쓴 것). 다시 쓰기가 고쳤는지 새로 깨뜨렸는지 보려고 남긴다. */
+  attempts: string[][];
   usage: Usage;
 }
 
@@ -55,6 +57,7 @@ async function steps(
   let usage = found.usage;
   let errors: string[] | undefined;
   let previous: Article | undefined;
+  const attempts: string[][] = [];
   for (;;) {
     const written = await client.write({
       today: input.today,
@@ -63,7 +66,7 @@ async function steps(
       previous,
     });
     usage = add(usage, written.usage);
-    const article = written.article;
+    const article = pruneSources(written.article);
     let reasons = lintStructure(article, {
       today: input.today,
       usedSourceUrls: input.avoidUrls,
@@ -74,8 +77,9 @@ async function steps(
       usage = add(usage, judged.usage);
       reasons = lintClaims(article, judged.judged);
     }
+    attempts.push(reasons);
     if (!reasons.length || errors)
-      return { ok: !reasons.length, article, reasons, usage };
+      return { ok: !reasons.length, article, reasons, attempts, usage };
     errors = reasons;
     previous = article;
   }

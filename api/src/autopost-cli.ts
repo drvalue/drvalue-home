@@ -50,11 +50,14 @@ async function main(): Promise<number> {
     console.log(
       `결과: ${result.outcome}${result.postId ? ` (글 ${result.postId})` : ''}`,
     );
-    console.log(
-      result.reasons.length
-        ? `검사: 떨어짐 — 사유 ${result.reasons.length}건\n${result.reasons.map((r) => `  - ${r}`).join('\n')}`
-        : '검사: 통과',
+    result.attempts.forEach((reasons, i) =>
+      console.log(
+        reasons.length
+          ? `검사 ${i + 1}차: 떨어짐 — 사유 ${reasons.length}건\n${reasons.map((r) => `  - ${r}`).join('\n')}`
+          : `검사 ${i + 1}차: 통과`,
+      ),
     );
+    console.log(`최종: ${result.reasons.length ? '떨어짐' : '통과'}`);
     console.log(
       `토큰: 입력 ${result.usage.input} · 출력 ${result.usage.output}`,
     );
