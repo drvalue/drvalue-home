@@ -22,7 +22,7 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
     desc: '파일 · JSON · 대화 기록을 API 키로 넣으면 조각 나누기 · 임베딩 · 색인 · 요약까지 처리합니다. 올린 즉시 채팅으로 시험하고, 답에는 원문 인용이 붙습니다.',
     heroLink: 'everyrag 바로가기',
     ctaTitle: '우리 자료로 답하는 AI, everyrag 로 먼저 확인해 보세요',
-    ctaDesc: 'studio.everyrag.com 에서 무료로 시작할 수 있습니다. 도입·연동 상담은 아래로.',
+    ctaDesc: 'studio.everyrag.com 에서 서비스를 바로 살펴볼 수 있습니다. 도입·연동 상담은 아래로.',
   },
   lead: {
     title: '있으면 인용하고, 없으면 없다고 답합니다',
