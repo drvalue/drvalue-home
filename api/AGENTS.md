@@ -267,7 +267,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 74 (주 4 · HTML 4 · 검사 36 · 판정 묶기 7 · 할 일 5 · 설정 6 · 순서 12)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 75 (주 4 · HTML 4 · 검사 37 · 판정 묶기 7 · 할 일 5 · 설정 6 · 순서 12)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

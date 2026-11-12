@@ -316,6 +316,34 @@ test('주장이 걸리지 않은 출처는 떼어 낸다', () => {
   assert.deepEqual(pruneSources({}), {}); // 형이 깨진 글은 건드리지 않는다
 });
 
+test('숫자 없는 사실도 주장으로 적을 수 있다 (값이 빈 주장) — 그 출처는 떼이지 않는다', () => {
+  const third = {
+    title: 'Plan detail',
+    url: 'https://example.net/plan',
+    publisher: 'Example News',
+    published: '2026-11-09',
+  };
+  const text = 'Example News 에 따르면 대상 지역은 광주와 창원입니다.';
+  const a = {
+    ...withHook(good, text),
+    sources: [...good.sources, third],
+    claims: [
+      ...good.claims,
+      {
+        sentence: text,
+        value: '',
+        source_url: third.url,
+        quote: 'Gwangju and Changwon',
+      },
+    ],
+  };
+  assert.equal(pruneSources(a).sources.length, 3);
+  assert.deepEqual(pass(a), []);
+  const j = allTrue(a);
+  j.claims[text] = false; // 값이 비어도 판정은 받는다
+  assert.match(lintClaims(a, j).join(), /확인되지 않은 주장/);
+});
+
 test('오래된 출처', () =>
   assert.ok(pass(withSourceDate(good, '2026-10-28')).length)); // 15일 전
 

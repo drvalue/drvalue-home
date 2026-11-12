@@ -342,7 +342,7 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
       out.push(
         `주장의 출처가 출처 목록에 없습니다: ${c.sentence.slice(0, 60)}`,
       );
-    if (!c.value.trim()) out.push('값이 빈 주장이 있습니다');
+    // 값이 빈 주장도 받는다 — 숫자 없는 사실(발표·계획·인용)을 그 출처에 묶는 주장이다. 판정은 똑같이 받는다.
     const sentence = squash(c.sentence);
     if (!sentence || !units.some((u) => u.includes(sentence)))
       out.push(`본문에 없는 주장입니다: ${c.sentence.slice(0, 60)}`);
