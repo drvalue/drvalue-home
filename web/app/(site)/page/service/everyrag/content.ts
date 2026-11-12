@@ -1,12 +1,14 @@
 /**
  * everyrag 장의 글 — 관리 화면(페이지 → everyrag)에서 고친다. 모양은 api 의
  * core/page/schema/intro-pages.schema.ts 와 같다. 씨앗(db/migrations/0022)이자 예비 글.
+ * 대화 시연(EveryragDemo)과 시작 코드는 코드다(everyragContent.ts).
  *
- * 출처: 운영 중인 서비스 사이트 studio.everyrag.com(2026-11-12 확인)의 첫 장 · Database · Assistant 장.
- * **문장을 새로 지어내지 않았다** — 거기 있는 글을 이 사이트의 합니다체로 옮겼다. 요금 숫자와
- * 「준비 중」으로 적힌 것(Plugin · CLI · 온라인 결제)은 싣지 않았다. 화면은 그 사이트 첫 장을 1440 폭으로 찍은 것.
+ * 출처: 운영 중인 서비스 사이트 studio.everyrag.com(2026-11-12 확인)의 첫 장 · Assistant 장.
+ * 거기 있는 글을 이 사이트의 합니다체로 옮겼다. 요금 숫자와 「준비 중」으로 적힌 것(Plugin · CLI · 온라인 결제)은
+ * 싣지 않았다. 화면 둘은 그 사이트의 공개 장을 1440 폭으로 찍은 것. 우리가 쓴 문장은 everyragContent.ts 머리말에.
  */
-import { imageOf, type EveryragContent } from '../../pageContentParts'
+import { ER_AFTER, ER_BEFORE } from '../everyragContent'
+import { compareOf, imageOf, type EveryragContent } from '../../pageContentParts'
 
 export const EVERYRAG_KEY = 'service-everyrag'
 
@@ -25,13 +27,13 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
     ctaDesc: 'studio.everyrag.com 에서 서비스를 바로 살펴볼 수 있습니다. 도입·연동 상담은 아래로.',
   },
   lead: {
-    title: '있으면 인용하고, 없으면 없다고 답합니다',
-    desc: '자료에서 온 주장에는 원문 인용이 붙습니다. 자료에 없는 일반 지식은 「자료 밖」으로 따로 표시합니다.',
+    title: '벡터 DB 를 몰라도 됩니다',
+    desc: '자료를 넣으면 요약하고 색인하고, 근거를 붙여 답합니다.',
     heroN: '',
     heroLabel: '',
     items: [
       { t: '근거 인용', d: '답의 인용 번호는 서버가 넘긴 근거 안에서만 인정합니다. 인용문은 모델 출력이 아니라 원문에서 가져옵니다.' },
-      { t: '자료 밖 표시', d: '기록에 없으면 없다고 답합니다. 일반 지식으로 덧붙일 때는 「자료 밖」으로 따로 표시합니다.' },
+      { t: '요약 지식', d: '원문만 뒤지지 않고, 쌓일 때마다 만든 주제 요약도 함께 찾습니다. 기간이나 사람 질문에 강합니다.' },
       { t: '컬렉션 격리', d: '모든 저장 · 검색 쿼리에 컬렉션 조건이 필수입니다. 다른 컬렉션의 자료는 섞이지 않습니다.' },
     ],
   },
@@ -47,36 +49,30 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
       url: 'studio.everyrag.com',
     },
   ],
-  sections: [
-    {
-      kicker: '넣기 · 요약 · 검색',
-      title: '넣고, 정리하고, 찾아서 답합니다',
-      desc: '',
-      items: [
-        { t: '넣기', d: '파일을 끌어다 놓거나, JSON · 대화 기록을 API 로 보냅니다. 조각 나누기는 everyrag 가 합니다.' },
-        { t: '요약 · 색인', d: '쌓일 때마다 주제별 요약(지식 뷰)을 만들고, 단어와 의미 두 방식으로 색인합니다.' },
-        { t: '검색 · 답', d: '질문 종류를 가려 찾고, 재순위한 뒤 근거를 판정해서 답합니다. 인용은 서버가 검증합니다.' },
-      ],
-    },
-    {
-      kicker: 'Database',
-      title: '넣으면 요약하고, 색인하고, 찾아 줍니다',
-      desc: '컬렉션 하나가 격리 단위입니다. 대화형과 문서형이 있고, 둘 다 같은 검색 · 재순위 · 근거 규칙을 씁니다.',
-      items: [
-        { t: '파일도 JSON 도 대화도', d: '끌어다 놓거나 API 로 보내면 조각 나누기와 임베딩을 알아서 합니다. 같은 id 로 다시 보내면 건너뜁니다.' },
-        { t: '단어와 의미를 함께', d: '질문 종류를 먼저 가리고, 하이브리드로 찾아 재순위합니다. 결과마다 점수와 출처를 보여 줍니다.' },
-        { t: '쌓일 때마다 요약', d: '주제별 요약과 요점을 지식 뷰로 만듭니다. 새 기록이 들어오면 해당 주제만 다시 요약합니다.' },
-      ],
-    },
-    {
-      kicker: 'Assistant',
-      title: '파일을 올리면 바로 물어볼 수 있습니다',
-      desc: '파일과 지침을 주면 채팅 화면이 생기고, 컬렉션마다 MCP 주소가 자동으로 발급됩니다. 배포 전에 답과 근거를 확인합니다.',
-      items: [
-        { t: '지침', d: '말투와 답변 범위를 지침으로 정합니다.' },
-        { t: 'MCP', d: '에이전트에 붙일 주소가 자동으로 생깁니다.' },
-        { t: 'API', d: '같은 컬렉션을 chat 엔드포인트로 호출합니다.' },
-      ],
-    },
+  demo: {
+    kicker: 'Assistant',
+    title: '있으면 인용하고, 없으면 없다고 답합니다',
+    desc: '자료에서 온 답에는 원문 인용이 붙습니다. 자료에 없으면 없다고 답하고, 일반 지식으로 덧붙일 때는 「자료 밖」으로 따로 표시합니다. 아래는 everyrag 가 사이트에 올려 둔 예시 대화를 그대로 따라간 것입니다.',
+  },
+  compareStatement: {
+    kicker: '',
+    title: '만드는 시간이 아니라 물어보는 시간',
+    desc: '벡터 DB 와 파이프라인을 세우던 일을, 자료를 넣고 묻는 일로 바꿉니다.',
+  },
+  compare: compareOf(ER_BEFORE, ER_AFTER, {
+    src: '/screens/everyrag-assistant.jpg',
+    alt: 'everyrag 서비스 사이트의 채팅 예시 화면 — 인용 번호가 붙은 답, 자료에서 못 찾았다는 답, 「자료 밖」 표시가 붙은 답',
+    w: 566,
+    h: 456,
+  }),
+  extra: {
+    kicker: 'API',
+    title: 'API 키 하나로 시작합니다',
+    desc: '넣기와 묻기는 같은 키로 합니다. 범위는 ingest · query · admin 이고, 키 원문은 발급할 때 한 번만 보여 줍니다.',
+  },
+  steps: [
+    { t: '넣기', d: '파일을 끌어다 놓거나, JSON · 대화 기록을 API 로 보냅니다. 조각 나누기는 everyrag 가 합니다.' },
+    { t: '요약 · 색인', d: '쌓일 때마다 주제별 요약(지식 뷰)을 만들고, 단어와 의미 두 방식으로 색인합니다.' },
+    { t: '검색 · 답', d: '질문 종류를 가려 찾고, 재순위한 뒤 근거를 판정해서 답합니다. 인용은 서버가 검증합니다.' },
   ],
 }
