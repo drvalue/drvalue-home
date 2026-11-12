@@ -175,11 +175,11 @@ test('사이트에 있는 그림(src) — 기본 글이 옛 화면 그림을 그
   assert.deepEqual(up.content.photo, { id, alt: 'a' });
 });
 
-test('소개 장 15장 스키마 — 칸 이름이 겹치지 않고, 키가 하나씩', () => {
+test('소개 장 16장 스키마 — 칸 이름이 겹치지 않고, 키가 하나씩', () => {
   const { PAGE_SCHEMAS } = require('../../../../dist/core/page/schema/index.js');
   const keys = PAGE_SCHEMAS.map((s) => s.key);
   assert.equal(new Set(keys).size, keys.length);
-  assert.equal(keys.length, 17); // 메인 1 + 소개 장 16(오시는 길 포함)
+  assert.equal(keys.length, 18); // 메인 1 + 소개 장 17(오시는 길 포함 — 2026-11-12 everyrag 가 더해졌다)
   const dup = (fs) => {
     const ks = fs.map((f) => f.key);
     assert.equal(new Set(ks).size, ks.length, ks.join(','));

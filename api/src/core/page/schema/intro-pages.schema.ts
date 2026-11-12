@@ -12,10 +12,10 @@ import {
 } from './parts';
 
 /**
- * 소개 장(회사·사업·서비스) 15장의 칸 구조. 장마다 따로 짓지 않고 틀 네 갈래를 조립한다 —
+ * 소개 장(회사·사업·서비스) 16장의 칸 구조. 장마다 따로 짓지 않고 틀 네 갈래를 조립한다 —
  * 회사(안내·비전) · 기능 덩어리(스마트 팩토리·GrowTalk·GrowXD) · 업종(PCB·화장품) · 서비스 시연
- * (오토폼·CADON·컷온·한건) + 모양이 하나뿐인 장(M.AX 소개·MES AI·AI 솔루션 개발·채팅).
- * 처음 글은 web 의 각 장 content.ts 에서 씨앗으로 넣었다(db/migrations/0008).
+ * (오토폼·CADON·컷온·한건) + 모양이 하나뿐인 장(M.AX 소개·MES AI·AI 솔루션 개발·채팅·everyrag).
+ * 처음 글은 web 의 각 장 content.ts 에서 씨앗으로 넣었다(db/migrations/0008, everyrag 는 0022).
  * 움직이는 시연(…Demo)·기록 그대로의 응답(한건 「모르면 모른다」)·흐름도(FlowBand)는 코드다.
  */
 
@@ -320,5 +320,24 @@ export const CHAT_SCHEMA: PageSchema = {
     image('customerShot', '머리 그림 — 고객 창', { required: true }),
     statementGroup('compareStatement', '전 · 후 구역 문장'),
     compareGroup(),
+  ],
+};
+
+/* ── everyrag ─────────────────────────────────────────────── */
+
+/** 서비스 시연 장과 같은 짜임(머리말 · 요약 · 화면 판 · 시연 · 전/후 · 셋째 구역) + 머리말 둘째 단추 글 + 시작 단계 카드. 바깥 링크 주소와 시연 대화는 web 의 코드다. */
+export const EVERYRAG_SCHEMA: PageSchema = {
+  key: 'service-everyrag',
+  label: 'everyrag',
+  path: '/page/service/everyrag',
+  fields: [
+    shellGroup({ heroLink: true }),
+    leadGroup(),
+    heroShotsList(),
+    statementGroup('demo', '대화 시연 구역 문장'),
+    statementGroup('compareStatement', '전 · 후 구역 문장'),
+    compareGroup(),
+    statementGroup('extra', '시작하기 구역 문장'),
+    cardsList('steps', '시작하기 단계 카드', { max: 3, itemLabel: '단계' }),
   ],
 };

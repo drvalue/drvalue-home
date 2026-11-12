@@ -50,6 +50,8 @@ export const CUTON_CSS = `
   #dvmax.mx_v4 .ct_groups li { grid-template-columns: 72px 1fr auto; padding: 10px 12px; }
   #dvmax.mx_v4 .ct_demo .hk_ctl button { white-space: nowrap; }
 }
+/* 컷온 서비스 바로가기 — 대표 화면 판 밑 */
+#dvmax.mx_v4 .ct_go { margin: 32px 0 0; }
 @media (prefers-reduced-motion: reduce) {
   #dvmax.mx_v4 .ct_demo * { animation: none !important; }
 }

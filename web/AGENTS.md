@@ -167,7 +167,7 @@
 - 제품 설명·화면 캡처 설명은 `app/(site)/page/business/max/maxContent.ts` 와
   `app/(site)/page/service/solutionContent.ts` 에서 온다. 화면 파일에 글을 적지
   않는다 — 자료를 고쳤을 때 화면이 옛말을 하게 된다.
-- **회사·사업·서비스 소개 16장(오시는 길 포함)은 관리 화면 「페이지」의 글로 그린다.** 장마다
+- **회사·사업·서비스 소개 17장(오시는 길 포함)은 관리 화면 「페이지」의 글로 그린다.** 장마다
   `content.ts` 가 기본 글(= 위 자료 파일의 옛 글을 페이지 글 모양으로)이고, 화면은
   `cmsPageContent(key) ?? 기본 글` 이다 — api 가 죽어도 같은 장이 나온다. 형·변환은
   `app/(site)/page/pageContentParts.ts` 하나(api 의 `core/page/schema/parts.ts` 와 같은 모양).
@@ -225,10 +225,10 @@
 ```bash
 python3 scripts/check-src.py      # 제일 먼저. CSS 문자열이 깨졌나
 python3 scripts/check-home.py     # 23/23   (:3400 이 떠 있어야 한다 — 다른 포트는 NEXT_ORIGIN)
-python3 scripts/check-header.py   # 99/99
-python3 scripts/check-a11y.py     # 323/323
+python3 scripts/check-header.py   # 104/104
+python3 scripts/check-a11y.py     # 340/340
 python3 scripts/check-assets.py   # 빠진 파일 0
-NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 98/98
+NEXT_ORIGIN=http://localhost:3400 python3 scripts/check-pages.py    # 102/102
 python3 scripts/check-copy.py     # 화면으로 가는 문구의 반말 0건 (서버 없이)
 python3 scripts/check-boards.py   # 35/35 공지·보도·뉴스 서버 렌더 · 글 주소 · 옛 주소 308
 python3 scripts/check-types.py    # 생성 형이 api 와 같은가 — 낡은 것 0 (api 를 빌드한다, 서버 없이)

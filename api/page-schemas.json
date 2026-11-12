@@ -3719,6 +3719,360 @@
     ]
   },
   {
+    "key": "service-everyrag",
+    "label": "everyrag",
+    "path": "/page/service/everyrag",
+    "fields": [
+      {
+        "type": "group",
+        "key": "shell",
+        "label": "머리말",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "장 이름",
+            "max": 40,
+            "required": true
+          },
+          {
+            "type": "text",
+            "key": "kickerSub",
+            "label": "상위 메뉴 이름",
+            "max": 40
+          },
+          {
+            "type": "text",
+            "key": "headLead",
+            "label": "제목 앞부분",
+            "max": 120,
+            "required": true
+          },
+          {
+            "type": "text",
+            "key": "headStrong",
+            "label": "제목 강조 부분",
+            "max": 120
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "소개 문장",
+            "max": 400
+          },
+          {
+            "type": "text",
+            "key": "heroLink",
+            "label": "머리말 둘째 단추 글",
+            "max": 30,
+            "help": "비워 두면 「기능 보기」로 나옵니다."
+          },
+          {
+            "type": "text",
+            "key": "ctaTitle",
+            "label": "문의 띠 제목",
+            "max": 120,
+            "help": "비워 두면 기본 문구가 나옵니다."
+          },
+          {
+            "type": "textarea",
+            "key": "ctaDesc",
+            "label": "문의 띠 설명",
+            "max": 300,
+            "help": "비워 두면 기본 문구가 나옵니다."
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "lead",
+        "label": "요약",
+        "fields": [
+          {
+            "type": "text",
+            "key": "title",
+            "label": "제목",
+            "max": 120,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          },
+          {
+            "type": "text",
+            "key": "heroN",
+            "label": "큰 값",
+            "max": 20,
+            "help": "채우면 항목이 「큰 값 하나 + 한 줄 셋」으로 보입니다. 본문에 있는 숫자만 쓰세요."
+          },
+          {
+            "type": "text",
+            "key": "heroLabel",
+            "label": "큰 값 설명",
+            "max": 120
+          },
+          {
+            "type": "list",
+            "key": "items",
+            "label": "항목",
+            "itemLabel": "항목",
+            "min": 0,
+            "max": 6,
+            "item": [
+              {
+                "type": "text",
+                "key": "t",
+                "label": "제목",
+                "max": 80,
+                "required": true
+              },
+              {
+                "type": "textarea",
+                "key": "d",
+                "label": "설명",
+                "max": 300
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "key": "heroShots",
+        "label": "머리말 화면",
+        "itemLabel": "화면",
+        "help": "둘 이상이면 몇 초마다 넘어갑니다. 아래 본문에 나오는 화면과 겹치지 않게 고르세요.",
+        "min": 0,
+        "max": 6,
+        "item": [
+          {
+            "type": "image",
+            "key": "image",
+            "label": "화면",
+            "required": true
+          },
+          {
+            "type": "text",
+            "key": "tag",
+            "label": "판 위 이름",
+            "max": 60
+          },
+          {
+            "type": "text",
+            "key": "url",
+            "label": "주소 막대 글자",
+            "max": 80
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "demo",
+        "label": "대화 시연 구역 문장",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "알약 글자",
+            "max": 40
+          },
+          {
+            "type": "text",
+            "key": "title",
+            "label": "큰 문장",
+            "max": 160,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "compareStatement",
+        "label": "전 · 후 구역 문장",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "알약 글자",
+            "max": 40
+          },
+          {
+            "type": "text",
+            "key": "title",
+            "label": "큰 문장",
+            "max": 160,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "compare",
+        "label": "전 · 후",
+        "fields": [
+          {
+            "type": "group",
+            "key": "before",
+            "label": "전",
+            "fields": [
+              {
+                "type": "text",
+                "key": "title",
+                "label": "제목",
+                "max": 80,
+                "required": true
+              },
+              {
+                "type": "list",
+                "key": "points",
+                "label": "요점",
+                "itemLabel": "줄",
+                "min": 0,
+                "max": 8,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "text",
+                    "label": "글",
+                    "max": 300,
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "type": "list",
+                "key": "bubbles",
+                "label": "말풍선",
+                "itemLabel": "말풍선",
+                "min": 0,
+                "max": 10,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "who",
+                    "label": "말한 쪽",
+                    "max": 4,
+                    "required": true,
+                    "pattern": "^(me|them)$",
+                    "patternMessage": "말한 쪽은 me(우리 쪽) 또는 them(상대 쪽)으로 적어 주세요.",
+                    "help": "me 는 우리 쪽, them 은 상대 쪽 말풍선입니다(원래 값 그대로)."
+                  },
+                  {
+                    "type": "text",
+                    "key": "t",
+                    "label": "말",
+                    "max": 200,
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "key": "after",
+            "label": "후",
+            "fields": [
+              {
+                "type": "text",
+                "key": "title",
+                "label": "제목",
+                "max": 80,
+                "required": true
+              },
+              {
+                "type": "list",
+                "key": "points",
+                "label": "요점",
+                "itemLabel": "줄",
+                "min": 0,
+                "max": 8,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "text",
+                    "label": "글",
+                    "max": 300,
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "image",
+            "key": "shot",
+            "label": "「후」 쪽 화면"
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "extra",
+        "label": "시작하기 구역 문장",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "알약 글자",
+            "max": 40
+          },
+          {
+            "type": "text",
+            "key": "title",
+            "label": "큰 문장",
+            "max": 160,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "key": "steps",
+        "label": "시작하기 단계 카드",
+        "itemLabel": "단계",
+        "min": 0,
+        "max": 3,
+        "item": [
+          {
+            "type": "text",
+            "key": "t",
+            "label": "제목",
+            "max": 80,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "d",
+            "label": "설명",
+            "max": 300
+          }
+        ]
+      }
+    ]
+  },
+  {
     "key": "service-hangeon",
     "label": "한건",
     "path": "/page/service/hangeon",
