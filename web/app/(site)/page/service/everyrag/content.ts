@@ -62,8 +62,8 @@ export const EVERYRAG_DEFAULT: EveryragContent = {
   compare: compareOf(ER_BEFORE, ER_AFTER, {
     src: '/screens/everyrag-assistant.jpg',
     alt: 'everyrag 서비스 사이트의 채팅 예시 화면 — 인용 번호가 붙은 답, 자료에서 못 찾았다는 답, 「자료 밖」 표시가 붙은 답',
-    w: 566,
-    h: 456,
+    w: 1120,
+    h: 904,
   }),
   extra: {
     kicker: 'API',
