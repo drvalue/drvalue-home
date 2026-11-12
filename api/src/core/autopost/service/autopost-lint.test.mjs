@@ -19,7 +19,7 @@ const {
   lintClaims,
   numbersIn,
   judgedUnits,
-  pruneSources,
+  keepUsedSources,
 } = require('../../../../dist/core/autopost/service/autopost-lint.js');
 
 const pass = (a, c = {}) => [
@@ -223,10 +223,6 @@ test('출처 칸: 발행처도 검사하고, 주장 없는 출처·겹친 주소
   assert.ok(pass(src({ title: 'x'.repeat(201) })).length);
   assert.ok(pass(src({ publisher: 'x'.repeat(81) })).length);
   assert.match(
-    pass(withSourceUrl(good, 'https://evil.example/login')).join(),
-    /주장이 없는 출처/,
-  );
-  assert.match(
     pass({ ...good, sources: [...good.sources, good.sources[0]] }).join(),
     /같은 출처/,
   );
@@ -306,42 +302,77 @@ test('숫자 사유는 어느 문단인지 같이 알려 준다', () =>
     /주장 목록에 없는 숫자: 47 — 「불량률이 47% 줄었습니다/,
   ));
 
-test('주장이 걸리지 않은 출처는 떼어 낸다', () => {
-  const extra = withSourceUrl(good, 'https://evil.example/login');
-  assert.equal(extra.sources.length, 3);
-  const pruned = pruneSources(extra);
-  assert.deepEqual(pruned.sources, good.sources);
-  assert.deepEqual(pass(pruned), []);
-  assert.equal(pruneSources(good), good); // 뗄 것이 없으면 그대로
-  assert.deepEqual(pruneSources({}), {}); // 형이 깨진 글은 건드리지 않는다
-});
-
-test('숫자 없는 사실도 주장으로 적을 수 있다 (값이 빈 주장) — 그 출처는 떼이지 않는다', () => {
+test('판정 뒤: 주장이 확인됐거나 판정이 근거로 쓴 출처만 남긴다', () => {
   const third = {
     title: 'Plan detail',
     url: 'https://example.net/plan',
     publisher: 'Example News',
     published: '2026-11-09',
   };
-  const text = 'Example News 에 따르면 대상 지역은 광주와 창원입니다.';
+  const evil = {
+    title: '자세히 보기',
+    url: 'https://evil.example/login',
+    publisher: 'Evil',
+    published: '2026-11-09',
+  };
   const a = {
-    ...withHook(good, text),
-    sources: [...good.sources, third],
+    ...withHook(good, 'Example News 에 따르면 대상 지역은 광주와 창원입니다.'),
+    sources: [...good.sources, third, evil],
+  };
+  // 주장 없는 출처가 끼어 있어도 구조 검사는 지나간다(판정 뒤에 뗀다).
+  assert.deepEqual(
+    lintStructure(a, { today: '2026-11-12', usedSourceUrls: [] }),
+    [],
+  );
+  const j = allTrue(a);
+  j.usedSources = [third.url]; // 판정이 숫자 없는 문단의 근거로 쓴 출처
+  j.sources[evil.url] = false; // 쓰이지 않은 출처는 열렸든 말든 상관없다
+  j.unopened = [evil.url];
+  assert.deepEqual(lintClaims(a, j), []);
+  assert.deepEqual(
+    keepUsedSources(a, j).sources.map((x) => x.url),
+    [...good.sources.map((x) => x.url), third.url],
+  );
+  // 남는 출처는 열렸고 발행일이 확인돼야 한다.
+  j.sources[third.url] = false;
+  assert.match(lintClaims(a, j).join(), /발행일이 원문에서 확인되지/);
+  assert.equal(keepUsedSources(good, allTrue(good)), good); // 뗄 것이 없으면 그대로
+});
+
+test('남는 출처가 하나도 없으면 떨어진다', () => {
+  const j = allTrue(good);
+  j.usedSources = [];
+  for (const c of good.claims) j.claims[c.sentence] = false;
+  assert.match(lintClaims(good, j).join(), /남는 출처가 없습니다/);
+});
+
+test('값이 빈 주장도 받는다 (숫자 없는 사실을 출처에 묶는 주장)', () => {
+  const text = '설비에 붙은 센서 값을 읽어 이상 징후를 찾는 모델입니다.';
+  const a = {
+    ...good,
     claims: [
       ...good.claims,
       {
         sentence: text,
         value: '',
-        source_url: third.url,
-        quote: 'Gwangju and Changwon',
+        source_url: good.sources[0].url,
+        quote: 'q',
       },
     ],
   };
-  assert.equal(pruneSources(a).sources.length, 3);
   assert.deepEqual(pass(a), []);
   const j = allTrue(a);
-  j.claims[text] = false; // 값이 비어도 판정은 받는다
+  j.claims[text] = false;
   assert.match(lintClaims(a, j).join(), /확인되지 않은 주장/);
+});
+
+test('판정이 답하지 않은 문단은 「아니오」와 다른 사유로 나온다', () => {
+  const j = allTrue(good);
+  j.units[good.hook[0]] = false;
+  j.unanswered = [good.hook[0]];
+  const r = lintClaims(good, j).join();
+  assert.match(r, /판정이 답하지 않은 문단/);
+  assert.doesNotMatch(r, /출처로 뒷받침되지 않는 문단/);
 });
 
 test('오래된 출처', () =>

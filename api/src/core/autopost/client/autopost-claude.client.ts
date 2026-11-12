@@ -35,7 +35,12 @@ export interface AutopostClient {
   research(input: ResearchInput): Promise<{ research: Research; usage: Usage }>;
   write(input: WriteInput): Promise<{ article: Article; usage: Usage }>;
   /** 글을 쓴 호출과 다른 호출이 출처를 다시 읽고 주장·발행일·본문 날짜를 판정한다. */
-  verify(article: Article): Promise<{ judged: Judgement; usage: Usage }>;
+  verify(article: Article): Promise<{
+    judged: Judgement;
+    usage: Usage;
+    /** 진단용: 실제로 열린 주소와 판정 기록 원문. */
+    evidence?: { fetchedUrls: string[]; transcript: string };
+  }>;
 }
 
 export const AUTOPOST_CLIENT = Symbol('AUTOPOST_CLIENT');
@@ -56,7 +61,7 @@ const STYLE = `글의 틀:
 - 훅(hook): 1~3문단. 무슨 일인지와 핵심 수치 두세 개.
 - 번호 단락(sections): 4~6개. 단락마다 한 가지만 — 무엇이 나왔나 → 핵심 수치 → 이전·경쟁과의 차이 → 현장에서의 쓰임새. 단락 제목(heading)에 번호를 붙이지 않는다(코드가 붙인다). 단락마다 문단 1~5개.
 - 출처(sources): 1~6개. 제목·주소·발행처·발행일(YYYY-MM-DD). 주소는 아래 「출처 주소」에 있는 것만, 글자 그대로 쓴다. 같은 주소를 두 번 적지 않는다. 본문의 주장에 쓰지 않은 출처는 적지 않는다. 발행처는 회사·기관 이름만 짧게 적는다.
-- 주장(claims): 숫자가 든 구절마다 한 줄 — 그 구절(sentence, **본문에 쓴 글자 그대로** 복사한 것. 한 문장 또는 그 일부), 값(value, 그 구절 안의 숫자를 본문 표기 그대로. 예: "30%", "1,200억 원". 한 구절에 숫자가 여럿이면 쉼표로 이어 전부), 출처 주소(source_url, 출처 목록에 있는 것), 출처 원문의 해당 구절(quote, 원문 언어 그대로). 같은 구절을 두 번 적지 않는다. 숫자가 없는 사실(누가 무엇을 발표·계획했다, 누가 이렇게 말했다, 어느 지역·공정이 대상이다)을 어느 출처에서 가져왔는지도 주장으로 적는다 — 그때 value 는 빈 글자로 둔다. **출처마다 본문에서 그 출처에 기댄 구절이 적어도 하나는 주장 목록에 있어야 한다.** 주장이 하나도 없는 출처는 글에서 빠지고, 그 출처에만 기댄 문단은 검사에서 떨어진다.
+- 주장(claims): 숫자가 든 구절마다 한 줄 — 그 구절(sentence, **본문에 쓴 글자 그대로** 복사한 것. 한 문장 또는 그 일부), 값(value, 그 구절 안의 숫자를 본문 표기 그대로. 예: "30%", "1,200억 원". 한 구절에 숫자가 여럿이면 쉼표로 이어 전부), 출처 주소(source_url, 출처 목록에 있는 것), 출처 원문의 해당 구절(quote, 원문 언어 그대로). 같은 구절을 두 번 적지 않는다. 숫자가 없는 사실(누가 무엇을 발표·계획했다, 누가 이렇게 말했다, 어느 지역·공정이 대상이다)을 어느 출처에서 가져왔는지도 주장으로 적는다 — 그때 value 는 빈 글자로 둔다. 출처마다 본문에서 그 출처에 기댄 구절을 적어도 하나는 주장으로 적는다. 본문에서 쓰지 않은 출처는 적지 않는다.
 
 말투: 「~습니다 / ~인데요」 존댓말. 문단은 한두 문장. 어려운 개념은 일상 비유로 한 번 풀어 준다.
 
@@ -112,8 +117,12 @@ const VERIFY_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { n: { type: 'integer' }, supported: { type: 'boolean' } },
-        required: ['n', 'supported'],
+        properties: {
+          n: { type: 'integer' },
+          supported: { type: 'boolean' },
+          sources: { type: 'array', items: { type: 'integer' } },
+        },
+        required: ['n', 'supported', 'sources'],
         additionalProperties: false,
       },
     },
@@ -291,7 +300,11 @@ ${input.avoidUrls.map((u) => `- ${u}`).join('\n') || '(없음)'}
     return { article: result.value, usage: result.usage };
   }
 
-  async verify(article: Article): Promise<{ judged: Judgement; usage: Usage }> {
+  async verify(article: Article): Promise<{
+    judged: Judgement;
+    usage: Usage;
+    evidence: { fetchedUrls: string[]; transcript: string };
+  }> {
     const sources = article.sources.map((s, i) => ({
       n: i + 1,
       url: s.url,
@@ -319,7 +332,7 @@ ${input.avoidUrls.map((u) => `- ${u}`).join('\n') || '(없음)'}
 
 2) 출처마다: 적힌 발행일(published)이 원문에서 확인되는가. 원문에 적힌 날짜와 같으면 「확인」, 다르거나 날짜를 찾지 못했거나 출처를 열지 못했으면 「미확인」.
 
-3) 문단마다: 그 문단이 사실로 말하는 것 **전부**(수치, 한글로 쓴 수량, 인용한 말, 누가 무엇을 발표·계약·도입했다는 것)가 출처 원문으로 뒷받침되는가. 하나라도 원문에 없거나, 다른 대상의 수치이거나, 원문보다 세게 말했으면 「아니오」. 사람의 말을 따옴표로 옮긴 것은 원문에 그 사람이 그렇게 말했다고 나와야 한다. 주장 목록에 적힌 것과 상관없이 문단의 글자만 보고 원문과 대조한다. 사실 주장이 없는 문단(쓰임새 설명·비유·단락 제목)은 원문과 어긋나지 않으면 「예」.
+3) 문단마다: 그 문단이 사실로 말하는 것 **전부**(수치, 한글로 쓴 수량, 인용한 말, 누가 무엇을 발표·계약·도입했다는 것)가 출처 원문으로 뒷받침되는가. 하나라도 원문에 없거나, 다른 대상의 수치이거나, 원문보다 세게 말했으면 「아니오」. 사람의 말을 따옴표로 옮긴 것은 원문에 그 사람이 그렇게 말했다고 나와야 한다. 주장 목록에 적힌 것과 상관없이 문단의 글자만 보고 원문과 대조한다. 문단이 매체 이름을 대면(「○○에 따르면」) 그 매체의 출처에서 확인한다. 「예」라면 그 문단의 근거가 된 출처 번호를 같이 적는다(여럿이면 전부). 사실 주장이 없는 문단(쓰임새 설명·비유·단락 제목)은 원문과 어긋나지 않으면 「예」.
 
 4) 글 본문에 쓰인 날짜(발표일·시행일 등)가 전부 출처 원문과 맞는가. 하나라도 다르거나 확인할 수 없으면 「아니오」. 본문에 날짜가 없으면 「예」.
 
@@ -336,7 +349,7 @@ ${JSON.stringify(paragraphs, null, 1)}
 ${bodyText(article)}
 </글_본문>
 
-주장마다 번호·판정(있음/없음)·근거(원문 구절)를, 출처마다 번호·판정(확인/미확인)·원문의 날짜를, 문단마다 번호·판정(예/아니오)·근거를, 마지막에 본문 날짜 판정(예/아니오)을 적으세요.`,
+주장마다 번호·판정(있음/없음)·근거(원문 구절)를, 출처마다 번호·판정(확인/미확인)·원문의 날짜를, 문단마다 번호·판정(예/아니오)·근거가 된 출처 번호·근거 구절을, 마지막에 본문 날짜 판정(예/아니오)을 적으세요.`,
       [
         {
           type: 'web_fetch_20260209',
@@ -348,7 +361,7 @@ ${bodyText(article)}
     const shaped = await this.structured<JudgeAnswer>(
       '판정 정리',
       '판정 기록을 정해진 구조로 옮깁니다. 기록에 「있음」·「확인」·「예」라고 분명히 적힌 것만 true 입니다. 기록에 없는 번호는 false 입니다.',
-      `아래 판정 기록을 구조로 옮기세요. 주장은 1~${claims.length}번, 출처는 1~${sources.length}번, 문단은 1~${paragraphs.length}번입니다.\n\n<판정_기록>\n${read.text}\n</판정_기록>`,
+      `아래 판정 기록을 구조로 옮기세요. 주장은 1~${claims.length}번, 출처는 1~${sources.length}번, 문단은 1~${paragraphs.length}번입니다. 문단의 sources 는 그 문단의 근거로 적힌 출처 번호들입니다(「아니오」이거나 적힌 것이 없으면 빈 배열).\n\n<판정_기록>\n${read.text}\n</판정_기록>`,
       VERIFY_SCHEMA,
     );
     // 답에 없는 것, 실제로 열리지 않은 출처에 기댄 것은 확인 안 된 것으로 묶는다.
@@ -357,6 +370,10 @@ ${bodyText(article)}
       shaped.value,
       read.fetchedUrls,
     );
-    return { judged, usage: add(read.usage, shaped.usage) };
+    return {
+      judged,
+      usage: add(read.usage, shaped.usage),
+      evidence: { fetchedUrls: read.fetchedUrls, transcript: read.text },
+    };
   }
 }

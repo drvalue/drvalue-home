@@ -68,6 +68,9 @@ async function main(): Promise<number> {
     console.log(`${line}\n주장과 출처:`);
     for (const c of result.article?.claims ?? [])
       console.log(`  - ${c.value} ← ${c.source_url}\n      원문: ${c.quote}`);
+    // 진단용: 조사 결과·시도마다의 글·열린 주소·판정 기록. 한 줄 JSON 이라 따로 떼어 읽는다.
+    console.log(`${line}\n증거(JSON):`);
+    console.log(JSON.stringify(result.evidence));
     return 0;
   } catch (e) {
     console.error(

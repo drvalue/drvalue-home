@@ -119,7 +119,7 @@ test('조사가 찾은 주소 밖의 출처는 떨어진다', async () => {
   assert.match(r.reasons.join(), /조사에 없는 출처/);
 });
 
-test('주장 없는 출처가 낀 글은 그 출처를 떼고 통과한다', async () => {
+test('쓰이지 않은 출처는 판정 뒤에 떼고 통과한다', async () => {
   const extra = {
     ...good,
     sources: [
@@ -136,10 +136,28 @@ test('주장 없는 출처가 낀 글은 그 출처를 떼고 통과한다', asy
     },
     usage: { input: 0, output: 0 },
   });
+  const verify = c.verify;
+  c.verify = async (a) => {
+    const v = await verify(a);
+    v.judged.usedSources = good.sources.map((x) => x.url); // 판정은 셋째 출처를 근거로 쓰지 않았다
+    return v;
+  };
   const r = await produce(c, input);
   assert.equal(r.ok, true);
-  assert.equal(r.article.sources.length, 2);
+  assert.deepEqual(
+    r.article.sources.map((x) => x.url),
+    good.sources.map((x) => x.url),
+  );
   assert.equal(c.calls.write, 1);
+  assert.equal(c.calls.verify, 1); // 판정은 떼기 전의 출처 목록으로 한 번
+});
+
+test('증거를 남긴다 — 조사 결과와 시도마다의 글·판정 기록', async () => {
+  const r = await produce(fake({ articles: [bad, good] }), input);
+  assert.equal(r.evidence.research.topic, 't');
+  assert.equal(r.evidence.attempts.length, 2);
+  assert.equal(r.evidence.attempts[0].article, bad);
+  assert.ok('judged' in r.evidence.attempts[1]);
 });
 
 test('시도마다의 사유를 남긴다', async () => {

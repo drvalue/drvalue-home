@@ -16,7 +16,11 @@ const {
 const all = (a) => ({
   claims: a.claims.map((_, i) => ({ n: i + 1, found: true })),
   sources: a.sources.map((_, i) => ({ n: i + 1, date_confirmed: true })),
-  paragraphs: judgedUnits(a).map((_, i) => ({ n: i + 1, supported: true })),
+  paragraphs: judgedUnits(a).map((_, i) => ({
+    n: i + 1,
+    supported: true,
+    sources: [1],
+  })),
   dates_ok: true,
 });
 const urls = good.sources.map((s) => s.url);
@@ -76,5 +80,24 @@ test('열린 주소는 scheme·www·쿼리가 달라도 같은 글로 본다 (�
 test('열지 못한 출처 목록을 준다', () => {
   assert.deepEqual(judgementFrom(good, all(good), [urls[0]]).unopened, [
     urls[1],
+  ]);
+});
+
+test('문단의 근거로 쓴 출처를 모은다 — 열린 것만, 「예」인 문단 것만', () => {
+  const r = all(good);
+  r.paragraphs[0] = { n: 1, supported: false, sources: [2] }; // 아니오인 문단의 근거는 안 센다
+  r.paragraphs[1] = { n: 2, supported: true, sources: [2, 99, 'x'] }; // 없는 번호·깨진 값은 버린다
+  assert.deepEqual(
+    judgementFrom(good, r, urls).usedSources.sort(),
+    [...urls].sort(),
+  );
+  assert.deepEqual(judgementFrom(good, r, [urls[0]]).usedSources, [urls[0]]); // 안 열린 출처는 근거가 못 된다
+});
+
+test('답에 없는 문단을 따로 알려 준다', () => {
+  const r = all(good);
+  r.paragraphs.shift();
+  assert.deepEqual(judgementFrom(good, r, urls).unanswered, [
+    judgedUnits(good)[0],
   ]);
 });

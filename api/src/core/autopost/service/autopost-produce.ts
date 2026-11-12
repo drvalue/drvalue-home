@@ -1,10 +1,16 @@
 import type {
   AutopostClient,
+  Research,
   ResearchInput,
   Usage,
 } from '../client/autopost-claude.client';
 import type { Article } from '../model/article';
-import { lintClaims, lintStructure, pruneSources } from './autopost-lint';
+import {
+  Judgement,
+  keepUsedSources,
+  lintClaims,
+  lintStructure,
+} from './autopost-lint';
 
 export interface Produced {
   /** 검사를 전부 통과했나. false 면 `reasons` 가 떨어진 사유다. */
@@ -13,6 +19,17 @@ export interface Produced {
   reasons: string[];
   /** 시도마다의 사유(첫 번째 · 다시 쓴 것). 다시 쓰기가 고쳤는지 새로 깨뜨렸는지 보려고 남긴다. */
   attempts: string[][];
+  /** 진단용 — 조사 결과와 시도마다의 글·판정 결과·열린 주소·판정 기록. 기록 표에는 넣지 않고 미리보기가 찍는다. */
+  evidence: {
+    research: Research;
+    attempts: {
+      article: Article;
+      reasons: string[];
+      judged?: Judgement;
+      fetchedUrls?: string[];
+      transcript?: string;
+    }[];
+  };
   usage: Usage;
 }
 
@@ -58,6 +75,10 @@ async function steps(
   let errors: string[] | undefined;
   let previous: Article | undefined;
   const attempts: string[][] = [];
+  const evidence: Produced['evidence'] = {
+    research: found.research,
+    attempts: [],
+  };
   for (;;) {
     const written = await client.write({
       today: input.today,
@@ -66,20 +87,38 @@ async function steps(
       previous,
     });
     usage = add(usage, written.usage);
-    const article = pruneSources(written.article);
+    let article = written.article;
+    const trace: Produced['evidence']['attempts'][number] = {
+      article,
+      reasons: [],
+    };
     let reasons = lintStructure(article, {
       today: input.today,
       usedSourceUrls: input.avoidUrls,
       researchUrls: found.research.sourceUrls,
     });
     if (!reasons.length) {
+      // 판정은 글쓴이가 적은 출처 목록 그대로 받는다. 쓰이지 않은 출처는 판정 뒤에 뗀다.
       const judged = await client.verify(article);
       usage = add(usage, judged.usage);
+      trace.judged = judged.judged;
+      trace.fetchedUrls = judged.evidence?.fetchedUrls;
+      trace.transcript = judged.evidence?.transcript;
       reasons = lintClaims(article, judged.judged);
+      if (!reasons.length) article = keepUsedSources(article, judged.judged);
     }
+    trace.reasons = reasons;
+    evidence.attempts.push(trace);
     attempts.push(reasons);
     if (!reasons.length || errors)
-      return { ok: !reasons.length, article, reasons, attempts, usage };
+      return {
+        ok: !reasons.length,
+        article,
+        reasons,
+        attempts,
+        evidence,
+        usage,
+      };
     errors = reasons;
     previous = article;
   }

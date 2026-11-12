@@ -162,6 +162,10 @@ export interface Judgement {
   sources: Record<string, boolean>;
   /** 덩어리(`judgedUnits`)의 글자 → 그 덩어리가 말하는 사실(수치·인용·발표)이 전부 출처로 뒷받침된다. */
   units: Record<string, boolean>;
+  /** 판정이 「예」라고 답한 문단의 근거로 쓴 출처의 `url`(열린 것만). 숫자 없는 문단이 기댄 출처를 남기려고 둔다. */
+  usedSources?: string[];
+  /** 판정의 답에 아예 없는 덩어리. 「아니오」와 사유를 가르려고 따로 둔다. */
+  unanswered?: string[];
   /** 판정이 실제로 열지 못한 출처의 `url`. 사유를 「발행일 미확인」과 가르려고 따로 둔다. */
   unopened?: string[];
   /** 본문에 쓴 날짜(발표일 등)가 출처와 맞다. */
@@ -319,8 +323,6 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
     // 출처 제목은 바깥 글의 제목을 그대로 옮기는 칸이다 — 길이만 본다.
     if (EMOJI_RE.test(s.publisher))
       out.push(`발행처 칸에 이모지가 있습니다: ${url}`);
-    if (!a.claims.some((c) => normalizeUrl(c.source_url) === url))
-      out.push(`주장이 없는 출처입니다: ${url}`);
     const published = dayMs(s.published);
     const age =
       published === null || today === null
@@ -371,11 +373,43 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
   return out;
 }
 
-/** 판정 뒤에 도는 검사. 확인된 주장만으로 본문 숫자가 전부 덮여야 하고, 출처 발행일과 본문 날짜도 확인돼야 한다. */
+/**
+ * 판정 뒤에 글에 남는 출처 — 확인된 주장이 걸렸거나, 판정이 「예」라고 한 문단의 근거로 쓴 출처.
+ * 나머지(모델이 끼워 넣기만 한 링크)는 떨어뜨리지 않고 뗀다. 판정은 떼기 전의 목록으로 돈다 —
+ * 먼저 떼면 숫자 없는 문단이 기댄 출처가 사라져 그 문단들이 전부 떨어진다(실제 실행에서 그랬다).
+ */
+function keptSources(a: Article, judged: Judgement): Article['sources'] {
+  const used = new Set(
+    [
+      ...a.claims
+        .filter((c) => judged.claims?.[c.sentence] === true)
+        .map((c) => c.source_url),
+      ...(judged.usedSources ?? []),
+    ]
+      .map(normalizeUrl)
+      .filter((u): u is string => !!u),
+  );
+  return a.sources.filter((s) => {
+    const url = normalizeUrl(s.url);
+    return !!url && used.has(url);
+  });
+}
+
+/** 쓰이지 않은 출처를 뗀 글. 뗄 것이 없으면 그대로 돌려준다. `lintClaims` 를 통과한 뒤에 부른다. */
+export function keepUsedSources(a: Article, judged: Judgement): Article {
+  const sources = keptSources(a, judged);
+  return sources.length === a.sources.length ? a : { ...a, sources };
+}
+
+/**
+ * 판정 뒤에 도는 검사. 확인된 주장만으로 본문 숫자가 전부 덮여야 하고, 덩어리마다 판정이 「예」여야 하며,
+ * 글에 남는 출처는 실제로 열렸고 발행일이 확인돼야 한다. 본문 날짜도 확인돼야 한다.
+ */
 export function lintClaims(a: Article, judged: Judgement): string[] {
   if (!hasShape(a)) return ['글의 형이 맞지 않습니다'];
   const confirmed = (c: Article['claims'][number]) =>
     judged.claims?.[c.sentence] === true;
+  const kept = keptSources(a, judged);
   return [
     ...a.claims
       .filter((c) => !confirmed(c))
@@ -383,7 +417,8 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
     ...uncovered(a, a.claims.filter(confirmed)).map(
       (n) => `확인된 주장에 없는 숫자: ${n}`,
     ),
-    ...a.sources
+    ...(kept.length ? [] : ['글에 남는 출처가 없습니다']),
+    ...kept
       .filter((s) => judged.sources?.[s.url] !== true)
       .map((s) =>
         judged.unopened?.includes(s.url)
@@ -392,26 +427,13 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
       ),
     ...judgedUnits(a)
       .filter((u) => judged.units?.[u] !== true)
-      .map((u) => `출처로 뒷받침되지 않는 문단: ${u.slice(0, 80)}`),
+      .map((u) =>
+        judged.unanswered?.includes(u)
+          ? `판정이 답하지 않은 문단: ${u.slice(0, 80)}`
+          : `출처로 뒷받침되지 않는 문단: ${u.slice(0, 80)}`,
+      ),
     ...(judged.datesOk === true
       ? []
       : ['본문의 날짜가 출처와 맞는지 확인되지 않습니다']),
   ];
-}
-
-/**
- * 주장이 하나도 걸리지 않은 출처를 떼어 낸다. 인용하지 않은 링크는 글에 싣지 않는다 —
- * 모델이 「참고로」 끼워 넣은 출처 때문에 한 주를 건너뛰지 않게, 떨어뜨리는 대신 뗀다.
- * 그 출처에만 기댄 문단이 있으면 판정이 떨어뜨린다. 뗄 것이 없거나 형이 깨진 글은 그대로 돌려준다.
- */
-export function pruneSources<T>(a: T): T {
-  if (!hasShape(a)) return a;
-  const claimed = new Set(
-    a.claims.map((c) => normalizeUrl(c.source_url)).filter((u) => !!u),
-  );
-  const sources = a.sources.filter((s) => {
-    const url = normalizeUrl(s.url);
-    return !url || claimed.has(url); // 읽을 수 없는 주소는 남겨 검사가 떨어뜨리게 한다
-  });
-  return sources.length === a.sources.length ? a : { ...a, sources };
 }

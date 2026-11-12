@@ -33,6 +33,8 @@ export interface AutopostResult {
   reasons: string[];
   /** 시도마다의 사유(첫 번째 · 다시 쓴 것). */
   attempts: string[][];
+  /** 진단용 증거(조사 결과·시도마다의 글과 판정 기록). */
+  evidence: Produced['evidence'];
   article: Article;
   html: string;
   postId?: number;
@@ -116,6 +118,7 @@ export class AutopostDefaultService {
     const base = {
       reasons: made.reasons,
       attempts: made.attempts,
+      evidence: made.evidence,
       article: made.article,
       html: made.ok ? renderArticle(made.article) : '',
       usage: made.usage,
@@ -202,6 +205,7 @@ export class AutopostDefaultService {
     const base = {
       reasons: made.reasons,
       attempts: made.attempts,
+      evidence: made.evidence,
       article: made.article,
       html,
       usage: made.usage,

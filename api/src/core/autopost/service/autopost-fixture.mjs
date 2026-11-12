@@ -86,6 +86,8 @@ export const allTrue = (a) => ({
   sources: Object.fromEntries((a.sources ?? []).map((s) => [s.url, true])),
   units: Object.fromEntries(units(a).map((u) => [u, true])),
   unopened: [],
+  usedSources: (a.sources ?? []).map((s) => s.url),
+  unanswered: [],
   datesOk: true,
 });
 export const withHook = (a, text) => ({ ...a, hook: [...a.hook, text] });

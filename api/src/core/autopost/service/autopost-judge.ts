@@ -5,7 +5,8 @@ import { Judgement, judgedUnits, normalizeUrl } from './autopost-lint';
 export interface JudgeAnswer {
   claims: { n: number; found: boolean }[];
   sources: { n: number; date_confirmed: boolean }[];
-  paragraphs: { n: number; supported: boolean }[];
+  /** `sources` 는 그 문단의 근거로 쓴 출처 번호. */
+  paragraphs: { n: number; supported: boolean; sources?: number[] }[];
   dates_ok: boolean;
 }
 
@@ -52,6 +53,21 @@ export function judgementFrom(
     const u = pageKey(url);
     return !!u && fetched.has(u);
   };
+  const units = judgedUnits(article);
+  const rows = Array.isArray(answer?.paragraphs)
+    ? (answer.paragraphs as JudgeAnswer['paragraphs']).filter((r) => !!r)
+    : [];
+  // 「예」인 문단이 근거로 댄 출처 번호 → 주소. 없는 번호·깨진 값·안 열린 출처는 버린다.
+  const usedSources = [
+    ...new Set(
+      rows
+        .filter((r) => r.supported === true && Array.isArray(r.sources))
+        .flatMap((r) => r.sources as unknown[])
+        .filter((n): n is number => Number.isInteger(n))
+        .map((n) => article.sources[n - 1]?.url)
+        .filter((u): u is string => !!u && opened(u)),
+    ),
+  ];
   return {
     claims: Object.fromEntries(
       article.claims.map((c, i) => [
@@ -76,7 +92,7 @@ export function judgementFrom(
       ]),
     ),
     units: Object.fromEntries(
-      judgedUnits(article).map((u, i) => [
+      units.map((u, i) => [
         u,
         pick<JudgeAnswer['paragraphs'][number]>(
           answer?.paragraphs,
@@ -85,6 +101,8 @@ export function judgementFrom(
         ),
       ]),
     ),
+    usedSources,
+    unanswered: units.filter((_, i) => !rows.some((r) => r.n === i + 1)),
     unopened: article.sources.map((s) => s.url).filter((u) => !opened(u)),
     datesOk: answer?.dates_ok === true,
   };
