@@ -70,10 +70,21 @@ export const good = {
   ],
 };
 
+/** 모델이 쓴 덩어리 전부(판정의 문단 열쇠 — 숫자가 없는 덩어리가 섞여도 된다). */
+const units = (a) =>
+  [
+    a.title,
+    a.summary,
+    a.seo_description,
+    ...(a.hook ?? []),
+    ...(a.sections ?? []).flatMap((s) => [s.heading, ...(s.paragraphs ?? [])]),
+  ].filter((u) => typeof u === 'string');
+
 /** 전부 확인된 판정. 주장은 문장으로, 출처는 주소로 찾는다. */
 export const allTrue = (a) => ({
   claims: Object.fromEntries((a.claims ?? []).map((c) => [c.sentence, true])),
   sources: Object.fromEntries((a.sources ?? []).map((s) => [s.url, true])),
+  units: Object.fromEntries(units(a).map((u) => [u, true])),
   datesOk: true,
 });
 export const withHook = (a, text) => ({ ...a, hook: [...a.hook, text] });

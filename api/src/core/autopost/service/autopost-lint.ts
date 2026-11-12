@@ -93,6 +93,8 @@ export interface Judgement {
   claims: Record<string, boolean>;
   /** 출처의 `url` → 적힌 발행일이 원문에서 확인된다. */
   sources: Record<string, boolean>;
+  /** 숫자가 든 덩어리(`numericUnits`)의 글자 → 그 덩어리의 숫자가 전부 출처로 뒷받침된다. */
+  units: Record<string, boolean>;
   /** 본문에 쓴 날짜(발표일 등)가 출처와 맞다. */
   datesOk: boolean;
 }
@@ -110,6 +112,14 @@ function bodyNumbers(text: string): string[] {
       .replace(/(?<![\d.])\d{1,2}\s?월(?:\s?\d{1,2}\s?일)?(?!\d)/g, ' ')
       .replace(/(?<![\d.])\d\s?(?:가지|개|번째|단계)/g, ' '),
   );
+}
+
+/**
+ * 숫자(예외 빼고)가 든 덩어리. 판정 호출이 이 덩어리마다 「숫자가 전부 출처로 뒷받침되는가」를 따로 답한다 —
+ * 짧은 구절의 주장 하나(「30% 줄었습니다.」)가 여러 문단에 들어 있어도 문단마다 확인을 받게.
+ */
+export function numericUnits(a: Article): string[] {
+  return [...new Set(bodyUnits(a))].filter((u) => bodyNumbers(u).length > 0);
 }
 
 /**
@@ -281,6 +291,9 @@ export function lintClaims(a: Article, judged: Judgement): string[] {
         (s) =>
           `출처의 발행일이 원문에서 확인되지 않습니다: ${s.url.slice(0, 80)}`,
       ),
+    ...numericUnits(a)
+      .filter((u) => judged.units?.[u] !== true)
+      .map((u) => `출처로 뒷받침되지 않는 문단: ${u.slice(0, 80)}`),
     ...(judged.datesOk === true
       ? []
       : ['본문의 날짜가 출처와 맞는지 확인되지 않습니다']),

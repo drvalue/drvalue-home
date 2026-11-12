@@ -18,6 +18,7 @@ const {
   lintStructure,
   lintClaims,
   numbersIn,
+  numericUnits,
 } = require('../../../../dist/core/autopost/service/autopost-lint.js');
 
 const pass = (a, c = {}) => [
@@ -113,6 +114,41 @@ test('기간으로 쓴 「일」은 숫자 검사를 받는다', () => {
   );
   assert.deepEqual(
     pass(withHook(good, '2026년 11월 10일에 발표했습니다.')),
+    [],
+  );
+});
+
+test('짧은 구절 하나가 두 문단을 덮어도, 문단마다 판정을 받아야 한다', () => {
+  // 주장 「30% 줄었습니다.」는 「멈춤 시간이 30% 줄었습니다.」에도 「불량률이 30% 줄었습니다.」에도 들어 있다.
+  const a = {
+    ...withHook(good, '불량률이 30% 줄었습니다.'),
+    claims: [
+      ...good.claims,
+      { ...good.claims[0], sentence: '30% 줄었습니다.' },
+    ],
+  };
+  assert.deepEqual(
+    lintStructure(a, { today: '2026-11-12', usedSourceUrls: [] }),
+    [],
+  );
+  const j = allTrue(a);
+  j.units['불량률이 30% 줄었습니다.'] = false; // 판정이 이 문단은 출처에 없다고 했다
+  assert.match(lintClaims(a, j).join(), /출처로 뒷받침되지 않는 문단/);
+  delete j.units['불량률이 30% 줄었습니다.']; // 판정에 없는 문단도 같다
+  assert.match(lintClaims(a, j).join(), /출처로 뒷받침되지 않는 문단/);
+});
+
+test('숫자가 든 덩어리만 문단 판정을 요구한다', () => {
+  assert.deepEqual(numericUnits(good), [
+    good.summary,
+    good.hook[1],
+    good.sections[1].paragraphs[0],
+  ]);
+  assert.deepEqual(
+    lintClaims(good, {
+      ...allTrue(good),
+      units: Object.fromEntries(numericUnits(good).map((u) => [u, true])),
+    }),
     [],
   );
 });
