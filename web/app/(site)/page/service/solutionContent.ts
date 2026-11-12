@@ -328,11 +328,11 @@ export const CUTON: Feature[] = [
   },
 ]
 
-/** 컷온 장 끝의 바깥 링크. 문장은 옛 장의 것. */
+/** 컷온 구역의 바깥 링크 — 운영 중인 서비스(2026-11-12 사용자가 준 주소). 문장은 옛 장의 것. */
 export const CUTON_LINK = {
   title: '지금 바로 컷온 서비스를 경험해 보세요',
   desc: '도면만 올리면 AI가 즉시 견적을 산출해 드립니다.',
-  href: 'https://www.cuton.co.kr',
+  href: 'https://cuton.co.kr/',
   label: '컷온 바로가기',
 } as const
 

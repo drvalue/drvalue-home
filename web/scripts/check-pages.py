@@ -74,6 +74,8 @@ FLOORS: dict[str, tuple[int, int]] = {
     "/page/service/cadon": (2071, 8),
     "/page/service/chat": (1070, 3),
     "/page/service/hangeon": (726, 1),
+    # 2026-11-12 새 장. 만든 날의 실측(머리말 화면 한 장 + 헤더·바닥 그림 둘).
+    "/page/service/everyrag": (1428, 3),
     # 2026-09-28 사용자: 머리말 밑 요약 3열(제목·한 줄)을 틀에서 뺐다 — 본문 661 → 512(실측).
     "/page/service/growtok": (512, 2),
     # 2026-09-28 사용자: 머리말 밑 요약 3열(제목·한 줄)을 틀에서 뺐다 — 본문 799 → 664(실측).

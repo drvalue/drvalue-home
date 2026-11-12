@@ -5,6 +5,7 @@ import CutonDemo from '../CutonDemo'
 import CutonShow from '../cuton/CutonShow'
 import { CUTON_CSS } from '../cutonStyles'
 import { CUTON_DEFAULT, CUTON_KEY } from '../cuton/content'
+import { CUTON_LINK } from '../solutionContent'
 import { PAGE_CSS } from '../../business/max/maxStyles'
 import SolutionShell from '../../business/max/SolutionShell'
 import { Cols, Plate, Statement } from '../../business/max/V4'
@@ -106,6 +107,8 @@ export default async function Page() {
             {ct.shell.headLead + ct.shell.headStrong}
           </Statement>
           {ctShot && <Plate shot={ctShot} tag={ctShot.tag} url={ctShot.url} phone={ctShot.phone} />}
+          {/* 컷온은 이미 운영 중인 서비스다 — 바로 가는 링크(2026-11-12 사용자). */}
+          <p className="hk_center ct_go"><a className="mx_pill o" href={CUTON_LINK.href}>{CUTON_LINK.label}</a></p>
         </section>
 
         {ctLead.items && (

@@ -194,8 +194,8 @@ src/
   - image 는 기본 글(씨앗)에 한해 사이트에 이미 있는 그림도 가리킨다: `{ id: null, src: '/screens/…', width, height }`.
     폴더는 screens·photo·brand·img·icon·images 만, `..` 금지, 개인정보 증서 원본(patent2·patent3)은 거부. 치수는
     보낸 값 그대로(api 가 web/public 을 못 읽는다). 관리 화면에서 새로 올리면 `{ id }` 로 바뀐다.
-  - **소개 장 15장**(E7 — 회사 안내·비전, M.AX 소개·PCB·화장품·MES AI·스마트 팩토리, AI 솔루션 개발·오토폼·
-    컷온·CADON·채팅·한건·GrowTalk·GrowXD)은 `schema/intro-pages.schema.ts` 한 파일이다. 칸 묶음은
+  - **소개 장 16장**(E7 — 회사 안내·비전, M.AX 소개·PCB·화장품·MES AI·스마트 팩토리, AI 솔루션 개발·오토폼·
+    컷온·CADON·채팅·한건·GrowTalk·GrowXD·everyrag)은 `schema/intro-pages.schema.ts` 한 파일이다. 칸 묶음은
     `schema/parts.ts`(머리말·요약·화면 판·큰 문장·카드·기능 줄·게이지 탭·전/후)를 조립한다 — web 의
     `app/(site)/page/pageContentParts.ts` 가 같은 모양의 형·변환을 갖는다. 씨앗은 `db/migrations/0008`.
     허브 둘(M.AX 소개·AI 솔루션 개발)의 제품 카드·구역 제목은 하위 장의 머리말·요약을 읽는다(두 곳에 안 적는다).
@@ -252,7 +252,7 @@ src/
 ```bash
 npm run typecheck && npm run build
 node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs   # 61 (8 + 9 + 5 + 16 + 7 + 11 + 5)
-bash scripts/verify.sh          # 342 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
+bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)
 python3 ../web/scripts/check-types.py   # web 의 생성 형이 낡았나 — 낡은 것 0

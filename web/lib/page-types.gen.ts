@@ -1284,6 +1284,71 @@ export interface PageContentMap {
       shot: ImageValue | null
     }
   }
+  /** everyrag — /page/service/everyrag */
+  "service-everyrag": {
+    /** 머리말 */
+    shell: {
+      /** 장 이름 */
+      kicker: string
+      /** 상위 메뉴 이름 */
+      kickerSub: string
+      /** 제목 앞부분 */
+      headLead: string
+      /** 제목 강조 부분 */
+      headStrong: string
+      /** 소개 문장 */
+      desc: string
+      /** 머리말 둘째 단추 글 */
+      heroLink: string
+      /** 문의 띠 제목 */
+      ctaTitle: string
+      /** 문의 띠 설명 */
+      ctaDesc: string
+    }
+    /** 요약 */
+    lead: {
+      /** 제목 */
+      title: string
+      /** 설명 */
+      desc: string
+      /** 큰 값 */
+      heroN: string
+      /** 큰 값 설명 */
+      heroLabel: string
+      /** 항목 */
+      items: {
+        /** 제목 */
+        t: string
+        /** 설명 */
+        d: string
+      }[]
+    }
+    /** 머리말 화면 */
+    heroShots: {
+      /** 화면 */
+      image: ImageValue
+      /** 판 위 이름 */
+      tag: string
+      /** 주소 막대 글자 */
+      url: string
+    }[]
+    /** 구역 */
+    sections: {
+      /** 알약 글자 */
+      kicker: string
+      /** 큰 문장 */
+      title: string
+      /** 설명 */
+      desc: string
+      /** 카드 */
+      items: {
+        /** 제목 */
+        t: string
+        /** 설명 */
+        d: string
+      }[]
+    }[]
+  }
   /** 한건 — /page/service/hangeon */
   "service-hangeon": {
     /** 머리말 */
