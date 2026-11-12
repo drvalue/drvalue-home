@@ -98,6 +98,26 @@ export const AppConfig = {
     return isIndexNowKey(raw) ? raw : null;
   },
 
+  /**
+   * 제조 AI 주간 글(자동 발행). 빠뜨리면 꺼진다 — 켜기 값이 정확히 `1` 이고 Claude API 키가 있어야 돈다.
+   * 키는 비밀이다. 기본값이 없고, 로그·기록 표·오류 문장에 싣지 않는다.
+   */
+  autopost: {
+    get enabled(): boolean {
+      return process.env.AUTOPOST_ENABLED === '1';
+    },
+    get apiKey(): string {
+      return (process.env.ANTHROPIC_API_KEY ?? '').trim();
+    },
+    /** 손으로 돌리는 명령(보기만·초안으로)은 켜기 값을 안 보고 키만 본다. */
+    get hasKey(): boolean {
+      return AppConfig.autopost.apiKey !== '';
+    },
+    get ready(): boolean {
+      return AppConfig.autopost.enabled && AppConfig.autopost.hasKey;
+    },
+  },
+
   mail: {
     get accessKey(): string {
       return process.env.NCP_ACCESS_KEY ?? '';
