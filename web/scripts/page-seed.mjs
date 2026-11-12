@@ -40,6 +40,7 @@ const PAGES = [
   { key: 'service-cuton', module: '../app/(site)/page/service/cuton/content.ts', name: 'CUTON_DEFAULT' },
   { key: 'service-cadon', module: '../app/(site)/page/service/cadon/content.ts', name: 'CADON_DEFAULT' },
   { key: 'service-chat', module: '../app/(site)/page/service/chat/content.ts', name: 'CHAT_DEFAULT' },
+  { key: 'service-everyrag', module: '../app/(site)/page/service/everyrag/content.ts', name: 'EVERYRAG_DEFAULT' },
   { key: 'service-hangeon', module: '../app/(site)/page/service/hangeon/content.ts', name: 'HANGEON_DEFAULT' },
   { key: 'service-growtok', module: '../app/(site)/page/service/growtok/content.ts', name: 'GROWTOK_DEFAULT' },
   { key: 'service-growxd', module: '../app/(site)/page/service/growxd/content.ts', name: 'GROWXD_DEFAULT' },

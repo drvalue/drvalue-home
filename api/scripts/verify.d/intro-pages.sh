@@ -1,13 +1,13 @@
 # verify.sh 가 읽는다(단독 실행 안 함). check · na · pick · adm · admj · dbq · AUTH · RUN · API · CLEANUP 을 쓴다.
 #
-# 소개 장 15장(E7 — 회사·사업·서비스)이 페이지 편집 엔진으로 도는가.
+# 소개 장 16장(E7 — 회사·사업·서비스)이 페이지 편집 엔진으로 도는가.
 #  · 씨앗 글(db/migrations/0008)이 스키마를 그대로 통과한다 — GET 한 글을 PUT → 200, 공개 API 가 같은 글
 #  · 틀마다 틀린 값 하나씩 400(칸 이름·형식 문구로)
 #  · 끝나면 고친 사람·때를 원래대로(검사가 관리 목록의 「마지막 수정」을 제 이름으로 남기지 않게)
 
-echo "== 소개 장 15장 =="
+echo "== 소개 장 16장 =="
 
-IP_KEYS="company-intro company-vision business-max business-pcb-mes business-cosmetics-mes business-mes-ai business-smart-fac business-ai-sol service-autoform service-cuton service-cadon service-chat service-hangeon service-growtok service-growxd"
+IP_KEYS="company-intro company-vision business-max business-pcb-mes business-cosmetics-mes business-mes-ai business-smart-fac business-ai-sol service-autoform service-cuton service-cadon service-chat service-everyrag service-hangeon service-growtok service-growxd"
 
 ip_orig() { adm "/pages/$1" | pick 'import json; print(json.dumps(((d.get("data") or {}).get("languages") or {}).get("ko-KR",{}).get("content") or {}, ensure_ascii=False, sort_keys=True))'; }
 # $1 = 원래 글(JSON), $2 = 파이썬 식(c 를 고친다) → PUT 본문
@@ -19,7 +19,7 @@ print(json.dumps({"languages_code": "ko-KR", "content": c}, ensure_ascii=False))
 ip_put() { admj PUT "/pages/$1"; }
 ip_msg() { pick 'print((d or {}).get("resultCode"), (d or {}).get("message"))'; }
 
-check "관리 목록에 페이지 17장(메인 + 오시는 길 + 15)" "17" \
+check "관리 목록에 페이지 18장(메인 + 오시는 길 + 16)" "18" \
   "$(adm "/pages" | pick 'print(len(d.get("data") or []))')"
 
 IP_SEEDED=0

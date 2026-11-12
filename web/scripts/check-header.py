@@ -96,6 +96,7 @@ ACTIVE = [
     ("/page/service/autoform", "AI솔루션"),
     ("/page/service/cadon", "AI솔루션"),
     ("/page/service/chat", "AI솔루션"),
+    ("/page/service/everyrag", "AI솔루션"),
     ("/page/service/hangeon", "AI솔루션"),
     # 메뉴에서 내렸지만 주소는 살아 있는 넷. 탭과 현재 위치 줄이 **자기 이름으로**
     # 찍혀야 한다 — 여기가 비어 있던 동안 GrowTalk 이 「오토폼」 으로 찍혔다.

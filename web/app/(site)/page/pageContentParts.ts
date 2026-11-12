@@ -40,6 +40,8 @@ export type AiSolContent = PageContentMap['business-ai-sol']
 export type ServiceDemoContent = PageContentMap['service-autoform']
 /** 채팅 장 — 머리말 · 요약(선언 문장과 AI 솔루션 장이 쓴다) · 머리 그림 둘 · 전/후. */
 export type ChatContent = PageContentMap['service-chat']
+/** everyrag 장 — 머리말(둘째 단추 = 서비스 바로가기) · 요약 · 화면 판 · 큰 문장 + 3열 카드 구역들. */
+export type EveryragContent = PageContentMap['service-everyrag']
 
 /** 머리말. 제품 소개 장 둘(M.AX · AI 솔루션)만 머리 링크(heroLink)가 있다. */
 export type ShellContent = FeaturePageContent['shell'] & { heroLink?: string }

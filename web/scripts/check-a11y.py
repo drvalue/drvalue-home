@@ -33,7 +33,7 @@ PAGES = [
     "/page/business/max", "/page/business/max/pcb-mes", "/page/business/max/cosmetics-mes",
     "/page/business/max/mes-ai",
     "/page/service/autoform", "/page/service/cuton", "/page/service/cadon",
-    "/page/service/chat", "/page/service/hangeon",
+    "/page/service/chat", "/page/service/hangeon", "/page/service/everyrag",
     "/page/portfolio/portfolio", "/page/tech/patent", "/page/tech/copyright",
     "/page/support/notice", "/page/support/press",
 ]
