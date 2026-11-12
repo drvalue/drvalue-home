@@ -70,7 +70,7 @@ export default async function Page() {
           <Statement desc={orUndefined(compareStatement.desc)}>
             {compareStatement.title}
           </Statement>
-          <CompareBlock c={c.compare} />
+          <CompareBlock c={c.compare} lightClass=" er_light" />
         </section>
 
         {/* 시작하기 — 서비스 사이트의 curl 두 번. 코드는 자기 칸 안에서만 옆으로 민다. */}

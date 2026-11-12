@@ -1,6 +1,7 @@
 /**
  * everyrag 장 전용 CSS. 창 틀(hk_win · hk_bar · hk_body · hk_ctl)과 전/후(hk_pair)는 maxStyles 것을 그대로 쓴다.
- * 이 문자열 안에 역따옴표를 넣지 않는다(check-src.py).
+ * 이 문자열 안에 역따옴표를 넣지 않는다 — 문자열이 끊겨 모든 장이 500 이 된다. check-src.py 는 PAGE_CSS 만 보므로
+ * 이 파일은 사람이 지킨다.
  */
 export const EVERYRAG_CSS = `
 #dvmax.mx_v4 .er_demo .hk_body { min-height: 0; }
@@ -13,14 +14,18 @@ export const EVERYRAG_CSS = `
 #dvmax.mx_v4 .er_cite b { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
 #dvmax.mx_v4 .er_out { display: inline-block; margin-right: 8px; padding: 2px 8px; border-radius: 6px; background: #fff1dc; color: #8a5200; font-size: 12.5px; font-weight: 700; }
 #dvmax.mx_v4 .er_a.none { color: #4e5968; }
-/* 재생 중에만 스크립트가 숨긴다 — 스크립트가 없으면 전부 보인다 */
-#dvmax.mx_v4 .er_chat li.er_hide { display: none; }
+/* 재생 중에만 스크립트가 숨긴다 — 스크립트가 없으면 전부 보인다. 자리는 남긴다(창 높이가 접혔다 자라면 아래 글이 따라 움직인다) */
+#dvmax.mx_v4 .er_chat li.er_hide { visibility: hidden; }
 #dvmax.mx_v4 .er_chat li.er_in { animation: mxPop .5s cubic-bezier(.22,.68,.24,1) both; }
 #dvmax.mx_v4 .er_code { margin: 0 0 8px; padding: 24px 28px; background: #1b2433; color: #e6edf5; border-radius: 16px; overflow-x: auto; font: 13.5px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
 #dvmax.mx_v4 .er_code .c { color: #8fa3bd; }
 #dvmax.mx_v4 .er_code:focus-visible { outline: 2px solid #191f28; outline-offset: 3px; }
+/* 전/후의 밝은 카드 — 채팅 예시 화면의 왼쪽 위부터 보인다. 좁은 화면에서는 잘리지 않게 높이를 푼다 */
+#dvmax.mx_v4 .er_light img { object-position: 0 0; }
 #dvmax.mx_v4 .er_code_note { margin: 0; font-size: 13px; color: #62707e; }
 @media (max-width: 720px) {
+  #dvmax.mx_v4 .er_light { min-height: 0; padding: 20px 0 0 20px; }
+  #dvmax.mx_v4 .er_light img { height: auto; }
   #dvmax.mx_v4 .er_q, #dvmax.mx_v4 .er_a { max-width: 94%; }
   #dvmax.mx_v4 .er_code { padding: 18px 16px; font-size: 12.5px; }
 }
