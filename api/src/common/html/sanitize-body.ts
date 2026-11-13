@@ -56,13 +56,15 @@ const OPTIONS: sanitizeHtml.IOptions = {
     li: ['data-list'],
     '*': ['class'],
   },
-  // 정렬(ql-align-*)과 목록 들여쓰기(ql-indent-*)만. 다른 class 는 버린다.
+  // 정렬(ql-align-*)과 목록 들여쓰기(ql-indent-*), 자동 글의 꾸밈 표시(dv_ap_* — `autopost-render.ts` 가 붙이고
+  // 화면 CSS 가 그 이름에만 모양을 준다)만. 다른 class 는 버린다.
   allowedClasses: {
     '*': [
       'ql-align-center',
       'ql-align-right',
       'ql-align-justify',
       /^ql-indent-\d$/,
+      /^dv_ap_[a-z_]{1,24}$/,
     ],
   },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],

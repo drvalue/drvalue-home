@@ -39,6 +39,8 @@ const PAGE_SIZE = 30;
  * 편집기가 넣는 주소는 `/api/content/assets/<uuid>`. 본문에 그림이 없으면 대표 이미지도 없다.
  */
 const THUMB_FROM_BODY = ['notice', 'press', 'news'];
+/** 시스템 행위자(세션 없는 자동 글)가 쓸 수 있는 게시판. */
+const SYSTEM_BOARDS = ['news'];
 const BODY_IMAGE_RE =
   /\/api\/content\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
 
@@ -131,6 +133,32 @@ export class AdminPostDefaultService {
     who: SessionPayload,
   ): Promise<Detail> {
     this.assertBoard(who, dto.board);
+    return this.insert(ctx, dto, who.email);
+  }
+
+  /**
+   * 사람이 아닌 주체(자동 글 — `core/autopost`)가 쓰는 새 글. 세션이 없으니 범위 검사 대신 게시판을 여기서 좁힌다 —
+   * 뉴스에만 쓴다. 그 밖의 규칙(한국어 제목·주소 겹침·본문 소독·변경 이력·IndexNow)은 `create` 와 같다.
+   * 바깥 HTTP 입구가 없다. 컨트롤러에 걸지 않는다.
+   */
+  @ServiceException({ errorCode: AdminPostError.SAVE_UNKNOWN })
+  @Transactional()
+  async createAsSystem(
+    ctx: ITransactionContext,
+    dto: ControllerAdminPostDefaultSaveDto,
+    actor: string,
+  ): Promise<Detail> {
+    if (!SYSTEM_BOARDS.includes(dto.board))
+      throw CommonError.createByErrorCode(AdminPostError.SYSTEM_BOARD);
+    return this.insert(ctx, dto, actor);
+  }
+
+  /** `create`·`createAsSystem` 의 몸통. 부른 쪽의 트랜잭션 안에서 돈다. */
+  private async insert(
+    ctx: ITransactionContext,
+    dto: ControllerAdminPostDefaultSaveDto,
+    actor: string,
+  ): Promise<Detail> {
     this.requireKoTitle(dto);
     const slug = dto.slug || `${dto.board}-${Date.now().toString(36)}`;
     await this.assertSlugFree(ctx, slug);
@@ -158,7 +186,7 @@ export class AdminPostDefaultService {
     const after = await this.get(ctx, saved.id);
     await this.revisionService.record(
       {
-        actor: who.email,
+        actor,
         action: 'create',
         collection: 'posts',
         itemId: saved.id,

@@ -1,0 +1,168 @@
+// node --test src/core/autopost/service/autopost-flow.test.mjs  (빌드 뒤 dist 를 읽는다. DB·네트워크 없이)
+// 글 한 편의 순서: 조사 → 집필 → 구조 검사 → 판정 → 주장 검사. 떨어지면 한 번만 다시 쓴다.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { good, allTrue, withHook } from './autopost-fixture.mjs';
+
+const require = createRequire(import.meta.url);
+const {
+  produce,
+} = require('../../../../dist/core/autopost/service/autopost-produce.js');
+
+const input = { today: '2026-11-12', avoidTitles: [], avoidUrls: [] };
+const bad = withHook(good, '불량률이 47% 줄었습니다.'); // 주장에 없는 숫자 — 구조 검사에서 떨어진다
+const research = {
+  topic: 't',
+  notes: 'n',
+  sourceUrls: good.sources.map((s) => s.url),
+};
+
+/** 호출 횟수를 세는 가짜. articles 는 write 가 차례로 내는 글. */
+function fake({ articles, verified = () => true }) {
+  const calls = { research: 0, write: 0, verify: 0 };
+  const client = {
+    calls,
+    lastWrite: null,
+    async research() {
+      calls.research++;
+      return { research, usage: { input: 10, output: 1 } };
+    },
+    async write(w) {
+      client.lastWrite = w;
+      return {
+        article: articles[calls.write++],
+        usage: { input: 20, output: 2 },
+      };
+    },
+    async verify(a) {
+      calls.verify++;
+      const judged = allTrue(a);
+      for (const c of a.claims) judged.claims[c.sentence] = verified(c);
+      return { judged, usage: { input: 30, output: 3 } };
+    },
+  };
+  return client;
+}
+
+test('한 번에 통과', async () => {
+  const c = fake({ articles: [good] });
+  const r = await produce(c, input);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.reasons, []);
+  assert.deepEqual(c.calls, { research: 1, write: 1, verify: 1 });
+});
+
+test('떨어지면 한 번만 다시 쓴다', async () => {
+  const c = fake({ articles: [bad, good] });
+  const r = await produce(c, input);
+  assert.equal(r.ok, true);
+  assert.equal(c.calls.write, 2);
+  assert.ok(c.lastWrite.errors.length);
+  assert.equal(c.lastWrite.previous, bad);
+  assert.equal(r.article, good);
+});
+
+test('두 번 떨어지면 탈락', async () => {
+  const c = fake({ articles: [bad, bad] });
+  const r = await produce(c, input);
+  assert.equal(r.ok, false);
+  assert.equal(c.calls.write, 2);
+  assert.ok(r.reasons.length);
+});
+
+test('구조 검사에 떨어지면 판정 호출을 안 한다', async () => {
+  const c = fake({ articles: [bad, bad] });
+  await produce(c, input);
+  assert.equal(c.calls.verify, 0);
+});
+
+test('판정이 없다고 한 주장이 있으면 다시 쓰고, 또 없으면 탈락', async () => {
+  const c = fake({ articles: [good, good], verified: () => false });
+  const r = await produce(c, input);
+  assert.equal(r.ok, false);
+  assert.deepEqual(c.calls, { research: 1, write: 2, verify: 2 });
+  assert.match(r.reasons.join(), /확인되지 않은 주장/);
+});
+
+test('토큰 수를 전부 더한다', async () => {
+  const r = await produce(fake({ articles: [good] }), input);
+  assert.deepEqual(r.usage, { input: 60, output: 6 });
+});
+
+test('이미 낸 출처는 조사에 넘기고 검사에도 쓴다', async () => {
+  const c = fake({ articles: [good, good] });
+  const r = await produce(c, { ...input, avoidUrls: [good.sources[0].url] });
+  assert.equal(r.ok, false);
+  assert.match(r.reasons.join(), /이미 낸 글의 출처/);
+});
+
+test('형이 깨진 글은 던지지 않고 탈락', async () => {
+  const r = await produce(fake({ articles: [{}, { title: 1 }] }), input);
+  assert.equal(r.ok, false);
+});
+
+test('전체 마감을 넘기면 던진다', async () => {
+  const c = fake({ articles: [good] });
+  c.research = () => new Promise(() => {}); // 끝나지 않는 호출
+  await assert.rejects(produce(c, input, { deadlineMs: 20 }), /시간/);
+});
+
+test('조사가 찾은 주소 밖의 출처는 떨어진다', async () => {
+  const c = fake({ articles: [good, good] });
+  c.research = async () => ({
+    research: { topic: 't', notes: 'n', sourceUrls: [good.sources[0].url] },
+    usage: { input: 0, output: 0 },
+  });
+  const r = await produce(c, input);
+  assert.equal(r.ok, false);
+  assert.match(r.reasons.join(), /조사에 없는 출처/);
+});
+
+test('쓰이지 않은 출처는 판정 뒤에 떼고 통과한다', async () => {
+  const extra = {
+    ...good,
+    sources: [
+      ...good.sources,
+      { ...good.sources[0], url: good.sources[0].url + '/extra' },
+    ],
+  };
+  const c = fake({ articles: [extra] });
+  c.research = async () => ({
+    research: {
+      topic: 't',
+      notes: 'n',
+      sourceUrls: extra.sources.map((x) => x.url),
+    },
+    usage: { input: 0, output: 0 },
+  });
+  const verify = c.verify;
+  c.verify = async (a) => {
+    const v = await verify(a);
+    v.judged.usedSources = good.sources.map((x) => x.url); // 판정은 셋째 출처를 근거로 쓰지 않았다
+    return v;
+  };
+  const r = await produce(c, input);
+  assert.equal(r.ok, true);
+  assert.deepEqual(
+    r.article.sources.map((x) => x.url),
+    good.sources.map((x) => x.url),
+  );
+  assert.equal(c.calls.write, 1);
+  assert.equal(c.calls.verify, 1); // 판정은 떼기 전의 출처 목록으로 한 번
+});
+
+test('증거를 남긴다 — 조사 결과와 시도마다의 글·판정 기록', async () => {
+  const r = await produce(fake({ articles: [bad, good] }), input);
+  assert.equal(r.evidence.research.topic, 't');
+  assert.equal(r.evidence.attempts.length, 2);
+  assert.equal(r.evidence.attempts[0].article, bad);
+  assert.ok('judged' in r.evidence.attempts[1]);
+});
+
+test('시도마다의 사유를 남긴다', async () => {
+  const r = await produce(fake({ articles: [bad, good] }), input);
+  assert.equal(r.attempts.length, 2);
+  assert.ok(r.attempts[0].length);
+  assert.deepEqual(r.attempts[1], []);
+});

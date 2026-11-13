@@ -92,6 +92,8 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 | `ADMIN_IAM_CALLBACK_URL` | IAM 이 로그인 뒤 돌려보낼 주소. IAM 화이트리스트와 같아야 한다. `https` 면 쿠키에 Secure | 로그인 버튼이 로그인 화면으로 돌아와 「로그인 설정이 끝나지 않았습니다.」(`ADMIN_AUTH_NOT_CONFIGURED`) |
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
 | `INDEXNOW_KEY` (선택) | IndexNow 키(8~128자, 영문·숫자·-, `openssl rand -hex 16`). 공개 글(만들기·고치기·지우기·되돌리기·예약 공개·자동 내림) · 페이지 글 · 검색 정보를 저장하면 커밋 뒤 api 가 그 주소를 `api.indexnow.org` 에 알린다(2초 모아 한 번, 5초 제한, 실패는 로그 한 줄 — 저장은 안 기다린다). web 은 실행 때 같은 값을 읽어 `/<키>.txt` 로 낸다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 보낸다 | 알림을 **안 보낸다**, 키 파일도 404(닫힌 쪽). 모양이 틀린 값도 같다 |
+| `AUTOPOST_ENABLED` · `ANTHROPIC_API_KEY` (선택) | 제조 AI 주간 글(자동 발행). 켜기 값이 **정확히 `1`** 이고 Claude API 키가 있으면 api 가 화요일 09:00(KST) 이후 한 시간마다 「이번 주 글이 있나」를 보고, 없으면 만들어 뉴스 게시판에 공개한다. 키는 비밀이다 — 로그·기록 표에 싣지 않는다. 한 주의 결과는 `autopost_runs` 표(공개·건너뜀·오류와 사유·토큰 수)에 남는다. **실패 알림은 없다** — 글이 안 올라오면 이 표와 api 로그를 본다 | 둘 중 하나라도 비면(켜기 값이 `1` 이 아니어도) **아무것도 안 한다** — Claude 를 부르지 않는다(닫힌 쪽). 뜰 때 `자동 글: 꺼져 있습니다` 한 줄 |
+| `AUTOPOST_PROVIDER` (선택) | 제조 AI 주간 글이 모델을 부르는 길. 비우면 Claude API. **정확히 `webgpt`** 면 그 기계의 ego 브라우저로 chatgpt.com 을 조작한다(키 없음, 아래 「손으로 돌리기」). `AUTOPOST_BROWSER_BIN` 으로 실행 파일을 바꿀 수 있다(기본 `ego-browser`) | Claude API 길이다 — 키가 없으면 안 돈다(닫힌 쪽). `webgpt` 인데 브라우저·로그인이 없으면 그 주는 오류로 닫힌다(글은 안 나간다) |
 | `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
 | `NAVER_SITE_VERIFICATION` · `GOOGLE_SITE_VERIFICATION` · `BING_SITE_VERIFICATION` (선택) | 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). **관리 화면 「사이트 › SEO › 검색엔진 설정」이 우선, env 는 예비** — 그 칸이 비었거나 api 가 안 닿을 때만 이 값을 쓴다. web **실행 환경값** — 그리는 때에 읽어서 요청마다 그리는 장(첫 화면 `/` 포함)에 붙는다. 빌드 때 굳는 정적 장에는 빌드 직후에는 안 붙는다. 공개 값이라 비밀이 아니다 | 관리 화면 칸도 비었으면 그 태그만 안 나간다. 소유 확인을 못 해 사이트맵·RSS(`/rss.xml`) 제출을 못 한다 |
 
@@ -103,6 +105,53 @@ dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_U
 
 `TRUST_PROXY` 는 홉 수(`1`)다. Nest 가 숫자로 바꿔 넘긴다 — 문자열 `"1"` 은 IP
 `0.0.0.1` 하나를 믿는 목록으로 읽힌다.
+
+### 제조 AI 주간 글을 손으로 돌리기
+
+```bash
+cd api && npm run build
+npm run autopost -- --preview   # 한 편을 만들어 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다
+npm run autopost -- --draft     # 같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 초안으로 저장한다(공개 안 함)
+npm run autopost -- --rules     # 글을 쓰는 쪽(사람·에이전트)이 읽을 주제 기준·규칙·글의 구조·이미 다룬 글을 찍는다
+npm run autopost -- --draft --article 글.json   # 조사·집필을 건너뛰고 받은 글을 검사·판정·그림에 넣는다(--preview 도 된다)
+```
+
+`--article` 은 글을 바깥에서 쓸 때 쓴다(2026-11-13: 글은 Claude 가 쓰고 ChatGPT 웹은 사실 대조와 그림만 맡는다). 받은 글은
+같은 구조 검사·판정·주장 검사를 지나야 하고, 떨어지면 다시 쓰지 않고 사유만 찍는다 — 쓴 쪽이 고쳐서 다시 넣는다.
+`--article` 은 미리보기와 초안까지만 한다. **공개는 묶음으로 한다** — 브라우저가 있는 기계(사람 맥)에서 만들고, DB 가 있는 곳(서버)에서 연다:
+
+```bash
+# ① 맥에서: 글을 검사·판정·그림까지 돌리고, 통과하면 글과 그림을 한 파일로 묶는다(DB 에 쓰지 않는다)
+AUTOPOST_PROVIDER=webgpt npm run autopost -- --preview --article 글.json --bundle 묶음.json
+# ② 묶음을 서버로 옮기고(scp), 서버에서 api 컨테이너에 넣어 공개한다
+docker cp 묶음.json drvalue_api:/tmp/묶음.json
+docker exec -e AUTOPOST_ENABLED=1 drvalue_api node dist/autopost-cli.js --publish-bundle /tmp/묶음.json
+```
+
+그림은 그 기계의 **Codex CLI**(`codex exec`)가 한 번 더 본다(글자·로고·겹친 장면). `codex` 가 PATH 에 없거나 로그인이 풀려 있으면
+그림 없이 간다 — 로그에 「그림 없이 갑니다」가 찍힌다.
+
+`--publish-bundle` 은 판정을 다시 하지 않는다(서버에는 브라우저가 없다). 대신 코드 검사를 **그 DB 의 기록으로** 다시 돌리고
+(이미 낸 출처면 거절), cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편이고, 두 번째는 거절한다. 그림은 그 서버의
+`UPLOADS_DIR` 에 쓴다. `AUTOPOST_ENABLED=1` 은 **그 명령에만** 준다 — 서버 `.env` 에 넣지 않아도 되고, 키가 없는 서버에서는
+넣어도 cron 이 돌지 않는다. 쓰는 쪽은 서버에서 `--rules` 를 돌려야 실제 「이미 다룬 글」을 본다(맥의 로컬 DB 에는 기록이 없다).
+2026-11-13 현재 ②를 **운영 서버에서 돌려 본 적은 없다**(로컬 DB 에서만 확인) — 맥에서 서버로 가는 접속(SSH)이 정해져야 한다.
+판정을 ChatGPT 웹으로 돌리려면 `AUTOPOST_PROVIDER=webgpt` 를 꼭 준다 — 없으면 판정이 유료 Claude API 로 나간다.
+
+켜기 값·요일·주 단위 기록을 보지 않고 `ANTHROPIC_API_KEY` 만 본다. 한 번에 Claude 호출이 대여섯 번 나간다(돈이 든다).
+`AUTOPOST_PROVIDER=webgpt` 로 돌리면 키 없이 **그 기계의 ego 브라우저로 chatgpt.com 을 조작**해 만든다(조사·집필·판정마다
+새 채팅 하나 — ChatGPT 기록에 남는다). ego 브라우저에 ChatGPT 가 로그인돼 있어야 하고, 도는 동안 그 브라우저 창이 움직인다.
+출처 원문은 ChatGPT 가 아니라 이 명령이 쿠키 없이 직접 열어 판정 지시문에 붙인다(바깥 https 주소만). 토큰 수는 0 으로 찍힌다
+(웹 화면이 알려 주지 않는다). api 컨테이너 안에는 브라우저가 없다 — 이 길은 사람 기계에서만 돈다.
+이 길에서는 검사를 통과한 글에 그림도 만든다(표지 한 장 + 단락 그림 한두 장, 그림마다 새 채팅 하나에 1~2분). `--preview` 는
+그림을 임시 폴더에 떨구고 그 경로를 「그림(표지)」「그림(2번 단락)」 줄에 찍는다. `--draft` 는 그 기계의 `UPLOADS_DIR` 에 파일을 쓰고
+본문에 넣는다. 그림이 안 나오면 「그림: 없음」으로 끝나고 글은 그대로다.
+운영에서 켜려면 서버 `.env` 에 두 값을 넣고 배포한다. 끄려면 `AUTOPOST_ENABLED` 를 비우고 다시 띄운다.
+한 주를 다시 만들게 하려면 `autopost_runs` 에서 그 주의 행을 지운다(다음 정시 틱이 다시 잡는다). 그 주의 글이 이미
+올라가 있으면 글(주소 `mfg-ai-<주 키>`)도 관리 화면에서 지워야 한다 — 주소가 겹치면 새 글 저장이 거부된다.
+이 명령은 cron 을 멈추고 돈다(명령 프로세스 안에서 자동 발행·예약 게시 틱이 돌지 않는다).
+DB 가 있어야 도는 검사: `node --test src/core/autopost/repository/autopost-run.dbtest.mjs src/core/autopost/service/autopost-flow.dbtest.mjs`
+(Claude 는 부르지 않는다. 테스트가 `2026-W46`·`W47` 기록과 `mfg-ai-2026-w4…` 글을 지우므로 **운영 DB 에 돌리지 않는다**).
 
 ### 2026-09-22 에 없앤 키
 

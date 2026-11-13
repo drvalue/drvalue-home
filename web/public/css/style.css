@@ -1238,6 +1238,51 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body blockquote p:last-child { margin-bottom: 0; }
 .dv_art_body a, .dv_art_link { color: #1b64da; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
 .dv_art_body a:hover { text-decoration-thickness: 2px; }
+/* 제조 AI 주간 글(자동 글)의 꾸밈. 표시(dv_ap_*)는 api 의 autopost-render.ts 가 붙인다 — 본문 소독이 이 이름만 남긴다.
+   모양: 표지 → 큰 숫자 줄 → 3줄 요약 면 → 단락(번호·제목·굵은 결론·그림) → 출처 → 문의 띠. */
+.dv_art_body .dv_ap_cover, .dv_art_body .dv_ap_pic { margin: 0 0 28px; }
+.dv_art_body .dv_ap_cover img, .dv_art_body .dv_ap_pic img { display: block; width: 100%; border-radius: 14px; }
+.dv_art_body .dv_ap_figs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); list-style: none; margin: 0 0 32px; padding: 0; }
+.dv_art_body .dv_ap_figs li { margin: 0; padding: 6px 24px; border-left: 1px solid #e5e8eb; }
+.dv_art_body .dv_ap_figs li:first-child { border-left: 0; padding-left: 0; }
+.dv_art_body .dv_ap_figs strong { display: block; overflow-wrap: anywhere; font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.dv_art_body .dv_ap_figs span { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; line-height: 1.5; color: #4e5968; }
+.dv_art_body .dv_ap_sum { margin: 0 0 40px; padding: 24px 28px; border-left: 0; border-radius: 14px; background: #f2f4f6; color: #191f28; font-size: 16px; }
+.dv_art_body .dv_ap_sum p { margin: 0 0 6px; font-size: 15px; }
+.dv_art_body .dv_ap_sum ul { list-style: none; margin: 0; padding: 0; }
+.dv_art_body .dv_ap_sum li { margin: 0; padding: 12px 0; border-top: 1px solid #e0e4e8; line-height: 1.65; font-weight: 500; }
+.dv_art_body .dv_ap_sum li:first-child { border-top: 0; }
+.dv_art_body .dv_ap_h { margin: 64px 0 14px; font-size: 26px; font-weight: 800; letter-spacing: -.7px; line-height: 1.4; }
+.dv_art_body .dv_ap_no { display: block; margin: 0 0 6px; font-size: 14px; font-weight: 800; letter-spacing: .04em; line-height: 1.5; color: #d71920; font-variant-numeric: tabular-nums; }
+.dv_art_body .dv_ap_lead { margin: 0 0 20px; font-size: 19px; font-weight: 700; line-height: 1.65; letter-spacing: -.2px; color: #191f28; }
+.dv_art_body .dv_ap_src_h { margin: 72px 0 10px; padding-top: 24px; border-top: 1px solid #e5e8eb; font-size: 14px; font-weight: 700; letter-spacing: 0; color: #6b7684; }
+.dv_art_body .dv_ap_src { list-style: none; margin: 0; padding: 0; font-size: 15px; line-height: 1.6; }
+.dv_art_body .dv_ap_src li { margin: 0 0 10px; }
+.dv_art_body .dv_ap_src a { word-break: normal; overflow-wrap: anywhere; }
+.dv_art_body .dv_ap_src span { display: block; margin-top: 2px; font-size: 13px; color: #6b7684; }
+.dv_art_body .dv_ap_cta { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: center; margin: 56px 0 0; padding: 36px 40px; border-left: 0; border-radius: 16px; background: #191f28; color: #c9d0d8; font-size: 16px; line-height: 1.6; }
+.dv_art_body .dv_ap_cta p { grid-column: 1; margin: 8px 0 0; }
+.dv_art_body .dv_ap_cta .dv_ap_cta_t { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.6px; line-height: 1.4; color: #fff; }
+.dv_art_body .dv_ap_cta p:last-child { grid-column: 2; grid-row: 1 / span 2; margin: 0; }
+.dv_art_body .dv_ap_cta_b { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; border-radius: 10px; background: #d71920; color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; word-break: keep-all; }
+.dv_art_body .dv_ap_cta_b:hover { background: #b9141a; }
+.dv_art_body .dv_ap_cta_b:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+/* 가로 세 칸이 좁아지는 폭에서는 큰 숫자의 글자를 줄인다. */
+@media (max-width: 900px) { .dv_art_body .dv_ap_figs strong { font-size: 32px; letter-spacing: -1px; } }
+@media (max-width: 768px) {
+  /* 좁은 화면에서는 세로로 쌓는다 — 세 칸을 나란히 두면 긴 값(「1,200억 원」)이 칸을 넘는다. */
+  .dv_art_body .dv_ap_figs { grid-auto-flow: row; }
+  .dv_art_body .dv_ap_figs li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-left: 0; border-top: 1px solid #e5e8eb; }
+  .dv_art_body .dv_ap_figs li:first-child { border-top: 0; padding-top: 0; }
+  .dv_art_body .dv_ap_figs strong { font-size: 28px; letter-spacing: -1px; white-space: nowrap; }
+  .dv_art_body .dv_ap_figs span { min-width: 0; margin-top: 0; font-size: 14px; text-align: right; overflow-wrap: anywhere; }
+  .dv_art_body .dv_ap_sum { padding: 20px; }
+  .dv_art_body .dv_ap_h { margin-top: 48px; font-size: 22px; }
+  .dv_art_body .dv_ap_lead { font-size: 17px; }
+  .dv_art_body .dv_ap_cta { grid-template-columns: minmax(0, 1fr); padding: 28px 24px; }
+  .dv_art_body .dv_ap_cta p:last-child { grid-column: 1; grid-row: auto; margin-top: 20px; }
+  .dv_art_body .dv_ap_cta_b { display: flex; }
+}
 .dv_art_foot { margin-top: 44px; padding-top: 22px; border-top: 1px solid #e5e8eb; }
 .dv_art_back { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; color: #4e5968; text-decoration: none; }
 .dv_art_back:hover { color: #191f28; text-decoration: underline; text-underline-offset: 4px; }
