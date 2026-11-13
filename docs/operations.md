@@ -112,18 +112,14 @@ dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_U
 cd api && npm run build
 npm run autopost -- --preview   # 한 편을 만들어 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다
 npm run autopost -- --draft     # 같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 초안으로 저장한다(공개 안 함)
-```
-
-npm run autopost -- --rules     # 글을 쓰는 쪽(사람·에이전트)이 읽을 범위·규칙·글의 구조를 찍는다
+npm run autopost -- --rules     # 글을 쓰는 쪽(사람·에이전트)이 읽을 주제 기준·규칙·글의 구조·이미 다룬 글을 찍는다
 npm run autopost -- --draft --article 글.json   # 조사·집필을 건너뛰고 받은 글을 검사·판정·그림에 넣는다(--preview 도 된다)
 ```
 
 `--article` 은 글을 바깥에서 쓸 때 쓴다(2026-11-13: 글은 Claude 가 쓰고 ChatGPT 웹은 사실 대조와 그림만 맡는다). 받은 글은
 같은 구조 검사·판정·주장 검사를 지나야 하고, 떨어지면 다시 쓰지 않고 사유만 찍는다 — 쓴 쪽이 고쳐서 다시 넣는다.
-
-```
-# (아래는 위 명령들의 공통 설명)
-```
+`--article` 은 미리보기와 초안까지만 한다. 주 1회 기록을 잡고 **공개**하는 길(`auto`)은 받은 글을 쓰지 않는다.
+판정을 ChatGPT 웹으로 돌리려면 `AUTOPOST_PROVIDER=webgpt` 를 꼭 준다 — 없으면 판정이 유료 Claude API 로 나간다.
 
 켜기 값·요일·주 단위 기록을 보지 않고 `ANTHROPIC_API_KEY` 만 본다. 한 번에 Claude 호출이 대여섯 번 나간다(돈이 든다).
 `AUTOPOST_PROVIDER=webgpt` 로 돌리면 키 없이 **그 기계의 ego 브라우저로 chatgpt.com 을 조작**해 만든다(조사·집필·판정마다

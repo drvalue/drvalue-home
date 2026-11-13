@@ -335,8 +335,9 @@ export class AutopostDefaultService {
     }
   }
 
-  /** 이미 공개한 자동 글의 제목·출처 주소 — 조사가 피하고 검사가 겹침을 본다. */
-  private async avoid(
+  /** 이미 공개한 자동 글의 제목·출처 주소 — 조사가 피하고 검사가 겹침을 본다. 바깥에서 쓰는 쪽도 읽는다(`--rules`). */
+  @ServiceException({ errorCode: AutopostError.RUN_UNKNOWN })
+  async avoid(
     ctx: ITransactionContext,
     today: string,
   ): Promise<{ today: string; avoidTitles: string[]; avoidUrls: string[] }> {
