@@ -8,7 +8,8 @@ import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
 import { orUndefined, toHeroShots, toLead } from '../../pageContentParts'
-import { CUTON_DEFAULT, CUTON_KEY, CUTON_URL } from './content'
+import { CUTON_LINK } from '../solutionContent'
+import { CUTON_DEFAULT, CUTON_KEY } from './content'
 
 /**
  * 컷온(CutOn) — 디알밸류가 만들어 운영하는 레이저 절단 자동 견적 플랫폼(cuton.co.kr).
@@ -49,8 +50,8 @@ export default async function Page() {
         desc={shell.desc}
         lead={toLead(c.lead)}
         heroShot={toHeroShots(c.heroShots)}
-        heroLink="컷온 바로가기"
-        heroHref={CUTON_URL}
+        heroLink={CUTON_LINK.label}
+        heroHref={CUTON_LINK.href}
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
