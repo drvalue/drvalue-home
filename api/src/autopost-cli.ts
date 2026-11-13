@@ -15,6 +15,7 @@ import {
  *   --draft    같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 **초안**으로 저장한다. 공개하지 않는다.
  *
  * 켜기 값·요일·주 단위 기록을 보지 않는다. Claude API 키만 있으면 돈다(돈이 든다 — 한 번에 호출 대여섯 번).
+ * `AUTOPOST_PROVIDER=webgpt` 면 키 없이 그 기계의 ego 브라우저로 chatgpt.com 을 조작해 돈다(로그인돼 있어야 한다).
  * 키 값은 찍지 않는다.
  */
 const MODES: Record<string, AutopostMode> = {
@@ -36,9 +37,9 @@ async function main(): Promise<number> {
     void job.stop();
   try {
     // 설정은 앱이 뜬 뒤에 본다 — `.env` 는 ConfigModule 이 채운다.
-    if (!AppConfig.autopost.hasKey) {
+    if (!AppConfig.autopost.canRun) {
       console.error(
-        'Claude API 키가 없습니다. 루트 .env 에 넣고 다시 돌려 주세요.',
+        'Claude API 키가 없습니다. 루트 .env 에 넣거나 AUTOPOST_PROVIDER=webgpt 로 돌려 주세요.',
       );
       return 1;
     }

@@ -196,7 +196,7 @@ export class AutopostDefaultService {
     mode: 'preview' | 'draft',
     now: Date,
   ): Promise<AutopostResult> {
-    if (!AppConfig.autopost.hasKey)
+    if (!AppConfig.autopost.canRun)
       throw CommonError.createByErrorCode(AutopostError.NOT_CONFIGURED);
     const today = kstDate(now);
     const made = await produce(this.client, await this.avoid(ctx, today));

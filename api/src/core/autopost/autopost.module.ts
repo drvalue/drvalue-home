@@ -6,6 +6,7 @@ import {
   AUTOPOST_CLIENT,
   AutopostClaudeClient,
 } from './client/autopost-claude.client';
+import { AutopostWebGptClient } from './client/autopost-webgpt.client';
 import { AutopostRunDefaultRepository } from './repository/autopost-run-default.repository';
 import { AutopostDefaultService } from './service/autopost-default.service';
 
@@ -22,7 +23,10 @@ import { AutopostDefaultService } from './service/autopost-default.service';
     {
       provide: AUTOPOST_CLIENT,
       // 키가 비어도 만든다 — 부르기 전에 서비스가 설정을 본다(꺼져 있으면 한 번도 안 부른다).
-      useFactory: () => new AutopostClaudeClient(AppConfig.autopost.apiKey),
+      useFactory: () =>
+        AppConfig.autopost.provider === 'webgpt'
+          ? new AutopostWebGptClient(AppConfig.autopost.browser)
+          : new AutopostClaudeClient(AppConfig.autopost.apiKey),
     },
   ],
   exports: [AutopostDefaultService],

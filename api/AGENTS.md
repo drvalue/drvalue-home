@@ -229,8 +229,12 @@ src/
   - 사람 검수가 없다(결정 0020). 검사 규칙(`autopost-lint.ts`)을 느슨하게 고치면 그대로 회사 이름으로 나간다.
   - Claude 호출은 `client/autopost-claude.client.ts` 하나에만 있다. 웹 검색·fetch 는 Anthropic 쪽에서 돈다 — 이 서버가
     모델이 고른 주소를 직접 열지 않는다. 호출 동안 트랜잭션을 열지 않는다.
+  - 모델을 부르는 길은 둘이다(`AUTOPOST_PROVIDER`). 지시문·답의 구조는 `client/autopost-prompts.ts` 에 한 벌만 있다.
+    `webgpt` 는 `client/autopost-webgpt.client.ts` — ego 브라우저(`ego-browser nodejs`)로 chatgpt.com 에 지시문을 넣고 답의
+    코드 블록을 읽는다. 이 길에서는 **코드가 출처 주소를 직접 연다**(쿠키 없이, 바깥 https 만 — `isPublicHttps`). 받은 글자를
+    판정 지시문에 붙이고, 코드가 연 주소만 「열린 출처」다. 화면 이름표에 기대므로 chatgpt.com 이 바뀌면 깨진다(오류로 닫힌다).
   - 오류(API 실패)로 끝난 주만 한 번 더 한다(주당 2번까지). 2시간 넘게 「진행 중」이면 죽은 것으로 닫는다.
-  - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 `ANTHROPIC_API_KEY` 둘 다 있어야 Claude 를 부른다.
+  - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 모델을 부를 길(`ANTHROPIC_API_KEY`, 또는 `AUTOPOST_PROVIDER=webgpt`) 둘 다 있어야 돈다.
   - 글 저장과 기록 닫기는 한 트랜잭션이다(`publish`). 기록을 못 닫으면 글도 되돌린다. 한 편을 만드는 전체 시간은 45분에서 끊는다.
   - 손으로 돌리기: `npm run autopost -- --preview | --draft`(`src/autopost-cli.ts`). 이 프로세스는 cron 을 멈추고 돈다.
     `--draft` 는 검사를 통과한 글만 초안으로 저장한다.
@@ -267,7 +271,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 80 (주 4 · HTML 4 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 86 (주 4 · HTML 4 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 6)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)
