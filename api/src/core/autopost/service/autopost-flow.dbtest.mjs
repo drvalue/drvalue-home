@@ -393,6 +393,60 @@ test('받은 글: 조사·집필을 건너뛰고 판정은 한 번, 떨어져도
   assert.ok(broken.reasons.length);
 });
 
+test('묶음 공개: 주간 기록을 잡고 닫는다 — 한 주에 한 편, 이미 낸 출처는 다시 못 쓴다', async () => {
+  await clean();
+  const pics = [
+    { bytes: jpeg(), mime: 'image/jpeg', section: null },
+    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    {
+      bytes: Buffer.from('그림이 아니다'.repeat(8)),
+      mime: 'image/jpeg',
+      section: 3,
+    },
+  ];
+  // 꺼져 있으면 막힌다
+  await assert.rejects(() => service.publishGiven(ctx, good, pics, TUE));
+  assert.equal(await row('2026-W46'), undefined);
+  process.env.AUTOPOST_ENABLED = '1';
+  // 구조 검사에 떨어지는 글은 기록을 잡지 않는다(고쳐서 다시 넣을 수 있게)
+  const bad = await service.publishGiven(
+    ctx,
+    withHook(good, '불량률이 47% 줄었습니다.'),
+    pics,
+    TUE,
+  );
+  assert.equal(bad.outcome, 'refused');
+  assert.equal(await row('2026-W46'), undefined);
+  // 화요일 09:00 전이어도 공개한다(사람이 돌리는 명령)
+  const EARLY = new Date('2026-11-09T22:00:00Z'); // KST 화 07:00
+  const r = await service.publishGiven(ctx, good, pics, EARLY);
+  assert.equal(r.outcome, 'published');
+  assert.equal(r.pictures, 2);
+  const post = await posts.get(ctx, r.postId);
+  assert.equal(post.status, 'published');
+  assert.equal(post.slug, 'mfg-ai-2026-w46');
+  assert.equal((await row('2026-W46')).status, 'published');
+  assert.equal((await coverRows()).length, 2);
+  // 같은 주에 다른 글(출처가 다르다)을 한 번 더: 한 주에 한 편이라 거절
+  const other = JSON.parse(
+    JSON.stringify(good)
+      .replaceAll('press.siemens.com', 'press.siemens.org')
+      .replaceAll('example.org', 'example.net'),
+  );
+  const again = await service.publishGiven(ctx, other, pics, TUE);
+  assert.equal(again.outcome, 'refused');
+  assert.ok(again.reasons[0].includes('한 주에 한 편'));
+  // 다음 주에 같은 출처로: 이미 낸 글의 출처라 거절, 기록도 안 잡는다
+  const next2 = await service.publishGiven(ctx, good, pics, NEXT);
+  assert.equal(next2.outcome, 'refused');
+  assert.ok(next2.reasons.some((x) => x.includes('이미 낸 글의 출처')));
+  assert.equal(await row('2026-W47'), undefined);
+  // 쓰는 쪽이 읽는 「이미 다룬 글」에 이제 나온다
+  const past = await service.avoid(ctx, '');
+  assert.ok(past.avoidTitles.includes(good.title));
+  delete process.env.AUTOPOST_ENABLED;
+});
+
 test('키가 없으면 손으로 돌리는 것도 막힌다', async () => {
   delete process.env.ANTHROPIC_API_KEY;
   await assert.rejects(service.run(ctx, 'preview', TUE));

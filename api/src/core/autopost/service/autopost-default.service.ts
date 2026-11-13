@@ -18,6 +18,7 @@ import {
 import { AutopostError } from '../error/autopost.error';
 import type { Article } from '../model/article';
 import { AutopostRunDefaultRepository } from '../repository/autopost-run-default.repository';
+import { lintStructure } from './autopost-lint';
 import { planRun } from './autopost-plan';
 import { produce, Produced } from './autopost-produce';
 import { PictureRef, renderArticle } from './autopost-render';
@@ -295,28 +296,113 @@ export class AutopostDefaultService {
   private async pictures(article: Article): Promise<Picture[]> {
     if (!this.client.illustrate) return [];
     try {
-      const seen = new Set<number | null>();
-      const kept = (await this.client.illustrate(article)).filter((pic) => {
-        const size = imageSize(pic.bytes);
-        const fits =
-          !!size &&
-          size.width >= PICTURE_MIN_WIDTH &&
-          size.height >= PICTURE_MIN_HEIGHT &&
-          pic.bytes.length <= PICTURE_MAX_BYTES &&
-          (pic.section === null ||
-            (Number.isInteger(pic.section) &&
-              pic.section >= 0 &&
-              pic.section < article.sections.length)) &&
-          !seen.has(pic.section);
-        if (fits) seen.add(pic.section);
-        return fits;
-      });
-      if (!kept.some((pic) => pic.section === null))
-        throw new Error('표지 그림이 없거나 치수·크기가 한도 밖입니다');
-      return kept;
+      return this.fitting(article, await this.client.illustrate(article));
     } catch (e) {
       this.logger.warn(`자동 글: 그림 없이 갑니다 — ${reasonOf(e)}`);
       return [];
+    }
+  }
+
+  /** 그림답고(JPEG 치수·크기) 자리가 맞는 것만. 표지가 없으면 던진다. 묶음으로 받은 그림도 같은 문을 지난다. */
+  private fitting(article: Article, pictures: Picture[]): Picture[] {
+    const seen = new Set<number | null>();
+    const kept = pictures.filter((pic) => {
+      const size = imageSize(pic.bytes);
+      const fits =
+        !!size &&
+        pic.bytes[0] === 0xff &&
+        pic.bytes[1] === 0xd8 &&
+        size.width >= PICTURE_MIN_WIDTH &&
+        size.height >= PICTURE_MIN_HEIGHT &&
+        pic.bytes.length <= PICTURE_MAX_BYTES &&
+        (pic.section === null ||
+          (Number.isInteger(pic.section) &&
+            pic.section >= 0 &&
+            pic.section < article.sections.length)) &&
+        !seen.has(pic.section);
+      if (fits) seen.add(pic.section);
+      return fits;
+    });
+    if (!kept.some((pic) => pic.section === null))
+      throw new Error('표지 그림이 없거나 치수·크기가 한도 밖입니다');
+    return kept;
+  }
+
+  /**
+   * 다른 기계에서 검사·판정·그림까지 끝낸 글 묶음을 **공개**한다(브라우저가 있는 사람 기계에서 만들고, DB 가 있는 곳에서 이것을 부른다).
+   * 판정은 다시 하지 않는다 — 이 명령을 돌릴 수 있는 사람은 이미 DB 에 쓸 수 있는 사람이다. 대신 코드 검사(구조·숫자·이미 낸 출처)는
+   * 이 DB 의 기록으로 다시 돌리고, cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편, 같은 출처를 두 번 쓰지 않는다.
+   * 켜기 값(`AUTOPOST_ENABLED`)이 있어야 한다. 요일은 보지 않는다(사람이 돌리는 명령이다).
+   */
+  @ServiceException({ errorCode: AutopostError.RUN_UNKNOWN })
+  async publishGiven(
+    ctx: ITransactionContext,
+    article: Article,
+    pictures: Picture[],
+    now: Date = new Date(),
+  ): Promise<{
+    outcome: 'published' | 'refused';
+    reasons: string[];
+    postId?: number;
+    pictures: number;
+  }> {
+    if (!AppConfig.autopost.enabled)
+      throw CommonError.createByErrorCode(AutopostError.NOT_CONFIGURED);
+    const refused = (reasons: string[]) => ({
+      outcome: 'refused' as const,
+      reasons,
+      pictures: 0,
+    });
+    const today = kstDate(now);
+    const past = await this.avoid(ctx, today);
+    const reasons = lintStructure(article, {
+      today,
+      usedSourceUrls: past.avoidUrls,
+    });
+    if (reasons.length) return refused(reasons);
+
+    const week = weekKey(now);
+    const row = await this.autopostRunDefaultRepository.findByWeek(ctx, week);
+    let plan = planRun(row, now);
+    if (plan === 'reap') {
+      await this.autopostRunDefaultRepository.reap(ctx, week);
+      plan = 'retry';
+    }
+    if (plan === 'none')
+      return refused([
+        `이번 주(${week}) 기록이 이미 있습니다(${row?.status ?? ''}) — 한 주에 한 편입니다`,
+      ]);
+    const claimed =
+      plan === 'start'
+        ? await this.autopostRunDefaultRepository.claim(ctx, week)
+        : await this.autopostRunDefaultRepository.claimRetry(ctx, week);
+    if (!claimed) return refused([`이번 주(${week})를 다른 실행이 잡았습니다`]);
+
+    let kept: Picture[] = [];
+    try {
+      kept = pictures.length ? this.fitting(article, pictures) : [];
+    } catch (e) {
+      this.logger.warn(`자동 글 ${week}: 그림 없이 갑니다 — ${reasonOf(e)}`);
+    }
+    const tokens = { article, inputTokens: 0, outputTokens: 0 };
+    try {
+      const saved = await this.stored((discards) =>
+        this.publish(ctx, week, article, kept, today, tokens, discards),
+      );
+      this.logger.log(`자동 글 ${week}: 공개했습니다 (글 ${saved.postId})`);
+      return {
+        outcome: 'published',
+        reasons: [],
+        postId: saved.postId,
+        pictures: kept.length,
+      };
+    } catch (e) {
+      await this.autopostRunDefaultRepository.finish(ctx, week, {
+        status: 'error',
+        reason: `저장 실패: ${reasonOf(e)}`,
+        ...tokens,
+      });
+      return refused([`저장하지 못했습니다: ${reasonOf(e)}`]);
     }
   }
 
