@@ -9,6 +9,9 @@ import { compareOf, leadOf, shotOf, type ServiceDemoContent } from '../../pageCo
 
 export const CUTON_KEY = 'service-cuton'
 
+/** 머리말 둘째 단추가 가는 곳 — 운영 중인 서비스. 주소는 페이지 글이 아니라 코드다(everyrag 장과 같은 방식). */
+export const CUTON_URL = 'https://cuton.co.kr/'
+
 export const CUTON_DEFAULT: ServiceDemoContent = {
   shell: {
     kicker: '컷온',
