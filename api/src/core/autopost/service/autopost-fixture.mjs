@@ -14,6 +14,7 @@ export const good = {
     '정해진 주기 점검에서 상태를 보고 하는 점검으로 바뀝니다.',
     '정비 일정을 생산 계획에 맞춰 잡을 수 있습니다.',
   ],
+  figures: [],
   hook: [
     '지멘스가 공장 설비의 고장을 미리 알려 주는 AI 를 내놨습니다.',
     '시범 공장에서 설비 멈춤 시간이 30% 줄었고, 투자 규모는 1,200억 원입니다.',
@@ -82,6 +83,7 @@ const units = (a) =>
     a.summary,
     a.seo_description,
     ...(a.key_points ?? []),
+    ...(a.figures ?? []).map((f) => `${f.label} ${f.value}`),
     ...(a.hook ?? []),
     ...(a.sections ?? []).flatMap((s) => [s.heading, ...(s.paragraphs ?? [])]),
   ].filter((u) => typeof u === 'string');

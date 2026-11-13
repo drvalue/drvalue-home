@@ -25,6 +25,8 @@ const LIMITS = {
   seo_description: [50, 160],
   keyPoints: [3, 3],
   keyPoint: [10, 80],
+  figureValue: [1, 12],
+  figureLabel: [2, 14],
   hook: [1, 3],
   sections: [3, 5],
   paragraphs: [1, 4],
@@ -120,6 +122,8 @@ function hasShape(a: unknown): a is Article {
     isText(x.summary) &&
     isText(x.seo_description) &&
     isTexts(x.key_points) &&
+    Array.isArray(x.figures) &&
+    x.figures.every((f) => !!f && isText(f.value) && isText(f.label)) &&
     isTexts(x.hook) &&
     Array.isArray(x.sections) &&
     x.sections.every(
@@ -301,6 +305,27 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
           '자',
         ),
       );
+  });
+  // 글머리 숫자 줄: 없거나 2~3개. 값에는 숫자가 있어야 한다(숫자 검사와 판정은 「이름 값」 덩어리로 받는다).
+  if (a.figures.length === 1 || a.figures.length > 3)
+    out.push(`핵심 숫자가 ${a.figures.length}개입니다 — 없거나 2~3개`);
+  a.figures.forEach((f, i) => {
+    out.push(
+      ...between(
+        `핵심 숫자 ${i + 1}번의 값`,
+        f.value.trim().length,
+        LIMITS.figureValue,
+        '자',
+      ),
+      ...between(
+        `핵심 숫자 ${i + 1}번의 이름`,
+        f.label.trim().length,
+        LIMITS.figureLabel,
+        '자',
+      ),
+    );
+    if (!/\d/.test(f.value))
+      out.push(`핵심 숫자 ${i + 1}번의 값에 숫자가 없습니다`);
   });
   keyPoints.forEach((k, i) =>
     out.push(

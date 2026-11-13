@@ -256,7 +256,9 @@ test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대�
   assert.equal(r.pictures.length, 2);
   assert.equal((r.html.match(/<img /g) || []).length, 2);
   const files = (await coverRows()).filter((f) =>
-    r.html.startsWith(`<p><img src="/api/content/assets/${f.id}" `),
+    r.html.startsWith(
+      `<p class="dv_ap_cover"><img src="/api/content/assets/${f.id}" `,
+    ),
   );
   assert.equal((await coverRows()).length, 2);
   assert.equal(files.length, 1); // 맨 위가 표지다
@@ -266,7 +268,9 @@ test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대�
   );
   assert.ok(existsSync(join(uploads, files[0].filename_disk)));
   assert.ok(
-    r.html.startsWith(`<p><img src="/api/content/assets/${files[0].id}" `),
+    r.html.startsWith(
+      `<p class="dv_ap_cover"><img src="/api/content/assets/${files[0].id}" `,
+    ),
   );
   const saved = await dataSource.query(
     `SELECT p.thumbnail, t.body FROM posts p JOIN posts_translations t ON t.posts = p.id WHERE p.id = $1`,

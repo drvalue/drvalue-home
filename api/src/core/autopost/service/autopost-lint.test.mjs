@@ -434,6 +434,27 @@ test('연도·날짜·한 자리 개수는 숫자 검사 예외', () =>
 
 test('구조: 단락 수·제목 길이·주장 없음', () => {
   assert.ok(pass({ ...good, sections: good.sections.slice(0, 2) }).length);
+  // 핵심 숫자: 없거나 2~3개 · 값에 숫자 · 「이름 값」 글자가 주장에 있어야 숫자 검사를 지난다
+  const fig = (figures, claims = []) =>
+    pass({ ...good, figures, claims: [...good.claims, ...claims] });
+  const f30 = { value: '30%', label: '멈춤 시간 감소' };
+  const f12 = { value: '1,200억 원', label: '투자 규모' };
+  const c = (f) => ({
+    sentence: `${f.label} ${f.value}`,
+    value: f.value,
+    source_url: good.sources[0].url,
+    quote: 'q',
+  });
+  assert.deepEqual(fig([f30, f12], [c(f30), c(f12)]), []);
+  assert.ok(
+    fig([f30, f12], [c(f30)]).some((r) => r.includes('주장 목록에 없는 숫자')),
+  );
+  assert.ok(fig([f30], [c(f30)]).some((r) => r.includes('핵심 숫자가 1개')));
+  assert.ok(
+    fig([f30, { value: '많이', label: '투자 규모' }], [c(f30)]).some((r) =>
+      r.includes('값에 숫자가 없습니다'),
+    ),
+  );
   // 핵심은 꼭 세 줄 · 단락의 첫 문단(굵게 나가는 결론)은 짧아야 한다
   assert.ok(pass({ ...good, key_points: good.key_points.slice(0, 2) }).length);
   assert.ok(

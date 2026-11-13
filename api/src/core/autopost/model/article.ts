@@ -21,12 +21,22 @@ export interface ArticleSection {
   paragraphs: string[];
 }
 
+/** 글머리에 크게 나가는 숫자 하나. */
+export interface ArticleFigure {
+  /** 숫자와 단위 — 「245곳」「30.1%」. */
+  value: string;
+  /** 그 숫자가 무엇인지 — 「생산성 향상」. */
+  label: string;
+}
+
 export interface Article {
   title: string;
   summary: string;
   seo_description: string;
   /** 이 글이 전하려는 것 세 줄. 본문 맨 위에 묶음으로 나간다. */
   key_points: string[];
+  /** 핵심 숫자 2~3개. 내세울 숫자가 없으면 빈 배열. */
+  figures: ArticleFigure[];
   hook: string[];
   sections: ArticleSection[];
   sources: ArticleSource[];
@@ -48,6 +58,7 @@ export const ARTICLE_JSON_SCHEMA = object({
   summary: text,
   seo_description: text,
   key_points: texts,
+  figures: { type: 'array', items: object({ value: text, label: text }) },
   hook: texts,
   sections: {
     type: 'array',
