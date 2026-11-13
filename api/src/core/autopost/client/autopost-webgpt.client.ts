@@ -5,6 +5,7 @@ import { JudgeAnswer, judgementFrom } from '../service/autopost-judge';
 import { Judgement } from '../service/autopost-lint';
 import type {
   AutopostClient,
+  Cover,
   Research,
   ResearchInput,
   Usage,
@@ -14,6 +15,7 @@ import {
   RESEARCH_SCHEMA,
   VERIFY_SCHEMA,
   VERIFY_SYSTEM,
+  coverPrompt,
   researchPrompt,
   researchSystem,
   verifyPrompt,
@@ -29,6 +31,10 @@ const SOURCE_CHARS = 15000;
 const SOURCES_TOTAL_CHARS = 60000;
 /** 이보다 짧으면 본문을 못 받은 것으로 본다(차단 안내·빈 껍데기). */
 const SOURCE_MIN_CHARS = 300;
+/** 그림 한 장을 기다리는 한도. */
+const IMAGE_TIMEOUT_MS = 10 * 60 * 1000;
+/** 표지 그림의 가로(px). 받은 그림을 화면 안에서 이 폭의 JPEG 로 줄여 받는다. */
+const COVER_WIDTH = 1600;
 const MARK = '@@AUTOPOST_ANSWER@@';
 /** ego 브라우저에서 이 작업이 쓰는 자리의 이름. 매번 같은 자리를 다시 쓴다. */
 const SPACE = 'drvalue autopost';
@@ -202,6 +208,74 @@ console.log(input.mark + JSON.stringify({ code: answer }));
 }
 
 /**
+ * 그림을 만들게 하고, 다 되면 화면 안에서 JPEG 로 줄여 base64 로 찍는다. 그림은 `blob:` 주소로 뜬다 —
+ * 바깥에서 주소로 받을 수 없어 화면의 canvas 로 꺼낸다(2026-11-13 실측).
+ * 다 됐다는 표시: 「중지」 단추가 없고 큰 그림이 두 번 이어 같은 주소로 보인다. 그리는 중에도 미리 보기 그림이 뜬다.
+ */
+function imageScript(prompt: string): string {
+  const input = JSON.stringify({
+    prompt,
+    url: 'https://chatgpt.com/',
+    space: SPACE,
+    timeout: IMAGE_TIMEOUT_MS,
+    width: COVER_WIDTH,
+    mark: MARK,
+  });
+  return `
+const input = ${input};
+const task = await taskSpace(input.space);
+const pages = await task.pages();
+const page = pages.length ? task.page(pages[0].label) : await task.newPage();
+await page.goto(input.url, { timeout: 60000 });
+await page.waitForSelector("div.ProseMirror", { state: "visible", timeout: 60000 });
+await page.focus("div.ProseMirror");
+await page.keyboard.insertText(input.prompt);
+await page.waitForTimeout(1500);
+const squash = (s) => s.replace(/\\s+/g, "");
+const typed = await page.evaluate(() => document.querySelector("div.ProseMirror")?.innerText ?? "");
+if (squash(typed).length < squash(input.prompt).length * 0.95) throw new Error("지시문이 입력창에 다 들어가지 않았습니다");
+await page.keyboard.press("Enter");
+const started = Date.now();
+let last = "", still = 0, bare = 0, ready = false;
+while (Date.now() - started < input.timeout) {
+  await page.waitForTimeout(4000);
+  const state = await page.evaluate(() => {
+    const labels = [...document.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") || "");
+    const big = [...document.querySelectorAll("main img")].filter((i) => i.complete && i.naturalWidth >= 512);
+    return {
+      inChat: location.pathname.startsWith("/c/"),
+      busy: labels.some((l) => /중지|Stop/i.test(l)),
+      said: labels.some((l) => /소리 내어 읽기|Read aloud/i.test(l)),
+      src: big.length ? big[big.length - 1].src : "",
+      tail: (document.querySelector("main")?.innerText ?? "").replace(/\\s+/g, " ").slice(-200),
+    };
+  });
+  if (state.inChat && !state.busy && state.src) {
+    still = state.src === last ? still + 1 : 0;
+    last = state.src;
+    if (still >= 1) { ready = true; break; }
+  }
+  // 그림 없이 글로만 답했다(거절·한도 안내·되묻기) — 기다리지 않고 끝낸다.
+  if (state.inChat && !state.busy && !state.src && state.said) {
+    if (++bare >= 3) throw new Error("답에 그림이 없습니다: " + state.tail);
+  } else bare = 0;
+}
+if (!ready) throw new Error("그림을 시간 안에 받지 못했습니다");
+const data = await page.evaluate((width) => {
+  const big = [...document.querySelectorAll("main img")].filter((i) => i.complete && i.naturalWidth >= 512);
+  const img = big[big.length - 1];
+  const scale = Math.min(1, width / img.naturalWidth);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}, input.width);
+console.log(input.mark + JSON.stringify({ code: data }));
+`;
+}
+
+/**
  * ChatGPT 웹(chatgpt.com)을 ego 브라우저로 조작해 조사·집필·판정을 한다. API 키를 쓰지 않는다 —
  * 그 기계의 ego 브라우저에 ChatGPT 가 로그인돼 있어야 한다. 서버에서는 못 돈다.
  *
@@ -217,16 +291,26 @@ export class AutopostWebGptClient implements AutopostClient {
     prompt: string,
     search: boolean,
   ): Promise<T> {
-    const out = await this.runBrowser(what, browserScript(prompt, search));
+    const code = await this.answer(what, browserScript(prompt, search));
+    try {
+      return jsonFromAnswer(code) as T;
+    } catch {
+      throw new Error(`${what}: 구조화 출력을 읽지 못했습니다`);
+    }
+  }
+
+  /** 스크립트가 표식 뒤에 찍은 글자. */
+  private async answer(what: string, script: string): Promise<string> {
+    const out = await this.runBrowser(what, script);
     const line = out.split('\n').find((l) => l.includes(MARK));
     if (!line) throw new Error(`${what}: 답을 받지 못했습니다`);
     try {
       const { code } = JSON.parse(
         line.slice(line.indexOf(MARK) + MARK.length),
       ) as { code: string };
-      return jsonFromAnswer(code) as T;
+      return code;
     } catch {
-      throw new Error(`${what}: 구조화 출력을 읽지 못했습니다`);
+      throw new Error(`${what}: 답을 읽지 못했습니다`);
     }
   }
 
@@ -324,5 +408,16 @@ export class AutopostWebGptClient implements AutopostClient {
       usage: NO_USAGE,
       evidence: { fetchedUrls, transcript: JSON.stringify(answer) },
     };
+  }
+
+  /** 표지 그림. 받은 것이 JPEG 가 아니면 던진다 — 치수·크기는 저장하는 쪽이 본다. */
+  async illustrate(article: Article): Promise<Cover> {
+    const data = await this.answer('표지', imageScript(coverPrompt(article)));
+    const head = 'data:image/jpeg;base64,';
+    if (!data.startsWith(head)) throw new Error('표지: 그림을 받지 못했습니다');
+    const bytes = Buffer.from(data.slice(head.length), 'base64');
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8)
+      throw new Error('표지: 받은 것이 JPEG 가 아닙니다');
+    return { bytes, mime: 'image/jpeg' };
   }
 }

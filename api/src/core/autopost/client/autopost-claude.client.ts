@@ -40,6 +40,12 @@ export interface WriteInput {
   previous?: Article;
 }
 
+/** 표지 그림 한 장. */
+export interface Cover {
+  bytes: Buffer;
+  mime: 'image/jpeg';
+}
+
 /** 글 한 편을 만드는 세 호출. 순서 짜기(`produce`)는 이 모양만 안다 — 테스트는 가짜를 끼운다. */
 export interface AutopostClient {
   research(input: ResearchInput): Promise<{ research: Research; usage: Usage }>;
@@ -51,6 +57,11 @@ export interface AutopostClient {
     /** 진단용: 실제로 열린 주소와 판정 기록 원문. */
     evidence?: { fetchedUrls: string[]; transcript: string };
   }>;
+  /**
+   * 통과한 글의 표지 그림을 만든다. 없는 길(Claude API)도 있다 — 그때 글은 그림 없이 나간다.
+   * 그림의 내용은 아무 검사도 보지 않는다(결정 0020 덧붙임).
+   */
+  illustrate?(article: Article): Promise<Cover>;
 }
 
 export const AUTOPOST_CLIENT = Symbol('AUTOPOST_CLIENT');

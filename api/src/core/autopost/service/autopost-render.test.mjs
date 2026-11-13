@@ -20,6 +20,19 @@ test('만든 HTML 은 소독의 고정점', () => {
   assert.equal(sanitizeBody(h), h);
 });
 
+test('표지 그림은 맨 위에, 소독을 지나도 그대로', () => {
+  const id = '0f8fad5b-d9cb-469f-a165-70867728950e';
+  const h = renderArticle(
+    { ...sample, title: '따옴표 "가" 든 <제목> & 기호' },
+    { id, width: 1600, height: 900 },
+  );
+  assert.ok(h.startsWith('<p><img src="/api/content/assets/' + id + '" alt="'));
+  assert.ok(h.includes('width="1600" height="900">'));
+  assert.equal(sanitizeBody(h), h);
+  // 그림이 없으면 예전 그대로다
+  assert.ok(!renderArticle(sample).includes('<img'));
+});
+
 test('모양', () => {
   const h = renderArticle(sample);
   assert.match(h, /^<p>/);

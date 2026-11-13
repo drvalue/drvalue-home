@@ -1,9 +1,12 @@
 // DB 가 있어야 도는 검사(일반 테스트 줄에는 넣지 않는다). Claude 는 부르지 않는다 — 가짜를 끼운다.
 //   DB_HOST=… DB_PORT=… DB_NAME=… DB_USER=… DB_PASSWORD=… ADMIN_SESSION_SECRET=… node --test src/core/autopost/service/autopost-flow.dbtest.mjs
-// 앱을 HTTP 없이 띄워 한 주의 흐름을 본다: 꺼짐 · 때가 아님 · 공개 · 같은 주 두 번 · 탈락 · 오류 뒤 한 번 더 · 초안.
+// 앱을 HTTP 없이 띄워 한 주의 흐름을 본다: 꺼짐 · 때가 아님 · 공개 · 같은 주 두 번 · 탈락 · 오류 뒤 한 번 더 · 초안 · 표지 그림.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { good, allTrue, withHook } from './autopost-fixture.mjs';
 
 const require = createRequire(import.meta.url);
@@ -58,6 +61,23 @@ service.client = {
 const TUE = new Date('2026-11-10T03:00:00Z'); // KST 화 12:00, 2026-W46
 const MON = new Date('2026-11-09T03:00:00Z'); // KST 월 12:00, 2026-W46
 const NEXT = new Date('2026-11-17T03:00:00Z'); // 2026-W47
+const uploads = mkdtempSync(join(tmpdir(), 'autopost-uploads-'));
+process.env.UPLOADS_DIR = uploads; // 실제 업로드 폴더에 쓰지 않는다
+const coverRows = () =>
+  dataSource.query(
+    `SELECT id, filename_disk, type, width, height FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%'`,
+  );
+/** 헤더만 있는 JPEG — 치수 읽기가 1600×900 으로 읽는다. */
+const jpeg = (width = 1600, height = 900) => {
+  const b = Buffer.alloc(64);
+  b.writeUInt16BE(0xffd8, 0);
+  b.writeUInt16BE(0xffc0, 2);
+  b.writeUInt16BE(17, 4);
+  b[6] = 8;
+  b.writeUInt16BE(height, 7);
+  b.writeUInt16BE(width, 9);
+  return b;
+};
 const row = async (week) =>
   (
     await dataSource.query('SELECT * FROM autopost_runs WHERE week_key = $1', [
@@ -69,10 +89,17 @@ const clean = async () => {
     `DELETE FROM autopost_runs WHERE week_key IN ('2026-W46','2026-W47')`,
   );
   await dataSource.query(`DELETE FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`);
+  // 표지 그림: 행과 디스크 파일을 같이 지운다(올린 이름이 글 주소로 시작한다).
+  for (const f of await coverRows())
+    rmSync(join(uploads, f.filename_disk), { force: true });
+  await dataSource.query(
+    `DELETE FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%'`,
+  );
 };
 await clean();
 after(async () => {
   await clean();
+  rmSync(uploads, { recursive: true, force: true });
   await app.close();
 });
 
@@ -212,6 +239,88 @@ test('기록을 못 닫으면 글 저장도 되돌린다', async () => {
   );
   assert.equal(n[0].n, 0);
   delete process.env.AUTOPOST_ENABLED;
+});
+
+test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대표 이미지가 된다', async () => {
+  await clean();
+  next = { article: good, fail: false };
+  service.client.illustrate = async () => ({
+    bytes: jpeg(),
+    mime: 'image/jpeg',
+  });
+  const r = await service.run(ctx, 'draft', TUE);
+  delete service.client.illustrate;
+  assert.equal(r.outcome, 'drafted');
+  const files = await coverRows();
+  assert.equal(files.length, 1);
+  assert.deepEqual(
+    [files[0].type, files[0].width, files[0].height],
+    ['image/jpeg', 1600, 900],
+  );
+  assert.ok(existsSync(join(uploads, files[0].filename_disk)));
+  assert.ok(
+    r.html.startsWith(`<p><img src="/api/content/assets/${files[0].id}" `),
+  );
+  const saved = await dataSource.query(
+    `SELECT p.thumbnail, t.body FROM posts p JOIN posts_translations t ON t.posts = p.id WHERE p.id = $1`,
+    [r.postId],
+  );
+  assert.equal(saved[0].thumbnail, files[0].id);
+  assert.equal(saved[0].body, r.html); // 소독을 지나도 그대로 저장된다
+});
+
+test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없이 나간다', async () => {
+  for (const illustrate of [
+    async () => {
+      throw new Error('가짜 실패');
+    },
+    async () => ({ bytes: jpeg(320, 180), mime: 'image/jpeg' }),
+    async () => ({
+      bytes: Buffer.from('그림이 아니다'.repeat(8)),
+      mime: 'image/jpeg',
+    }),
+  ]) {
+    await clean();
+    next = { article: good, fail: false };
+    service.client.illustrate = illustrate;
+    const r = await service.run(ctx, 'draft', TUE);
+    delete service.client.illustrate;
+    assert.equal(r.outcome, 'drafted');
+    assert.equal(r.cover, null);
+    assert.ok(!r.html.includes('<img'));
+    assert.equal((await coverRows()).length, 0);
+  }
+});
+
+test('표지 그림: 떨어진 글에는 만들지 않는다', async () => {
+  let asked = 0;
+  next = { article: withHook(good, '불량률이 47% 줄었습니다.'), fail: false };
+  service.client.illustrate = async () => {
+    asked++;
+    return { bytes: jpeg(), mime: 'image/jpeg' };
+  };
+  const r = await service.run(ctx, 'preview', TUE);
+  delete service.client.illustrate;
+  assert.ok(r.reasons.length);
+  assert.equal(asked, 0);
+});
+
+test('표지 그림: 글 저장이 되돌려지면 파일 행도 디스크 파일도 남지 않는다', async () => {
+  await clean();
+  process.env.AUTOPOST_ENABLED = '1';
+  next = { article: good, fail: false };
+  service.client.illustrate = async () => {
+    // 그림을 만드는 사이에 그 주의 행이 사라졌다 — 닫을 행이 없어 저장이 되돌려진다.
+    await dataSource.query(
+      `DELETE FROM autopost_runs WHERE week_key = '2026-W46'`,
+    );
+    return { bytes: jpeg(), mime: 'image/jpeg' };
+  };
+  assert.equal(await service.run(ctx, 'auto', TUE), null);
+  delete service.client.illustrate;
+  delete process.env.AUTOPOST_ENABLED;
+  assert.equal((await coverRows()).length, 0);
+  assert.deepEqual(readdirSync(uploads), []);
 });
 
 test('키가 없으면 손으로 돌리는 것도 막힌다', async () => {

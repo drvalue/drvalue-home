@@ -22,11 +22,19 @@ function attr(text: string): string {
 
 const p = (text: string) => `<p>${escape(text)}</p>`;
 
+/** 저장한 표지 그림(directus_files 의 행). */
+export interface CoverRef {
+  id: string;
+  width: number;
+  height: number;
+}
+
 /**
  * 글 → 본문 HTML. 본문 소독(`sanitizeBody`)이 받는 태그만 쓰고, 소독을 지나도 한 글자도 안 바뀌는 모양으로
  * 만든다(한 줄, 새 창 링크의 rel 까지) — 검사가 그것을 본다.
+ * 표지 그림이 있으면 맨 위에 둔다 — 뉴스 게시판은 본문의 첫 그림이 대표 이미지다.
  */
-export function renderArticle(a: Article): string {
+export function renderArticle(a: Article, cover?: CoverRef): string {
   const sections = a.sections.map(
     (s, i) =>
       `<h2>${i + 1}. ${escape(s.heading)}</h2>${s.paragraphs.map(p).join('')}`,
@@ -36,6 +44,9 @@ export function renderArticle(a: Article): string {
       `<li><a href="${attr(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)}</a> — ${escape(s.publisher)}, ${escape(s.published)}</li>`,
   );
   return [
+    cover
+      ? `<p><img src="/api/content/assets/${cover.id}" alt="${attr(a.title)}" width="${cover.width}" height="${cover.height}"></p>`
+      : '',
     a.hook.map(p).join(''),
     sections.join(''),
     `<h2>출처</h2><ul>${sources.join('')}</ul>`,

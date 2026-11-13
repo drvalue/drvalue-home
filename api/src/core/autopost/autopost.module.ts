@@ -1,6 +1,7 @@
 import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { AppConfig } from '../../common/config/app-config';
 import { TransactionContextFactory } from '../../common/typeorm/transaction-context.factory';
+import { AdminFileModule } from '../admin-file/admin-file.module';
 import { AdminPostModule } from '../admin-post/admin-post.module';
 import {
   AUTOPOST_CLIENT,
@@ -15,7 +16,7 @@ import { AutopostDefaultService } from './service/autopost-default.service';
  * ScheduleModule.forRoot() 는 `admin-schedule` 이 건다(앱 전체에 한 번).
  */
 @Module({
-  imports: [AdminPostModule],
+  imports: [AdminPostModule, AdminFileModule],
   providers: [
     AutopostDefaultService,
     AutopostRunDefaultRepository,
