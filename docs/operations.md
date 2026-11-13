@@ -118,7 +118,21 @@ npm run autopost -- --draft --article 글.json   # 조사·집필을 건너뛰�
 
 `--article` 은 글을 바깥에서 쓸 때 쓴다(2026-11-13: 글은 Claude 가 쓰고 ChatGPT 웹은 사실 대조와 그림만 맡는다). 받은 글은
 같은 구조 검사·판정·주장 검사를 지나야 하고, 떨어지면 다시 쓰지 않고 사유만 찍는다 — 쓴 쪽이 고쳐서 다시 넣는다.
-`--article` 은 미리보기와 초안까지만 한다. 주 1회 기록을 잡고 **공개**하는 길(`auto`)은 받은 글을 쓰지 않는다.
+`--article` 은 미리보기와 초안까지만 한다. **공개는 묶음으로 한다** — 브라우저가 있는 기계(사람 맥)에서 만들고, DB 가 있는 곳(서버)에서 연다:
+
+```bash
+# ① 맥에서: 글을 검사·판정·그림까지 돌리고, 통과하면 글과 그림을 한 파일로 묶는다(DB 에 쓰지 않는다)
+AUTOPOST_PROVIDER=webgpt npm run autopost -- --preview --article 글.json --bundle 묶음.json
+# ② 묶음을 서버로 옮기고(scp), 서버에서 api 컨테이너에 넣어 공개한다
+docker cp 묶음.json drvalue_api:/tmp/묶음.json
+docker exec -e AUTOPOST_ENABLED=1 drvalue_api node dist/autopost-cli.js --publish-bundle /tmp/묶음.json
+```
+
+`--publish-bundle` 은 판정을 다시 하지 않는다(서버에는 브라우저가 없다). 대신 코드 검사를 **그 DB 의 기록으로** 다시 돌리고
+(이미 낸 출처면 거절), cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편이고, 두 번째는 거절한다. 그림은 그 서버의
+`UPLOADS_DIR` 에 쓴다. `AUTOPOST_ENABLED=1` 은 **그 명령에만** 준다 — 서버 `.env` 에 넣지 않아도 되고, 키가 없는 서버에서는
+넣어도 cron 이 돌지 않는다. 쓰는 쪽은 서버에서 `--rules` 를 돌려야 실제 「이미 다룬 글」을 본다(맥의 로컬 DB 에는 기록이 없다).
+2026-11-13 현재 ②를 **운영 서버에서 돌려 본 적은 없다**(로컬 DB 에서만 확인) — 맥에서 서버로 가는 접속(SSH)이 정해져야 한다.
 판정을 ChatGPT 웹으로 돌리려면 `AUTOPOST_PROVIDER=webgpt` 를 꼭 준다 — 없으면 판정이 유료 Claude API 로 나간다.
 
 켜기 값·요일·주 단위 기록을 보지 않고 `ANTHROPIC_API_KEY` 만 본다. 한 번에 Claude 호출이 대여섯 번 나간다(돈이 든다).
