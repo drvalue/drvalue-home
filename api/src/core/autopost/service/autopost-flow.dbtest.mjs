@@ -55,6 +55,8 @@ service.client = {
     calls.verify++;
     return { judged: allTrue(a), usage: { input: 1, output: 1 } };
   },
+  // 그림 판정(다른 모델). 기본은 「뺄 것 없음」 — 그림 테스트가 illustrate 만 갈아 끼운다.
+  inspect: async () => ({ marked: [], pairs: [] }),
 };
 
 // 고정 자료의 출처 날짜(2026-11-10·11-05)가 14일 안에 들게 2026-11-12 주변의 시각만 쓴다.
@@ -334,6 +336,50 @@ test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없�
     assert.ok(!r.html.includes('<img'));
     assert.equal((await coverRows()).length, 0);
   }
+});
+
+test('그림 판정: 글자·로고가 든 그림과 겹친 장면의 뒤 그림을 뺀다 · 판정하지 못하면 그림 없이 간다', async () => {
+  const three = async () => [
+    { bytes: jpeg(), mime: 'image/jpeg', section: null },
+    { bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 },
+    { bytes: jpeg(1600, 900, 2), mime: 'image/jpeg', section: 3 },
+  ];
+  const inspect = service.client.inspect;
+  const run = async (verdict) => {
+    await clean();
+    next = { article: good, fail: false };
+    service.client.illustrate = three;
+    service.client.inspect = verdict;
+    const r = await service.run(ctx, 'preview', TUE);
+    delete service.client.illustrate;
+    service.client.inspect = inspect;
+    return r.pictures.map((p) => p.section);
+  };
+  assert.deepEqual(await run(async () => ({ marked: [], pairs: [] })), [
+    null,
+    1,
+    3,
+  ]);
+  // 2번 그림에 글자가 있다 → 그 그림만 뺀다
+  assert.deepEqual(await run(async () => ({ marked: [1], pairs: [] })), [
+    null,
+    3,
+  ]);
+  // 2번·3번이 같은 장면 → 뒤의 것을 뺀다
+  assert.deepEqual(await run(async () => ({ marked: [], pairs: [[1, 2]] })), [
+    null,
+    1,
+  ]);
+  // 표지에 글자가 있다 → 표지가 빠지면 그림 전부 없이 간다
+  assert.deepEqual(await run(async () => ({ marked: [0], pairs: [] })), []);
+  // 판정이 실패했다 · 판정 길이 없다 → 통과가 아니라 그림 없음
+  assert.deepEqual(
+    await run(async () => {
+      throw new Error('가짜 판정 실패');
+    }),
+    [],
+  );
+  assert.deepEqual(await run(undefined), []);
 });
 
 test('표지 그림: 떨어진 글에는 만들지 않는다', async () => {

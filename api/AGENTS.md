@@ -239,7 +239,9 @@ src/
   - 그림: 클라이언트에 `illustrate` 가 있으면(ChatGPT 웹 길만) 통과한 글에 한 번 부른다 — 표지 한 장과 단락 그림
     (`pictureSections`). 받은 JPEG 는 파일 서비스의 시스템 행위자 입구(`uploadAsSystem` — 그림만)로 올리고
     `renderArticle(article, pictures)` 가 `<img>` 로 넣는다(표지는 맨 위 — 대표 이미지는 본문의 첫 그림, 단락 그림은 단락 제목 아래).
-    파일 행과 글은 한 트랜잭션이고, 되돌려지면 디스크 파일도 지운다. 그림 실패는 글을 막지 않는다. 그림의 내용은 검사하지 않는다.
+    파일 행과 글은 한 트랜잭션이고, 되돌려지면 디스크 파일도 지운다. 그림 실패는 글을 막지 않는다.
+    그림의 내용은 `inspect`(`client/autopost-picture-judge.ts` — Codex CLI 가 그림을 본다)가 판정한다: 글자·로고가 든 그림과
+    겹친 장면의 뒤 그림을 뺀다. `illustrate` 만 있고 `inspect` 가 없거나 판정이 실패하면 그림 없이 간다.
   - 글의 모양은 `renderArticle` 이 정한다: 표지 → 큰 숫자 줄(`figures`) → 3줄 요약(`key_points`) → 단락(번호·제목·굵은 결론·그림)
     → 출처 → 문의 띠(`CTA_HTML`, 코드에 적힌 글자). 태그에 `dv_ap_*` 표시를 붙이고 모양은 `web/public/css/style.css` 에 있다.
     본문 소독(`sanitize-body.ts`)은 `dv_ap_` 로 시작하는 표시만 남긴다 — 새 표시를 쓰면 두 곳(소독의 이름 규칙 · CSS)을 같이 본다.
@@ -282,7 +284,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 88 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 7)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 89 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

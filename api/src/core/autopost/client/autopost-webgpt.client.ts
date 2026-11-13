@@ -4,6 +4,7 @@ import { isIP } from 'node:net';
 import { Article, ARTICLE_JSON_SCHEMA } from '../model/article';
 import { JudgeAnswer, judgementFrom } from '../service/autopost-judge';
 import { Judgement } from '../service/autopost-lint';
+import { judgePictures } from './autopost-picture-judge';
 import type {
   AutopostClient,
   Picture,
@@ -287,7 +288,17 @@ console.log(input.mark + JSON.stringify({ code: data }));
  * 발행 여부는 이 호출이 아니라 코드 검사가 정한다.
  */
 export class AutopostWebGptClient implements AutopostClient {
-  constructor(private readonly options: BrowserOptions) {}
+  constructor(
+    private readonly options: BrowserOptions,
+    /** 그림을 보는 판정 도구(Codex CLI). 그린 모델(ChatGPT)과 다른 모델이다. */
+    private readonly judge: BrowserOptions = { ...options, bin: 'codex' },
+  ) {}
+
+  inspect(
+    pictures: Picture[],
+  ): Promise<{ marked: number[]; pairs: [number, number][] }> {
+    return judgePictures(pictures, this.judge);
+  }
 
   private async ask<T>(
     what: string,

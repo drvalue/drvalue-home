@@ -128,6 +128,9 @@ docker cp 묶음.json drvalue_api:/tmp/묶음.json
 docker exec -e AUTOPOST_ENABLED=1 drvalue_api node dist/autopost-cli.js --publish-bundle /tmp/묶음.json
 ```
 
+그림은 그 기계의 **Codex CLI**(`codex exec`)가 한 번 더 본다(글자·로고·겹친 장면). `codex` 가 PATH 에 없거나 로그인이 풀려 있으면
+그림 없이 간다 — 로그에 「그림 없이 갑니다」가 찍힌다.
+
 `--publish-bundle` 은 판정을 다시 하지 않는다(서버에는 브라우저가 없다). 대신 코드 검사를 **그 DB 의 기록으로** 다시 돌리고
 (이미 낸 출처면 거절), cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편이고, 두 번째는 거절한다. 그림은 그 서버의
 `UPLOADS_DIR` 에 쓴다. `AUTOPOST_ENABLED=1` 은 **그 명령에만** 준다 — 서버 `.env` 에 넣지 않아도 되고, 키가 없는 서버에서는

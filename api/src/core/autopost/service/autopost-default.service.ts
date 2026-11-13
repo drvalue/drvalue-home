@@ -285,6 +285,9 @@ export class AutopostDefaultService {
       illustrate: this.client.illustrate
         ? (a) => this.client.illustrate!(a)
         : undefined,
+      inspect: this.client.inspect
+        ? (pics) => this.client.inspect!(pics)
+        : undefined,
     };
   }
 
@@ -296,7 +299,21 @@ export class AutopostDefaultService {
   private async pictures(article: Article): Promise<Picture[]> {
     if (!this.client.illustrate) return [];
     try {
-      return this.fitting(article, await this.client.illustrate(article));
+      const fit = this.fitting(article, await this.client.illustrate(article));
+      // 그림의 내용은 다른 모델이 본다. 판정 길이 없거나 판정하지 못하면 그림 없이 간다 — 판정 불가는 통과가 아니다.
+      if (!this.client.inspect) throw new Error('그림을 판정할 길이 없습니다');
+      const verdict = await this.client.inspect(fit);
+      const out = new Set<number>(verdict.marked);
+      // 같은 장면의 쌍은 뒤의 것을 뺀다(표지는 맨 앞이라 남는다).
+      for (const [, later] of verdict.pairs) out.add(later);
+      if (out.size)
+        this.logger.warn(
+          `자동 글: 판정이 그림 ${out.size}장을 뺐습니다(글자·로고 ${verdict.marked.length} · 겹친 장면 ${verdict.pairs.length})`,
+        );
+      return this.fitting(
+        article,
+        fit.filter((_, i) => !out.has(i)),
+      );
     } catch (e) {
       this.logger.warn(`자동 글: 그림 없이 갑니다 — ${reasonOf(e)}`);
       return [];

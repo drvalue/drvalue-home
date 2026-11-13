@@ -213,3 +213,81 @@ test('그림 지시문에는 글의 숫자가 실리지 않는다', async () => 
   assert.ok(sectionPicturePrompt(a, 3).includes(PICTURE_FRAMES.people));
   assert.ok(!sectionPicturePrompt(a, 3).includes(PICTURE_FRAMES.closeup));
 });
+
+test('그림 판정: 답을 뺄 그림과 겹친 쌍으로 바꾼다 — 답이 모자라면 던진다', async () => {
+  const {
+    verdictFrom,
+    judgePictures,
+  } = require('../../../../dist/core/autopost/client/autopost-picture-judge.js');
+  const pic = (t, l) => ({ has_text: t, has_logo: l, scene: 's' });
+  assert.deepEqual(
+    verdictFrom(
+      {
+        pictures: [
+          { n: 1, ...pic(false, false) },
+          { n: 2, ...pic(true, false) },
+          { n: 3, ...pic(false, true) },
+        ],
+        same_scene_pairs: [[3, 2]],
+      },
+      3,
+    ),
+    { marked: [1, 2], pairs: [[1, 2]] },
+  );
+  // 그림 하나의 답이 없다 · 없는 번호의 쌍 · 모양이 다르다 → 통과가 아니라 던진다
+  assert.throws(() =>
+    verdictFrom(
+      { pictures: [{ n: 1, ...pic(false, false) }], same_scene_pairs: [] },
+      2,
+    ),
+  );
+  assert.throws(() =>
+    verdictFrom(
+      {
+        pictures: [{ n: 1, ...pic(false, false) }],
+        same_scene_pairs: [[1, 4]],
+      },
+      1,
+    ),
+  );
+  assert.throws(() => verdictFrom({ pictures: 'x' }, 1));
+  assert.throws(() => verdictFrom(null, 1));
+
+  // 가짜 판정 도구: -o 뒤의 파일에 답을 쓴다. 그림 파일이 -i 로 넘어오는지도 본다.
+  const { mkdtempSync, writeFileSync, chmodSync, rmSync } =
+    await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'fake-judge-'));
+  const bin = join(dir, 'judge.sh');
+  const script = (body) => {
+    writeFileSync(bin, '#!/bin/sh\n' + body);
+    chmodSync(bin, 0o755);
+  };
+  const env = { PATH: process.env.PATH ?? '' };
+  const pics = [{ bytes: Buffer.from('a') }, { bytes: Buffer.from('b') }];
+  script(
+    'out=""; n=0; while [ $# -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; [ "$1" = "-i" ] && [ -f "$2" ] && n=$((n+1)); shift; done\n' +
+      'echo "{\\"pictures\\":[{\\"n\\":1,\\"has_text\\":false,\\"has_logo\\":false,\\"scene\\":\\"s\\"},{\\"n\\":2,\\"has_text\\":true,\\"has_logo\\":false,\\"scene\\":\\"s\\"}],\\"same_scene_pairs\\":[[1,$n]]}" > "$out"\n',
+  );
+  assert.deepEqual(await judgePictures(pics, { bin, env }), {
+    marked: [1],
+    pairs: [[0, 1]],
+  });
+  // 도구가 실패했다 · 답 파일을 안 썼다 · 도구가 없다 → 던진다
+  script('exit 3\n');
+  await assert.rejects(
+    () => judgePictures(pics, { bin, env }),
+    /실패했습니다\(3\)/,
+  );
+  script('exit 0\n');
+  await assert.rejects(
+    () => judgePictures(pics, { bin, env }),
+    /답을 읽지 못했습니다/,
+  );
+  await assert.rejects(
+    () => judgePictures(pics, { bin: join(dir, 'none'), env }),
+    /실행하지 못했습니다/,
+  );
+  rmSync(dir, { recursive: true, force: true });
+});

@@ -64,6 +64,13 @@ export interface AutopostClient {
    * 일부만 만들어졌으면 만들어진 것만 돌려준다. 그림의 내용은 아무 검사도 보지 않는다(결정 0020 덧붙임).
    */
   illustrate?(article: Article): Promise<Picture[]>;
+  /**
+   * 받은 그림을 다른 모델이 보고 판정한다 — 뺄 그림(글자·로고)과 같은 장면으로 본 쌍(넘긴 순서, 0부터).
+   * 그림을 만드는 길에는 이것이 같이 있어야 한다: 판정하지 못하면 그림 없이 간다.
+   */
+  inspect?(
+    pictures: Picture[],
+  ): Promise<{ marked: number[]; pairs: [number, number][] }>;
 }
 
 export const AUTOPOST_CLIENT = Symbol('AUTOPOST_CLIENT');
