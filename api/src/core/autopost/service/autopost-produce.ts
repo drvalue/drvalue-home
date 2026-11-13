@@ -50,7 +50,7 @@ const add = (a: Usage, b: Usage): Usage => ({
 export async function produce(
   client: AutopostClient,
   input: ResearchInput,
-  opts: { deadlineMs?: number } = {},
+  opts: { deadlineMs?: number; rewrite?: boolean } = {},
 ): Promise<Produced> {
   let timer: NodeJS.Timeout | undefined;
   const deadline = new Promise<never>((_, reject) => {
@@ -60,7 +60,10 @@ export async function produce(
     );
   });
   try {
-    return await Promise.race([steps(client, input), deadline]);
+    return await Promise.race([
+      steps(client, input, opts.rewrite ?? true),
+      deadline,
+    ]);
   } finally {
     clearTimeout(timer);
   }
@@ -69,6 +72,7 @@ export async function produce(
 async function steps(
   client: AutopostClient,
   input: ResearchInput,
+  rewrite: boolean,
 ): Promise<Produced> {
   const found = await client.research(input);
   let usage = found.usage;
@@ -110,7 +114,8 @@ async function steps(
     trace.reasons = reasons;
     evidence.attempts.push(trace);
     attempts.push(reasons);
-    if (!reasons.length || errors)
+    // 다시 쓸 수 없는 글(바깥에서 받은 글)은 한 번만 본다.
+    if (!reasons.length || errors || !rewrite)
       return {
         ok: !reasons.length,
         article,

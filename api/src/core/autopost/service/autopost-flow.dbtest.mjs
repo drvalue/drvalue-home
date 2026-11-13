@@ -369,6 +369,30 @@ test('표지 그림: 글 저장이 되돌려지면 파일 행도 디스크 파�
   assert.deepEqual(readdirSync(uploads), []);
 });
 
+test('받은 글: 조사·집필을 건너뛰고 판정은 한 번, 떨어져도 다시 쓰지 않는다', async () => {
+  await clean();
+  const before = { ...calls };
+  const r = await service.run(ctx, 'preview', TUE, good);
+  assert.equal(r.outcome, 'preview');
+  assert.deepEqual(r.reasons, []);
+  assert.equal(calls.research, before.research);
+  assert.equal(calls.write, before.write);
+  assert.equal(calls.verify, before.verify + 1);
+  // 구조에서 떨어지는 글: 판정도 부르지 않고 한 번에 끝난다
+  const bad = await service.run(
+    ctx,
+    'draft',
+    TUE,
+    withHook(good, '불량률이 47% 줄었습니다.'),
+  );
+  assert.equal(bad.outcome, 'preview');
+  assert.equal(bad.attempts.length, 1);
+  assert.equal(calls.verify, before.verify + 1);
+  // 형이 깨진 글은 던지지 않고 떨어진다
+  const broken = await service.run(ctx, 'preview', TUE, { title: 1 });
+  assert.ok(broken.reasons.length);
+});
+
 test('키가 없으면 손으로 돌리는 것도 막힌다', async () => {
   delete process.env.ANTHROPIC_API_KEY;
   await assert.rejects(service.run(ctx, 'preview', TUE));

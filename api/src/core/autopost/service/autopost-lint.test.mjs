@@ -450,6 +450,14 @@ test('구조: 단락 수·제목 길이·주장 없음', () => {
     fig([f30, f12], [c(f30)]).some((r) => r.includes('주장 목록에 없는 숫자')),
   );
   assert.ok(fig([f30], [c(f30)]).some((r) => r.includes('핵심 숫자가 1개')));
+  // 한 자리 개수도 크게 나가는 자리에서는 주장이 있어야 한다
+  const f2 = { value: '2곳', label: '시험한 생산라인' };
+  assert.ok(
+    fig([f30, f2], [c(f30)]).some((r) =>
+      r.includes('핵심 숫자 2번이 주장 목록에 없습니다'),
+    ),
+  );
+  assert.deepEqual(fig([f30, f2], [c(f30), c(f2)]), []);
   assert.ok(
     fig([f30, { value: '많이', label: '투자 규모' }], [c(f30)]).some((r) =>
       r.includes('값에 숫자가 없습니다'),

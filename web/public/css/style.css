@@ -1245,7 +1245,7 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body .dv_ap_figs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); list-style: none; margin: 0 0 32px; padding: 0; }
 .dv_art_body .dv_ap_figs li { margin: 0; padding: 6px 24px; border-left: 1px solid #e5e8eb; }
 .dv_art_body .dv_ap_figs li:first-child { border-left: 0; padding-left: 0; }
-.dv_art_body .dv_ap_figs strong { display: block; font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.dv_art_body .dv_ap_figs strong { display: block; overflow-wrap: anywhere; font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .dv_art_body .dv_ap_figs span { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; line-height: 1.5; color: #4e5968; }
 .dv_art_body .dv_ap_sum { margin: 0 0 40px; padding: 24px 28px; border-left: 0; border-radius: 14px; background: #f2f4f6; color: #191f28; font-size: 16px; }
 .dv_art_body .dv_ap_sum p { margin: 0 0 6px; font-size: 15px; }
@@ -1267,13 +1267,15 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body .dv_ap_cta_b { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; border-radius: 10px; background: #d71920; color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; word-break: keep-all; }
 .dv_art_body .dv_ap_cta_b:hover { background: #b9141a; }
 .dv_art_body .dv_ap_cta_b:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+/* 가로 세 칸이 좁아지는 폭에서는 큰 숫자의 글자를 줄인다. */
+@media (max-width: 900px) { .dv_art_body .dv_ap_figs strong { font-size: 32px; letter-spacing: -1px; } }
 @media (max-width: 768px) {
   /* 좁은 화면에서는 세로로 쌓는다 — 세 칸을 나란히 두면 긴 값(「1,200억 원」)이 칸을 넘는다. */
   .dv_art_body .dv_ap_figs { grid-auto-flow: row; }
   .dv_art_body .dv_ap_figs li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-left: 0; border-top: 1px solid #e5e8eb; }
   .dv_art_body .dv_ap_figs li:first-child { border-top: 0; padding-top: 0; }
   .dv_art_body .dv_ap_figs strong { font-size: 28px; letter-spacing: -1px; white-space: nowrap; }
-  .dv_art_body .dv_ap_figs span { margin-top: 0; font-size: 14px; text-align: right; }
+  .dv_art_body .dv_ap_figs span { min-width: 0; margin-top: 0; font-size: 14px; text-align: right; overflow-wrap: anywhere; }
   .dv_art_body .dv_ap_sum { padding: 20px; }
   .dv_art_body .dv_ap_h { margin-top: 48px; font-size: 22px; }
   .dv_art_body .dv_ap_lead { font-size: 17px; }

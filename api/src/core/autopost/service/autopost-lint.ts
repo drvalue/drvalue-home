@@ -1,6 +1,11 @@
 import { sanitizeBody } from '../../../common/html/sanitize-body';
 import type { Article } from '../model/article';
-import { bodyText, bodyUnits, renderArticle } from './autopost-render';
+import {
+  bodyText,
+  bodyUnits,
+  figureText,
+  renderArticle,
+} from './autopost-render';
 
 /**
  * 자동 글의 코드 검사. 사람이 검수하지 않으므로 이것과 판정 호출이 공개 전의 전부다.
@@ -25,10 +30,10 @@ const LIMITS = {
   seo_description: [50, 160],
   keyPoints: [3, 3],
   keyPoint: [10, 80],
-  figureValue: [1, 12],
+  figureValue: [1, 10],
   figureLabel: [2, 14],
   hook: [1, 3],
-  sections: [3, 5],
+  sections: [3, 4],
   paragraphs: [1, 4],
   /** 단락의 첫 문단(굵게 나가는 결론 한 문장). */
   lead: [1, 90],
@@ -326,6 +331,14 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
     );
     if (!/\d/.test(f.value))
       out.push(`핵심 숫자 ${i + 1}번의 값에 숫자가 없습니다`);
+    // 크게 나가는 숫자는 예외(한 자리 개수·날짜)가 없다 — 「이름 값」 글자에 걸린 주장이 그 숫자를 값으로 가져야 한다.
+    const unit = squash(figureText(f));
+    const digits = f.value.match(/\d[\d.,]*/g) ?? [];
+    const held = a.claims.filter(
+      (c) => squash(c.sentence) && unit.includes(squash(c.sentence)),
+    );
+    if (digits.some((d) => !held.some((c) => c.value.includes(d))))
+      out.push(`핵심 숫자 ${i + 1}번이 주장 목록에 없습니다: ${figureText(f)}`);
   });
   keyPoints.forEach((k, i) =>
     out.push(

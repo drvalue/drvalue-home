@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NestFactory } from '@nestjs/core';
@@ -10,12 +10,16 @@ import {
   AutopostDefaultService,
   AutopostMode,
 } from './core/autopost/service/autopost-default.service';
+import { SCOPE, STYLE } from './core/autopost/client/autopost-prompts';
+import { Article, ARTICLE_JSON_SCHEMA } from './core/autopost/model/article';
 
 /**
  * 제조 AI 주간 글을 손으로 한 번 만든다(빌드 뒤 `npm run autopost -- --preview`).
  *
  *   --preview  만들어서 검사 결과·글·토큰 수를 찍는다. 저장하지 않는다.
  *   --draft    같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 **초안**으로 저장한다. 공개하지 않는다.
+ *   --article 글.json  조사·집필을 건너뛰고 받은 글을 검사·판정·그림에 넣는다(글을 바깥에서 쓸 때). 떨어져도 다시 쓰지 않는다.
+ *   --rules    글을 쓰는 쪽이 읽을 범위·규칙·구조를 찍는다.
  *
  * 켜기 값·요일·주 단위 기록을 보지 않는다. Claude API 키만 있으면 돈다(돈이 든다 — 한 번에 호출 대여섯 번).
  * `AUTOPOST_PROVIDER=webgpt` 면 키 없이 그 기계의 ego 브라우저로 chatgpt.com 을 조작해 돈다(로그인돼 있어야 한다).
@@ -27,10 +31,30 @@ const MODES: Record<string, AutopostMode> = {
 };
 
 async function main(): Promise<number> {
-  const mode = MODES[process.argv[2] ?? ''];
-  if (!mode || process.argv.length !== 3) {
-    console.error('쓰는 법: npm run autopost -- --preview | --draft');
+  const args = process.argv.slice(2);
+  if (args[0] === '--rules' && args.length === 1) {
+    // 글을 바깥에서 쓰는 쪽(사람·에이전트)이 읽는 규칙과 답의 구조. 코드가 쓰는 것과 같은 글자다.
+    console.log(
+      `${SCOPE}\n\n${STYLE}\n\n글의 구조(JSON Schema):\n${JSON.stringify(ARTICLE_JSON_SCHEMA)}`,
+    );
+    return 0;
+  }
+  const mode = MODES[args[0] ?? ''];
+  const withArticle = args[1] === '--article' && args.length === 3;
+  if (!mode || (args.length !== 1 && !withArticle)) {
+    console.error(
+      '쓰는 법: npm run autopost -- --preview | --draft [--article 글.json] | --rules',
+    );
     return 2;
+  }
+  let given: Article | undefined;
+  if (withArticle) {
+    try {
+      given = JSON.parse(readFileSync(args[2], 'utf8')) as Article;
+    } catch {
+      console.error('글 파일을 읽지 못했습니다(JSON 이어야 합니다).');
+      return 2;
+    }
   }
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn'],
@@ -48,7 +72,12 @@ async function main(): Promise<number> {
     }
     const result = await app
       .get(AutopostDefaultService)
-      .run(app.get(TransactionContextFactory).create(), mode);
+      .run(
+        app.get(TransactionContextFactory).create(),
+        mode,
+        new Date(),
+        given,
+      );
     if (!result) return 1;
     const line = '─'.repeat(60);
     console.log(

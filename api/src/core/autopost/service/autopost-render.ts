@@ -12,7 +12,9 @@ export const KEY_POINTS_LABEL = '3줄 요약';
 
 /** 글자 칸. 따옴표는 그대로 둔다 — 본문 소독이 글자 칸의 따옴표를 바꾸지 않는다(고정점). */
 function escape(text: string): string {
+  // 줄바꿈 없는 공백(NBSP)은 보통 공백으로 — 소독이 `&nbsp;` 로 바꿔 「소독의 고정점」이 깨지고 그 주 글이 막힌다.
   return text
+    .replace(/\u00a0/g, ' ')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -25,7 +27,10 @@ function attr(text: string): string {
 
 const p = (text: string) => `<p>${escape(text)}</p>`;
 
-/** 글머리 숫자 줄이 판정·숫자 검사에서 보이는 글자 — 「생산성 향상 30.1%」. 글쓴이는 이 글자 그대로 주장에 적는다. */
+/**
+ * 글머리 숫자 줄이 판정·숫자 검사에서 보이는 글자 — 「생산성 향상 30.1%」. 글쓴이는 이 글자 그대로 주장에 적는다.
+ * 화면에는 값이 위, 이름이 아래로 나간다(순서만 다르고 글자는 같다).
+ */
 export const figureText = (f: { value: string; label: string }): string =>
   `${f.label} ${f.value}`;
 

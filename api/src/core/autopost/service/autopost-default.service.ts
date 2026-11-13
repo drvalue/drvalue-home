@@ -93,8 +93,9 @@ export class AutopostDefaultService {
     ctx: ITransactionContext,
     mode: AutopostMode,
     now: Date = new Date(),
+    given?: Article,
   ): Promise<AutopostResult | null> {
-    if (mode !== 'auto') return this.runManual(ctx, mode, now);
+    if (mode !== 'auto') return this.runManual(ctx, mode, now, given);
     if (!AppConfig.autopost.ready || !isDue(now)) return null;
 
     const week = weekKey(now);
@@ -219,11 +220,17 @@ export class AutopostDefaultService {
     ctx: ITransactionContext,
     mode: 'preview' | 'draft',
     now: Date,
+    given?: Article,
   ): Promise<AutopostResult> {
     if (!AppConfig.autopost.canRun)
       throw CommonError.createByErrorCode(AutopostError.NOT_CONFIGURED);
     const today = kstDate(now);
-    const made = await produce(this.client, await this.avoid(ctx, today));
+    // 받은 글이 있으면 조사·집필을 건너뛴다 — 그 글을 그대로 검사·판정에 넣고, 떨어져도 다시 쓰지 않는다.
+    const made = given
+      ? await produce(this.givenClient(given), await this.avoid(ctx, today), {
+          rewrite: false,
+        })
+      : await produce(this.client, await this.avoid(ctx, today));
     // 손으로 돌린 것은 떨어진 글도 보여 준다 — 만든 HTML 을 읽어 보려고 돌리는 것이다.
     const html = safeRender(made.article);
     const base = {
@@ -253,6 +260,31 @@ export class AutopostDefaultService {
       ),
     );
     return { outcome: 'drafted', ...base, ...saved };
+  }
+
+  /**
+   * 바깥에서 쓴 글(사람·다른 에이전트)을 받는 길. 조사·집필 자리에 그 글을 돌려주고, 판정과 그림은 설정된 길 그대로 쓴다 —
+   * 쓴 쪽과 판정하는 쪽이 다른 모델이 된다. 형이 깨진 글은 구조 검사가 떨어뜨린다(여기서 던지지 않는다).
+   */
+  private givenClient(article: Article): AutopostClient {
+    const urls = Array.isArray(article?.sources)
+      ? article.sources.flatMap((s) =>
+          typeof s?.url === 'string' ? [s.url] : [],
+        )
+      : [];
+    const none = { input: 0, output: 0 };
+    return {
+      research: () =>
+        Promise.resolve({
+          research: { topic: '', notes: '', sourceUrls: urls },
+          usage: none,
+        }),
+      write: () => Promise.resolve({ article, usage: none }),
+      verify: (a) => this.client.verify(a),
+      illustrate: this.client.illustrate
+        ? (a) => this.client.illustrate!(a)
+        : undefined,
+    };
   }
 
   /**

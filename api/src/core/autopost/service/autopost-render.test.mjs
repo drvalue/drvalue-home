@@ -109,7 +109,7 @@ test('꾸밈 표시는 dv_ap_ 로 시작하는 것만 소독을 지난다', () =
 test('모델이 쓴 꺾쇠·따옴표는 글자로 나간다', () => {
   const h = renderArticle({
     ...sample,
-    hook: ['<script>alert(1)</script> & "x"'],
+    hook: ['<script>alert(1)</script> & "x" 줄바꿈\u00a0없는 공백'],
   });
   assert.ok(!h.includes('<script>'));
   assert.equal(sanitizeBody(h), h);
