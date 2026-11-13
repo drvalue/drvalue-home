@@ -236,9 +236,25 @@ ${PICTURE_RULES}
 제목: ${withoutNumbers(article.title)}
 요약: ${withoutNumbers(article.summary)}`;
 
-/** 단락 그림 지시문. 그 단락의 제목과 첫 문단(결론)만 넘긴다. 표지와 겹치지 않게 가까이서 본 한 장면을 시킨다. */
+/**
+ * 그림마다 다른 장면을 시킨다 — 자리마다 구도를 정해 두지 않으면 같은 장면이 두 번 나온다(2026-11-13 실측: 단락 그림 두 장이
+ * 둘 다 「로봇이 파란 통에 부품을 담는 장면」이었다. 화소를 견주는 값으로는 못 잡는다 — 그 두 장의 차이 해시가 38/64 로
+ * 서로 다른 글의 그림끼리와 같았다). 표지 = 현장 전체, 가운데 단락 = 사람 없는 물건·작업의 근접, 마지막 단락 = 사람들.
+ */
+export const PICTURE_FRAMES = {
+  closeup:
+    '그 단락이 말하는 물건이나 작업 한 가지를 아주 가까이서 본 장면입니다. 손·부품·기계의 일부만 크게 보이고, 사람의 몸 전체나 공장 전경은 넣지 않습니다.',
+  people:
+    '현장 사람들이 주인공인 장면입니다. 작업복을 입은 사람 두세 명이 설비 옆에서 함께 살펴보거나 의논합니다(뒷모습이나 옆모습, 얼굴은 드러나지 않게). 로봇이나 기계를 화면 가운데에 크게 그리지 않습니다.',
+} as const;
+
+/** 단락 그림 지시문. 그 단락의 제목과 첫 문단(결론)만 넘긴다. 마지막 단락은 사람 장면, 그 밖은 근접 장면이다. */
 export const sectionPicturePrompt = (article: Article, index: number): string =>
-  `이미지를 한 장 생성해 주세요. 가로로 긴 16:9 비율입니다. 아래 글의 한 단락에 넣을 그림입니다. 그 단락이 말하는 것 한 가지를 가까이서 본 장면 하나로 그립니다(현장 전체를 넓게 잡지 않습니다).
+  `이미지를 한 장 생성해 주세요. 가로로 긴 16:9 비율입니다. 아래 글의 한 단락에 넣을 그림입니다. ${
+    index === article.sections.length - 1
+      ? PICTURE_FRAMES.people
+      : PICTURE_FRAMES.closeup
+  }
 
 ${PICTURE_RULES}
 
@@ -248,5 +264,7 @@ ${PICTURE_RULES}
 
 /** 단락 그림을 넣을 단락 번호(0부터). 그림이 잇달아 붙지 않게 하나 걸러 고른다 — 첫 단락은 표지 바로 아래라 뺀다. */
 export function pictureSections(article: Article): number[] {
-  return article.sections.length >= 4 ? [1, 3] : [1];
+  // 마지막 단락(사람 장면)과, 단락이 넷 이상이면 둘째 단락(근접 장면). 셋이면 마지막 하나만 — 그림이 잇달아 붙지 않게.
+  const last = article.sections.length - 1;
+  return last >= 3 ? [1, last] : [last];
 }

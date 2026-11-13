@@ -306,6 +306,7 @@ export class AutopostDefaultService {
   /** 그림답고(JPEG 치수·크기) 자리가 맞는 것만. 표지가 없으면 던진다. 묶음으로 받은 그림도 같은 문을 지난다. */
   private fitting(article: Article, pictures: Picture[]): Picture[] {
     const seen = new Set<number | null>();
+    const bytesSeen: Buffer[] = [];
     const kept = pictures.filter((pic) => {
       const size = imageSize(pic.bytes);
       const fits =
@@ -319,8 +320,13 @@ export class AutopostDefaultService {
           (Number.isInteger(pic.section) &&
             pic.section >= 0 &&
             pic.section < article.sections.length)) &&
-        !seen.has(pic.section);
-      if (fits) seen.add(pic.section);
+        !seen.has(pic.section) &&
+        // 같은 그림이 두 자리에 오면 뒤의 것을 뺀다(브라우저가 앞 채팅의 그림을 다시 집은 경우).
+        !bytesSeen.some((b) => b.equals(pic.bytes));
+      if (fits) {
+        seen.add(pic.section);
+        bytesSeen.push(pic.bytes);
+      }
       return fits;
     });
     if (!kept.some((pic) => pic.section === null))

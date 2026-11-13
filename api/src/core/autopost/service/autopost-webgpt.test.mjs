@@ -201,6 +201,15 @@ test('그림 지시문에는 글의 숫자가 실리지 않는다', async () => 
   assert.deepEqual(pictureSections(a), [1, 3]);
   assert.deepEqual(
     pictureSections({ ...a, sections: a.sections.slice(0, 3) }),
-    [1],
+    [2],
   );
+  // 그림마다 장면이 다르다: 표지 = 전경, 가운데 = 근접, 마지막 = 사람들
+  const {
+    PICTURE_FRAMES,
+  } = require('../../../../dist/core/autopost/client/autopost-prompts.js');
+  assert.ok(coverPrompt(a).includes('현장 전체가 보이는 넓은 장면'));
+  assert.ok(sectionPicturePrompt(a, 1).includes(PICTURE_FRAMES.closeup));
+  assert.ok(!sectionPicturePrompt(a, 1).includes(PICTURE_FRAMES.people));
+  assert.ok(sectionPicturePrompt(a, 3).includes(PICTURE_FRAMES.people));
+  assert.ok(!sectionPicturePrompt(a, 3).includes(PICTURE_FRAMES.closeup));
 });

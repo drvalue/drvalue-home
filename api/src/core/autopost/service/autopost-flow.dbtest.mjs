@@ -68,7 +68,7 @@ const coverRows = () =>
     `SELECT id, filename_disk, type, width, height FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%'`,
   );
 /** 헤더만 있는 JPEG — 치수 읽기가 1600×900 으로 읽는다. */
-const jpeg = (width = 1600, height = 900) => {
+const jpeg = (width = 1600, height = 900, salt = 0) => {
   const b = Buffer.alloc(64);
   b.writeUInt16BE(0xffd8, 0);
   b.writeUInt16BE(0xffc0, 2);
@@ -76,6 +76,7 @@ const jpeg = (width = 1600, height = 900) => {
   b[6] = 8;
   b.writeUInt16BE(height, 7);
   b.writeUInt16BE(width, 9);
+  b[40] = salt; // 같은 바이트의 그림은 겹친 것으로 빠진다 — 자리마다 다르게
   return b;
 };
 const row = async (week) =>
@@ -246,7 +247,7 @@ test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대�
   next = { article: good, fail: false };
   service.client.illustrate = async () => [
     { bytes: jpeg(), mime: 'image/jpeg', section: null },
-    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    { bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 },
     { bytes: jpeg(320, 180), mime: 'image/jpeg', section: 3 }, // 작은 그림은 빠진다
     { bytes: jpeg(), mime: 'image/jpeg', section: 9 }, // 없는 단락도 빠진다
   ];
@@ -287,7 +288,7 @@ test('그림: 공개된 글의 그림은 공개 관문을 지난다(초안의 �
   const gate = app.get(ContentPostDefaultRepository, { strict: false });
   const two = async () => [
     { bytes: jpeg(), mime: 'image/jpeg', section: null },
-    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    { bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 },
   ];
   await clean();
   next = { article: good, fail: false };
@@ -314,7 +315,7 @@ test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없�
     },
     async () => [{ bytes: jpeg(320, 180), mime: 'image/jpeg', section: null }],
     // 표지 없이 단락 그림만 오면 쓰지 않는다
-    async () => [{ bytes: jpeg(), mime: 'image/jpeg', section: 1 }],
+    async () => [{ bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 }],
     async () => [
       {
         bytes: Buffer.from('그림이 아니다'.repeat(8)),
@@ -359,7 +360,7 @@ test('표지 그림: 글 저장이 되돌려지면 파일 행도 디스크 파�
     );
     return [
       { bytes: jpeg(), mime: 'image/jpeg', section: null },
-      { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+      { bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 },
     ];
   };
   assert.equal(await service.run(ctx, 'auto', TUE), null);
@@ -397,7 +398,7 @@ test('묶음 공개: 주간 기록을 잡고 닫는다 — 한 주에 한 편, �
   await clean();
   const pics = [
     { bytes: jpeg(), mime: 'image/jpeg', section: null },
-    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    { bytes: jpeg(1600, 900, 1), mime: 'image/jpeg', section: 1 },
     {
       bytes: Buffer.from('그림이 아니다'.repeat(8)),
       mime: 'image/jpeg',
