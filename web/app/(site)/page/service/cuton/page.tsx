@@ -8,6 +8,7 @@ import { seoMeta } from '@/lib/seo'
 import { cmsPageContent } from '@/lib/cms'
 import CompareBlock from '../CompareBlock'
 import { orUndefined, toHeroShots, toLead } from '../../pageContentParts'
+import { CUTON_LINK } from '../solutionContent'
 import { CUTON_DEFAULT, CUTON_KEY } from './content'
 
 /**
@@ -49,6 +50,8 @@ export default async function Page() {
         desc={shell.desc}
         lead={toLead(c.lead)}
         heroShot={toHeroShots(c.heroShots)}
+        heroLink={CUTON_LINK.label}
+        heroHref={CUTON_LINK.href}
         ctaTitle={orUndefined(shell.ctaTitle)}
         ctaDesc={orUndefined(shell.ctaDesc)}
       >
