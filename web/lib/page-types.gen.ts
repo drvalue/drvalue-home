@@ -1332,21 +1332,71 @@ export interface PageContentMap {
       /** 주소 막대 글자 */
       url: string
     }[]
-    /** 구역 */
-    sections: {
+    /** 대화 시연 구역 문장 */
+    demo: {
       /** 알약 글자 */
       kicker: string
       /** 큰 문장 */
       title: string
       /** 설명 */
       desc: string
-      /** 카드 */
-      items: {
+    }
+    /** 전 · 후 구역 문장 */
+    compareStatement: {
+      /** 알약 글자 */
+      kicker: string
+      /** 큰 문장 */
+      title: string
+      /** 설명 */
+      desc: string
+    }
+    /** 전 · 후 */
+    compare: {
+      /** 전 */
+      before: {
         /** 제목 */
-        t: string
-        /** 설명 */
-        d: string
-      }[]
+        title: string
+        /** 요점 */
+        points: {
+          /** 글 */
+          text: string
+        }[]
+        /** 말풍선 */
+        bubbles: {
+          /** 말한 쪽 */
+          who: string
+          /** 말 */
+          t: string
+        }[]
+      }
+      /** 후 */
+      after: {
+        /** 제목 */
+        title: string
+        /** 요점 */
+        points: {
+          /** 글 */
+          text: string
+        }[]
+      }
+      /** 「후」 쪽 화면 */
+      shot: ImageValue | null
+    }
+    /** 시작하기 구역 문장 */
+    extra: {
+      /** 알약 글자 */
+      kicker: string
+      /** 큰 문장 */
+      title: string
+      /** 설명 */
+      desc: string
+    }
+    /** 시작하기 단계 카드 */
+    steps: {
+      /** 제목 */
+      t: string
+      /** 설명 */
+      d: string
     }[]
   }
   /** 한건 — /page/service/hangeon */

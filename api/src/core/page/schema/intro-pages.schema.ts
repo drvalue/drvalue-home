@@ -325,7 +325,7 @@ export const CHAT_SCHEMA: PageSchema = {
 
 /* ── everyrag ─────────────────────────────────────────────── */
 
-/** 머리말(둘째 단추는 서비스로 가는 바깥 링크 — 주소는 코드) · 요약 · 화면 판 · 큰 문장 + 3열 카드 구역들. */
+/** 서비스 시연 장과 같은 짜임(머리말 · 요약 · 화면 판 · 시연 · 전/후 · 셋째 구역) + 머리말 둘째 단추 글 + 시작 단계 카드. 바깥 링크 주소와 시연 대화는 web 의 코드다. */
 export const EVERYRAG_SCHEMA: PageSchema = {
   key: 'service-everyrag',
   label: 'everyrag',
@@ -334,20 +334,10 @@ export const EVERYRAG_SCHEMA: PageSchema = {
     shellGroup({ heroLink: true }),
     leadGroup(),
     heroShotsList(),
-    {
-      type: 'list',
-      key: 'sections',
-      label: '구역',
-      itemLabel: '구역',
-      help: '구역마다 큰 문장 하나와 그 밑 카드 줄입니다.',
-      min: 0,
-      max: 6,
-      item: [
-        text('kicker', '알약 글자', 40),
-        text('title', '큰 문장', 160, { required: true }),
-        area('desc', '설명', 600),
-        cardsList('items', '카드', { max: 3 }),
-      ],
-    },
+    statementGroup('demo', '대화 시연 구역 문장'),
+    statementGroup('compareStatement', '전 · 후 구역 문장'),
+    compareGroup(),
+    statementGroup('extra', '시작하기 구역 문장'),
+    cardsList('steps', '시작하기 단계 카드', { max: 3, itemLabel: '단계' }),
   ],
 };

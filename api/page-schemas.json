@@ -3869,14 +3869,10 @@
         ]
       },
       {
-        "type": "list",
-        "key": "sections",
-        "label": "구역",
-        "itemLabel": "구역",
-        "help": "구역마다 큰 문장 하나와 그 밑 카드 줄입니다.",
-        "min": 0,
-        "max": 6,
-        "item": [
+        "type": "group",
+        "key": "demo",
+        "label": "대화 시연 구역 문장",
+        "fields": [
           {
             "type": "text",
             "key": "kicker",
@@ -3895,29 +3891,182 @@
             "key": "desc",
             "label": "설명",
             "max": 600
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "compareStatement",
+        "label": "전 · 후 구역 문장",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "알약 글자",
+            "max": 40
           },
           {
-            "type": "list",
-            "key": "items",
-            "label": "카드",
-            "itemLabel": "항목",
-            "min": 0,
-            "max": 3,
-            "item": [
+            "type": "text",
+            "key": "title",
+            "label": "큰 문장",
+            "max": 160,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "compare",
+        "label": "전 · 후",
+        "fields": [
+          {
+            "type": "group",
+            "key": "before",
+            "label": "전",
+            "fields": [
               {
                 "type": "text",
-                "key": "t",
+                "key": "title",
                 "label": "제목",
                 "max": 80,
                 "required": true
               },
               {
-                "type": "textarea",
-                "key": "d",
-                "label": "설명",
-                "max": 300
+                "type": "list",
+                "key": "points",
+                "label": "요점",
+                "itemLabel": "줄",
+                "min": 0,
+                "max": 8,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "text",
+                    "label": "글",
+                    "max": 300,
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "type": "list",
+                "key": "bubbles",
+                "label": "말풍선",
+                "itemLabel": "말풍선",
+                "min": 0,
+                "max": 10,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "who",
+                    "label": "말한 쪽",
+                    "max": 4,
+                    "required": true,
+                    "pattern": "^(me|them)$",
+                    "patternMessage": "말한 쪽은 me(우리 쪽) 또는 them(상대 쪽)으로 적어 주세요.",
+                    "help": "me 는 우리 쪽, them 은 상대 쪽 말풍선입니다(원래 값 그대로)."
+                  },
+                  {
+                    "type": "text",
+                    "key": "t",
+                    "label": "말",
+                    "max": 200,
+                    "required": true
+                  }
+                ]
               }
             ]
+          },
+          {
+            "type": "group",
+            "key": "after",
+            "label": "후",
+            "fields": [
+              {
+                "type": "text",
+                "key": "title",
+                "label": "제목",
+                "max": 80,
+                "required": true
+              },
+              {
+                "type": "list",
+                "key": "points",
+                "label": "요점",
+                "itemLabel": "줄",
+                "min": 0,
+                "max": 8,
+                "item": [
+                  {
+                    "type": "text",
+                    "key": "text",
+                    "label": "글",
+                    "max": 300,
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "image",
+            "key": "shot",
+            "label": "「후」 쪽 화면"
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "key": "extra",
+        "label": "시작하기 구역 문장",
+        "fields": [
+          {
+            "type": "text",
+            "key": "kicker",
+            "label": "알약 글자",
+            "max": 40
+          },
+          {
+            "type": "text",
+            "key": "title",
+            "label": "큰 문장",
+            "max": 160,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "desc",
+            "label": "설명",
+            "max": 600
+          }
+        ]
+      },
+      {
+        "type": "list",
+        "key": "steps",
+        "label": "시작하기 단계 카드",
+        "itemLabel": "단계",
+        "min": 0,
+        "max": 3,
+        "item": [
+          {
+            "type": "text",
+            "key": "t",
+            "label": "제목",
+            "max": 80,
+            "required": true
+          },
+          {
+            "type": "textarea",
+            "key": "d",
+            "label": "설명",
+            "max": 300
           }
         ]
       }

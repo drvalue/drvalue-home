@@ -32,7 +32,7 @@ data/uploads                             업로드 파일 (bind mount, 저장소
   │  /api/admin/files              예외: web 의 route handler 가 버퍼 없이 흘려보낸다(rewrite 는 10MB 에서 자른다)
   │  /api/admin/menu/refresh       예외: web 의 route handler 가 메뉴 캐시(태그 menu)를 비운다
   │                                (권한은 같은 쿠키로 api 의 /api/admin/menu 를 불러 본다)
-  └─ 우하단 채팅 위젯               GrowChat 외부 스크립트(도메인 잠금). /admin 에는 안 실린다
+  └─ 우하단 채팅 위젯               LAG Studio 공개 채팅 위젯(넣을 사이트로 잠금, lib/chatbot.ts). 끄면 GrowChat. /admin 에는 안 실린다
 
 Nest(api)
   │  /api/content/*                → DB (published 만). 파일은 data/uploads 에서 관문 뒤로
