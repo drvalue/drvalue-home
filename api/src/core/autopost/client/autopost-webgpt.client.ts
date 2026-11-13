@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { spawn } from 'node:child_process';
 import { isIP } from 'node:net';
 import { Article, ARTICLE_JSON_SCHEMA } from '../model/article';
@@ -430,8 +431,11 @@ export class AutopostWebGptClient implements AutopostClient {
             index,
           ),
         );
-      } catch {
+      } catch (e) {
         // 이 단락은 그림 없이 간다.
+        new Logger(AutopostWebGptClient.name).warn(
+          `단락 그림 ${index + 1} 없이 갑니다 — ${e instanceof Error ? e.message.slice(0, 200) : ''}`,
+        );
       }
     }
     return pictures;

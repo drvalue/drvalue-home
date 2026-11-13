@@ -169,3 +169,38 @@ test('브라우저가 답을 표준 오류로 찍어도 읽는다 — 앞에 다
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('그림 지시문에는 글의 숫자가 실리지 않는다', async () => {
+  const {
+    coverPrompt,
+    sectionPicturePrompt,
+    pictureSections,
+    withoutNumbers,
+  } = require('../../../../dist/core/autopost/client/autopost-prompts.js');
+  const { good } = await import('./autopost-fixture.mjs');
+  assert.equal(
+    withoutNumbers(
+      '생산성 30.1% 향상, 불량률 -15.5 퍼센트 · 245곳 · 1,200억 원',
+    ),
+    '생산성 향상, 불량률 · 곳 · 억 원',
+  );
+  const a = {
+    ...good,
+    title: '공장 245곳 확산…생산성 30.1% 향상',
+    sections: good.sections.map((s) => ({
+      ...s,
+      paragraphs: ['불량률이 15.5% 줄었습니다.', ...s.paragraphs],
+    })),
+  };
+  // 지시문에 남는 숫자는 코드가 적은 비율(16:9)뿐이다
+  for (const prompt of [
+    coverPrompt(a),
+    ...pictureSections(a).map((i) => sectionPicturePrompt(a, i)),
+  ])
+    assert.equal(prompt.replace('16:9', '').match(/\d/), null);
+  assert.deepEqual(pictureSections(a), [1, 3]);
+  assert.deepEqual(
+    pictureSections({ ...a, sections: a.sections.slice(0, 3) }),
+    [1],
+  );
+});

@@ -190,14 +190,25 @@ ${bodyText(article)}
   };
 }
 
+/**
+ * 그림 지시문에 넘기는 글에서 숫자를 뗀다 — 넘긴 수치가 그림 속 화면에 그대로 그려졌다(2026-11-13 실측: 표지에 「+30.1%」).
+ * 그림 속 숫자는 어떤 검사도 보지 않는다.
+ */
+export const withoutNumbers = (text: string): string =>
+  text
+    .replace(/[+\-−]?\d[\d.,]*\s*(%|퍼센트)?/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 const PICTURE_RULES = `- 제조 현장의 장면을 그린 깔끔한 일러스트입니다. 사진처럼 보이게 그리지 않습니다.
 - 밝고 차분한 색을 씁니다.
-- 글자·숫자·로고·상표·회사 이름을 넣지 않습니다. 글에 나오는 회사의 제품이나 건물을 실제 생김새대로 그리지 않습니다.
+- 그림 어디에도 글자·숫자·퍼센트·로고·상표·회사 이름을 넣지 않습니다. 화면·모니터·간판·홀로그램·서류·아이콘 안도 마찬가지입니다 — 「AI」 같은 짧은 글자도 넣지 않고, 화면에는 글자 없는 도형과 그래프 모양만 그립니다.
+- 글에 나오는 회사의 제품이나 건물을 실제 생김새대로 그리지 않습니다.
 - 실존 인물을 그리지 않습니다. 사람은 얼굴이 드러나지 않게 작게 그립니다.
 - 설명 글 없이 이미지만 주세요.`;
 
 /**
- * 표지 그림 지시문. 글자는 코드에 적힌 것이고, 글에서는 제목과 요약만 넘긴다.
+ * 표지 그림 지시문. 글자는 코드에 적힌 것이고, 글에서는 제목과 요약만(숫자를 떼고) 넘긴다.
  * 그림 안의 글자·상표·사람은 검사할 길이 없어 처음부터 넣지 말라고 적는다.
  */
 export const coverPrompt = (article: Article): string =>
@@ -205,8 +216,8 @@ export const coverPrompt = (article: Article): string =>
 
 ${PICTURE_RULES}
 
-제목: ${article.title}
-요약: ${article.summary}`;
+제목: ${withoutNumbers(article.title)}
+요약: ${withoutNumbers(article.summary)}`;
 
 /** 단락 그림 지시문. 그 단락의 제목과 첫 문단(결론)만 넘긴다. 표지와 겹치지 않게 가까이서 본 한 장면을 시킨다. */
 export const sectionPicturePrompt = (article: Article, index: number): string =>
@@ -214,9 +225,9 @@ export const sectionPicturePrompt = (article: Article, index: number): string =>
 
 ${PICTURE_RULES}
 
-글 제목: ${article.title}
-단락 제목: ${article.sections[index].heading}
-단락의 요지: ${article.sections[index].paragraphs[0]}`;
+글 제목: ${withoutNumbers(article.title)}
+단락 제목: ${withoutNumbers(article.sections[index].heading)}
+단락의 요지: ${withoutNumbers(article.sections[index].paragraphs[0])}`;
 
 /** 단락 그림을 넣을 단락 번호(0부터). 그림이 잇달아 붙지 않게 하나 걸러 고른다 — 첫 단락은 표지 바로 아래라 뺀다. */
 export function pictureSections(article: Article): number[] {
