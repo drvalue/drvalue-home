@@ -236,10 +236,12 @@ src/
   - 오류(API 실패)로 끝난 주만 한 번 더 한다(주당 2번까지). 2시간 넘게 「진행 중」이면 죽은 것으로 닫는다.
   - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 모델을 부를 길(`ANTHROPIC_API_KEY`, 또는 `AUTOPOST_PROVIDER=webgpt`) 둘 다 있어야 돈다.
   - 글 저장과 기록 닫기는 한 트랜잭션이다(`publish`). 기록을 못 닫으면 글도 되돌린다. 한 편을 만드는 전체 시간은 45분에서 끊는다.
-  - 표지 그림: 클라이언트에 `illustrate` 가 있으면(ChatGPT 웹 길만) 통과한 글에 한 번 부른다. 받은 JPEG 는 파일 서비스의
-    시스템 행위자 입구(`uploadAsSystem` — 그림만)로 올리고 `renderArticle(article, cover)` 가 본문 맨 위에 `<img>` 로 넣는다
-    (대표 이미지는 본문의 첫 그림). 파일 행과 글은 한 트랜잭션이고, 되돌려지면 디스크 파일도 지운다. 그림 실패는 글을 막지 않는다.
-    그림의 내용은 검사하지 않는다.
+  - 그림: 클라이언트에 `illustrate` 가 있으면(ChatGPT 웹 길만) 통과한 글에 한 번 부른다 — 표지 한 장과 단락 그림
+    (`pictureSections`). 받은 JPEG 는 파일 서비스의 시스템 행위자 입구(`uploadAsSystem` — 그림만)로 올리고
+    `renderArticle(article, pictures)` 가 `<img>` 로 넣는다(표지는 맨 위 — 대표 이미지는 본문의 첫 그림, 단락 그림은 단락 제목 아래).
+    파일 행과 글은 한 트랜잭션이고, 되돌려지면 디스크 파일도 지운다. 그림 실패는 글을 막지 않는다. 그림의 내용은 검사하지 않는다.
+  - 강조는 `renderArticle` 이 정한 자리에만 넣는다: 맨 위 「핵심만 먼저」(`key_points` 세 줄)와 단락의 첫 문단(굵게).
+    모델은 HTML·마크다운을 쓰지 않는다. 글 끝 문의 문단(`CTA_HTML`)은 코드에 적힌 글자다.
   - 손으로 돌리기: `npm run autopost -- --preview | --draft`(`src/autopost-cli.ts`). 이 프로세스는 cron 을 멈추고 돈다.
     `--draft` 는 검사를 통과한 글만 초안으로 저장한다.
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
@@ -275,7 +277,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 87 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 6)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 + 자동 글 88 (주 4 · HTML 6 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 6)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

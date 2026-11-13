@@ -12,7 +12,7 @@ import { AdminPostDefaultService } from '../../admin-post/service/admin-post-def
 import {
   AUTOPOST_CLIENT,
   AutopostClient,
-  Cover,
+  Picture,
   Usage,
 } from '../client/autopost-claude.client';
 import { AutopostError } from '../error/autopost.error';
@@ -20,16 +20,16 @@ import type { Article } from '../model/article';
 import { AutopostRunDefaultRepository } from '../repository/autopost-run-default.repository';
 import { planRun } from './autopost-plan';
 import { produce, Produced } from './autopost-produce';
-import { CoverRef, renderArticle } from './autopost-render';
+import { PictureRef, renderArticle } from './autopost-render';
 import { isDue, kstDate, weekKey } from './autopost-week';
 
 const ACTOR = 'autopost@system';
 const BOARD = 'news';
 const LANGUAGE = 'ko-KR';
-/** 표지 그림으로 받는 한도. 이보다 작거나 무거우면 그림 없이 낸다. */
-const COVER_MIN_WIDTH = 800;
-const COVER_MIN_HEIGHT = 400;
-const COVER_MAX_BYTES = 2 * 1024 * 1024;
+/** 그림으로 받는 한도. 이보다 작거나 무거운 그림은 뺀다. */
+const PICTURE_MIN_WIDTH = 800;
+const PICTURE_MIN_HEIGHT = 400;
+const PICTURE_MAX_BYTES = 2 * 1024 * 1024;
 
 /** auto: cron(주 1회, 통과하면 공개) · preview: 보기만(저장 없음) · draft: 통과한 글만 초안으로 저장(공개 안 함). */
 export type AutopostMode = 'auto' | 'preview' | 'draft';
@@ -44,8 +44,8 @@ export interface AutopostResult {
   evidence: Produced['evidence'];
   article: Article;
   html: string;
-  /** 만든 표지 그림. 못 만들었거나 그림을 못 만드는 길이면 null — 글은 그림 없이 나간다. */
-  cover: Cover | null;
+  /** 만든 그림들(표지 · 단락 그림). 못 만들었거나 그림을 못 만드는 길이면 빈 배열 — 글은 그림 없이 나간다. */
+  pictures: Picture[];
   postId?: number;
   usage: Usage;
 }
@@ -55,7 +55,7 @@ export interface AutopostResult {
  * 없으면 만든다(정해진 시각에 한 번 쏘면 배포로 내려가 있던 주를 통째로 놓친다).
  *
  *   검사 통과 → 뉴스 게시판에 **공개**로 저장. 사람 검수가 없다(결정 0020).
- *              표지 그림을 만들 수 있으면 본문 맨 위에 넣는다. 그림이 안 나와도 글은 나간다.
+ *              그림을 만들 수 있으면 표지는 본문 맨 위에, 단락 그림은 그 단락 제목 아래에 넣는다. 그림이 안 나와도 글은 나간다.
  *   검사 탈락 → 글을 만들지 않고 기록 표에만 남긴다. 그 주는 건너뛴다.
  *   호출 실패 → 오류로 닫고 그 주에 한 번 더 한다.
  *
@@ -132,7 +132,7 @@ export class AutopostDefaultService {
       evidence: made.evidence,
       article: made.article,
       html: '',
-      cover: null as Cover | null,
+      pictures: [] as Picture[],
       usage: made.usage,
     };
     const tokens = {
@@ -151,7 +151,7 @@ export class AutopostDefaultService {
       );
       return { outcome: 'skipped', ...base };
     }
-    base.cover = await this.picture(made.article);
+    base.pictures = await this.pictures(made.article);
     let postId: number;
     try {
       ({ postId, html: base.html } = await this.stored((discards) =>
@@ -159,7 +159,7 @@ export class AutopostDefaultService {
           ctx,
           week,
           made.article,
-          base.cover,
+          base.pictures,
           today,
           tokens,
           discards,
@@ -189,7 +189,7 @@ export class AutopostDefaultService {
     ctx: ITransactionContext,
     week: string,
     article: Article,
-    cover: Cover | null,
+    pictures: Picture[],
     today: string,
     tokens: { article: Article; inputTokens: number; outputTokens: number },
     discards: Array<() => void>,
@@ -197,7 +197,7 @@ export class AutopostDefaultService {
     const saved = await this.save(
       ctx,
       article,
-      cover,
+      pictures,
       today,
       {
         status: 'published',
@@ -233,7 +233,7 @@ export class AutopostDefaultService {
       article: made.article,
       html,
       // 떨어진 글에는 그림을 만들지 않는다.
-      cover: html && made.ok ? await this.picture(made.article) : null,
+      pictures: html && made.ok ? await this.pictures(made.article) : [],
       usage: made.usage,
     };
     // 검사에 떨어진 글은 초안으로도 저장하지 않는다 — 관리 화면에 일반 초안처럼 놓이면 한 번 눌러 공개된다.
@@ -243,7 +243,7 @@ export class AutopostDefaultService {
       this.save(
         ctx,
         made.article,
-        base.cover,
+        base.pictures,
         today,
         {
           status: 'draft',
@@ -256,25 +256,35 @@ export class AutopostDefaultService {
   }
 
   /**
-   * 통과한 글의 표지 그림. 그림을 못 만드는 길이거나, 실패했거나, 받은 것이 그림답지 않으면 null —
+   * 통과한 글에 넣을 그림들. 그림을 못 만드는 길이거나 실패했으면 빈 배열, 그림답지 않은 것(치수·크기)은 뺀다 —
    * 그림 때문에 글이 막히지 않는다. 그림의 내용은 보지 않는다(볼 길이 없다).
+   * 표지가 빠지면 단락 그림도 쓰지 않는다 — 대표 이미지가 단락 그림이 되지 않게.
    */
-  private async picture(article: Article): Promise<Cover | null> {
-    if (!this.client.illustrate) return null;
+  private async pictures(article: Article): Promise<Picture[]> {
+    if (!this.client.illustrate) return [];
     try {
-      const cover = await this.client.illustrate(article);
-      const size = imageSize(cover.bytes);
-      if (
-        !size ||
-        size.width < COVER_MIN_WIDTH ||
-        size.height < COVER_MIN_HEIGHT ||
-        cover.bytes.length > COVER_MAX_BYTES
-      )
-        throw new Error('받은 그림의 치수·크기가 한도 밖입니다');
-      return cover;
+      const seen = new Set<number | null>();
+      const kept = (await this.client.illustrate(article)).filter((pic) => {
+        const size = imageSize(pic.bytes);
+        const fits =
+          !!size &&
+          size.width >= PICTURE_MIN_WIDTH &&
+          size.height >= PICTURE_MIN_HEIGHT &&
+          pic.bytes.length <= PICTURE_MAX_BYTES &&
+          (pic.section === null ||
+            (Number.isInteger(pic.section) &&
+              pic.section >= 0 &&
+              pic.section < article.sections.length)) &&
+          !seen.has(pic.section);
+        if (fits) seen.add(pic.section);
+        return fits;
+      });
+      if (!kept.some((pic) => pic.section === null))
+        throw new Error('표지 그림이 없거나 치수·크기가 한도 밖입니다');
+      return kept;
     } catch (e) {
-      this.logger.warn(`자동 글: 표지 그림 없이 갑니다 — ${reasonOf(e)}`);
-      return null;
+      this.logger.warn(`자동 글: 그림 없이 갑니다 — ${reasonOf(e)}`);
+      return [];
     }
   }
 
@@ -318,35 +328,46 @@ export class AutopostDefaultService {
 
   /**
    * 글 저장은 글 서비스의 시스템 행위자 입구로 — 변경 이력·소독·주소 겹침·IndexNow 가 거기 있다.
-   * 표지 그림은 파일 서비스의 시스템 행위자 입구로 올리고, 그 행과 글을 한 트랜잭션에 넣는다.
+   * 그림은 파일 서비스의 시스템 행위자 입구로 올리고, 그 행들과 글을 한 트랜잭션에 넣는다.
    */
   @Transactional()
   private async save(
     ctx: ITransactionContext,
     article: Article,
-    cover: Cover | null,
+    pictures: Picture[],
     today: string,
     opts: { status: 'published' | 'draft'; slug: string },
     discards: Array<() => void>,
   ): Promise<{ postId: number; html: string }> {
-    let ref: CoverRef | undefined;
-    if (cover) {
+    const refs: PictureRef[] = [];
+    for (const pic of pictures) {
+      const tail = pic.section === null ? 'cover' : `s${pic.section + 1}`;
       const up = await this.adminFileDefaultService.uploadAsSystem(
         ctx,
         {
-          originalname: `${opts.slug}.jpg`,
-          mimetype: cover.mime,
-          size: cover.bytes.length,
-          buffer: cover.bytes,
+          originalname: `${opts.slug}-${tail}.jpg`,
+          mimetype: pic.mime,
+          size: pic.bytes.length,
+          buffer: pic.bytes,
         },
-        article.title.trim().slice(0, 200),
+        (pic.section === null
+          ? article.title
+          : article.sections[pic.section].heading
+        )
+          .trim()
+          .slice(0, 200),
         ACTOR,
       );
       discards.push(up.discard);
       if (up.file.width && up.file.height)
-        ref = { id: up.file.id, width: up.file.width, height: up.file.height };
+        refs.push({
+          id: up.file.id,
+          width: up.file.width,
+          height: up.file.height,
+          section: pic.section,
+        });
     }
-    const html = renderArticle(article, ref);
+    const html = renderArticle(article, refs);
     const saved = await this.adminPostDefaultService.createAsSystem(
       ctx,
       {

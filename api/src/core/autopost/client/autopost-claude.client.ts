@@ -40,10 +40,12 @@ export interface WriteInput {
   previous?: Article;
 }
 
-/** 표지 그림 한 장. */
-export interface Cover {
+/** 글에 넣을 그림 한 장. */
+export interface Picture {
   bytes: Buffer;
   mime: 'image/jpeg';
+  /** 어디에 넣나 — null 은 표지(본문 맨 위), 숫자는 그 번호(0부터)의 단락 제목 바로 아래. */
+  section: number | null;
 }
 
 /** 글 한 편을 만드는 세 호출. 순서 짜기(`produce`)는 이 모양만 안다 — 테스트는 가짜를 끼운다. */
@@ -58,10 +60,10 @@ export interface AutopostClient {
     evidence?: { fetchedUrls: string[]; transcript: string };
   }>;
   /**
-   * 통과한 글의 표지 그림을 만든다. 없는 길(Claude API)도 있다 — 그때 글은 그림 없이 나간다.
-   * 그림의 내용은 아무 검사도 보지 않는다(결정 0020 덧붙임).
+   * 통과한 글에 넣을 그림들(표지 한 장 + 단락 그림)을 만든다. 없는 길(Claude API)도 있다 — 그때 글은 그림 없이 나간다.
+   * 일부만 만들어졌으면 만들어진 것만 돌려준다. 그림의 내용은 아무 검사도 보지 않는다(결정 0020 덧붙임).
    */
-  illustrate?(article: Article): Promise<Cover>;
+  illustrate?(article: Article): Promise<Picture[]>;
 }
 
 export const AUTOPOST_CLIENT = Symbol('AUTOPOST_CLIENT');

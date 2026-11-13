@@ -146,6 +146,7 @@ test('덩어리마다 판정을 요구한다 — 숫자가 없어도(인용·발
       good.title,
       good.summary,
       good.seo_description,
+      ...good.key_points,
       ...good.hook,
       ...good.sections.flatMap((x) => [x.heading, ...x.paragraphs]),
     ]).size,
@@ -432,7 +433,28 @@ test('연도·날짜·한 자리 개수는 숫자 검사 예외', () =>
   ));
 
 test('구조: 단락 수·제목 길이·주장 없음', () => {
-  assert.ok(pass({ ...good, sections: good.sections.slice(0, 3) }).length);
+  assert.ok(pass({ ...good, sections: good.sections.slice(0, 2) }).length);
+  // 핵심은 꼭 세 줄 · 단락의 첫 문단(굵게 나가는 결론)은 짧아야 한다
+  assert.ok(pass({ ...good, key_points: good.key_points.slice(0, 2) }).length);
+  assert.ok(
+    pass({ ...good, key_points: [...good.key_points.slice(0, 2), '짧다'] })
+      .length,
+  );
+  assert.ok(
+    pass({
+      ...good,
+      sections: [
+        {
+          heading: '무엇이 나왔나',
+          paragraphs: [
+            '가'.repeat(91),
+            '설비에 붙은 센서 값을 읽어 이상 징후를 찾는 모델입니다.',
+          ],
+        },
+        ...good.sections.slice(1),
+      ],
+    }).some((r) => r.includes('첫 문단')),
+  );
   assert.ok(pass({ ...good, title: '짧다' }).length);
   assert.ok(pass({ ...good, claims: [] }).length);
   assert.ok(pass({ ...good, sources: [] }).length);

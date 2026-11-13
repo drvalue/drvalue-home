@@ -65,12 +65,17 @@ async function main(): Promise<number> {
     console.log(
       `토큰: 입력 ${result.usage.input} · 출력 ${result.usage.output}`,
     );
-    // 표지 그림은 파일로 떨군다 — 미리보기는 저장하지 않으므로 여기서만 볼 수 있다.
-    if (result.cover) {
-      const path = join(tmpdir(), `autopost-cover-${Date.now()}.jpg`);
-      writeFileSync(path, result.cover.bytes);
-      console.log(`표지: ${path}`);
-    } else console.log('표지: 없음');
+    // 그림은 파일로 떨군다 — 미리보기는 저장하지 않으므로 여기서만 볼 수 있다.
+    if (!result.pictures.length) console.log('그림: 없음');
+    const stamp = Date.now();
+    for (const pic of result.pictures) {
+      const where = pic.section === null ? 'cover' : `s${pic.section + 1}`;
+      const path = join(tmpdir(), `autopost-${stamp}-${where}.jpg`);
+      writeFileSync(path, pic.bytes);
+      console.log(
+        `그림(${pic.section === null ? '표지' : `${pic.section + 1}번 단락`}): ${path}`,
+      );
+    }
     console.log(
       `${line}\n제목: ${result.article?.title ?? ''}\n요약: ${result.article?.summary ?? ''}\n${line}`,
     );

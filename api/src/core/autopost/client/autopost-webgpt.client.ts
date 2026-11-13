@@ -5,7 +5,7 @@ import { JudgeAnswer, judgementFrom } from '../service/autopost-judge';
 import { Judgement } from '../service/autopost-lint';
 import type {
   AutopostClient,
-  Cover,
+  Picture,
   Research,
   ResearchInput,
   Usage,
@@ -16,8 +16,10 @@ import {
   VERIFY_SCHEMA,
   VERIFY_SYSTEM,
   coverPrompt,
+  pictureSections,
   researchPrompt,
   researchSystem,
+  sectionPicturePrompt,
   verifyPrompt,
   writePrompt,
   writeSystem,
@@ -410,14 +412,44 @@ export class AutopostWebGptClient implements AutopostClient {
     };
   }
 
-  /** 표지 그림. 받은 것이 JPEG 가 아니면 던진다 — 치수·크기는 저장하는 쪽이 본다. */
-  async illustrate(article: Article): Promise<Cover> {
-    const data = await this.answer('표지', imageScript(coverPrompt(article)));
+  /**
+   * 표지 한 장과 단락 그림들. 그림마다 새 채팅 하나다. 표지를 못 받으면 던지고(그림 없는 글),
+   * 단락 그림은 실패한 것만 빼고 간다.
+   */
+  async illustrate(article: Article): Promise<Picture[]> {
+    const pictures: Picture[] = [
+      await this.picture('표지', coverPrompt(article), null),
+    ];
+    for (const index of pictureSections(article)) {
+      if (!article.sections[index]?.paragraphs.length) continue;
+      try {
+        pictures.push(
+          await this.picture(
+            `단락 그림 ${index + 1}`,
+            sectionPicturePrompt(article, index),
+            index,
+          ),
+        );
+      } catch {
+        // 이 단락은 그림 없이 간다.
+      }
+    }
+    return pictures;
+  }
+
+  /** 받은 것이 JPEG 가 아니면 던진다 — 치수·크기는 저장하는 쪽이 본다. */
+  private async picture(
+    what: string,
+    prompt: string,
+    section: number | null,
+  ): Promise<Picture> {
+    const data = await this.answer(what, imageScript(prompt));
     const head = 'data:image/jpeg;base64,';
-    if (!data.startsWith(head)) throw new Error('표지: 그림을 받지 못했습니다');
+    if (!data.startsWith(head))
+      throw new Error(`${what}: 그림을 받지 못했습니다`);
     const bytes = Buffer.from(data.slice(head.length), 'base64');
     if (bytes[0] !== 0xff || bytes[1] !== 0xd8)
-      throw new Error('표지: 받은 것이 JPEG 가 아닙니다');
-    return { bytes, mime: 'image/jpeg' };
+      throw new Error(`${what}: 받은 것이 JPEG 가 아닙니다`);
+    return { bytes, mime: 'image/jpeg', section };
   }
 }

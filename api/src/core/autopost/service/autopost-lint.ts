@@ -23,9 +23,13 @@ const LIMITS = {
   title: [10, 60],
   summary: [20, 200],
   seo_description: [50, 160],
+  keyPoints: [3, 3],
+  keyPoint: [10, 80],
   hook: [1, 3],
-  sections: [4, 6],
-  paragraphs: [1, 5],
+  sections: [3, 5],
+  paragraphs: [1, 4],
+  /** 단락의 첫 문단(굵게 나가는 결론 한 문장). */
+  lead: [1, 90],
   sources: [1, 6],
   sourceTitle: [1, 200],
   publisher: [1, 80],
@@ -115,6 +119,7 @@ function hasShape(a: unknown): a is Article {
     isText(x.title) &&
     isText(x.summary) &&
     isText(x.seo_description) &&
+    isTexts(x.key_points) &&
     isTexts(x.hook) &&
     Array.isArray(x.sections) &&
     x.sections.every(
@@ -261,6 +266,7 @@ function between(
 /** 판정 호출 전에 도는 검사(돈이 안 든다). 여기서 떨어지면 판정 호출을 하지 않는다. */
 export function lintStructure(a: Article, ctx: LintContext): string[] {
   if (!hasShape(a)) return ['글의 형이 맞지 않습니다'];
+  const keyPoints = a.key_points;
   const out: string[] = [
     ...between('제목', a.title.trim().length, LIMITS.title, '자'),
     ...between('요약', a.summary.trim().length, LIMITS.summary, '자'),
@@ -270,6 +276,7 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
       LIMITS.seo_description,
       '자',
     ),
+    ...between('핵심 줄', keyPoints.length, LIMITS.keyPoints, '개'),
     ...between('훅 문단', a.hook.length, LIMITS.hook, '개'),
     ...between('번호 단락', a.sections.length, LIMITS.sections, '개'),
     ...between('출처', a.sources.length, LIMITS.sources, '개'),
@@ -284,11 +291,28 @@ export function lintStructure(a: Article, ctx: LintContext): string[] {
       ),
     );
     if (!s.heading.trim()) out.push(`${i + 1}번 단락의 제목이 비었습니다`);
+    // 문단이 둘 이상이면 첫 문단이 굵게 나간다 — 결론 한 문장이어야 한다.
+    if (s.paragraphs.length > 1)
+      out.push(
+        ...between(
+          `${i + 1}번 단락의 첫 문단(결론 한 문장)`,
+          s.paragraphs[0].trim().length,
+          LIMITS.lead,
+          '자',
+        ),
+      );
   });
+  keyPoints.forEach((k, i) =>
+    out.push(
+      ...between(`핵심 ${i + 1}번 줄`, k.trim().length, LIMITS.keyPoint, '자'),
+    ),
+  );
   if (
-    [...a.hook, ...a.sections.flatMap((s) => s.paragraphs)].some(
-      (p) => !p.trim(),
-    )
+    [
+      ...a.key_points,
+      ...a.hook,
+      ...a.sections.flatMap((s) => s.paragraphs),
+    ].some((p) => !p.trim())
   )
     out.push('빈 문단이 있습니다');
   if (!a.claims.length) out.push('주장 목록이 비었습니다');

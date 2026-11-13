@@ -244,15 +244,22 @@ test('기록을 못 닫으면 글 저장도 되돌린다', async () => {
 test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대표 이미지가 된다', async () => {
   await clean();
   next = { article: good, fail: false };
-  service.client.illustrate = async () => ({
-    bytes: jpeg(),
-    mime: 'image/jpeg',
-  });
+  service.client.illustrate = async () => [
+    { bytes: jpeg(), mime: 'image/jpeg', section: null },
+    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    { bytes: jpeg(320, 180), mime: 'image/jpeg', section: 3 }, // 작은 그림은 빠진다
+    { bytes: jpeg(), mime: 'image/jpeg', section: 9 }, // 없는 단락도 빠진다
+  ];
   const r = await service.run(ctx, 'draft', TUE);
   delete service.client.illustrate;
   assert.equal(r.outcome, 'drafted');
-  const files = await coverRows();
-  assert.equal(files.length, 1);
+  assert.equal(r.pictures.length, 2);
+  assert.equal((r.html.match(/<img /g) || []).length, 2);
+  const files = (await coverRows()).filter((f) =>
+    r.html.startsWith(`<p><img src="/api/content/assets/${f.id}" `),
+  );
+  assert.equal((await coverRows()).length, 2);
+  assert.equal(files.length, 1); // 맨 위가 표지다
   assert.deepEqual(
     [files[0].type, files[0].width, files[0].height],
     ['image/jpeg', 1600, 900],
@@ -274,11 +281,16 @@ test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없�
     async () => {
       throw new Error('가짜 실패');
     },
-    async () => ({ bytes: jpeg(320, 180), mime: 'image/jpeg' }),
-    async () => ({
-      bytes: Buffer.from('그림이 아니다'.repeat(8)),
-      mime: 'image/jpeg',
-    }),
+    async () => [{ bytes: jpeg(320, 180), mime: 'image/jpeg', section: null }],
+    // 표지 없이 단락 그림만 오면 쓰지 않는다
+    async () => [{ bytes: jpeg(), mime: 'image/jpeg', section: 1 }],
+    async () => [
+      {
+        bytes: Buffer.from('그림이 아니다'.repeat(8)),
+        mime: 'image/jpeg',
+        section: null,
+      },
+    ],
   ]) {
     await clean();
     next = { article: good, fail: false };
@@ -286,7 +298,7 @@ test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없�
     const r = await service.run(ctx, 'draft', TUE);
     delete service.client.illustrate;
     assert.equal(r.outcome, 'drafted');
-    assert.equal(r.cover, null);
+    assert.deepEqual(r.pictures, []);
     assert.ok(!r.html.includes('<img'));
     assert.equal((await coverRows()).length, 0);
   }
@@ -297,7 +309,7 @@ test('표지 그림: 떨어진 글에는 만들지 않는다', async () => {
   next = { article: withHook(good, '불량률이 47% 줄었습니다.'), fail: false };
   service.client.illustrate = async () => {
     asked++;
-    return { bytes: jpeg(), mime: 'image/jpeg' };
+    return [{ bytes: jpeg(), mime: 'image/jpeg', section: null }];
   };
   const r = await service.run(ctx, 'preview', TUE);
   delete service.client.illustrate;
@@ -314,7 +326,10 @@ test('표지 그림: 글 저장이 되돌려지면 파일 행도 디스크 파�
     await dataSource.query(
       `DELETE FROM autopost_runs WHERE week_key = '2026-W46'`,
     );
-    return { bytes: jpeg(), mime: 'image/jpeg' };
+    return [
+      { bytes: jpeg(), mime: 'image/jpeg', section: null },
+      { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+    ];
   };
   assert.equal(await service.run(ctx, 'auto', TUE), null);
   delete service.client.illustrate;

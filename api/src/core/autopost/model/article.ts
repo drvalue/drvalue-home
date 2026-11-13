@@ -25,6 +25,8 @@ export interface Article {
   title: string;
   summary: string;
   seo_description: string;
+  /** 이 글이 전하려는 것 세 줄. 본문 맨 위에 묶음으로 나간다. */
+  key_points: string[];
   hook: string[];
   sections: ArticleSection[];
   sources: ArticleSource[];
@@ -45,6 +47,7 @@ export const ARTICLE_JSON_SCHEMA = object({
   title: text,
   summary: text,
   seo_description: text,
+  key_points: texts,
   hook: texts,
   sections: {
     type: 'array',
