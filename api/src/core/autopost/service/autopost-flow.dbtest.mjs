@@ -276,6 +276,33 @@ test('표지 그림: 파일로 저장하고 본문 맨 위에 넣는다 — 대�
   assert.equal(saved[0].body, r.html); // 소독을 지나도 그대로 저장된다
 });
 
+test('그림: 공개된 글의 그림은 공개 관문을 지난다(초안의 그림은 못 지난다)', async () => {
+  const {
+    ContentPostDefaultRepository,
+  } = require('../../../../dist/core/content/repository/post-default.repository.js');
+  const gate = app.get(ContentPostDefaultRepository, { strict: false });
+  const two = async () => [
+    { bytes: jpeg(), mime: 'image/jpeg', section: null },
+    { bytes: jpeg(), mime: 'image/jpeg', section: 1 },
+  ];
+  await clean();
+  next = { article: good, fail: false };
+  service.client.illustrate = two;
+  await service.run(ctx, 'draft', TUE);
+  for (const f of await coverRows())
+    assert.equal(await gate.isReferencedByLivePost(ctx, f.id), false);
+  await clean();
+  process.env.AUTOPOST_ENABLED = '1';
+  const r = await service.run(ctx, 'auto', TUE);
+  delete service.client.illustrate;
+  delete process.env.AUTOPOST_ENABLED;
+  assert.equal(r.outcome, 'published');
+  const files = await coverRows();
+  assert.equal(files.length, 2);
+  for (const f of files)
+    assert.equal(await gate.isReferencedByLivePost(ctx, f.id), true);
+});
+
 test('표지 그림: 못 만들거나 그림답지 않으면 글은 그림 없이 나간다', async () => {
   for (const illustrate of [
     async () => {
