@@ -7,7 +7,7 @@ import type { ResearchInput, WriteInput } from './autopost-claude.client';
  * 조사·집필·판정에 쓰는 지시문과 답의 구조. 어느 모델을 부르든(Claude API · ChatGPT 웹) 같은 글자를 쓴다 —
  * 모델을 바꿔도 글의 틀·말투·판정 기준이 달라지지 않게 한 곳에 둔다.
  */
-export const SCOPE = `다루는 범위: 제조 AX(제조업의 AI 전환) — 공장·생산 현장의 AI: 품질 검사, 설비 예지보전, 공정 최적화, 산업용 로봇, 제조 현장의 AI 도입 사례, 제조 AI 관련 정책과 지원 사업. 국내와 해외 모두.
+export const SCOPE = `다루는 범위: 제조 AX(제조업의 AI 전환) — 공장·생산 현장의 AI: 생산 관리(MES)·생산 계획·납기·재고에 AI 를 쓰는 사례, 품질 검사, 설비 예지보전, 공정 최적화, 산업용 로봇, 제조 현장의 AI 도입 사례, 제조 AI 관련 정책과 지원 사업. 국내와 해외 모두.
 다루지 않는 것: 소비자용 AI 제품, 제조와 무관한 AI 모델 출시, 주가·투자 전망.`;
 
 export const STYLE = `글의 틀:

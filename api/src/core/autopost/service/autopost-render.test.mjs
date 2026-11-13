@@ -51,7 +51,7 @@ test('만든 HTML 은 소독의 고정점 — 숫자 줄·그림·꾸밈 표시�
   );
   assert.ok(
     full.includes(
-      '<span class="dv_ap_no">02</span>' +
+      '<span class="dv_ap_no">02</span> ' +
         sample.sections[1].heading +
         '</h2><p class="dv_ap_pic"><img src="/api/content/assets/' +
         id2,
@@ -65,7 +65,7 @@ test('모양: 숫자 줄 → 3줄 요약 → 훅 → 단락 → 출처 → 문�
   const h = renderArticle({ ...two(sample), figures });
   assert.ok(
     h.startsWith(
-      '<ul class="dv_ap_figs"><li><strong>30%</strong><span>멈춤 시간 감소</span></li>',
+      '<ul class="dv_ap_figs"><li><strong>30%</strong> <span>멈춤 시간 감소</span></li>',
     ),
   );
   assert.ok(
@@ -77,7 +77,7 @@ test('모양: 숫자 줄 → 3줄 요약 → 훅 → 단락 → 출처 → 문�
   // 굵은 결론은 단락의 첫 문단 하나. 문단이 하나뿐인 단락은 통째로 결론으로 만들지 않는다
   assert.ok(
     h.includes(
-      '<h2 class="dv_ap_h"><span class="dv_ap_no">01</span>무엇이 나왔나</h2><p class="dv_ap_lead">결론 한 문장입니다.</p><p>받치는 문단입니다.</p>',
+      '<h2 class="dv_ap_h"><span class="dv_ap_no">01</span> 무엇이 나왔나</h2><p class="dv_ap_lead">결론 한 문장입니다.</p><p>받치는 문단입니다.</p>',
     ),
   );
   assert.equal((h.match(/dv_ap_lead/g) || []).length, 1);

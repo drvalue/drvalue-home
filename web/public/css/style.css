@@ -1238,11 +1238,11 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body blockquote p:last-child { margin-bottom: 0; }
 .dv_art_body a, .dv_art_link { color: #1b64da; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
 .dv_art_body a:hover { text-decoration-thickness: 2px; }
-/* 제조 AI 주간 글(자동 글)의 꾸밈. 표시(dv_ap_*)는 api 의 `autopost-render.ts` 가 붙인다 — 본문 소독이 이 이름만 남긴다.
+/* 제조 AI 주간 글(자동 글)의 꾸밈. 표시(dv_ap_*)는 api 의 autopost-render.ts 가 붙인다 — 본문 소독이 이 이름만 남긴다.
    모양: 표지 → 큰 숫자 줄 → 3줄 요약 면 → 단락(번호·제목·굵은 결론·그림) → 출처 → 문의 띠. */
 .dv_art_body .dv_ap_cover, .dv_art_body .dv_ap_pic { margin: 0 0 28px; }
 .dv_art_body .dv_ap_cover img, .dv_art_body .dv_ap_pic img { display: block; width: 100%; border-radius: 14px; }
-.dv_art_body .dv_ap_figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; list-style: none; margin: 0 0 32px; padding: 0; }
+.dv_art_body .dv_ap_figs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); list-style: none; margin: 0 0 32px; padding: 0; }
 .dv_art_body .dv_ap_figs li { margin: 0; padding: 6px 24px; border-left: 1px solid #e5e8eb; }
 .dv_art_body .dv_ap_figs li:first-child { border-left: 0; padding-left: 0; }
 .dv_art_body .dv_ap_figs strong { display: block; font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.2; font-variant-numeric: tabular-nums; }
@@ -1268,9 +1268,12 @@ td .dv_state { padding: 54px 20px 58px; }
 .dv_art_body .dv_ap_cta_b:hover { background: #b9141a; }
 .dv_art_body .dv_ap_cta_b:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 @media (max-width: 768px) {
-  .dv_art_body .dv_ap_figs strong { font-size: 28px; letter-spacing: -1px; }
-  .dv_art_body .dv_ap_figs li { padding: 4px 12px; }
-  .dv_art_body .dv_ap_figs span { font-size: 13px; }
+  /* 좁은 화면에서는 세로로 쌓는다 — 세 칸을 나란히 두면 긴 값(「1,200억 원」)이 칸을 넘는다. */
+  .dv_art_body .dv_ap_figs { grid-auto-flow: row; }
+  .dv_art_body .dv_ap_figs li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 12px 0; border-left: 0; border-top: 1px solid #e5e8eb; }
+  .dv_art_body .dv_ap_figs li:first-child { border-top: 0; padding-top: 0; }
+  .dv_art_body .dv_ap_figs strong { font-size: 28px; letter-spacing: -1px; white-space: nowrap; }
+  .dv_art_body .dv_ap_figs span { margin-top: 0; font-size: 14px; text-align: right; }
   .dv_art_body .dv_ap_sum { padding: 20px; }
   .dv_art_body .dv_ap_h { margin-top: 48px; font-size: 22px; }
   .dv_art_body .dv_ap_lead { font-size: 17px; }

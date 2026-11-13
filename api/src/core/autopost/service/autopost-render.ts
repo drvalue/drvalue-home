@@ -58,16 +58,16 @@ export function renderArticle(a: Article, pictures: PictureRef[] = []): string {
     const lead = rest.length
       ? `<p class="dv_ap_lead">${escape(first)}</p>`
       : '';
-    return `<h2 class="dv_ap_h"><span class="dv_ap_no">${String(i + 1).padStart(2, '0')}</span>${escape(s.heading)}</h2>${lead}${img(i, s.heading, 'dv_ap_pic')}${(rest.length ? rest : s.paragraphs).map(p).join('')}`;
+    return `<h2 class="dv_ap_h"><span class="dv_ap_no">${String(i + 1).padStart(2, '0')}</span> ${escape(s.heading)}</h2>${lead}${img(i, s.heading, 'dv_ap_pic')}${(rest.length ? rest : s.paragraphs).map(p).join('')}`;
   });
   const sources = a.sources.map(
     (s) =>
-      `<li><a href="${attr(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)}</a><span>${escape(s.publisher)} · ${escape(s.published)}</span></li>`,
+      `<li><a href="${attr(s.url)}" target="_blank" rel="noopener noreferrer">${escape(s.title)}</a> <span>${escape(s.publisher)} · ${escape(s.published)}</span></li>`,
   );
   return [
     img(null, a.title, 'dv_ap_cover'),
     a.figures?.length
-      ? `<ul class="dv_ap_figs">${a.figures.map((f) => `<li><strong>${escape(f.value)}</strong><span>${escape(f.label)}</span></li>`).join('')}</ul>`
+      ? `<ul class="dv_ap_figs">${a.figures.map((f) => `<li><strong>${escape(f.value)}</strong> <span>${escape(f.label)}</span></li>`).join('')}</ul>`
       : '',
     a.key_points?.length
       ? `<blockquote class="dv_ap_sum"><p><strong>${KEY_POINTS_LABEL}</strong></p><ul>${a.key_points.map((k) => `<li>${escape(k)}</li>`).join('')}</ul></blockquote>`
