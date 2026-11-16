@@ -53,11 +53,12 @@ export const BOARDS: Record<BoardKey, BoardConf> = {
     key: 'news',
     path: '/page/support/news',
     label: '뉴스',
-    description: '디알밸류의 새 소식과 활동을 전합니다.',
+    description: '전 세계 공장의 M.AX 소식을 전합니다.',
+    // 뒤 문장은 이 게시판에 올라오는 제조 AI 주간 글이 다루는 것이다(docs/business-rules.md 「제조 AI 주간 글」).
     seoDescription:
-      '디알밸류의 새 소식과 활동을 전합니다. 제조 현장의 언어를 데이터로 통일하는 디알밸류의 사업·제품 소식을 모읍니다.',
-    headLead: '디알밸류의 ',
-    headStrong: '새 소식을 전합니다.',
+      '전 세계 공장의 M.AX 소식을 전합니다. 해외와 국내 제조 현장이 AI를 어디서부터 어떻게 쓰기 시작했는지, 도입 사례를 출처와 함께 정리합니다.',
+    headLead: '전 세계 제조 현장의 ',
+    headStrong: 'M.AX 소식을 전합니다.',
     emptyTitle: '아직 등록된 뉴스가 없습니다',
     emptyDesc: '새 소식이 올라오면 이곳에 바로 보입니다.',
   },
