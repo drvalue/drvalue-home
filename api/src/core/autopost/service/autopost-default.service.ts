@@ -427,7 +427,13 @@ export class AutopostDefaultService {
         reason: `저장 실패: ${reasonOf(e)}`,
         ...tokens,
       });
-      return refused([`저장하지 못했습니다: ${reasonOf(e)}`]);
+      // 오류의 원문(SQL 문구일 수 있다)은 로그와 기록 표에만 — 사유는 HTTP 응답으로도 나간다.
+      this.logger.error(
+        `자동 글 ${week}: 저장하지 못했습니다 — ${reasonOf(e)}`,
+      );
+      return refused([
+        '저장하지 못했습니다. 서버 로그와 기록 표를 확인해 주세요.',
+      ]);
     }
   }
 
