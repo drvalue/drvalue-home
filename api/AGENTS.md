@@ -254,7 +254,7 @@ src/
   - 묶음을 HTTP 로 받는 입구(결정 0021): `POST /api/autopost/bundle`(같은 `publishGiven`) · `GET /api/autopost/rules`(`--rules` 와
     같은 글자, `service/autopost-rules.ts`). 문은 `guard/autopost-token.guard.ts` — `Authorization: Bearer` 가
     `AUTOPOST_SUBMIT_TOKEN` 과 같아야 하고, 토큰이 없는 서버는 전부 401 이다. 속도 제한 가드를 토큰 가드보다 먼저 건다.
-    묶음 본문(그림이 실려 수 MB)은 `main.ts` 가 그 주소에만 건 `bundleBody` 가 읽는다 — **토큰이 맞는 요청만** 16MB,
+    묶음 본문(그림이 실려 수 MB)은 `main.ts` 가 그 주소에만 건 `bundleBody` 가 읽는다 — **토큰이 맞는 요청만** 9MB(앞의 web 프록시가 10MB 에서 자른다),
     그 밖은 전역 100KB 에서 413. 보내는 쪽은 `client/autopost-submit.client.ts`(`--submit-bundle` · `--rules-from` —
     앱·DB 를 안 띄운다, https 만). **`createAsSystem` 에 닿는 HTTP 길은 이것 하나다** — 이 컨트롤러에 핸들러를 더하지 않는다.
   - 손으로 돌리기: `npm run autopost -- --preview | --draft`(`src/autopost-cli.ts`). 이 프로세스는 cron 을 멈추고 돈다.
@@ -292,7 +292,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 96 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8 · 받는 입구 7)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 97 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8 · 받는 입구 8)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

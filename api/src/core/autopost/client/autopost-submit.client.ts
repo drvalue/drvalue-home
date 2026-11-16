@@ -12,6 +12,9 @@ export interface SubmitResult {
 
 type Fetch = typeof fetch;
 
+/** 묶음 본문의 한도. 서버(`BUNDLE_BODY_LIMIT`)와 같다 — 서버 앞의 web 프록시가 10MB 에서 잘라 그 아래로 잡았다. */
+export const SUBMIT_MAX_BYTES = 9 * 1024 * 1024;
+
 /**
  * 받는 서버의 주소(출처만 — `https://drvalue.co.kr`). https 만 받는다: 토큰이 평문으로 나가지 않게.
  * 이 기계의 주소(localhost · 127.0.0.1)만 http 를 받는다(로컬 시험). 틀리면 null.
@@ -56,7 +59,7 @@ async function call<T>(
   // 토큰이 틀리면 서버가 큰 본문을 읽지 않아, 그림이 든 묶음은 401 이 아니라 413 으로 돌아온다.
   if (res.status === 413)
     throw new Error(
-      '서버가 받지 않았습니다 (413) — 토큰이 서버와 다르거나 묶음이 16MB 를 넘습니다',
+      '서버가 받지 않았습니다 (413) — 토큰이 서버와 다르거나 묶음이 너무 큽니다',
     );
   if (!res.ok || !json?.data)
     throw new Error(
@@ -75,19 +78,25 @@ export function submitBundle(
   },
   doFetch: Fetch = fetch,
 ): Promise<SubmitResult> {
+  const body = JSON.stringify({
+    article: bundle.article,
+    pictures: (Array.isArray(bundle.pictures) ? bundle.pictures : []).map(
+      (pic) => ({ section: pic.section, data: pic.data }),
+    ),
+  });
+  // 넘는 묶음은 보내지 않는다 — 서버 앞의 프록시가 중간에 끊어 알 수 없는 500 으로 돌아온다.
+  const bytes = Buffer.byteLength(body);
+  if (bytes > SUBMIT_MAX_BYTES)
+    return Promise.reject(
+      new Error(
+        `묶음이 너무 큽니다 (${(bytes / 1024 / 1024).toFixed(1)}MB, 한도 9MB) — 그림을 줄이거나 빼 주세요`,
+      ),
+    );
   return call<SubmitResult>(
     origin,
     '/api/autopost/bundle',
     token,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        article: bundle.article,
-        pictures: (Array.isArray(bundle.pictures) ? bundle.pictures : []).map(
-          (pic) => ({ section: pic.section, data: pic.data }),
-        ),
-      }),
-    },
+    { method: 'POST', body },
     doFetch,
   );
 }

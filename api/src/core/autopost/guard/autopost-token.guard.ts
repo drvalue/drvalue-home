@@ -6,8 +6,11 @@ import { AppConfig } from '../../../common/config/app-config';
 import { CommonError } from '../../../common/error/common-error';
 import { AutopostError } from '../error/autopost.error';
 
-/** 묶음 한 건의 본문 한도 — 그림 다섯 장(장당 2MB, base64 로 1.34배)과 글. */
-const BUNDLE_BODY_LIMIT = '16mb';
+/**
+ * 묶음 한 건의 본문 한도. 앞에 선 web(Next 의 `/api` 프록시)이 본문을 10MB 에서 자른다(실측 2026-11-16 —
+ * 넘으면 연결이 끊겨 500 이 된다). 그 아래로 잡는다. 보내는 쪽(`autopost-submit.client.ts`)이 같은 값을 먼저 본다.
+ */
+const BUNDLE_BODY_LIMIT = '9mb';
 
 /**
  * `Authorization: Bearer <토큰>` 이 설정된 토큰과 같은가. 설정이 없으면(null) 무엇을 보내도 거짓 — 닫힌 쪽.
@@ -43,7 +46,7 @@ export class AutopostTokenGuard implements CanActivate {
 /**
  * 묶음 본문(그림이 base64 로 들어 있어 수 MB)을 읽는 미들웨어. `main.ts` 가 묶음 주소에만 건다.
  * **토큰이 맞는 요청만** 큰 한도로 읽는다 — 그 밖은 그냥 넘겨 전역 한도(100KB)에 걸리게 둔다.
- * 익명 요청이 16MB 씩 메모리에 올리지 못하게.
+ * 익명 요청이 9MB 씩 메모리에 올리지 못하게.
  */
 export function bundleBody() {
   const parse = json({ limit: BUNDLE_BODY_LIMIT });

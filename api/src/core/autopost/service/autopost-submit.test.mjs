@@ -130,6 +130,23 @@ test('보내기: 토큰은 헤더에만, 넘겨 보내는 곳은 안 따라간�
   });
 });
 
+test('보내기: 한도(9MB)를 넘는 묶음은 서버를 부르지 않고 던진다', async () => {
+  let called = 0;
+  const never = async () => {
+    called++;
+    throw new Error('부르면 안 된다');
+  };
+  const big = {
+    article: {},
+    pictures: [{ section: null, data: 'A'.repeat(9 * 1024 * 1024) }],
+  };
+  await assert.rejects(
+    () => submitBundle('https://drvalue.co.kr', TOKEN, big, never),
+    /너무 큽니다/,
+  );
+  assert.equal(called, 0);
+});
+
 test('보내기: 서버가 거절하면 던진다 — 문장에 토큰이 없다', async () => {
   const denied = async () => ({
     ok: false,

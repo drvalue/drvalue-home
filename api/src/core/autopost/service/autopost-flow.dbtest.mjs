@@ -23,6 +23,9 @@ const {
 
 delete process.env.AUTOPOST_ENABLED;
 delete process.env.ANTHROPIC_API_KEY;
+// 받는 입구의 토큰이 있으면 묶음 공개가 열린다 — 루트 .env 에 넣어 둔 기계에서도 「꺼져 있으면 막힌다」를 재도록 빈 값으로 덮는다
+// (지우기만 하면 ConfigModule 이 .env 에서 다시 채운다).
+process.env.AUTOPOST_SUBMIT_TOKEN = '';
 const app = await NestFactory.createApplicationContext(AppModule, {
   logger: false,
 });
