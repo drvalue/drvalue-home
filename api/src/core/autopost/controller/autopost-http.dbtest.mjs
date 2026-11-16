@@ -195,7 +195,7 @@ test(
     const pub = await fetch(`${origin}/api/content/posts/${slug}`);
     assert.equal(pub.status, 200);
 
-    // 같은 주에 한 번 더: 거절(200) — 한 주에 한 편
+    // 같은 묶음을 한 번 더: 거절(200) — 이미 낸 글의 출처다
     const again = await submitBundle(origin, TOKEN, bundle); // 5
     assert.equal(again.outcome, 'refused');
     // 여섯 번째 요청은 속도 제한(분 5회) — 토큰이 맞아도

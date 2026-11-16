@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const {
   weekKey,
+  dayKey,
   isDue,
   kstDate,
 } = require('../../../../dist/core/autopost/service/autopost-week.js');
@@ -32,3 +33,9 @@ test('화요일 09:00 KST 부터', () => {
 
 test('kstDate', () =>
   assert.equal(kstDate(new Date('2026-11-11T15:30:00Z')), '2026-11-12'));
+
+test('날 키는 KST 날짜를 붙여 쓴다 — 주 키와 같은 8자', () => {
+  assert.equal(dayKey(new Date('2026-11-15T15:00:00Z')), '20261116'); // KST 월 00:00
+  assert.equal(dayKey(new Date('2026-11-15T14:59:00Z')), '20261115');
+  assert.equal(dayKey(new Date('2026-11-15T15:00:00Z')).length, 8);
+});

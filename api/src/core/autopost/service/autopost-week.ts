@@ -21,6 +21,11 @@ export function kstDate(now: Date): string {
   return kst(now).toISOString().slice(0, 10);
 }
 
+/** 한국 날짜를 붙여 쓴 것 `20261116` — 주간 글 밖의 한 편이 잡는 기록 키. 주 키와 같은 칸(8자)에 들어간다. */
+export function dayKey(now: Date): string {
+  return kstDate(now).replaceAll('-', '');
+}
+
 /** 한국 시간 기준 ISO 주 — `2026-W46`. 그 주의 목요일이 속한 해가 주의 해다. */
 export function weekKey(now: Date): string {
   const d = kst(now);
