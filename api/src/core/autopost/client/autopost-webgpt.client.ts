@@ -50,7 +50,27 @@ export interface BrowserOptions {
   bin: string;
   /** 자식 프로세스에 넘길 환경변수 — 이 서버의 비밀을 물려주지 않는다. */
   env: Record<string, string>;
+  /** ChatGPT 를 쓸 ego 브라우저 프로필의 이름(`AUTOPOST_BROWSER_PROFILE`). 없으면 브라우저를 열지 않는다. */
+  profile?: string;
 }
+
+/**
+ * 브라우저 스크립트의 첫머리 — **정해진 프로필에서만** chatgpt.com 을 연다. ChatGPT 는 그 프로필의 계정으로만 쓴다
+ * (사용자 결정 2026-11-16). 이름이 정확히 같은 프로필이 하나 있어야 하고, 없거나 여럿이면 던진다 — 다른 프로필(다른 계정)로
+ * 넘어가지 않는다. 자리 이름에 프로필 id 를 붙인다: 프로필은 자리를 만들 때만 정해져서, 다른 프로필로 만든 자리를 다시 쓰지 않게.
+ */
+export const OPEN_CHAT = `const wanted = (await profiles()).filter((p) => p.name === input.profile);
+if (wanted.length !== 1) throw new Error("ego 브라우저에 「" + input.profile + "」 프로필이 " + (wanted.length ? "여러 개입니다" : "없습니다"));
+const task = await taskSpace(input.space + " · " + wanted[0].id, { profileId: wanted[0].id });
+const pages = await task.pages();
+const page = pages.length ? task.page(pages[0].label) : await task.newPage();
+await page.goto(input.url, { timeout: 60000 });
+try {
+  await page.waitForSelector("div.ProseMirror", { state: "visible", timeout: 60000 });
+} catch {
+  throw new Error("「" + input.profile + "」 프로필의 chatgpt.com 에 입력창이 없습니다 — 그 프로필에서 ChatGPT 에 로그인돼 있는지 확인해 주세요");
+}
+`;
 
 const asJson = (schema: unknown) =>
   `답은 \`\`\`json 코드 블록 하나로만 하세요. 코드 블록 밖에는 아무것도 쓰지 않습니다. 아래 JSON Schema 를 그대로 따릅니다(모든 칸을 채우고, 없는 칸을 더하지 않습니다).\n\n${JSON.stringify(schema)}`;
@@ -159,22 +179,22 @@ export async function fetchSourceText(
  * 화면의 이름표(「소리 내어 읽기」 등)는 chatgpt.com 한국어·영어 화면에서 본 것이다(2026-11-13 실측) —
  * 화면이 바뀌면 여기가 깨지고, 그 주는 오류로 닫힌다(글이 나가는 쪽으로 깨지지 않는다).
  */
-function browserScript(prompt: string, search: boolean): string {
+function browserScript(
+  prompt: string,
+  search: boolean,
+  profile: string,
+): string {
   const input = JSON.stringify({
     prompt,
     url: `https://chatgpt.com/${search ? '?hints=search' : ''}`,
     space: SPACE,
+    profile,
     timeout: ANSWER_TIMEOUT_MS,
     mark: MARK,
   });
   return `
 const input = ${input};
-const task = await taskSpace(input.space);
-const pages = await task.pages();
-const page = pages.length ? task.page(pages[0].label) : await task.newPage();
-await page.goto(input.url, { timeout: 60000 });
-await page.waitForSelector("div.ProseMirror", { state: "visible", timeout: 60000 });
-await page.focus("div.ProseMirror");
+${OPEN_CHAT}await page.focus("div.ProseMirror");
 await page.keyboard.insertText(input.prompt);
 await page.waitForTimeout(1500);
 const squash = (s) => s.replace(/\\s+/g, "");
@@ -216,23 +236,19 @@ console.log(input.mark + JSON.stringify({ code: answer }));
  * 바깥에서 주소로 받을 수 없어 화면의 canvas 로 꺼낸다(2026-11-13 실측).
  * 다 됐다는 표시: 「중지」 단추가 없고 큰 그림이 두 번 이어 같은 주소로 보인다. 그리는 중에도 미리 보기 그림이 뜬다.
  */
-function imageScript(prompt: string): string {
+function imageScript(prompt: string, profile: string): string {
   const input = JSON.stringify({
     prompt,
     url: 'https://chatgpt.com/',
     space: SPACE,
+    profile,
     timeout: IMAGE_TIMEOUT_MS,
     width: COVER_WIDTH,
     mark: MARK,
   });
   return `
 const input = ${input};
-const task = await taskSpace(input.space);
-const pages = await task.pages();
-const page = pages.length ? task.page(pages[0].label) : await task.newPage();
-await page.goto(input.url, { timeout: 60000 });
-await page.waitForSelector("div.ProseMirror", { state: "visible", timeout: 60000 });
-await page.focus("div.ProseMirror");
+${OPEN_CHAT}await page.focus("div.ProseMirror");
 await page.keyboard.insertText(input.prompt);
 await page.waitForTimeout(1500);
 const squash = (s) => s.replace(/\\s+/g, "");
@@ -305,12 +321,25 @@ export class AutopostWebGptClient implements AutopostClient {
     prompt: string,
     search: boolean,
   ): Promise<T> {
-    const code = await this.answer(what, browserScript(prompt, search));
+    const code = await this.answer(
+      what,
+      browserScript(prompt, search, this.profile()),
+    );
     try {
       return jsonFromAnswer(code) as T;
     } catch {
       throw new Error(`${what}: 구조화 출력을 읽지 못했습니다`);
     }
+  }
+
+  /** ChatGPT 를 쓸 프로필. 정해지지 않았으면 브라우저를 열기 전에 던진다 — 기본 프로필로 넘어가지 않는다. */
+  private profile(): string {
+    const name = (this.options.profile ?? '').trim();
+    if (!name)
+      throw new Error(
+        'ChatGPT 를 쓸 브라우저 프로필이 정해지지 않았습니다(AUTOPOST_BROWSER_PROFILE)',
+      );
+    return name;
   }
 
   /** 스크립트가 표식 뒤에 찍은 글자. */
@@ -458,7 +487,7 @@ export class AutopostWebGptClient implements AutopostClient {
     prompt: string,
     section: number | null,
   ): Promise<Picture> {
-    const data = await this.answer(what, imageScript(prompt));
+    const data = await this.answer(what, imageScript(prompt, this.profile()));
     const head = 'data:image/jpeg;base64,';
     if (!data.startsWith(head))
       throw new Error(`${what}: 그림을 받지 못했습니다`);

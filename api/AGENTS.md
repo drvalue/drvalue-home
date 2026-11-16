@@ -233,7 +233,8 @@ src/
   - 모델을 부르는 길은 둘이다(`AUTOPOST_PROVIDER`). 지시문·답의 구조는 `client/autopost-prompts.ts` 에 한 벌만 있다.
     `webgpt` 는 `client/autopost-webgpt.client.ts` — ego 브라우저(`ego-browser nodejs`)로 chatgpt.com 에 지시문을 넣고 답의
     코드 블록을 읽는다. 이 길에서는 **코드가 출처 주소를 직접 연다**(쿠키 없이, 바깥 https 만 — `isPublicHttps`). 받은 글자를
-    판정 지시문에 붙이고, 코드가 연 주소만 「열린 출처」다. 화면 이름표에 기대므로 chatgpt.com 이 바뀌면 깨진다(오류로 닫힌다).
+    판정 지시문에 붙이고, 코드가 연 주소만 「열린 출처」다. **ChatGPT 는 정해진 ego 프로필에서만 연다**(`AUTOPOST_BROWSER_PROFILE` —
+    스크립트 첫머리 `OPEN_CHAT`). 이름이 정확히 같은 프로필이 하나 있어야 하고, 없으면 던진다 — 기본 프로필로 넘어가는 길을 두지 않는다. 화면 이름표에 기대므로 chatgpt.com 이 바뀌면 깨진다(오류로 닫힌다).
   - 오류(API 실패)로 끝난 주만 한 번 더 한다(주당 2번까지). 2시간 넘게 「진행 중」이면 죽은 것으로 닫는다.
   - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 모델을 부를 길(`ANTHROPIC_API_KEY`, 또는 `AUTOPOST_PROVIDER=webgpt`) 둘 다 있어야 돈다.
     묶음 공개(`publishGiven`)는 켜기 값이나 받는 입구의 토큰 중 하나가 있어야 한다. 토큰만으로는 cron 이 켜지지 않는다.
@@ -292,7 +293,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 97 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8 · 받는 입구 8)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 98 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 9 · 받는 입구 8)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)
