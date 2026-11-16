@@ -23,7 +23,7 @@ import { planRun } from './autopost-plan';
 import { produce, Produced } from './autopost-produce';
 import { PictureRef, renderArticle } from './autopost-render';
 import { rulesText } from './autopost-rules';
-import { isDue, kstDate, weekKey } from './autopost-week';
+import { dayKey, isDue, kstDate, weekKey } from './autopost-week';
 
 const ACTOR = 'autopost@system';
 const BOARD = 'news';
@@ -204,7 +204,7 @@ export class AutopostDefaultService {
       today,
       {
         status: 'published',
-        // 주소는 주 키로 짓는다 — 같은 주에 두 번째 글이 생기려 하면 주소가 겹쳐 막힌다.
+        // 주소는 기록 키(주 또는 날)로 짓는다 — 같은 자리에 두 번째 글이 생기려 하면 주소가 겹쳐 막힌다.
         slug: `mfg-ai-${week.toLowerCase()}`,
       },
       discards,
@@ -355,7 +355,7 @@ export class AutopostDefaultService {
   /**
    * 다른 기계에서 검사·판정·그림까지 끝낸 글 묶음을 **공개**한다(브라우저가 있는 사람 기계에서 만들고, DB 가 있는 곳에서 이것을 부른다).
    * 판정은 다시 하지 않는다 — 이 명령을 돌릴 수 있는 사람은 이미 DB 에 쓸 수 있는 사람이다. 대신 코드 검사(구조·숫자·이미 낸 출처)는
-   * 이 DB 의 기록으로 다시 돌리고, cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편, 같은 출처를 두 번 쓰지 않는다.
+   * 이 DB 의 기록으로 다시 돌리고, cron 과 같은 주간 기록을 잡고 닫는다. 그 주 글이 이미 있으면 오늘 자리(`dayKey`)를 잡는다 — 주간 글 밖으로는 하루에 한 편(결정 0022). 같은 출처를 두 번 쓰지 않는다.
    * 켜기 값(`AUTOPOST_ENABLED`)이나 받는 입구의 토큰(`AUTOPOST_SUBMIT_TOKEN`)이 있어야 한다. 요일은 보지 않는다.
    * HTTP 입구(`POST /api/autopost/bundle`)도 이것을 부른다 — 그쪽은 토큰 가드가 문이다(결정 0021).
    */
@@ -386,22 +386,35 @@ export class AutopostDefaultService {
     });
     if (reasons.length) return refused(reasons);
 
-    const week = weekKey(now);
-    const row = await this.autopostRunDefaultRepository.findByWeek(ctx, week);
-    let plan = planRun(row, now);
-    if (plan === 'reap') {
-      await this.autopostRunDefaultRepository.reap(ctx, week);
-      plan = 'retry';
+    // 자리는 둘이다: 이번 주(주간 글), 그 주 글이 이미 닫혔으면 오늘(사람이 주제를 줘서 한 편 더 낼 때 — 하루에 한 편).
+    // 만드는 중인 주는 넘기지 않는다 — 같은 묶음을 두 번 보내면 두 자리에 같은 글이 나간다.
+    let week = weekKey(now);
+    let claimed = false;
+    for (const key of [week, dayKey(now)]) {
+      week = key;
+      const row = await this.autopostRunDefaultRepository.findByWeek(ctx, key);
+      let plan = planRun(row, now);
+      if (plan === 'reap') {
+        await this.autopostRunDefaultRepository.reap(ctx, key);
+        plan = 'retry';
+      }
+      if (plan === 'none') {
+        if (row?.status === 'running')
+          return refused([`다른 실행이 만드는 중입니다(${key})`]);
+        continue;
+      }
+      claimed =
+        plan === 'start'
+          ? await this.autopostRunDefaultRepository.claim(ctx, key)
+          : await this.autopostRunDefaultRepository.claimRetry(ctx, key);
+      if (!claimed)
+        return refused([`이 자리(${key})를 다른 실행이 잡았습니다`]);
+      break;
     }
-    if (plan === 'none')
+    if (!claimed)
       return refused([
-        `이번 주(${week}) 기록이 이미 있습니다(${row?.status ?? ''}) — 한 주에 한 편입니다`,
+        `이번 주 글과 오늘(${week}) 글이 이미 있습니다 — 주간 글 밖으로는 하루에 한 편입니다`,
       ]);
-    const claimed =
-      plan === 'start'
-        ? await this.autopostRunDefaultRepository.claim(ctx, week)
-        : await this.autopostRunDefaultRepository.claimRetry(ctx, week);
-    if (!claimed) return refused([`이번 주(${week})를 다른 실행이 잡았습니다`]);
 
     let kept: Picture[] = [];
     try {

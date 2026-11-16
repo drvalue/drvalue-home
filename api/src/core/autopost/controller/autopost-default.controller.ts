@@ -61,7 +61,7 @@ export class AutopostDefaultController {
   @ApiOperation({
     operationId: 'autopostDefaultPublishBundle',
     summary:
-      '글 묶음을 공개한다(한 주에 한 편 · 이미 낸 출처 거절). 거절도 200 이고 outcome 으로 가른다',
+      '글 묶음을 공개한다(주간 글 한 편, 그 밖으로는 하루에 한 편 · 이미 낸 출처 거절). 거절도 200 이고 outcome 으로 가른다',
   })
   @ApiDataResponse(ControllerAutopostDefaultBundleResponseDto)
   async publishBundle(

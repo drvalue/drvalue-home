@@ -25,7 +25,7 @@ import { Article } from './core/autopost/model/article';
  *   --draft    같은 일을 하고, 검사를 통과한 글만 뉴스 게시판에 **초안**으로 저장한다. 공개하지 않는다.
  *   --article 글.json  조사·집필을 건너뛰고 받은 글을 검사·판정·그림에 넣는다(글을 바깥에서 쓸 때). 떨어져도 다시 쓰지 않는다.
  *   --article 글.json --bundle 묶음.json  위와 같되, 통과하면 글과 그림을 한 파일로 묶는다(다른 기계로 보낼 것).
- *   --publish-bundle 묶음.json  묶음을 이 DB 에 **공개**한다 — 주간 기록을 잡고 닫는다. AUTOPOST_ENABLED=1 이 있어야 한다.
+ *   --publish-bundle 묶음.json  묶음을 이 DB 에 **공개**한다 — 주간 기록을 잡고 닫는다(그 주 글이 이미 있으면 오늘 자리 — 하루에 한 편). AUTOPOST_ENABLED=1 이 있어야 한다.
  *   --rules    글을 쓰는 쪽이 읽을 주제 기준·이미 다룬 글·규칙·구조를 찍는다(DB 를 읽는다).
  *   --rules-from https://서버  같은 글자를 서버에서 받아 찍는다 — 「이미 다룬 글」이 그 서버(운영)의 기록이다. DB 를 안 쓴다.
  *   --submit-bundle 묶음.json https://서버  묶음을 서버의 받는 입구(`POST /api/autopost/bundle`)에 넣어 **공개**한다. DB 를 안 쓴다.

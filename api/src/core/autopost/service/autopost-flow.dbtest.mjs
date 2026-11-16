@@ -70,7 +70,7 @@ const uploads = mkdtempSync(join(tmpdir(), 'autopost-uploads-'));
 process.env.UPLOADS_DIR = uploads; // 실제 업로드 폴더에 쓰지 않는다
 const coverRows = () =>
   dataSource.query(
-    `SELECT id, filename_disk, type, width, height FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%'`,
+    `SELECT id, filename_disk, type, width, height FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%' OR filename_download LIKE 'mfg-ai-20261110-%'`,
   );
 /** 헤더만 있는 JPEG — 치수 읽기가 1600×900 으로 읽는다. */
 const jpeg = (width = 1600, height = 900, salt = 0) => {
@@ -92,14 +92,16 @@ const row = async (week) =>
   )[0];
 const clean = async () => {
   await dataSource.query(
-    `DELETE FROM autopost_runs WHERE week_key IN ('2026-W46','2026-W47')`,
+    `DELETE FROM autopost_runs WHERE week_key IN ('2026-W46','2026-W47','20261110')`,
   );
-  await dataSource.query(`DELETE FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%'`);
+  await dataSource.query(
+    `DELETE FROM posts WHERE slug LIKE 'mfg-ai-2026-w4%' OR slug = 'mfg-ai-20261110'`,
+  );
   // 표지 그림: 행과 디스크 파일을 같이 지운다(올린 이름이 글 주소로 시작한다).
   for (const f of await coverRows())
     rmSync(join(uploads, f.filename_disk), { force: true });
   await dataSource.query(
-    `DELETE FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%'`,
+    `DELETE FROM directus_files WHERE filename_download LIKE 'mfg-ai-2026-w4%' OR filename_download LIKE 'mfg-ai-20261110-%'`,
   );
 };
 await clean();
@@ -443,7 +445,7 @@ test('받은 글: 조사·집필을 건너뛰고 판정은 한 번, 떨어져도
   assert.ok(broken.reasons.length);
 });
 
-test('묶음 공개: 주간 기록을 잡고 닫는다 — 한 주에 한 편, 이미 낸 출처는 다시 못 쓴다', async () => {
+test('묶음 공개: 주간 기록을 잡고 닫는다 — 주간 글 밖으로는 하루에 한 편, 이미 낸 출처는 다시 못 쓴다', async () => {
   await clean();
   const pics = [
     { bytes: jpeg(), mime: 'image/jpeg', section: null },
@@ -477,15 +479,48 @@ test('묶음 공개: 주간 기록을 잡고 닫는다 — 한 주에 한 편, �
   assert.equal(post.slug, 'mfg-ai-2026-w46');
   assert.equal((await row('2026-W46')).status, 'published');
   assert.equal((await coverRows()).length, 2);
-  // 같은 주에 다른 글(출처가 다르다)을 한 번 더: 한 주에 한 편이라 거절
-  const other = JSON.parse(
-    JSON.stringify(good)
-      .replaceAll('press.siemens.com', 'press.siemens.org')
-      .replaceAll('example.org', 'example.net'),
-  );
+  // 같은 주에 다른 글(출처가 다르다)을 한 번 더: 그날 자리로 나간다(결정 0022)
+  const swap = (a, com, org) =>
+    JSON.parse(
+      JSON.stringify(a)
+        .replaceAll('press.siemens.com', com)
+        .replaceAll('example.org', org),
+    );
+  const other = swap(good, 'press.siemens.org', 'example.net');
   const again = await service.publishGiven(ctx, other, pics, TUE);
-  assert.equal(again.outcome, 'refused');
-  assert.ok(again.reasons[0].includes('한 주에 한 편'));
+  assert.equal(again.outcome, 'published', again.reasons.join(' / '));
+  assert.equal((await posts.get(ctx, again.postId)).slug, 'mfg-ai-20261110');
+  assert.equal((await row('20261110')).status, 'published');
+  // 같은 날 세 번째(출처가 또 다르다): 하루에 한 편이라 거절
+  const third = await service.publishGiven(
+    ctx,
+    swap(good, 'press.siemens.net', 'example.com'),
+    pics,
+    TUE,
+  );
+  assert.equal(third.outcome, 'refused');
+  assert.ok(third.reasons[0].includes('하루에 한 편'));
+  // 그 주가 만드는 중이면 오늘 자리로 넘기지 않는다(같은 묶음이 두 자리에 나가지 않게)
+  await dataSource.query(
+    "UPDATE autopost_runs SET status = 'running', started_on = $2 WHERE week_key = $1",
+    ['2026-W46', TUE],
+  );
+  await dataSource.query('DELETE FROM autopost_runs WHERE week_key = $1', [
+    '20261110',
+  ]);
+  const busy = await service.publishGiven(
+    ctx,
+    swap(good, 'press.siemens.net', 'example.com'),
+    pics,
+    TUE,
+  );
+  assert.equal(busy.outcome, 'refused');
+  assert.ok(busy.reasons[0].includes('만드는 중'));
+  assert.equal(await row('20261110'), undefined);
+  await dataSource.query(
+    "UPDATE autopost_runs SET status = 'published' WHERE week_key = $1",
+    ['2026-W46'],
+  );
   // 다음 주에 같은 출처로: 이미 낸 글의 출처라 거절, 기록도 안 잡는다
   const next2 = await service.publishGiven(ctx, good, pics, NEXT);
   assert.equal(next2.outcome, 'refused');
