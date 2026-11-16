@@ -128,6 +128,21 @@ export const AppConfig = {
     get ready(): boolean {
       return AppConfig.autopost.enabled && AppConfig.autopost.canRun;
     },
+    /**
+     * 바깥에서 만든 글 묶음을 HTTP 로 받는 입구(`/api/autopost/*`)의 토큰. 비었거나 모양이 틀리면(32~256자, 영문·숫자·-·_)
+     * null — 입구가 닫힌다(누가 뭘 보내도 401). 비밀이다: 이 값을 아는 쪽은 사람 검수 없이 뉴스 게시판에 글을 공개한다.
+     * 보내는 쪽(사람 기계)도 같은 이름으로 읽는다. 만들기: openssl rand -hex 32
+     */
+    get submitToken(): string | null {
+      const raw = (process.env.AUTOPOST_SUBMIT_TOKEN ?? '').trim();
+      return /^[A-Za-z0-9_-]{32,256}$/.test(raw) ? raw : null;
+    },
+    /** 묶음을 공개해도 되나 — 켜기 값이 있거나(그 명령에만 준다), 받는 입구의 토큰이 있거나. 둘 다 없으면 닫힌다. */
+    get canPublishGiven(): boolean {
+      return (
+        AppConfig.autopost.enabled || AppConfig.autopost.submitToken !== null
+      );
+    },
     /** ego 브라우저 실행 파일과 자식 프로세스에 넘길 환경. 이 서버의 다른 환경변수는 안 넘긴다. */
     get browser(): { bin: string; env: Record<string, string> } {
       const env: Record<string, string> = {};

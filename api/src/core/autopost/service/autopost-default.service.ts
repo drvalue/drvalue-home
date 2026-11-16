@@ -22,6 +22,7 @@ import { lintStructure } from './autopost-lint';
 import { planRun } from './autopost-plan';
 import { produce, Produced } from './autopost-produce';
 import { PictureRef, renderArticle } from './autopost-render';
+import { rulesText } from './autopost-rules';
 import { isDue, kstDate, weekKey } from './autopost-week';
 
 const ACTOR = 'autopost@system';
@@ -355,7 +356,8 @@ export class AutopostDefaultService {
    * 다른 기계에서 검사·판정·그림까지 끝낸 글 묶음을 **공개**한다(브라우저가 있는 사람 기계에서 만들고, DB 가 있는 곳에서 이것을 부른다).
    * 판정은 다시 하지 않는다 — 이 명령을 돌릴 수 있는 사람은 이미 DB 에 쓸 수 있는 사람이다. 대신 코드 검사(구조·숫자·이미 낸 출처)는
    * 이 DB 의 기록으로 다시 돌리고, cron 과 같은 주간 기록을 잡고 닫는다 — 한 주에 한 편, 같은 출처를 두 번 쓰지 않는다.
-   * 켜기 값(`AUTOPOST_ENABLED`)이 있어야 한다. 요일은 보지 않는다(사람이 돌리는 명령이다).
+   * 켜기 값(`AUTOPOST_ENABLED`)이나 받는 입구의 토큰(`AUTOPOST_SUBMIT_TOKEN`)이 있어야 한다. 요일은 보지 않는다.
+   * HTTP 입구(`POST /api/autopost/bundle`)도 이것을 부른다 — 그쪽은 토큰 가드가 문이다(결정 0021).
    */
   @ServiceException({ errorCode: AutopostError.RUN_UNKNOWN })
   async publishGiven(
@@ -369,7 +371,7 @@ export class AutopostDefaultService {
     postId?: number;
     pictures: number;
   }> {
-    if (!AppConfig.autopost.enabled)
+    if (!AppConfig.autopost.canPublishGiven)
       throw CommonError.createByErrorCode(AutopostError.NOT_CONFIGURED);
     const refused = (reasons: string[]) => ({
       outcome: 'refused' as const,
@@ -466,6 +468,15 @@ export class AutopostDefaultService {
           : [],
       ),
     };
+  }
+
+  /** 바깥에서 쓰는 쪽이 읽는 글자(주제 기준·이미 다룬 글·규칙·구조). 「이미 다룬 글」은 이 DB 의 기록이다. */
+  @ServiceException({ errorCode: AutopostError.RUN_UNKNOWN })
+  async rules(
+    ctx: ITransactionContext,
+    now: Date = new Date(),
+  ): Promise<string> {
+    return rulesText(await this.avoid(ctx, ''), kstDate(now));
   }
 
   /**

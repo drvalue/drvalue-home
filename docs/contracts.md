@@ -1,7 +1,7 @@
 # 바깥이 부르는 약속
 
 이 시스템이 밖에 내놓는 것은 **HTTP 하나**다. 공개 사이트가 부르는 `/api/content/*` ·
-`/api/inquiry` 와, 관리 화면이 부르는 `/api/admin/*`.
+`/api/inquiry` 와, 관리 화면이 부르는 `/api/admin/*`, 그리고 자동 글을 만드는 기계가 부르는 `/api/autopost/*`.
 
 ## 공통
 
@@ -17,8 +17,23 @@
     만들지 않고 이것을 띄운다. 개발자용 원인(`detail`)은 응답에 없다 — 5xx 는 api 로그에 남는다.
   - `path` 는 쿼리를 뺀 주소다.
 - 공개 목록은 전부 익명으로 부른다. `/api/admin/*` 는 IAM 로그인이 만든 세션 쿠키
-  (`dv_admin`) 만 받는다 — `Authorization` 헤더는 보지 않는다. 없으면 `401`,
+  (`dv_admin`) 만 받는다 — `Authorization` 헤더는 보지 않는다(헤더 토큰을 받는 곳은 `/api/autopost/*` 뿐이다). 없으면 `401`,
   입장 권한이 없으면 `403 ADMIN_AUTH_NOT_ALLOWED`, 역할이 안 맞으면 `403 ADMIN_AUTH_FORBIDDEN`.
+
+## `/api/autopost/*` — 자동 글 묶음 받기
+
+사람 기계의 예약 실행이 부른다(결정 0021). **`Authorization: Bearer <토큰>`** 이 있어야 한다 — 없거나 틀리면
+`401 AUTOPOST_UNAUTHORIZED`. 서버에 토큰이 설정돼 있지 않아도 같은 401 이다. IP 당 분 5회 · 시 30회(`429`), 틀린 토큰도 센다.
+
+| 주소 | 받는 것 | 주는 것 |
+|---|---|---|
+| `GET /api/autopost/rules` | — | `{ data: { text } }` — 주제 기준 · 이미 다룬 글의 제목과 출처 주소 · 글 규칙 · 글의 구조(JSON Schema) |
+| `POST /api/autopost/bundle` | `{ article, pictures? }`. `article` 은 위 구조의 글. `pictures` 는 `{ section, data }` 다섯 장까지 — `section` 은 단락 번호(0 부터), 표지는 `null`. `data` 는 JSON 안의 base64 JPEG(원본 2MB 까지) | `200` `{ data: { outcome, reasons, post_id, pictures } }` |
+
+- `outcome` 이 `published` 면 뉴스 게시판에 **공개**됐다(`post_id` · 들어간 그림 수 `pictures`). `refused` 면 `reasons` 에
+  사유가 있다 — 구조 검사 탈락 · 이미 낸 출처 · 이번 주 기록이 이미 있음. **거절도 200 이다.**
+- 글이 빠졌거나 그림 칸의 모양이 틀리면 `400`. 본문은 16MB 까지 — 토큰이 안 맞는 요청은 100KB 에서 `413` 이다.
+- 한 주(ISO 주, 한국 시간)에 한 편이다. 주는 서버의 시각으로 정한다.
 
 ## `GET /api/content/menu`
 

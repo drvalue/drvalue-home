@@ -31,6 +31,9 @@ export function toCommonError(exception: unknown): CommonError {
         : CommonErrorCode.INTERNAL);
     return CommonError.createByErrorCode(code);
   }
+  // 본문 한도를 넘으면 body-parser 가 HttpException 이 아닌 오류(http-errors)를 던진다 — 500 이 아니라 413 으로.
+  if ((exception as { type?: unknown } | null)?.type === 'entity.too.large')
+    return CommonError.createByErrorCode(CommonErrorCode.PAYLOAD_TOO_LARGE);
   return CommonError.createByErrorCode(CommonErrorCode.INTERNAL);
 }
 

@@ -94,7 +94,7 @@ Nest(api)
 | 모듈 | 소유 | 의존 방향 |
 |---|---|---|
 | `web` | 공개 화면, 관리 화면, 주소 체계, 검사 스크립트 | → `api` (HTTP `/api` 만) |
-| `api` | 공개 API, 관리 API, IAM 로그인, `admin_users` 동기화·범위, 변경 이력, 예약 게시, 제조 AI 주간 글, 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM, → Claude API |
+| `api` | 공개 API, 관리 API, IAM 로그인, `admin_users` 동기화·범위, 변경 이력, 예약 게시, 제조 AI 주간 글(+ 바깥에서 만든 묶음을 받는 토큰 입구 `/api/autopost/*`), 속도 제한, 파일 | → DB, → 네이버 클라우드 메일, → 사내 IAM, → Claude API |
 | `db` | 테이블. 이름은 옛 관리 도구(Directus) 시절 것 그대로 — `directus_files` 포함 | 아무것도 안 부른다 |
 | 루트 PHP | 현재 운영 화면 | 저장소 안에서 아무것도 안 부른다 |
 

@@ -15,4 +15,13 @@ export const AutopostError = {
     detail: 'ANTHROPIC_API_KEY 가 비었다',
     status: HttpStatus.SERVICE_UNAVAILABLE,
   } as ICommonErrorCode,
+
+  // ── 묶음을 받는 입구(/api/autopost/*). 사람이 아니라 예약 실행이 읽는다.
+  UNAUTHORIZED: {
+    code: 'AUTOPOST_UNAUTHORIZED',
+    message: '인증이 필요합니다.',
+    detail:
+      'Authorization: Bearer 토큰이 없거나 틀렸다. 서버에 AUTOPOST_SUBMIT_TOKEN 이 없어도 같은 답이다',
+    status: HttpStatus.UNAUTHORIZED,
+  } as ICommonErrorCode,
 };

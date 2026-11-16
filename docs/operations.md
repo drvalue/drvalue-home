@@ -93,6 +93,7 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
 | `INDEXNOW_KEY` (선택) | IndexNow 키(8~128자, 영문·숫자·-, `openssl rand -hex 16`). 공개 글(만들기·고치기·지우기·되돌리기·예약 공개·자동 내림) · 페이지 글 · 검색 정보를 저장하면 커밋 뒤 api 가 그 주소를 `api.indexnow.org` 에 알린다(2초 모아 한 번, 5초 제한, 실패는 로그 한 줄 — 저장은 안 기다린다). web 은 실행 때 같은 값을 읽어 `/<키>.txt` 로 낸다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 보낸다 | 알림을 **안 보낸다**, 키 파일도 404(닫힌 쪽). 모양이 틀린 값도 같다 |
 | `AUTOPOST_ENABLED` · `ANTHROPIC_API_KEY` (선택) | 제조 AI 주간 글(자동 발행). 켜기 값이 **정확히 `1`** 이고 Claude API 키가 있으면 api 가 화요일 09:00(KST) 이후 한 시간마다 「이번 주 글이 있나」를 보고, 없으면 만들어 뉴스 게시판에 공개한다. 키는 비밀이다 — 로그·기록 표에 싣지 않는다. 한 주의 결과는 `autopost_runs` 표(공개·건너뜀·오류와 사유·토큰 수)에 남는다. **실패 알림은 없다** — 글이 안 올라오면 이 표와 api 로그를 본다 | 둘 중 하나라도 비면(켜기 값이 `1` 이 아니어도) **아무것도 안 한다** — Claude 를 부르지 않는다(닫힌 쪽). 뜰 때 `자동 글: 꺼져 있습니다` 한 줄 |
+| `AUTOPOST_SUBMIT_TOKEN` (선택) | 사람 기계에서 만든 자동 글 묶음을 받는 입구(`/api/autopost/bundle` · `/rules`)의 토큰. 32~256자, 영문·숫자·`-`·`_`(`openssl rand -hex 32`). 서버와 묶음을 보내는 기계에 같은 값. **비밀이다** — 아는 쪽은 사람 검수 없이 뉴스 게시판에 글을 공개한다. 아래 「맥에서 만들어 서버에 넣기」 | 입구가 **닫힌다** — 무엇을 보내도 401(닫힌 쪽). 모양이 틀려도 같다. 뜰 때 `자동 글 묶음 받기: 닫혀 있습니다` 한 줄 |
 | `AUTOPOST_PROVIDER` (선택) | 제조 AI 주간 글이 모델을 부르는 길. 비우면 Claude API. **정확히 `webgpt`** 면 그 기계의 ego 브라우저로 chatgpt.com 을 조작한다(키 없음, 아래 「손으로 돌리기」). `AUTOPOST_BROWSER_BIN` 으로 실행 파일을 바꿀 수 있다(기본 `ego-browser`) | Claude API 길이다 — 키가 없으면 안 돈다(닫힌 쪽). `webgpt` 인데 브라우저·로그인이 없으면 그 주는 오류로 닫힌다(글은 안 나간다) |
 | `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
 | `NAVER_SITE_VERIFICATION` · `GOOGLE_SITE_VERIFICATION` · `BING_SITE_VERIFICATION` (선택) | 검색엔진 사이트 소유 확인 메타(네이버 서치어드바이저 · 구글 서치 콘솔 · 빙 웹마스터). **관리 화면 「사이트 › SEO › 검색엔진 설정」이 우선, env 는 예비** — 그 칸이 비었거나 api 가 안 닿을 때만 이 값을 쓴다. web **실행 환경값** — 그리는 때에 읽어서 요청마다 그리는 장(첫 화면 `/` 포함)에 붙는다. 빌드 때 굳는 정적 장에는 빌드 직후에는 안 붙는다. 공개 값이라 비밀이 아니다 | 관리 화면 칸도 비었으면 그 태그만 안 나간다. 소유 확인을 못 해 사이트맵·RSS(`/rss.xml`) 제출을 못 한다 |
@@ -105,6 +106,31 @@ dev compose 가 `DB_HOST=db` · `DB_PORT=5432` · `DB_NAME=drvalue_cms` · `DB_U
 
 `TRUST_PROXY` 는 홉 수(`1`)다. Nest 가 숫자로 바꿔 넘긴다 — 문자열 `"1"` 은 IP
 `0.0.0.1` 하나를 믿는 목록으로 읽힌다.
+
+### 제조 AI 주간 글을 맥에서 만들어 서버에 넣기 (받는 입구)
+
+서버에 `AUTOPOST_SUBMIT_TOKEN` 이 있으면 `/api/autopost/*` 가 열린다(결정 0021). 맥의 루트 `.env` 에도 같은 값을 넣는다.
+Claude API 키가 필요 없다 — 글은 쓰는 쪽(사람·에이전트)이, 판정·그림은 ChatGPT 웹과 Codex CLI 가 맡는다.
+
+```bash
+cd api && npm run build
+# ① 서버의 기록으로 규칙을 받는다(「이미 다룬 글」이 운영의 것이다). DB 를 안 쓴다
+npm run autopost -- --rules-from https://drvalue.co.kr
+# ② 그 규칙대로 글.json 을 쓴 뒤, 검사·판정·그림을 돌려 묶는다(이 단계는 그 기계의 DB 가 떠 있어야 한다)
+AUTOPOST_PROVIDER=webgpt npm run autopost -- --preview --article 글.json --bundle 묶음.json
+# ③ 묶음을 서버에 넣어 공개한다. DB 를 안 쓴다
+npm run autopost -- --submit-bundle 묶음.json https://drvalue.co.kr
+```
+
+- ③은 `결과: published (글 N · 그림 M장)` 이면 종료코드 0, 거절(`결과: refused` + 사유)이나 실패면 1 이다.
+  거절은 글을 고쳐 다시 넣으면 된다 — 구조 검사에서 떨어진 것은 주간 기록을 잡지 않는다.
+- 주소는 https 만 받는다(이 기계 주소 `localhost`·`127.0.0.1` 만 http). 토큰이 평문으로 나가지 않게.
+- 토큰이 서버와 다르면 그림이 든 묶음은 401 이 아니라 **413** 으로 돌아온다(서버가 익명의 큰 본문을 읽지 않는다).
+- 한도: IP 당 분 5회 · 시 30회(틀린 토큰 포함), 묶음 16MB, 그림 다섯 장(장당 2MB).
+- 토큰을 바꾸려면 서버 `.env` 를 고치고 api 를 다시 띄운 뒤 맥의 `.env` 도 고친다. 비우면 입구가 닫힌다.
+- ②의 「이미 낸 출처」 검사는 맥의 로컬 DB 기록으로 돈다 — 운영 기록과의 겹침은 ③에서 서버가 다시 본다.
+- DB 가 있어야 도는 검사: `node --test src/core/autopost/controller/autopost-http.dbtest.mjs`(실제 서버를 띄워 토큰·공개·한 주 한 편·
+  속도 제한을 본다. 서버의 「이번 주」에 글을 공개했다 지운다 — 이번 주 기록이 이미 있는 DB 에서는 건너뛴다. **운영 DB 에 돌리지 않는다**).
 
 ### 제조 AI 주간 글을 손으로 돌리기
 

@@ -326,6 +326,35 @@ export interface ControllerAdminUserDefaultUpdateDto {
   role: "admin" | "marketing" | "hr"
 }
 
+export interface ControllerAutopostDefaultBundleDto {
+  /** 글(구조는 GET /api/autopost/rules 끝의 JSON Schema). 안쪽은 구조 검사가 본다 — 형이 틀리면 거절 사유로 돌아간다 */
+  article: Record<string, unknown>
+  /** 표지 한 장과 단락 그림. 없어도 된다(글만 나간다) */
+  pictures?: ControllerAutopostDefaultPictureDto[]
+}
+
+export interface ControllerAutopostDefaultBundleResponseDto {
+  outcome: "published" | "refused"
+  /** 글에 들어간 그림 수 */
+  pictures: number
+  /** 공개한 글의 id */
+  post_id: number | null
+  /** 거절 사유(사람이 읽는 문장). 공개했으면 빈 배열 */
+  reasons: string[]
+}
+
+export interface ControllerAutopostDefaultPictureDto {
+  /** JPEG 바이트(base64). 원본 2MB 까지 */
+  data: string
+  /** 단락 번호(0 부터). 표지는 null */
+  section?: number | null
+}
+
+export interface ControllerAutopostDefaultRulesResponseDto {
+  /** 주제 기준 · 이미 다룬 글의 제목과 출처 주소 · 글 규칙 · 글의 구조(JSON Schema) */
+  text: string
+}
+
 export interface ControllerContentAttachmentResponseDto {
   /** 파일 id */
   id: string
@@ -1143,6 +1172,20 @@ export interface ApiOperations {
       data: ControllerAdminUserDefaultResponseDto
     }
     body: ControllerAdminUserDefaultUpdateDto
+  }
+  /** 글 묶음을 공개한다(한 주에 한 편 · 이미 낸 출처 거절). 거절도 200 이고 outcome 으로 가른다 */
+  "POST /api/autopost/bundle": {
+    response: {
+      data: ControllerAutopostDefaultBundleResponseDto
+    }
+    body: ControllerAutopostDefaultBundleDto
+  }
+  /** 글을 쓰는 쪽이 읽는 주제 기준·이미 다룬 글·규칙·구조 */
+  "GET /api/autopost/rules": {
+    response: {
+      data: ControllerAutopostDefaultRulesResponseDto
+    }
+    body: never
   }
   /** 공개 파일 원본(공개된 곳이 가리키는 파일만) */
   "GET /api/content/assets/{id}": {

@@ -8,17 +8,22 @@ import {
   AutopostClaudeClient,
 } from './client/autopost-claude.client';
 import { AutopostWebGptClient } from './client/autopost-webgpt.client';
+import { AutopostDefaultController } from './controller/autopost-default.controller';
+import { AutopostTokenGuard } from './guard/autopost-token.guard';
 import { AutopostRunDefaultRepository } from './repository/autopost-run-default.repository';
 import { AutopostDefaultService } from './service/autopost-default.service';
 
 /**
- * 제조 AI 주간 글(1시간 틱). 바깥 HTTP 입구가 없다 — 컨트롤러를 두지 않는다.
+ * 제조 AI 주간 글(1시간 틱) + 바깥에서 만든 글 묶음을 받는 입구(`/api/autopost/*`, 토큰 — 결정 0021).
+ * 받는 입구는 토큰이 없으면 닫혀 있다. 속도 제한(ThrottlerModule)은 `inquiry` 가 앱 전체에 한 번 건 것을 쓴다.
  * ScheduleModule.forRoot() 는 `admin-schedule` 이 건다(앱 전체에 한 번).
  */
 @Module({
   imports: [AdminPostModule, AdminFileModule],
+  controllers: [AutopostDefaultController],
   providers: [
     AutopostDefaultService,
+    AutopostTokenGuard,
     AutopostRunDefaultRepository,
     TransactionContextFactory,
     {
@@ -35,7 +40,9 @@ import { AutopostDefaultService } from './service/autopost-default.service';
 export class AutopostModule implements OnModuleInit {
   /** 꺼진 채로 떴으면 한 줄 남긴다 — 몇 주째 글이 없을 때 로그에서 이유를 찾을 수 있게. */
   onModuleInit(): void {
-    if (!AppConfig.autopost.ready)
-      new Logger(AutopostModule.name).log('자동 글: 꺼져 있습니다');
+    const logger = new Logger(AutopostModule.name);
+    if (!AppConfig.autopost.ready) logger.log('자동 글: 꺼져 있습니다');
+    if (!AppConfig.autopost.submitToken)
+      logger.log('자동 글 묶음 받기: 닫혀 있습니다');
   }
 }

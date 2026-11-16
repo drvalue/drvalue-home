@@ -54,7 +54,7 @@ src/
 `page`(페이지 글 — 관리 `admin/pages` + 공개 `content/pages`, 한 서비스) ·
 `seo`(정적 장의 검색 정보 `page_meta` — 공개 읽기 `/api/content/page-meta` + 관리 `/api/admin/seo/pages`) ·
 `home`(메인 기간 배너·팝업 — 공개 `content/home` + 관리 `admin/home/banners·popups`) ·
-`autopost`(제조 AI 주간 글 — 1시간 cron, 컨트롤러 없음. 아래 「방식」) ·
+`autopost`(제조 AI 주간 글 — 1시간 cron + 바깥에서 만든 묶음을 받는 토큰 입구 `/api/autopost/*`. 아래 「방식」) ·
 `search-settings`(검색엔진 설정 한 행 `site_search_settings` — 공개 `content/search-settings`(확인 코드·AI 스위치 둘·IndexNow 켜짐, 키 없음) + 관리 `admin/search-settings`(+ IndexNow 최근 보내기 20건, 프로세스 메모리). 저장은 IndexNow 로 안 알린다).
 **기준 모듈은 `core/admin-post`** 다. 새 모듈은 이 파일들을 그대로 따라 한다.
 2026-09-22 에 bmes 를 재어 맞췄다(`apps/`, 아래 표). 같은 날 R1 로 모듈 14개가 전부 이 모양이다 —
@@ -140,7 +140,8 @@ src/
 6. 변경 이력: 관리 화면의 쓰기(글·문의·파일·권한·페이지 글·메뉴·검색 정보·검색엔진 설정·메인 배너·팝업)가 `admin_revisions` 에
    actor · before · after 를 남긴다. 목록·되돌리기는 전체 권한만, 한 항목의 이력은 마케팅도(볼 수 있는 것만).
 
-**IAM 을 안 거치는 문은 없다.** 토큰 우회 경로를 두지 않는다. 검사(verify.sh)는
+**관리 API 에 IAM 을 안 거치는 문은 없다.** 토큰 우회 경로를 두지 않는다. 헤더 토큰을 받는 곳은 관리 API 밖의
+`/api/autopost/*` 하나뿐이다(결정 0021 — 자동 글 한 편을 넣는 것만 된다. 예외를 더 만들지 않는다). 검사(verify.sh)는
 `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만들어 들어간다 — 그 키를 가진 사람은
 이미 서버 관리자다.
 
@@ -235,6 +236,7 @@ src/
     판정 지시문에 붙이고, 코드가 연 주소만 「열린 출처」다. 화면 이름표에 기대므로 chatgpt.com 이 바뀌면 깨진다(오류로 닫힌다).
   - 오류(API 실패)로 끝난 주만 한 번 더 한다(주당 2번까지). 2시간 넘게 「진행 중」이면 죽은 것으로 닫는다.
   - 빠뜨리면 꺼진다: `AUTOPOST_ENABLED=1` 과 모델을 부를 길(`ANTHROPIC_API_KEY`, 또는 `AUTOPOST_PROVIDER=webgpt`) 둘 다 있어야 돈다.
+    묶음 공개(`publishGiven`)는 켜기 값이나 받는 입구의 토큰 중 하나가 있어야 한다. 토큰만으로는 cron 이 켜지지 않는다.
   - 글 저장과 기록 닫기는 한 트랜잭션이다(`publish`). 기록을 못 닫으면 글도 되돌린다. 한 편을 만드는 전체 시간은 45분에서 끊는다.
   - 그림: 클라이언트에 `illustrate` 가 있으면(ChatGPT 웹 길만) 통과한 글에 한 번 부른다 — 표지 한 장과 단락 그림
     (`pictureSections`). 받은 JPEG 는 파일 서비스의 시스템 행위자 입구(`uploadAsSystem` — 그림만)로 올리고
@@ -249,6 +251,12 @@ src/
   - 글을 바깥에서 쓰는 길: `--rules` 가 주제 기준·이미 다룬 글·글 규칙·구조를 찍고, `--preview|--draft --article 글.json` 이 그 글을
     조사·집필 없이 검사·판정·그림에 넣는다(`givenClient`). 떨어져도 다시 쓰지 않는다. 공개는 묶음으로 — `--bundle` 이 통과한 글과 그림을 한 파일로 묶고,
     `--publish-bundle`(`publishGiven`)이 DB 가 있는 곳에서 코드 검사를 다시 돌린 뒤 주간 기록을 잡고 닫아 공개한다(판정은 다시 안 한다).
+  - 묶음을 HTTP 로 받는 입구(결정 0021): `POST /api/autopost/bundle`(같은 `publishGiven`) · `GET /api/autopost/rules`(`--rules` 와
+    같은 글자, `service/autopost-rules.ts`). 문은 `guard/autopost-token.guard.ts` — `Authorization: Bearer` 가
+    `AUTOPOST_SUBMIT_TOKEN` 과 같아야 하고, 토큰이 없는 서버는 전부 401 이다. 속도 제한 가드를 토큰 가드보다 먼저 건다.
+    묶음 본문(그림이 실려 수 MB)은 `main.ts` 가 그 주소에만 건 `bundleBody` 가 읽는다 — **토큰이 맞는 요청만** 16MB,
+    그 밖은 전역 100KB 에서 413. 보내는 쪽은 `client/autopost-submit.client.ts`(`--submit-bundle` · `--rules-from` —
+    앱·DB 를 안 띄운다, https 만). **`createAsSystem` 에 닿는 HTTP 길은 이것 하나다** — 이 컨트롤러에 핸들러를 더하지 않는다.
   - 손으로 돌리기: `npm run autopost -- --preview | --draft`(`src/autopost-cli.ts`). 이 프로세스는 cron 을 멈추고 돈다.
     `--draft` 는 검사를 통과한 글만 초안으로 저장한다.
 - 속도 제한 저장소는 프로세스 메모리다. 컨테이너를 늘리면 IP 당 한도가
@@ -284,7 +292,7 @@ src/
 
 ```bash
 npm run typecheck && npm run build
-node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 89 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8)
+node --test src/common/typeorm/transactional.test.mjs src/core/admin-auth/service/authorize.test.mjs src/core/admin-user/service/last-admin.test.mjs src/core/page/service/page-content.test.mjs src/common/html/sanitize-body.test.mjs src/common/indexnow/indexnow.test.mjs src/core/search-settings/service/search-settings.test.mjs src/core/autopost/service/*.test.mjs   # 기존 일곱 파일 61 (8 + 9 + 5 + 16 + 7 + 11 + 5) + 자동 글 96 (주 4 · HTML 5 · 검사 39 · 판정 묶기 9 · 할 일 5 · 설정 6 · 순서 13 · ChatGPT 웹 8 · 받는 입구 7)
 bash scripts/verify.sh          # 343 통과 · 판정불가 2 (api:3500 + DB, .env 의 ADMIN_SESSION_SECRET 으로 세션을 만든다. 둘째 판정불가는 INDEXNOW_KEY 가 없는 곳)
 python3 scripts/check-pattern.py   # 모듈 모양 문제 0 (서버 없이 돈다)
 node scripts/openapi.js            # DTO·칸 구조를 바꿨으면 → openapi.json · page-schemas.json (그다음 web 의 gen-types.mjs)

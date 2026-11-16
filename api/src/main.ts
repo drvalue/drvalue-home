@@ -7,6 +7,7 @@ import { buildSwaggerConfig } from './common/swagger/swagger-config';
 import { AppConfig } from './common/config/app-config';
 import { CommonExceptionFilter } from './common/error/common-exception.filter';
 import { validationExceptionFactory } from './common/error/validation-exception.factory';
+import { bundleBody } from './core/autopost/guard/autopost-token.guard';
 
 async function bootstrap() {
   // 관리자 세션 서명 비밀에 안전한 기본값은 없다. 없으면 뜨지 않는다.
@@ -20,6 +21,9 @@ async function bootstrap() {
   // 프록시 뒤에서 req.ip 가 프록시 주소로 합쳐지면 IP 별 속도 제한이 한도 하나가 된다.
   if (AppConfig.trustProxy !== undefined)
     app.set('trust proxy', AppConfig.trustProxy);
+  // 자동 글 묶음은 그림이 실려 수 MB 다. 토큰이 맞는 요청만 큰 한도로 읽는다(그 밖은 전역 100KB).
+  // Nest 의 본문 읽기보다 먼저 걸려야 해서 여기 둔다.
+  app.use('/api/autopost/bundle', bundleBody());
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({

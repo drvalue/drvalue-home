@@ -1253,6 +1253,98 @@
         ],
         "type": "object"
       },
+      "ControllerAutopostDefaultBundleDto": {
+        "properties": {
+          "article": {
+            "description": "글(구조는 GET /api/autopost/rules 끝의 JSON Schema). 안쪽은 구조 검사가 본다 — 형이 틀리면 거절 사유로 돌아간다",
+            "example": {
+              "title": "…"
+            },
+            "type": "object"
+          },
+          "pictures": {
+            "description": "표지 한 장과 단락 그림. 없어도 된다(글만 나간다)",
+            "items": {
+              "$ref": "#/components/schemas/ControllerAutopostDefaultPictureDto"
+            },
+            "maxItems": 5,
+            "type": "array"
+          }
+        },
+        "required": [
+          "article"
+        ],
+        "type": "object"
+      },
+      "ControllerAutopostDefaultBundleResponseDto": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "published",
+              "refused"
+            ],
+            "type": "string"
+          },
+          "pictures": {
+            "description": "글에 들어간 그림 수",
+            "type": "number"
+          },
+          "post_id": {
+            "description": "공개한 글의 id",
+            "nullable": true,
+            "type": "number"
+          },
+          "reasons": {
+            "description": "거절 사유(사람이 읽는 문장). 공개했으면 빈 배열",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "outcome",
+          "reasons",
+          "post_id",
+          "pictures"
+        ],
+        "type": "object"
+      },
+      "ControllerAutopostDefaultPictureDto": {
+        "properties": {
+          "data": {
+            "description": "JPEG 바이트(base64). 원본 2MB 까지",
+            "example": "/9j/4AAQSkZJRg==",
+            "maxLength": 2800000,
+            "pattern": "^[A-Za-z0-9+/]+={0,2}$",
+            "type": "string"
+          },
+          "section": {
+            "description": "단락 번호(0 부터). 표지는 null",
+            "example": 0,
+            "maximum": 9,
+            "minimum": 0,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ControllerAutopostDefaultRulesResponseDto": {
+        "properties": {
+          "text": {
+            "description": "주제 기준 · 이미 다룬 글의 제목과 출처 주소 · 글 규칙 · 글의 구조(JSON Schema)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
       "ControllerContentAttachmentResponseDto": {
         "properties": {
           "id": {
@@ -5303,6 +5395,86 @@
         "summary": "고칠 수 있는 범위 바꾸기",
         "tags": [
           "Admin User Default - 관리 화면 권한"
+        ]
+      }
+    },
+    "/api/autopost/bundle": {
+      "post": {
+        "operationId": "autopostDefaultPublishBundle",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControllerAutopostDefaultBundleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ControllerAutopostDefaultBundleResponseDto"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "글 묶음을 공개한다(한 주에 한 편 · 이미 낸 출처 거절). 거절도 200 이고 outcome 으로 가른다",
+        "tags": [
+          "Autopost Default - 자동 글 묶음 받기"
+        ]
+      }
+    },
+    "/api/autopost/rules": {
+      "get": {
+        "operationId": "autopostDefaultRules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ControllerAutopostDefaultRulesResponseDto"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "글을 쓰는 쪽이 읽는 주제 기준·이미 다룬 글·규칙·구조",
+        "tags": [
+          "Autopost Default - 자동 글 묶음 받기"
         ]
       }
     },
