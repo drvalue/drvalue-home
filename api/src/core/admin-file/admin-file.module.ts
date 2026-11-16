@@ -14,5 +14,6 @@ import { AdminFileDefaultService } from './service/admin-file-default.service';
     AdminFileDefaultService,
     FileRevisionHandler,
   ],
+  exports: [AdminFileDefaultService],
 })
 export class AdminFileModule {}

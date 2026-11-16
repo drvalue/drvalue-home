@@ -98,6 +98,65 @@ export const AppConfig = {
     return isIndexNowKey(raw) ? raw : null;
   },
 
+  /**
+   * 제조 AI 주간 글(자동 발행). 빠뜨리면 꺼진다 — 켜기 값이 정확히 `1` 이고 모델을 부를 길이 있어야 돈다.
+   * 길은 둘이다: Claude API(기본 — 키가 있어야 한다) · ChatGPT 웹(`AUTOPOST_PROVIDER=webgpt` — 그 기계에
+   * ego 브라우저가 깔려 있고 거기서 chatgpt.com 에 로그인돼 있어야 한다. 키가 없다. 서버에서는 못 돈다).
+   * 키는 비밀이다. 기본값이 없고, 로그·기록 표·오류 문장에 싣지 않는다.
+   */
+  autopost: {
+    get enabled(): boolean {
+      return process.env.AUTOPOST_ENABLED === '1';
+    },
+    get apiKey(): string {
+      return (process.env.ANTHROPIC_API_KEY ?? '').trim();
+    },
+    /** 손으로 돌리는 명령(보기만·초안으로)은 켜기 값을 안 보고 키만 본다. */
+    get hasKey(): boolean {
+      return AppConfig.autopost.apiKey !== '';
+    },
+    /** 정확히 `webgpt` 일 때만 ChatGPT 웹. 그 밖의 값·빈 값은 Claude API 다. */
+    get provider(): 'claude' | 'webgpt' {
+      return process.env.AUTOPOST_PROVIDER === 'webgpt' ? 'webgpt' : 'claude';
+    },
+    /** 모델을 부를 길이 있나 — Claude 는 키, ChatGPT 웹은 그 기계의 로그인(여기서는 못 본다 — 부를 때 실패한다). */
+    get canRun(): boolean {
+      return (
+        AppConfig.autopost.provider === 'webgpt' || AppConfig.autopost.hasKey
+      );
+    },
+    get ready(): boolean {
+      return AppConfig.autopost.enabled && AppConfig.autopost.canRun;
+    },
+    /**
+     * 바깥에서 만든 글 묶음을 HTTP 로 받는 입구(`/api/autopost/*`)의 토큰. 비었거나 모양이 틀리면(32~256자, 영문·숫자·-·_)
+     * null — 입구가 닫힌다(누가 뭘 보내도 401). 비밀이다: 이 값을 아는 쪽은 사람 검수 없이 뉴스 게시판에 글을 공개한다.
+     * 보내는 쪽(사람 기계)도 같은 이름으로 읽는다. 만들기: openssl rand -hex 32
+     */
+    get submitToken(): string | null {
+      const raw = (process.env.AUTOPOST_SUBMIT_TOKEN ?? '').trim();
+      return /^[A-Za-z0-9_-]{32,256}$/.test(raw) ? raw : null;
+    },
+    /** 묶음을 공개해도 되나 — 켜기 값이 있거나(그 명령에만 준다), 받는 입구의 토큰이 있거나. 둘 다 없으면 닫힌다. */
+    get canPublishGiven(): boolean {
+      return (
+        AppConfig.autopost.enabled || AppConfig.autopost.submitToken !== null
+      );
+    },
+    /** ego 브라우저 실행 파일과 자식 프로세스에 넘길 환경. 이 서버의 다른 환경변수는 안 넘긴다. */
+    get browser(): { bin: string; env: Record<string, string> } {
+      const env: Record<string, string> = {};
+      for (const name of ['PATH', 'HOME', 'LANG', 'TMPDIR']) {
+        const value = process.env[name];
+        if (value) env[name] = value;
+      }
+      return {
+        bin: (process.env.AUTOPOST_BROWSER_BIN ?? '').trim() || 'ego-browser',
+        env,
+      };
+    },
+  },
+
   mail: {
     get accessKey(): string {
       return process.env.NCP_ACCESS_KEY ?? '';

@@ -21,6 +21,7 @@ import { HomeBannerTranslationEntity } from '../entity/home-banner-translation.e
 import { HomePopupEntity } from '../entity/home-popup.entity';
 import { HomePopupTranslationEntity } from '../entity/home-popup-translation.entity';
 import { SearchSettingsEntity } from '../entity/search-settings.entity';
+import { AutopostRunEntity } from '../entity/autopost-run.entity';
 
 export const ENTITIES = [
   PostEntity,
@@ -40,6 +41,7 @@ export const ENTITIES = [
   HomePopupEntity,
   HomePopupTranslationEntity,
   SearchSettingsEntity,
+  AutopostRunEntity,
 ];
 
 /**

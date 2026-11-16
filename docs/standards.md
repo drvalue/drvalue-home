@@ -23,8 +23,9 @@
 - 토큰·비밀번호·해시를 출력·로그·문서에 그대로 쓰지 않는다.
 - 새 비밀값이 필요하면 환경변수로 받는다. 기본값을 코드에 박지 않는다.
 - **IAM 을 안 거치는 관리자 문을 만들지 않는다.** 토큰·헤더 우회 경로 금지. 검사는
-  `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다.
-- 환경변수는 `.env.example` 에 있는 것뿐이다 — 운영 필수는 DB 연결 다섯 · 세션 키 · IAM 콜백 · NCP 메일 넷, 선택은 `NEXT_PUBLIC_GTM_ID` · `DB_SSL` · `WEB_PORT` · `INDEXNOW_KEY`. 새로 만들기 전에 코드 상수나 compose
+  `ADMIN_SESSION_SECRET` 으로 같은 모양의 세션을 만든다. 예외는 하나 — 자동 글 묶음을 받는 `/api/autopost/*`
+  (토큰, 결정 0021). 관리 API 가 아니고, 그 토큰으로는 자동 글 한 편을 넣는 것만 된다. 예외를 더 만들지 않는다.
+- 환경변수는 `.env.example` 에 있는 것뿐이다 — 운영 필수는 DB 연결 다섯 · 세션 키 · IAM 콜백 · NCP 메일 넷, 선택은 `NEXT_PUBLIC_GTM_ID` · `DB_SSL` · `WEB_PORT` · `INDEXNOW_KEY` · 자동 글 넷(`AUTOPOST_ENABLED` · `ANTHROPIC_API_KEY` · `AUTOPOST_PROVIDER` · `AUTOPOST_SUBMIT_TOKEN`). 새로 만들기 전에 코드 상수나 compose
   배선으로 되는지 먼저 본다. api 에서 읽는 곳은 `common/config/app-config.ts` 하나다.
 
 ## 검사 통과 기준

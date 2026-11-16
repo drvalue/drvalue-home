@@ -22,6 +22,13 @@ export const AdminPostError = {
     status: HttpStatus.BAD_REQUEST,
   } as ICommonErrorCode,
 
+  SYSTEM_BOARD: {
+    code: 'ADMIN_POST_SYSTEM_BOARD',
+    message: '이 게시판에는 자동으로 글을 쓸 수 없습니다.',
+    detail: '시스템 행위자(createAsSystem)는 news 게시판에만 쓴다',
+    status: HttpStatus.FORBIDDEN,
+  } as ICommonErrorCode,
+
   FILE_GONE: {
     code: 'ADMIN_POST_FILE_GONE',
     message: '첨부 파일 중 지워진 것이 있습니다. 첨부 목록을 확인해 주세요.',

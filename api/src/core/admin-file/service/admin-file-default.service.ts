@@ -30,6 +30,9 @@ const ALLOWED: Record<string, string> = {
   'video/webm': '.webm',
 };
 
+/** 시스템 행위자가 올릴 수 있는 형식 — 그림뿐이다. */
+const SYSTEM_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
 const MB = 1024 * 1024;
 /** 영상만 200MB, 나머지는 20MB. 컨트롤러의 multer 상한(200MB)은 가장 큰 쪽이다. */
 export const MAX_UPLOAD = 200 * MB;
@@ -79,9 +82,59 @@ export class AdminFileDefaultService {
     mkdirSync(AppConfig.uploadsDir, { recursive: true });
     writeFileSync(path, file.buffer);
     try {
-      return await this.insertRow(ctx, id, filenameDisk, ext, file, title, who);
+      return await this.insertRow(
+        ctx,
+        id,
+        filenameDisk,
+        ext,
+        file,
+        title,
+        who.email,
+      );
     } catch (e) {
       rmSync(path, { force: true });
+      throw e;
+    }
+  }
+
+  /**
+   * 세션 없는 시스템 행위자(자동 글)의 입구 — 그림만 받는다. 형식·크기 검사와 변경 이력은 `upload` 와 같다.
+   * 부른 쪽의 트랜잭션이 되돌려지면 행은 사라지고 디스크 파일만 남는다 — 그때 `discard` 를 부른다.
+   */
+  @ServiceException({ errorCode: AdminFileError.UPLOAD_UNKNOWN })
+  async uploadAsSystem(
+    ctx: ITransactionContext,
+    file: UploadedFileInput,
+    title: string,
+    actor: string,
+  ): Promise<{
+    file: ControllerAdminFileDefaultResponseDto;
+    discard: () => void;
+  }> {
+    const ext = ALLOWED[file.mimetype];
+    if (!ext || !SYSTEM_TYPES.includes(file.mimetype))
+      throw CommonError.createByErrorCode(AdminFileError.TYPE_NOT_ALLOWED);
+    if (file.size > limitOf(file.mimetype))
+      throw CommonError.createByErrorCode(AdminFileError.TOO_LARGE);
+    const id = randomUUID();
+    const filenameDisk = `${id}${ext}`;
+    const path = join(AppConfig.uploadsDir, filenameDisk);
+    mkdirSync(AppConfig.uploadsDir, { recursive: true });
+    writeFileSync(path, file.buffer);
+    const discard = () => rmSync(path, { force: true });
+    try {
+      const saved = await this.insertRow(
+        ctx,
+        id,
+        filenameDisk,
+        ext,
+        file,
+        title,
+        actor,
+      );
+      return { file: saved, discard };
+    } catch (e) {
+      discard();
       throw e;
     }
   }
@@ -187,7 +240,7 @@ export class AdminFileDefaultService {
     ext: string,
     file: UploadedFileInput,
     title: string | undefined,
-    who: SessionPayload,
+    actor: string,
   ): Promise<ControllerAdminFileDefaultResponseDto> {
     const size = file.mimetype.startsWith('image/')
       ? imageSize(file.buffer)
@@ -213,7 +266,7 @@ export class AdminFileDefaultService {
     const view = ControllerAdminFileDefaultResponseDto.from(saved, 0);
     await this.revisionService.record(
       {
-        actor: who.email,
+        actor,
         action: 'create',
         collection: 'files',
         itemId: id,
