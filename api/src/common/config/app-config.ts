@@ -144,11 +144,7 @@ export const AppConfig = {
       );
     },
     /** ego 브라우저 실행 파일과 자식 프로세스에 넘길 환경. 이 서버의 다른 환경변수는 안 넘긴다. */
-    get browser(): {
-      bin: string;
-      env: Record<string, string>;
-      profile: string;
-    } {
+    get browser(): { bin: string; env: Record<string, string> } {
       const env: Record<string, string> = {};
       for (const name of ['PATH', 'HOME', 'LANG', 'TMPDIR']) {
         const value = process.env[name];
@@ -157,8 +153,6 @@ export const AppConfig = {
       return {
         bin: (process.env.AUTOPOST_BROWSER_BIN ?? '').trim() || 'ego-browser',
         env,
-        // ChatGPT 는 이 이름의 ego 브라우저 프로필에서만 쓴다. 비면 ChatGPT 웹 길이 브라우저를 열지 않고 실패한다(닫힌 쪽).
-        profile: (process.env.AUTOPOST_BROWSER_PROFILE ?? '').trim(),
       };
     },
   },

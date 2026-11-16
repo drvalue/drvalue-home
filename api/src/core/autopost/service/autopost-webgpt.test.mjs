@@ -143,7 +143,6 @@ test('브라우저가 답을 표준 오류로 찍어도 읽는다 — 앞에 다
     return new AutopostWebGptClient({
       bin: file,
       env: { PATH: process.env.PATH },
-      profile: '시험',
     });
   };
   const input = { today: '2026-11-13', avoidTitles: [], avoidUrls: [] };
@@ -291,51 +290,4 @@ test('그림 판정: 답을 뺄 그림과 겹친 쌍으로 바꾼다 — 답이 
     /실행하지 못했습니다/,
   );
   rmSync(dir, { recursive: true, force: true });
-});
-
-test('프로필이 정해지지 않으면 브라우저를 열지 않는다 · 스크립트는 그 이름의 프로필만 쓴다', async () => {
-  const {
-    AutopostWebGptClient,
-    OPEN_CHAT,
-  } = require('../../../../dist/core/autopost/client/autopost-webgpt.client.js');
-  const { mkdtemp, writeFile, chmod, rm, readFile } =
-    await import('node:fs/promises');
-  const { tmpdir } = await import('node:os');
-  const { join } = await import('node:path');
-  const dir = await mkdtemp(join(tmpdir(), 'fake-ego-profile-'));
-  const bin = join(dir, 'ego');
-  const seen = join(dir, 'seen.txt');
-  // 받은 스크립트를 파일로 남기는 가짜 브라우저
-  await writeFile(bin, `#!/bin/sh\ncat > '${seen}'\nexit 1\n`);
-  await chmod(bin, 0o755);
-  const input = { today: '2026-11-16', avoidTitles: [], avoidUrls: [] };
-  try {
-    for (const profile of [undefined, '', '   ']) {
-      const none = new AutopostWebGptClient({
-        bin,
-        env: { PATH: process.env.PATH },
-        profile,
-      });
-      await assert.rejects(
-        none.research(input),
-        /프로필이 정해지지 않았습니다/,
-      );
-      await assert.rejects(readFile(seen)); // 브라우저를 부르지도 않았다
-    }
-    const pinned = new AutopostWebGptClient({
-      bin,
-      env: { PATH: process.env.PATH },
-      profile: '나다',
-    });
-    await assert.rejects(pinned.research(input));
-    const script = await readFile(seen, 'utf8');
-    assert.ok(script.includes('"profile":"나다"'));
-    assert.ok(script.includes('p.name === input.profile'));
-    assert.ok(script.includes('profileId: wanted[0].id'));
-    // 프로필을 못 찾으면 던진다 — 기본 프로필로 넘어가는 길이 없다
-    assert.ok(OPEN_CHAT.includes('wanted.length !== 1) throw'));
-    assert.ok(!/taskSpace\(input\.space\)/.test(script));
-  } finally {
-    await rm(dir, { recursive: true, force: true });
-  }
 });

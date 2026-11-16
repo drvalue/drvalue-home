@@ -93,7 +93,6 @@ api 쪽을 읽는 곳은 `api/src/common/config/app-config.ts` 하나다. 나머
 | `NCP_ACCESS_KEY` · `NCP_SECRET_KEY` · `NCP_MAIL_SENDER_ADDRESS` · `NCP_MAIL_TO` | 문의 메일(네이버 클라우드) | 메일만 안 간다. 문의는 DB 에 남는다 |
 | `INDEXNOW_KEY` (선택) | IndexNow 키(8~128자, 영문·숫자·-, `openssl rand -hex 16`). 공개 글(만들기·고치기·지우기·되돌리기·예약 공개·자동 내림) · 페이지 글 · 검색 정보를 저장하면 커밋 뒤 api 가 그 주소를 `api.indexnow.org` 에 알린다(2초 모아 한 번, 5초 제한, 실패는 로그 한 줄 — 저장은 안 기다린다). web 은 실행 때 같은 값을 읽어 `/<키>.txt` 로 낸다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 보낸다 | 알림을 **안 보낸다**, 키 파일도 404(닫힌 쪽). 모양이 틀린 값도 같다 |
 | `AUTOPOST_ENABLED` · `ANTHROPIC_API_KEY` (선택) | 제조 AI 주간 글(자동 발행). 켜기 값이 **정확히 `1`** 이고 Claude API 키가 있으면 api 가 화요일 09:00(KST) 이후 한 시간마다 「이번 주 글이 있나」를 보고, 없으면 만들어 뉴스 게시판에 공개한다. 키는 비밀이다 — 로그·기록 표에 싣지 않는다. 한 주의 결과는 `autopost_runs` 표(공개·건너뜀·오류와 사유·토큰 수)에 남는다. **실패 알림은 없다** — 글이 안 올라오면 이 표와 api 로그를 본다 | 둘 중 하나라도 비면(켜기 값이 `1` 이 아니어도) **아무것도 안 한다** — Claude 를 부르지 않는다(닫힌 쪽). 뜰 때 `자동 글: 꺼져 있습니다` 한 줄 |
-| `AUTOPOST_BROWSER_PROFILE` (ChatGPT 웹 길에서는 필수) | `AUTOPOST_PROVIDER=webgpt` 가 쓸 ego 브라우저 프로필의 이름(브라우저에 보이는 그대로 — 이 맥은 `나다`). **ChatGPT 는 이 프로필의 계정으로만 쓴다**(사용자 결정 2026-11-16). 그 프로필에서 chatgpt.com 에 로그인돼 있어야 한다 | ChatGPT 웹 길이 브라우저를 열지 않고 **실패한다**(닫힌 쪽). 그 이름의 프로필이 없거나 여럿이어도 같다 — 다른 프로필로 넘어가지 않는다. 로그인이 풀려 있으면 「○○ 프로필의 chatgpt.com 에 입력창이 없습니다」로 끝난다 |
 | `AUTOPOST_SUBMIT_TOKEN` (선택) | 사람 기계에서 만든 자동 글 묶음을 받는 입구(`/api/autopost/bundle` · `/rules`)의 토큰. 32~256자, 영문·숫자·`-`·`_`(`openssl rand -hex 32`). 서버와 묶음을 보내는 기계에 같은 값. **비밀이다** — 아는 쪽은 사람 검수 없이 뉴스 게시판에 글을 공개한다. 아래 「맥에서 만들어 서버에 넣기」 | 입구가 **닫힌다** — 무엇을 보내도 401(닫힌 쪽). 모양이 틀려도 같다. 뜰 때 `자동 글 묶음 받기: 닫혀 있습니다` 한 줄 |
 | `AUTOPOST_PROVIDER` (선택) | 제조 AI 주간 글이 모델을 부르는 길. 비우면 Claude API. **정확히 `webgpt`** 면 그 기계의 ego 브라우저로 chatgpt.com 을 조작한다(키 없음, 아래 「손으로 돌리기」). `AUTOPOST_BROWSER_BIN` 으로 실행 파일을 바꿀 수 있다(기본 `ego-browser`) | Claude API 길이다 — 키가 없으면 안 돈다(닫힌 쪽). `webgpt` 인데 브라우저·로그인이 없으면 그 주는 오류로 닫힌다(글은 안 나간다) |
 | `NEXT_PUBLIC_GTM_ID` (선택) | 방문 통계 GTM id. web **빌드 인자**(compose 가 넘긴다) — 번들에 굳는다. 운영은 `GTM-NLL3QGRF`. 동의(Consent Mode v2)는 기본 거부, 방문자가 「동의」해야 analytics 만 켜진다. 미리보기(`NOINDEX=1`)는 값이 있어도 안 싣는다 | GTM·동의 창이 **안 실린다**(닫힌 쪽). 전에는 코드에 박혀 있어 미리보기도 운영 GTM 에 기록을 보냈다 |
@@ -117,8 +116,7 @@ Claude API 키가 필요 없다 — 글은 쓰는 쪽(사람·에이전트)이, 
 cd api && npm run build
 # ① 서버의 기록으로 규칙을 받는다(「이미 다룬 글」이 운영의 것이다). DB 를 안 쓴다
 npm run autopost -- --rules-from https://drvalue.co.kr
-# ② 그 규칙대로 글.json 을 쓴 뒤, 검사·판정·그림을 돌려 묶는다(이 단계는 그 기계의 DB 가 떠 있어야 하고,
-#    .env 의 AUTOPOST_BROWSER_PROFILE 프로필에서 ChatGPT 에 로그인돼 있어야 한다)
+# ② 그 규칙대로 글.json 을 쓴 뒤, 검사·판정·그림을 돌려 묶는다(이 단계는 그 기계의 DB 가 떠 있어야 한다)
 AUTOPOST_PROVIDER=webgpt npm run autopost -- --preview --article 글.json --bundle 묶음.json
 # ③ 묶음을 서버에 넣어 공개한다. DB 를 안 쓴다
 npm run autopost -- --submit-bundle 묶음.json https://drvalue.co.kr
