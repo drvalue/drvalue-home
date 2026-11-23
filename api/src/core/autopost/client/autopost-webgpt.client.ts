@@ -37,6 +37,8 @@ const SOURCES_TOTAL_CHARS = 60000;
 const SOURCE_MIN_CHARS = 300;
 /** 그림 한 장을 기다리는 한도. */
 const IMAGE_TIMEOUT_MS = 10 * 60 * 1000;
+/** 「중지」 단추가 남아 있을 때, 같은 그림 주소가 이만큼(4초 간격) 이어지면 다 된 것으로 본다 — 1분. */
+const STEADY_POLLS = 15;
 /** 표지 그림의 가로(px). 받은 그림을 화면 안에서 이 폭의 JPEG 로 줄여 받는다. */
 const COVER_WIDTH = 1600;
 const MARK = '@@AUTOPOST_ANSWER@@';
@@ -215,6 +217,9 @@ console.log(input.mark + JSON.stringify({ code: answer }));
  * 그림을 만들게 하고, 다 되면 화면 안에서 JPEG 로 줄여 base64 로 찍는다. 그림은 `blob:` 주소로 뜬다 —
  * 바깥에서 주소로 받을 수 없어 화면의 canvas 로 꺼낸다(2026-11-13 실측).
  * 다 됐다는 표시: 「중지」 단추가 없고 큰 그림이 두 번 이어 같은 주소로 보인다. 그리는 중에도 미리 보기 그림이 뜬다.
+ * 「중지」 단추가 그림이 다 된 뒤에도 오래 남는 때가 있다(2026-11-23 실측 — 그림은 36초에 떴고 주소가 끝까지 같았는데
+ * 단추는 601초에 사라져, 10분 한도에 걸려 그림 없이 나갔다). 그래서 같은 주소가 STEADY_POLLS 번 이어지면 단추가
+ * 남아 있어도 다 된 것으로 본다.
  */
 function imageScript(prompt: string): string {
   const input = JSON.stringify({
@@ -222,6 +227,7 @@ function imageScript(prompt: string): string {
     url: 'https://chatgpt.com/',
     space: SPACE,
     timeout: IMAGE_TIMEOUT_MS,
+    steady: STEADY_POLLS,
     width: COVER_WIDTH,
     mark: MARK,
   });
@@ -254,11 +260,11 @@ while (Date.now() - started < input.timeout) {
       tail: (document.querySelector("main")?.innerText ?? "").replace(/\\s+/g, " ").slice(-200),
     };
   });
-  if (state.inChat && !state.busy && state.src) {
+  if (state.inChat && state.src) {
     still = state.src === last ? still + 1 : 0;
     last = state.src;
-    if (still >= 1) { ready = true; break; }
-  }
+    if (still >= (state.busy ? input.steady : 1)) { ready = true; break; }
+  } else { still = 0; last = ""; }
   // 그림 없이 글로만 답했다(거절·한도 안내·되묻기) — 기다리지 않고 끝낸다.
   if (state.inChat && !state.busy && !state.src && state.said) {
     if (++bare >= 3) throw new Error("답에 그림이 없습니다: " + state.tail);
