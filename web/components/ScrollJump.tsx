@@ -8,7 +8,15 @@ import { useEffect, useState } from 'react'
  * - 조금 내려야(400px) 「맨 위」가 뜨고, 바닥 근처(200px)면 「맨 아래」가 숨는다. 짧은 장이면 둘 다 없다.
  * - 스크립트가 없으면 아무것도 안 그린다 — 단추가 동작하지 않는 채로 남지 않게.
  * - 움직임을 줄인 사람에게는 부드럽게 흐르지 않고 바로 간다.
+ * - 챗봇 창(LAG 위젯)이 열려 있으면 숨는다 — 창 바로 아래 버튼 위에 단추가 쌓여 보였다.
+ *   위젯은 늦게 실리므로 `window.LagChat` 이 생길 때까지 잠깐 기다렸다가 open · close 를 듣는다.
  */
+type LagChat = {
+  isOpen?: () => boolean
+  on: (event: 'open' | 'close', cb: () => void) => void
+  off: (event: 'open' | 'close', cb: () => void) => void
+}
+
 const CSS = `
 .dv_jump { position: fixed; right: 24px; bottom: 104px; z-index: 900; display: flex; flex-direction: column; gap: 8px; }
 .dv_jump button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #e5e8eb; border-radius: 50%; background: #fff; color: #191f28; box-shadow: 0 4px 12px rgba(21,34,56,.10); cursor: pointer; transition: background .15s, border-color .15s; }
@@ -24,6 +32,7 @@ const CSS = `
 export default function ScrollJump() {
   const [up, setUp] = useState(false)
   const [down, setDown] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
 
   useEffect(() => {
     let frame: number | null = null
@@ -45,12 +54,35 @@ export default function ScrollJump() {
     }
   }, [])
 
+  useEffect(() => {
+    let chat: LagChat | null = null
+    let tries = 0
+    const onOpen = () => setChatOpen(true)
+    const onClose = () => setChatOpen(false)
+    const attach = () => {
+      const c = (window as unknown as { LagChat?: LagChat }).LagChat
+      if (!c) return false
+      chat = c
+      c.on('open', onOpen)
+      c.on('close', onClose)
+      setChatOpen(c.isOpen?.() ?? false)
+      return true
+    }
+    const timer = attach() ? null : window.setInterval(() => {
+      if (attach() || ++tries >= 40) window.clearInterval(timer!)
+    }, 500)
+    return () => {
+      if (timer !== null) window.clearInterval(timer)
+      if (chat) { chat.off('open', onOpen); chat.off('close', onClose) }
+    }
+  }, [])
+
   const go = (top: number) => {
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top, behavior: still ? 'auto' : 'smooth' })
   }
 
-  if (!up && !down) return null
+  if (chatOpen || (!up && !down)) return null
   return (
     <div className="dv_jump">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
