@@ -54,6 +54,12 @@ export const HEADER_CSS = String.raw`
         }
         .dv_btn_submit:hover { background: #b80000; }
         body.no-scroll { overflow: hidden !important; }
+        /* 문의 창이 화면보다 길면(폰: 창 711px > 화면 664px) 위아래가 잘린 채 몸통 스크롤도 잠겨 끝까지 못 내렸다
+           (2026-11-26 사용자). 창 안에서 스크롤한다. */
+        .dv_modal_window { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+        @media (max-width: 640px) { .dv_modal_window { padding: 24px 20px; } }
+        /* 문의 창·모바일 메뉴가 열린 동안 채팅 위젯 단추(z-index 2147483000)를 숨긴다 — 그 위에 떠서 「메일 발송하기」·메뉴 아래 끝을 가렸다. */
+        body.no-scroll [data-chat-widget] { display: none !important; }
 `
 
 export const HEADER_JS = String.raw`

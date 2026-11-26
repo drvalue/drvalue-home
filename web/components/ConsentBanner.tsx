@@ -15,8 +15,9 @@ const CSS = `
 .dv_consent { position: fixed; left: 24px; bottom: 24px; z-index: 2147483647; width: 340px; max-width: calc(100vw - 48px);
   padding: 16px 16px 14px; border: 1px solid #e5e8eb; border-radius: 12px; background: #fff; color: #333d4b;
   box-shadow: 0 8px 24px rgba(21,34,56,.12); font-size: 13.5px; line-height: 1.6; word-break: keep-all; }
-/* 문의 모달·모바일 메뉴가 열려 있으면(body.no-scroll) 띠는 그 뒤로 — 모달의 제출 단추를 가리면 문의가 막힌다. */
-body.no-scroll .dv_consent { z-index: 9000; }
+/* 문의 모달·모바일 메뉴가 열려 있으면(body.no-scroll) 카드를 숨긴다. 전에는 z-index 만 9000 으로 내렸는데, 메뉴(머리글 1000 층 안)보다는
+   여전히 위라 폰에서 메뉴의 「문의하기」를 덮었다(2026-11-26 실측). 닫으면 다시 뜬다. */
+body.no-scroll .dv_consent { display: none; }
 .dv_consent p { margin: 0 0 12px; }
 .dv_consent_act { display: flex; justify-content: flex-end; gap: 8px; }
 .dv_consent button { min-height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #d1d6db; background: #fff;
@@ -24,8 +25,10 @@ body.no-scroll .dv_consent { z-index: 9000; }
 .dv_consent button:hover { background: #f2f4f6; }
 .dv_consent button.is-main { background: #191f28; border-color: #191f28; color: #fff; }
 .dv_consent button:focus-visible { outline: 2px solid #191f28; outline-offset: 2px; }
+/* 폰: 채팅 위젯 단추(아래 16px, 높이 52px)와 같은 줄에 두면 카드가 단추를 덮고, 폰 브라우저의 아래 막대와도 닿는다
+   (2026-11-26 사용자: 아래 위젯과 겹쳐 동의를 못 받는다). 채팅 단추 위로 띄운다 — 둘 다 누를 수 있게. */
 @media (max-width: 640px) {
-  .dv_consent { left: 12px; right: 12px; bottom: 12px; width: auto; max-width: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
+  .dv_consent { left: 12px; right: 12px; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); width: auto; max-width: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
   .dv_consent p { flex: 1; margin: 0; font-size: 12.5px; }
   .dv_consent_act { flex-direction: column; gap: 6px; }
 }
