@@ -16,8 +16,8 @@ const CSS = `
 .dv_jump button:focus-visible { outline: 2px solid #191f28; outline-offset: 2px; }
 .dv_jump svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 640px) { .dv_jump { right: 16px; bottom: 92px; } }
-/* 폰에서 쿠키 동의 줄이 떠 있는 동안은 그 위로 올린다 — 겹쳤다. */
-@media (max-width: 640px) { body:has(.dv_consent) .dv_jump { bottom: 124px; } }
+/* 폰에서 쿠키 동의 카드가 떠 있는 동안은 그 위로 올린다 — 카드는 채팅 단추 위(아래 80px, 높이 약 104px)에 뜬다. */
+@media (max-width: 640px) { body:has(.dv_consent) .dv_jump { bottom: calc(196px + env(safe-area-inset-bottom, 0px)); } }
 @media print { .dv_jump { display: none; } }
 `
 

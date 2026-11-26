@@ -408,11 +408,17 @@ html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_
         right: -100%;
         width: 100%;
         height: 100vh;
+        /* 폰 브라우저의 100vh 는 주소창·아래 막대를 뺀 실제 화면보다 크다 — 메뉴를 펼치면 아래 끝(문의하기)이
+           화면 밖에 남아 끝까지 안 내려갔다(2026-11-26 사용자). 보이는 높이(dvh)로 맞춘다. */
+        height: 100dvh;
         background: #fff;
         z-index: 10001;
-        padding: 96px 24px 40px;
+        /* 아래 여백: 오른쪽 아래 채팅 단추(52px)가 메뉴 위에 떠 있다 — 마지막 줄이 그 밑에 깔리지 않게. */
+        padding: 96px 24px calc(96px + env(safe-area-inset-bottom, 0px));
         transition: right 0.35s ease;
         overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     #mobile_menu_layer.active { right: 0; }

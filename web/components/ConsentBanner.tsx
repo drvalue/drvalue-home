@@ -24,8 +24,10 @@ body.no-scroll .dv_consent { z-index: 9000; }
 .dv_consent button:hover { background: #f2f4f6; }
 .dv_consent button.is-main { background: #191f28; border-color: #191f28; color: #fff; }
 .dv_consent button:focus-visible { outline: 2px solid #191f28; outline-offset: 2px; }
+/* 폰: 채팅 위젯 단추(아래 16px, 높이 52px)와 같은 줄에 두면 카드가 단추를 덮고, 폰 브라우저의 아래 막대와도 닿는다
+   (2026-11-26 사용자: 아래 위젯과 겹쳐 동의를 못 받는다). 채팅 단추 위로 띄운다 — 둘 다 누를 수 있게. */
 @media (max-width: 640px) {
-  .dv_consent { left: 12px; right: 12px; bottom: 12px; width: auto; max-width: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
+  .dv_consent { left: 12px; right: 12px; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); width: auto; max-width: none; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
   .dv_consent p { flex: 1; margin: 0; font-size: 12.5px; }
   .dv_consent_act { flex-direction: column; gap: 6px; }
 }
