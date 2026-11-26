@@ -413,8 +413,8 @@ html:has(.mx_hero, .hero_sub_banner, .dv_hero):not([data-hdr="scrolled"]) #toss_
         height: 100dvh;
         background: #fff;
         z-index: 10001;
-        /* 아래 여백: 오른쪽 아래 채팅 단추(52px)가 메뉴 위에 떠 있다 — 마지막 줄이 그 밑에 깔리지 않게. */
-        padding: 96px 24px calc(96px + env(safe-area-inset-bottom, 0px));
+        /* 메뉴가 열린 동안 채팅 단추는 숨긴다(headerAssets.ts 의 body.no-scroll). 아래 여백은 홈 막대(safe area)만 더한다. */
+        padding: 96px 24px calc(40px + env(safe-area-inset-bottom, 0px));
         transition: right 0.35s ease;
         overflow-y: auto;
         overscroll-behavior: contain;

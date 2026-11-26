@@ -15,8 +15,9 @@ const CSS = `
 .dv_consent { position: fixed; left: 24px; bottom: 24px; z-index: 2147483647; width: 340px; max-width: calc(100vw - 48px);
   padding: 16px 16px 14px; border: 1px solid #e5e8eb; border-radius: 12px; background: #fff; color: #333d4b;
   box-shadow: 0 8px 24px rgba(21,34,56,.12); font-size: 13.5px; line-height: 1.6; word-break: keep-all; }
-/* 문의 모달·모바일 메뉴가 열려 있으면(body.no-scroll) 띠는 그 뒤로 — 모달의 제출 단추를 가리면 문의가 막힌다. */
-body.no-scroll .dv_consent { z-index: 9000; }
+/* 문의 모달·모바일 메뉴가 열려 있으면(body.no-scroll) 카드를 숨긴다. 전에는 z-index 만 9000 으로 내렸는데, 메뉴(머리글 1000 층 안)보다는
+   여전히 위라 폰에서 메뉴의 「문의하기」를 덮었다(2026-11-26 실측). 닫으면 다시 뜬다. */
+body.no-scroll .dv_consent { display: none; }
 .dv_consent p { margin: 0 0 12px; }
 .dv_consent_act { display: flex; justify-content: flex-end; gap: 8px; }
 .dv_consent button { min-height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid #d1d6db; background: #fff;
